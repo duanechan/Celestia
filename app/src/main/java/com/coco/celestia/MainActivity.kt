@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,7 +52,7 @@ class MainActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(Color(0xFFF2E3DB)) // Hex color))
                 ) {
-                    HomeScreen()
+                    LoginScreen()
                 }
             }
         }
@@ -64,14 +65,12 @@ fun HomeScreen() {
     Text(text = "This is Celestia's home page.", fontSize = 15.sp)
 }
 
-
-
 @Preview
 @Composable
 fun LoginScreen() {
-
     val MAX_CHARACTERS = 25
     val auth = FirebaseAuth.getInstance()
+    val database = FirebaseDatabase.getInstance().reference
     var showDialog by remember { mutableStateOf(false) }
     var errorDialogMessage by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
@@ -122,9 +121,12 @@ fun LoginScreen() {
 
         Button(
             onClick = {
-                auth.signInWithEmailAndPassword(username, password)
-                    .addOnCompleteListener() { login ->
-                        if(login.isSuccessful) {
+                database.child("users").child("user1").get()
+                    .addOnSuccessListener { data ->
+                        val storedPassword = data.child("password").value.toString()
+                        val username = data.child("username").value.toString()
+
+                        if (password == storedPassword) {
                             errorDialogMessage = ""
                             showDialog = true
                             val user = auth.currentUser
