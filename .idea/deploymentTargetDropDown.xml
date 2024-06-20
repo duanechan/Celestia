@@ -5,7 +5,10 @@
       <entry key="LoginActivity">
         <State />
       </entry>
-      <entry key="app">
+      <entry key="RegisterActivity">
+        <State />
+      </entry>
+      <entry key="RegisterScreen">
         <State />
       </entry>
     </value>

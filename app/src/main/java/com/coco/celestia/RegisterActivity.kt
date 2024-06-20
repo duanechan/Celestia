@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -36,10 +35,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.initialize
 
-class LoginActivity : ComponentActivity() {
+class RegisterActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Firebase.initialize(this)
@@ -51,7 +49,7 @@ class LoginActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(Color(0xFFF2E3DB)) // Hex color))
                 ) {
-                    LoginScreen()
+                    RegisterScreen()
                 }
             }
         }
@@ -60,14 +58,17 @@ class LoginActivity : ComponentActivity() {
 
 @Preview
 @Composable
-fun LoginScreen() {
+fun RegisterScreen() {
 
     val MAX_CHARACTERS = 25
-    val auth = FirebaseAuth.getInstance()
     var showDialog by remember { mutableStateOf(false) }
     var errorDialogMessage by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -80,6 +81,20 @@ fun LoginScreen() {
         Text(text = "Coop Connects", fontSize = 15.sp)
 
         Spacer(modifier = Modifier.height(35.dp))
+
+        OutlinedTextField(
+            value = email,
+            onValueChange = {
+                if (it.length <= MAX_CHARACTERS) {
+                    email = it
+                }
+            },
+            label = { Text(text = "Email") },
+            singleLine = true,
+            maxLines = 1
+        )
+
+        Spacer(modifier = Modifier.height(2.dp))
 
         OutlinedTextField(
             value = username,
@@ -96,9 +111,37 @@ fun LoginScreen() {
         Spacer(modifier = Modifier.height(2.dp))
 
         OutlinedTextField(
+            value = firstName,
+            onValueChange = {
+                if (it.length <= MAX_CHARACTERS) {
+                    firstName = it
+                }
+            },
+            label = { Text(text = "First Name") },
+            singleLine = true,
+            maxLines = 1
+        )
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        OutlinedTextField(
+            value = lastName,
+            onValueChange = {
+                if (it.length <= MAX_CHARACTERS) {
+                    lastName = it
+                }
+            },
+            label = { Text(text = "Last Name") },
+            singleLine = true,
+            maxLines = 1
+        )
+
+        Spacer(modifier = Modifier.height(2.dp))
+
+        OutlinedTextField(
             value = password,
             onValueChange = {
-                if (it.length <= 16) {
+                if (it.length <= MAX_CHARACTERS) {
                     password = it
                 }
             },
@@ -109,40 +152,41 @@ fun LoginScreen() {
             maxLines = 1
         )
 
+        Spacer(modifier = Modifier.height(2.dp))
+
+        OutlinedTextField(
+            value = confirmPassword,
+            onValueChange = {
+                if (it.length <= MAX_CHARACTERS) {
+                    confirmPassword = it
+                }
+            },
+            label = { Text(text = "Confirm Password") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            visualTransformation = PasswordVisualTransformation(),
+            singleLine = true,
+            maxLines = 1
+        )
 
         Spacer(modifier = Modifier.height(15.dp))
 
         Button(
             onClick = {
-                if (username.isEmpty() || password.isEmpty()) {
-                    errorDialogMessage = "Failed"
-                    showDialog = true
-                } else {
-                    auth.signInWithEmailAndPassword(username, password)
-                        .addOnCompleteListener { login ->
-                            showDialog = true
-                            if(login.isSuccessful) {
-                                errorDialogMessage = ""
-                                val user = auth.currentUser
-                            } else {
-                                errorDialogMessage = "Failed"
-                            }
-                        }
-                }
+                // TODO: Register functionality
             },
             modifier = Modifier
                 .width(285.dp)
                 .height(50.dp)) {
-            Text(text = "Login")
+            Text(text = "Register")
         }
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = { showDialog = false },
                 title = {
-                    Text(text = if (errorDialogMessage.isNotEmpty()) "Login Failed" else "Login Successful!")
+                    Text(text = if (errorDialogMessage.isNotEmpty()) "Registration Failed" else "Registration Successful!")
                 },
                 text = {
-                    Text(text = if (errorDialogMessage.isNotEmpty()) "Try again" else "Welcome back, $username!")
+                    Text(text = if (errorDialogMessage.isNotEmpty()) "Try again" else "Welcome, $username!")
                 },
                 confirmButton = {
                     Button(
@@ -155,9 +199,5 @@ fun LoginScreen() {
         }
 
         Spacer(modifier = Modifier.height(5.dp))
-        Text(text = "Forgot Password?", fontSize = 13.sp, modifier = Modifier.clickable {  })
-        Spacer(modifier = Modifier.height(85.dp))
-        Text(text = "Don't have an account?", fontSize = 15.sp, modifier = Modifier.clickable {  })
-        Text(text = "Register Now!", fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable {  })
     }
 }
