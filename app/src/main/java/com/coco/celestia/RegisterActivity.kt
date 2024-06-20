@@ -1,6 +1,8 @@
 package com.coco.celestia
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -35,12 +37,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.google.firebase.Firebase
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.initialize
 
 class RegisterActivity : ComponentActivity() {
+    private lateinit var databaseReference : DatabaseReference
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Firebase.initialize(this)
+
         setContent {
             CelestiaTheme {
                 // A surface container using the 'background' color from the theme
@@ -49,20 +58,39 @@ class RegisterActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(Color(0xFFF2E3DB)) // Hex color))
                 ) {
-                    RegisterScreen()
+                    databaseReference = FirebaseDatabase.getInstance("https://celestia-9771e-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference().child("users")
+                    RegisterScreen(
+                        registerUser = ::registerUser,
+                        showMessage = { message ->
+                            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+                        })
                 }
             }
         }
     }
+
+    private fun registerUser(email: String, username: String, firstname: String, lastname: String, password: String) {
+        val userData = UserData(email, username, firstname, lastname, password)
+
+        databaseReference.push().setValue(userData)
+            .addOnCompleteListener{
+                Toast.makeText(this@RegisterActivity, "Register Successful", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(this@RegisterActivity, LoginActivity::class.java))
+                finish()
+            }
+            .addOnFailureListener{
+                Toast.makeText(this@RegisterActivity, "error ${it.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
 }
 
-@Preview
+
 @Composable
-fun RegisterScreen() {
+fun RegisterScreen(registerUser: (String, String, String, String, String) -> Unit, showMessage: (String) -> Unit) {
 
     val MAX_CHARACTERS = 25
     var showDialog by remember { mutableStateOf(false) }
-    var errorDialogMessage by remember { mutableStateOf("") }
+    val errorDialogMessage by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
@@ -172,7 +200,11 @@ fun RegisterScreen() {
 
         Button(
             onClick = {
-                // TODO: Register functionality
+                if (email.isNotEmpty() && username.isNotEmpty() && firstName.isNotEmpty() && lastName.isNotEmpty() && password.isNotEmpty()) {
+                    registerUser(email, username, firstName, lastName, password)
+                } else {
+                    showMessage("All fields must be filled.")
+                }
             },
             modifier = Modifier
                 .width(285.dp)
