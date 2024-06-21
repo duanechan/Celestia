@@ -73,9 +73,7 @@ class LoginActivity : ComponentActivity() {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
                     for (userSnapshot in snapshot.children) {
-                        val userData = userSnapshot.getValue(UserData::class.java)
-
-                        if (userData != null && userData.password == password) {
+                        if (userSnapshot.child("password").value.toString() == password) {
                             Toast.makeText(this@LoginActivity, "Login Successful", Toast.LENGTH_SHORT).show()
                             startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                             finish()
