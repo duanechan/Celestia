@@ -61,7 +61,7 @@ class LoginActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(Color(0xFFF2E3DB)) // Hex color))
                 ) {
-                    databaseReference = FirebaseDatabase.getInstance("https://celestia-9771e-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference().child("users")
+                    databaseReference = FirebaseDatabase.getInstance().getReference().child("users")
                     LoginScreen(loginUser = ::loginUser)
                 }
             }

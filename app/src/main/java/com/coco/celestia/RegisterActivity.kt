@@ -58,7 +58,7 @@ class RegisterActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(Color(0xFFF2E3DB)) // Hex color))
                 ) {
-                    databaseReference = FirebaseDatabase.getInstance("https://celestia-9771e-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference().child("users")
+                    databaseReference = FirebaseDatabase.getInstance().getReference("users")
                     RegisterScreen(
                         registerUser = ::registerUser,
                         showMessage = { message ->
@@ -107,7 +107,6 @@ fun RegisterScreen(registerUser: (String, String, String, String, String) -> Uni
 
         Text(text = "CoCo", fontSize = 54.sp, fontWeight = FontWeight.Bold)
         Text(text = "Coop Connects", fontSize = 15.sp)
-
         Spacer(modifier = Modifier.height(35.dp))
 
         OutlinedTextField(

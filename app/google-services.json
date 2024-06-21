@@ -2,6 +2,7 @@
   "project_info": {
     "project_number": "682969212746",
     "project_id": "celestia-9771e",
+    "firebase_url": "https://celestia-9771e-default-rtdb.asia-southeast1.firebasedatabase.app/",
     "storage_bucket": "celestia-9771e.appspot.com"
   },
   "client": [
