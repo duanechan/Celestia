@@ -1,6 +1,8 @@
 package com.coco.celestia
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -27,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -37,9 +40,16 @@ import androidx.compose.ui.unit.sp
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.initialize
 
 class LoginActivity : ComponentActivity() {
+    private lateinit var databaseReference: DatabaseReference
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Firebase.initialize(this)
@@ -51,19 +61,43 @@ class LoginActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(Color(0xFFF2E3DB)) // Hex color))
                 ) {
-                    LoginScreen()
+                    databaseReference = FirebaseDatabase.getInstance("https://celestia-9771e-default-rtdb.asia-southeast1.firebasedatabase.app/").getReference().child("users")
+                    LoginScreen(loginUser = ::loginUser)
                 }
             }
         }
     }
+
+    private fun loginUser(username: String, password: String) {
+        databaseReference.orderByChild("username").equalTo(username).addListenerForSingleValueEvent(object : ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    for (userSnapshot in snapshot.children) {
+                        val userData = userSnapshot.getValue(UserData::class.java)
+
+                        if (userData != null && userData.password == password) {
+                            Toast.makeText(this@LoginActivity, "Login Successful", Toast.LENGTH_SHORT).show()
+                            startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                            finish()
+                            return
+                        }
+                    }
+                } else {
+                    Toast.makeText(this@LoginActivity, "Login Failed", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(this@LoginActivity, "Database Error: ${error.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
 }
 
-@Preview
 @Composable
-fun LoginScreen() {
+fun LoginScreen(loginUser: (String, String) -> Unit) {
 
     val MAX_CHARACTERS = 25
-    val auth = FirebaseAuth.getInstance()
     var showDialog by remember { mutableStateOf(false) }
     var errorDialogMessage by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
@@ -118,16 +152,7 @@ fun LoginScreen() {
                     errorDialogMessage = "Failed"
                     showDialog = true
                 } else {
-                    auth.signInWithEmailAndPassword(username, password)
-                        .addOnCompleteListener { login ->
-                            showDialog = true
-                            if(login.isSuccessful) {
-                                errorDialogMessage = ""
-                                val user = auth.currentUser
-                            } else {
-                                errorDialogMessage = "Failed"
-                            }
-                        }
+                    loginUser(username, password)
                 }
             },
             modifier = Modifier
@@ -158,6 +183,15 @@ fun LoginScreen() {
         Text(text = "Forgot Password?", fontSize = 13.sp, modifier = Modifier.clickable {  })
         Spacer(modifier = Modifier.height(85.dp))
         Text(text = "Don't have an account?", fontSize = 15.sp, modifier = Modifier.clickable {  })
-        Text(text = "Register Now!", fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable {  })
+        val context = LocalContext.current
+        Text(
+            text = "Register Now!",
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.clickable {
+                val intent = Intent(context, RegisterActivity::class.java)
+                context.startActivity(intent)
+                (context as? ComponentActivity)?.finish()
+            })
     }
 }

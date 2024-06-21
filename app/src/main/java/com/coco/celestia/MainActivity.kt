@@ -1,5 +1,6 @@
 package com.coco.celestia
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -26,6 +27,7 @@ class MainActivity : ComponentActivity() {
                         .background(Color(0xFFF2E3DB)) // Hex color))
                 ) {
                     HomeScreen()
+//                    startActivity(Intent(this, LoginActivity::class.java))
                 }
             }
         }
