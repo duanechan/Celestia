@@ -4,10 +4,12 @@ import android.annotation.SuppressLint
 import android.graphics.drawable.Icon
 import android.os.Bundle
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.rounded.Menu
@@ -39,6 +42,8 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -108,8 +113,9 @@ fun NavDrawer(){
                 Box(modifier = Modifier
                     .background(Pink40)
                     .fillMaxWidth()
-                    .height(150.dp)){
-                    Text(text = "")
+                    .height(150.dp)
+                ){
+                    Text(text = "Admin User1")
                 }
                 Divider()
                 NavigationDrawerItem(
@@ -162,6 +168,18 @@ fun NavDrawer(){
                         navigationController.navigate(Screen.Admin.route){
                             popUpTo(0)
                         }
+                    })
+
+                NavigationDrawerItem(
+                    label = { Text(text = "Logout", color = Orange) },
+                    selected = false,
+                    icon = { Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Logout", tint = DarkGreen)},
+                    onClick = {
+                        coroutineScope.launch {
+                            drawerState.close()
+                        }
+                        //Initial
+                        Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
                     })
             }
         }) {
