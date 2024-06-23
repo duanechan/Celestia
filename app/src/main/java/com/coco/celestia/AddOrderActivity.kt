@@ -21,6 +21,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,11 +31,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.ui.theme.CelestiaTheme
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.getValue
+import java.util.Locale
 
 class AddOrderActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,7 +75,7 @@ fun AddOrderPanel(navController: NavController) {
             modifier = Modifier
                 .size(width = 300.dp, height = 150.dp)
                 .clickable {
-                    navController.navigate(Screen.OrderDetails.createRoute(ProductType.COFFEE))
+                    navController.navigate(Screen.OrderDetails.createRoute("Coffee"))
                 }
         ) {
             Text(text = "Coffee", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
@@ -77,7 +86,7 @@ fun AddOrderPanel(navController: NavController) {
             modifier = Modifier
                 .size(width = 300.dp, height = 150.dp)
                 .clickable {
-                    navController.navigate(Screen.OrderDetails.createRoute(ProductType.MEAT))
+                    navController.navigate(Screen.OrderDetails.createRoute("Meat"))
                 }
         ) {
             Text(text = "Meat", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
@@ -88,7 +97,7 @@ fun AddOrderPanel(navController: NavController) {
             modifier = Modifier
                 .size(width = 300.dp, height = 150.dp)
                 .clickable {
-                    navController.navigate(Screen.OrderDetails.createRoute(ProductType.VEGETABLE))
+                    navController.navigate(Screen.OrderDetails.createRoute("Vegetable"))
                 }
         ) {
             Text(text = "Vegetable", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
@@ -98,65 +107,92 @@ fun AddOrderPanel(navController: NavController) {
 }
 
 @Composable
-fun OrderDetailsPanel(navController: NavController, productType: ProductType?) {
+fun OrderDetailsPanel(navController: NavController, product: String?) {
     var productQty by remember { mutableStateOf("") }
+    var productList by remember { mutableStateOf(mapOf<String, Int>()) }
+    var databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("products")
 
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text =
-            when (productType) {
-                ProductType.COFFEE -> "Coffee"
-                ProductType.MEAT -> "Meat"
-                else -> "Vegetable"
-            },
+            text = product.toString(),
             fontSize = 25.sp)
         Spacer(modifier = Modifier.height(150.dp))
-        when (productType) {
-            ProductType.COFFEE -> {
-                Card(
-                    modifier = Modifier
-                        .size(width = 300.dp, height = 150.dp)
-                        .clickable {
-                            navController.navigate(Screen.OrderConfirmation.createRoute(productType, 1))
-                        }
-                ) {
-                    Text(text = "Green Beans", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(20.dp))
+        OrderDetails(navController, product, productList, databaseReference) {
+            productList = it
+        }
+    }
+}
+
+fun fetchProductList(databaseReference: DatabaseReference, product: String?, onProductsFetched: (Map<String, Int>) -> Unit) {
+    databaseReference.child(product.toString()).addListenerForSingleValueEvent(object : ValueEventListener {
+        override fun onDataChange(snapshot: DataSnapshot) {
+            val productList = snapshot.children.mapNotNull { snapshot ->
+                val key = snapshot.key
+                val value = snapshot.getValue<Int>()
+                if (key != null && value != null) {
+                    key to value
+                } else {
+                    null
                 }
-                Spacer(modifier = Modifier.height(15.dp))
-                Card(
-                    modifier = Modifier
-                        .size(width = 300.dp, height = 150.dp)
-                        .clickable {
-                            navController.navigate(Screen.OrderConfirmation.createRoute(productType, 2))
-                        }
-                ) {
-                    Text(text = "Parchment", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(20.dp))
-                }
-                Spacer(modifier = Modifier.height(15.dp))
-                Card(
-                    modifier = Modifier
-                        .size(width = 300.dp, height = 150.dp)
-                        .clickable {
-                            navController.navigate(Screen.OrderConfirmation.createRoute(productType, 3))
-                        }
-                ) {
-                    Text(text = "Packed Coffee", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(20.dp))
-                }
+            }.toMap()
+            onProductsFetched(productList)
+        }
+
+        override fun onCancelled(error: DatabaseError) {
+
+        }
+    })
+}
+
+@Composable
+fun OrderDetails(navController: NavController, product: String?, productList: Map<String, Int>,
+                 databaseReference: DatabaseReference, onProductsFetched: (Map<String, Int>) -> Unit) {
+    when (product) {
+        "Coffee" -> {
+            LaunchedEffect(Unit) {
+                fetchProductList(databaseReference, "coffee", onProductsFetched)
             }
-            ProductType.MEAT -> {
-                Text(text = "Meat Panel", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
+        }
+        "Meat" -> {
+            LaunchedEffect(Unit) {
+                fetchProductList(databaseReference, "meat", onProductsFetched)
+            }
+        }
+        else -> {
+            LaunchedEffect(Unit) {
+                fetchProductList(databaseReference, "vegetable", onProductsFetched)
+            }
+        }
+    }
+    DisplayProductList(navController, productList, product)
+}
+
+@Composable
+fun DisplayProductList(navController: NavController, productList: Map<String, Int>, product: String?) {
+    var x = 1
+    var productType: String
+    var productQty: Int
+    if (productList.isNotEmpty()) {
+        for ((type, quantity) in productList) {
+            productType = type.replace("_", " ")
+                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
+            productQty = quantity
+            Card(
+                modifier = Modifier
+                    .size(width = 300.dp, height = 150.dp)
+                    .clickable {
+                        navController.navigate(Screen.OrderConfirmation.createRoute(product.toString(), x))
+                    }
+            ) {
+                Text(text = productType, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(20.dp))
+                Text(text = productQty.toString(), fontSize = 20.sp, modifier = Modifier.padding(20.dp))
             }
-            else -> {
-                Text(text = "Vegetable Panel", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(20.dp))
-            }
+            Spacer(modifier = Modifier.height(15.dp))
+            x++
         }
 
     }

@@ -16,11 +16,10 @@ fun AddOrderNav(navController: NavHostController) {
         composable(Screen.AddOrder.route) { AddOrderPanel(navController) }
         composable(
             route = Screen.OrderDetails.route,
-            arguments = listOf(navArgument("productType") { type = NavType.StringType })
+            arguments = listOf(navArgument("product") { type = NavType.StringType })
         ) { backStack ->
-            val productType = backStack.arguments?.getString("productType")
-                ?.let { ProductType.valueOf(it) }
-            OrderDetailsPanel(navController, productType)
+            val product = backStack.arguments?.getString("product")
+            OrderDetailsPanel(navController, product)
         }
         composable(
             route = Screen.OrderConfirmation.route,
