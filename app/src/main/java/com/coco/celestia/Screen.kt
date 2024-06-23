@@ -11,6 +11,7 @@ sealed class Screen(val route: String) {
     object OrderConfirmation : Screen("add_order/{productType}/{orderType}") {
         fun createRoute(productType: ProductType, orderType: Int) = "add_order/$productType/$orderType"
     }
+    object Admin: Screen(route = "admin_dashboard")
 }
 
 // TODO: Add more screens or separate them by making another Screen class here
