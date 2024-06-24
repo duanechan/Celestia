@@ -4,31 +4,41 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.toUpperCase
@@ -44,6 +54,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.getValue
 import java.util.Locale
+import kotlin.math.exp
 
 class AddOrderActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -172,31 +183,117 @@ fun OrderDetails(navController: NavController, product: String?, productList: Ma
 
 @Composable
 fun DisplayProductList(navController: NavController, productList: Map<String, Int>, product: String?) {
-    var x = 1
-    var productType: String
-    var productQty: Int
+    val quantities = remember { mutableStateMapOf<String, Int>().apply { putAll(productList) } }
+
     if (productList.isNotEmpty()) {
-        for ((type, quantity) in productList) {
-            productType = type.replace("_", " ")
+        var x = 1
+        productList.forEach { (type, quantity) ->
+            val productType = type.replace("_", " ")
                 .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
-            productQty = quantity
+
             Card(
                 modifier = Modifier
-                    .size(width = 300.dp, height = 150.dp)
-                    .clickable {
-                        navController.navigate(Screen.OrderConfirmation.createRoute(product.toString(), x))
-                    }
+                    .padding(vertical = 8.dp)
+                    .animateContentSize()
             ) {
-                Text(text = productType, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(20.dp))
-                Text(text = productQty.toString(), fontSize = 20.sp, modifier = Modifier.padding(20.dp))
+                var expanded by remember { mutableStateOf(false) }
+                Column(
+                    Modifier
+                        .clickable { expanded = !expanded }
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = productType,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                    Text(
+                        text = "${quantity}kg",
+                        fontSize = 20.sp,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                    AnimatedVisibility(expanded) {
+                        QuantitySelector(
+                            productQty = quantities[type] ?: 0,
+                            onQuantityChange = { newQty ->
+                                quantities[type] = newQty
+                            },
+                            navController = navController,
+                            product = product,
+                            productType = x
+                        )
+                    }
+                }
             }
-            Spacer(modifier = Modifier.height(15.dp))
             x++
         }
-
     }
 }
+
+@Composable
+fun QuantitySelector(productQty: Int, navController: NavController, onQuantityChange: (Int) -> Unit,
+                     product: String?, productType: Int?) {
+    var quantity by remember { mutableStateOf(productQty) }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .padding(16.dp)
+            .background(Color(0xFFFFF3E0), shape = RoundedCornerShape(24.dp))
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(vertical = 8.dp)
+        ) {
+            Button(
+                onClick = { if (quantity > 0) quantity-- },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252)),
+                modifier = Modifier.size(48.dp)
+            ) {
+                Text("-", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Bold)
+            }
+
+            Text(
+                text = "${quantity}kg",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            Button(
+                onClick = { if (quantity < productQty) quantity++ },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF66BB6A)),
+                modifier = Modifier.size(48.dp)
+            ) {
+                Text("+", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Bold)
+            }
+            Column {
+                Button(
+                    onClick = {
+                        navController.navigate(Screen.OrderConfirmation.createRoute(product.toString(), productType!!))
+                    }
+                ) {
+                    Text("Add Order", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        Text(
+            text = "Qty of Order",
+            fontSize = 14.sp,
+            color = Color.Gray,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+    }
+
+    LaunchedEffect(quantity) {
+        onQuantityChange(quantity)
+    }
+}
+
 
 @Composable
 fun ConfirmOrderRequestPanel(navController: NavController, orderType: Int?) {
