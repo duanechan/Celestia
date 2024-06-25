@@ -245,7 +245,6 @@ fun QuantitySelector(productQty: Int, navController: NavController, onQuantityCh
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
             modifier = Modifier.padding(vertical = 8.dp)
         ) {
             Button(
@@ -270,14 +269,15 @@ fun QuantitySelector(productQty: Int, navController: NavController, onQuantityCh
             ) {
                 Text("+", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Bold)
             }
-            Column {
-                Button(
-                    onClick = {
-                        navController.navigate(Screen.OrderConfirmation.createRoute(product.toString(), productType!!))
-                    }
-                ) {
-                    Text("Add Order", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        }
+
+        Column {
+            Button(
+                onClick = {
+                    navController.navigate(Screen.OrderConfirmation.createRoute(product.toString(), productType!!))
                 }
+            ) {
+                Text("Add Order", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
         }
 
