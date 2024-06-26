@@ -1,5 +1,7 @@
 package com.coco.celestia
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -7,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AddOrderNav(navController: NavHostController) {
     NavHost(
@@ -23,10 +26,15 @@ fun AddOrderNav(navController: NavHostController) {
         }
         composable(
             route = Screen.OrderConfirmation.route,
-            arguments = listOf(navArgument("orderType") { type = NavType.IntType })
+            arguments = listOf(
+                navArgument("product") { type = NavType.StringType },
+                navArgument("type") { type = NavType.StringType },
+                navArgument("quantity") { type = NavType.IntType })
         ) { backStack ->
-            val orderType = backStack.arguments?.getInt("orderType")
-            ConfirmOrderRequestPanel(navController, orderType)
+            val product = backStack.arguments?.getString("product")
+            val type = backStack.arguments?.getString("type")
+            val quantity = backStack.arguments?.getInt("quantity")
+            ConfirmOrderRequestPanel(navController, product, type, quantity)
         }
     }
 }

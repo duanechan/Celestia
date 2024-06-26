@@ -8,8 +8,9 @@ sealed class Screen(val route: String) {
     object OrderDetails : Screen("add_order/{product}") {
         fun createRoute(product: String) = "add_order/$product"
     }
-    object OrderConfirmation : Screen("add_order/{product}/{orderType}") {
-        fun createRoute(product: String, orderType: Int) = "add_order/$product/$orderType"
+    object OrderConfirmation : Screen("add_order/{product}/{type}-{quantity}") {
+        fun createRoute(product: String, type: String, quantity: Int) =
+            "add_order/$product/$type-$quantity"
     }
     object Admin: Screen(route = "admin_dashboard")
 }

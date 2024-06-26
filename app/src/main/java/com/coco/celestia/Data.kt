@@ -11,11 +11,10 @@ data class UserData(
 )
 
 data class OrderData(
-    val orderId: Long,
-    val clientName: String,
-    val orderDate: Date,
+    var orderDate: Date,
     val product: String,
-    val productType: String,
+    val type: String,
+    val quantity: Int,
     val city: String,
     val postalCode: Int,
     val barangay: String,
