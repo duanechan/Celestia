@@ -1,9 +1,13 @@
 package com.coco.celestia
 
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -27,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,6 +49,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.ui.theme.CelestiaTheme
@@ -53,8 +59,9 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.getValue
+import java.time.Instant
+import java.util.Date
 import java.util.Locale
-import kotlin.math.exp
 
 class AddOrderActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -119,9 +126,8 @@ fun AddOrderPanel(navController: NavController) {
 
 @Composable
 fun OrderDetailsPanel(navController: NavController, product: String?) {
-    var productQty by remember { mutableStateOf("") }
     var productList by remember { mutableStateOf(mapOf<String, Int>()) }
-    var databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("products")
+    val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("products")
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -186,7 +192,6 @@ fun DisplayProductList(navController: NavController, productList: Map<String, In
     val quantities = remember { mutableStateMapOf<String, Int>().apply { putAll(productList) } }
 
     if (productList.isNotEmpty()) {
-        var x = 1
         productList.forEach { (type, quantity) ->
             val productType = type.replace("_", " ")
                 .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
@@ -215,26 +220,28 @@ fun DisplayProductList(navController: NavController, productList: Map<String, In
                     )
                     AnimatedVisibility(expanded) {
                         QuantitySelector(
-                            productQty = quantities[type] ?: 0,
                             onQuantityChange = { newQty ->
                                 quantities[type] = newQty
                             },
                             navController = navController,
                             product = product,
-                            productType = x
+                            productType = productType
                         )
                     }
                 }
             }
-            x++
         }
     }
 }
 
 @Composable
-fun QuantitySelector(productQty: Int, navController: NavController, onQuantityChange: (Int) -> Unit,
-                     product: String?, productType: Int?) {
-    var quantity by remember { mutableStateOf(productQty) }
+fun QuantitySelector(
+    navController: NavController,
+    onQuantityChange: (Int) -> Unit,
+    product: String?,
+    productType: String?
+) {
+    var quantity by remember { mutableIntStateOf(0) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -248,7 +255,10 @@ fun QuantitySelector(productQty: Int, navController: NavController, onQuantityCh
             modifier = Modifier.padding(vertical = 8.dp)
         ) {
             Button(
-                onClick = { if (quantity > 0) quantity-- },
+                onClick = {
+                    if (quantity > 0)
+                        quantity--
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252)),
                 modifier = Modifier.size(48.dp)
             ) {
@@ -256,14 +266,17 @@ fun QuantitySelector(productQty: Int, navController: NavController, onQuantityCh
             }
 
             Text(
-                text = "${quantity}kg",
+                text = "$quantity kg",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
 
             Button(
-                onClick = { if (quantity < productQty) quantity++ },
+                onClick = {
+                    if (quantity < 500)
+                        quantity++
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF66BB6A)),
                 modifier = Modifier.size(48.dp)
             ) {
@@ -271,14 +284,12 @@ fun QuantitySelector(productQty: Int, navController: NavController, onQuantityCh
             }
         }
 
-        Column {
-            Button(
-                onClick = {
-                    navController.navigate(Screen.OrderConfirmation.createRoute(product.toString(), productType!!))
-                }
-            ) {
-                Text("Add Order", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Button(
+            onClick = {
+                navController.navigate(Screen.OrderConfirmation.createRoute(product.toString(), productType.toString(), quantity))
             }
+        ) {
+            Text("Add Order", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
 
         Text(
@@ -295,8 +306,9 @@ fun QuantitySelector(productQty: Int, navController: NavController, onQuantityCh
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ConfirmOrderRequestPanel(navController: NavController, orderType: Int?) {
+fun ConfirmOrderRequestPanel(navController: NavController, product: String?, type: String?, quantity: Int?) {
     var city by remember { mutableStateOf("") }
     var postalCode by remember { mutableStateOf("") }
     var barangay by remember { mutableStateOf("") }
@@ -379,12 +391,18 @@ fun ConfirmOrderRequestPanel(navController: NavController, orderType: Int?) {
                     && streetAndNumber.isNotEmpty()
                     && additionalInfo.isNotEmpty()
                 ) {
-                    Toast.makeText(
-                        navController.context,
-                        "Order Success",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    // TODO: Database function goes here
+                    val order = OrderData(
+                        Date.from(Instant.now()),
+                        product.toString(),
+                        type.toString(),
+                        quantity!!,
+                        city,
+                        postalCode.toInt(),
+                        barangay,
+                        streetAndNumber,
+                        additionalInfo
+                    )
+                    placeOrder(navController, order)
                 } else {
                     Toast.makeText(
                         navController.context,
@@ -399,4 +417,16 @@ fun ConfirmOrderRequestPanel(navController: NavController, orderType: Int?) {
             Text(text = "Submit")
         }
     }
+}
+
+private fun placeOrder(navController: NavController, order: OrderData) {
+    val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("orders")
+    databaseReference.push().setValue(order)
+        .addOnCompleteListener{
+            Toast.makeText(navController.context, "Order Placed", Toast.LENGTH_SHORT).show()
+            navController.navigate(Screen.AddOrder.route)
+        }
+        .addOnFailureListener{
+            Toast.makeText(navController.context, "Error: ${it.message}", Toast.LENGTH_SHORT).show()
+        }
 }
