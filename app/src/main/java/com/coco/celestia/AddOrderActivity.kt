@@ -143,7 +143,7 @@ fun OrderDetailsPanel(navController: NavController, product: String?) {
     }
 }
 
-fun fetchProductList(databaseReference: DatabaseReference, product: String?, onProductsFetched: (Map<String, Int>) -> Unit) {
+private fun fetchProductList(databaseReference: DatabaseReference, product: String?, onProductsFetched: (Map<String, Int>) -> Unit) {
     databaseReference.child(product.toString()).addListenerForSingleValueEvent(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
             val productList = snapshot.children.mapNotNull { snapshot ->
@@ -392,7 +392,7 @@ fun ConfirmOrderRequestPanel(navController: NavController, product: String?, typ
                     && additionalInfo.isNotEmpty()
                 ) {
                     val order = OrderData(
-                        Date.from(Instant.now()),
+                        Date.from(Instant.now()).toString(),
                         product.toString(),
                         type.toString(),
                         quantity!!,
