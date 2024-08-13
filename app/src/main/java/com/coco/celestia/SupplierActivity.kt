@@ -175,7 +175,7 @@ fun SupplierNavDrawer(){
         Scaffold(
             topBar = {
                 val coroutineScope = rememberCoroutineScope()
-                TopAppBar(title = { Text(text = "Dashboard")},
+                TopAppBar(title = { Text(text = "Supplier User 1")},
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Orange,
                         titleContentColor = Color.White,
