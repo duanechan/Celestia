@@ -11,13 +11,13 @@ data class UserData(
 )
 
 data class OrderData(
-    var orderDate: Date,
-    val product: String,
-    val type: String,
-    val quantity: Int,
-    val city: String,
-    val postalCode: Int,
-    val barangay: String,
-    val street: String,
-    val additionalInfo: String
+    var orderDate: String = "",
+    val product: String = "",
+    val type: String = "",
+    val quantity: Int = 0,
+    val city: String = "",
+    val postalCode: Int = 0,
+    val barangay: String = "",
+    val street: String = "",
+    val additionalInfo: String = ""
 )
