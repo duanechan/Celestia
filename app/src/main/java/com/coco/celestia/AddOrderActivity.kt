@@ -143,18 +143,17 @@ fun OrderDetailsPanel(navController: NavController, product: String?) {
     }
 }
 
-private fun fetchProductList(databaseReference: DatabaseReference, product: String?, onProductsFetched: (Map<String, Int>) -> Unit) {
-    databaseReference.child(product.toString()).addListenerForSingleValueEvent(object : ValueEventListener {
+private fun fetchProductList(
+    databaseReference: DatabaseReference,
+    product: String?,
+    onProductsFetched: (Map<String, Int>) -> Unit
+) {
+    databaseReference.orderByChild("type").equalTo(product).addListenerForSingleValueEvent(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
-            val productList = snapshot.children.mapNotNull { snapshot ->
-                val key = snapshot.key
-                val value = snapshot.getValue<Int>()
-                if (key != null && value != null) {
-                    key to value
-                } else {
-                    null
-                }
-            }.toMap()
+            val productList = snapshot.children.mapNotNull {
+                it.key?.let { key -> key to it.child("quantity").getValue(Int::class.java) }
+            }
+                .filter { it.second != null }.associate { it.first to it.second!! }
             onProductsFetched(productList)
         }
 
@@ -163,6 +162,7 @@ private fun fetchProductList(databaseReference: DatabaseReference, product: Stri
         }
     })
 }
+
 
 @Composable
 fun OrderDetails(navController: NavController, product: String?, productList: Map<String, Int>,

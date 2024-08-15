@@ -44,7 +44,6 @@ fun OrderPanel() {
     var orderList by remember { mutableStateOf<List<OrderData>>(emptyList()) }
     var isError by remember { mutableStateOf(false) }
 
-    // Fetch orders when the composable is first composed
     LaunchedEffect(Unit) {
         fetchOrderList(
             onSuccess = { orders ->
