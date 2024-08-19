@@ -1,7 +1,5 @@
 package com.coco.celestia
 
-import java.util.Date
-
 data class UserData(
     val email: String,
     val username: String,
@@ -11,7 +9,9 @@ data class UserData(
 )
 
 data class OrderData(
-    var orderDate: String = "",
+    val orderId: String = "",
+    val orderDate: String = "",
+    val status: String = "",
     val product: String = "",
     val type: String = "",
     val quantity: Int = 0,

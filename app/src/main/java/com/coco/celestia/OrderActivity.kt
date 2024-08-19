@@ -1,6 +1,7 @@
 package com.coco.celestia
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -21,6 +22,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlin.reflect.full.memberProperties
 
 class OrderActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,7 +70,6 @@ fun OrderPanel() {
 
 @Composable
 fun OrderItem(order: OrderData) {
-    // TODO: @Earl @Ron 🥹👉👈 design the order item?
     Text(text = "Product: ${order.product}")
     Text(text = "Quantity: ${order.quantity}")
     Text(text = "City: ${order.city}")
@@ -81,7 +82,8 @@ fun OrderItem(order: OrderData) {
     Spacer(modifier = Modifier.height(8.dp))
 }
 
-private fun fetchOrderList(
+fun fetchOrderList(
+    filter: String = "Coffee, Meat",
     onSuccess: (List<OrderData>) -> Unit,
     onError: () -> Unit
 ) {
@@ -90,10 +92,21 @@ private fun fetchOrderList(
     databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
             try {
+                val filterKeywords = filter.split(",").map { it.trim() }
+
                 val orderList = snapshot.children.mapNotNull { child ->
                     val orderData = child.getValue(OrderData::class.java)
                     orderData?.copy(orderDate = orderData.orderDate)
+                }.filter { orderData ->
+                    val matches = filterKeywords.any { keyword ->
+                        OrderData::class.memberProperties.any { prop ->
+                            val value = prop.get(orderData)
+                            value?.toString()?.contains(keyword, ignoreCase = true) == true
+                        }
+                    }
+                    matches
                 }
+
                 onSuccess(orderList)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -107,4 +120,3 @@ private fun fetchOrderList(
         }
     })
 }
-

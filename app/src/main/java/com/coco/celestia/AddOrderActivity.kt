@@ -52,9 +52,11 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import java.time.Instant
 import java.util.Date
+import java.util.UUID
 import java.util.Locale
 
 class AddOrderActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -156,8 +158,12 @@ fun fetchProductByType(
 
 
 @Composable
-fun OrderDetails(navController: NavController, product: String?, productList: Map<String, Int>,
-                 databaseReference: DatabaseReference, onProductsFetched: (Map<String, Int>) -> Unit) {
+fun OrderDetails(
+    navController: NavController,
+    product: String?, productList: Map<String, Int>,
+    databaseReference: DatabaseReference,
+    onProductsFetched: (Map<String, Int>) -> Unit
+) {
     when (product) {
         "Coffee" -> {
             LaunchedEffect(Unit) {
@@ -383,7 +389,9 @@ fun ConfirmOrderRequestPanel(navController: NavController, product: String?, typ
                     && additionalInfo.isNotEmpty()
                 ) {
                     val order = OrderData(
+                        UUID.randomUUID().toString(),
                         Date.from(Instant.now()).toString(),
+                        "PENDING",
                         product.toString(),
                         type.toString(),
                         quantity!!,
