@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -27,6 +29,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -78,69 +81,67 @@ class AddOrderActivity : ComponentActivity() {
 fun AddOrderPanel(navController: NavController) {
     Column(
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
     ) {
         Text(text = "Add Order", fontSize = 25.sp)
         Spacer(modifier = Modifier.height(150.dp))
-        Card(
+        ProductCard("Coffee", navController)
+        ProductCard("Meat", navController)
+        ProductCard("Vegetable", navController)
+    }
+}
+
+@Composable
+fun ProductCard(product: String, navController: NavController) {
+    Card(
+        modifier = Modifier
+            .height(150.dp)
+            .clickable {
+                navController.navigate(Screen.OrderDetails.createRoute(product))
+            }
+    ) {
+        Column(
             modifier = Modifier
-                .size(width = 300.dp, height = 150.dp)
-                .clickable {
-                    navController.navigate(Screen.OrderDetails.createRoute("Coffee"))
-                }
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
-            Text(text = "Coffee", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(20.dp))
-        }
-        Spacer(modifier = Modifier.height(15.dp))
-        Card(
-            modifier = Modifier
-                .size(width = 300.dp, height = 150.dp)
-                .clickable {
-                    navController.navigate(Screen.OrderDetails.createRoute("Meat"))
-                }
-        ) {
-            Text(text = "Meat", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(20.dp))
-        }
-        Spacer(modifier = Modifier.height(15.dp))
-        Card(
-            modifier = Modifier
-                .size(width = 300.dp, height = 150.dp)
-                .clickable {
-                    navController.navigate(Screen.OrderDetails.createRoute("Vegetable"))
-                }
-        ) {
-            Text(text = "Vegetable", fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
+            Text(text = product, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.padding(20.dp))
         }
     }
+    Spacer(modifier = Modifier.height(15.dp))
 }
 
 @Composable
 fun OrderDetailsPanel(navController: NavController, product: String?) {
     var productList by remember { mutableStateOf(mapOf<String, Int>()) }
-    val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("products")
 
     Column(
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
     ) {
         Text(
             text = product.toString(),
             fontSize = 25.sp)
         Spacer(modifier = Modifier.height(150.dp))
-        OrderDetails(navController, product, productList, databaseReference) {
+        OrderDetails(navController, product, productList) {
             productList = it
         }
     }
 }
 
 fun fetchProductByType(
-    databaseReference: DatabaseReference,
     product: String?,
     onProductsFetched: (Map<String, Int>) -> Unit
 ) {
+    val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("products")
+
     databaseReference.orderByChild("type").equalTo(product).addListenerForSingleValueEvent(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
             val productList = snapshot.children.mapNotNull {
@@ -160,24 +161,24 @@ fun fetchProductByType(
 @Composable
 fun OrderDetails(
     navController: NavController,
-    product: String?, productList: Map<String, Int>,
-    databaseReference: DatabaseReference,
+    product: String?,
+    productList: Map<String, Int>,
     onProductsFetched: (Map<String, Int>) -> Unit
 ) {
     when (product) {
         "Coffee" -> {
             LaunchedEffect(Unit) {
-                fetchProductByType(databaseReference, "coffee", onProductsFetched)
+                fetchProductByType("coffee", onProductsFetched)
             }
         }
         "Meat" -> {
             LaunchedEffect(Unit) {
-                fetchProductByType(databaseReference, "meat", onProductsFetched)
+                fetchProductByType("meat", onProductsFetched)
             }
         }
         else -> {
             LaunchedEffect(Unit) {
-                fetchProductByType(databaseReference, "vegetable", onProductsFetched)
+                fetchProductByType("vegetable", onProductsFetched)
             }
         }
     }
@@ -192,11 +193,11 @@ fun DisplayProductList(navController: NavController, productList: Map<String, In
         productList.forEach { (type, quantity) ->
             val productType = type.replace("_", " ")
                 .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
-
             Card(
                 modifier = Modifier
-                    .padding(vertical = 8.dp)
+                    .padding(vertical = 16.dp)
                     .animateContentSize()
+                    .fillMaxWidth()
             ) {
                 var expanded by remember { mutableStateOf(false) }
                 Column(
@@ -222,7 +223,8 @@ fun DisplayProductList(navController: NavController, productList: Map<String, In
                             },
                             navController = navController,
                             product = product,
-                            productType = productType
+                            productType = productType,
+                            maxQuantity = quantity
                         )
                     }
                 }
@@ -236,7 +238,8 @@ fun QuantitySelector(
     navController: NavController,
     onQuantityChange: (Int) -> Unit,
     product: String?,
-    productType: String?
+    productType: String?,
+    maxQuantity: Int
 ) {
     var quantity by remember { mutableIntStateOf(0) }
 
@@ -249,7 +252,9 @@ fun QuantitySelector(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(vertical = 8.dp)
+            modifier = Modifier
+                .padding(vertical = 8.dp)
+                .fillMaxWidth()
         ) {
             Button(
                 onClick = {
@@ -257,25 +262,31 @@ fun QuantitySelector(
                         quantity--
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252)),
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier
+                    .size(48.dp)
+                    .fillMaxWidth()
             ) {
                 Text("-", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Bold)
             }
 
-            Text(
-                text = "$quantity kg",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 16.dp)
+            TextField(
+                value = quantity.toString(),
+                onValueChange = {
+                    quantity = it.toInt()
+                },
+                modifier = Modifier
+                    .width(225.dp)
             )
 
             Button(
                 onClick = {
-                    if (quantity < 500)
+                    if (quantity < maxQuantity)
                         quantity++
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF66BB6A)),
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier
+                    .size(48.dp)
+                    .fillMaxWidth()
             ) {
                 Text("+", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Bold)
             }
