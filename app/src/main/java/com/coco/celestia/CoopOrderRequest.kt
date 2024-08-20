@@ -146,7 +146,8 @@ fun OrderItemDecision(
                     .padding(16.dp)
                     .animateContentSize()
             ) {
-                Text(text = "${order.type}, ${order.quantity}kg", fontSize = 30.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif)
+                Text(text = if (order.product != "Vegetable") "${order.type}, ${order.quantity}kg" else order.type,
+                    fontSize = 30.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif)
                 Text(text = "${order.status} ●", fontSize = 20.sp, fontWeight = FontWeight.Light, color = Orange)
                 Text(text = "${order.street}, ${order.barangay}, ${order.city} ${order.postalCode}")
                 Text(text = order.additionalInfo, fontStyle = FontStyle.Italic)

@@ -26,6 +26,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -57,6 +58,7 @@ import java.time.Instant
 import java.util.Date
 import java.util.UUID
 import java.util.Locale
+import kotlin.math.exp
 
 class AddOrderActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -145,7 +147,13 @@ fun fetchProductByType(
     databaseReference.orderByChild("type").equalTo(product).addListenerForSingleValueEvent(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
             val productList = snapshot.children.mapNotNull {
-                it.key?.let { key -> key to it.child("quantity").getValue(Int::class.java) }
+                it.key?.let { key ->
+                    if (it.child("type").getValue(String::class.java) == "vegetable") {
+                        key to 0
+                    } else {
+                        key to it.child("quantity").getValue(Int::class.java)
+                    }
+                }
             }
                 .filter { it.second != null }.associate { it.first to it.second!! }
             onProductsFetched(productList)
@@ -185,6 +193,7 @@ fun OrderDetails(
     DisplayProductList(navController, productList, product)
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DisplayProductList(navController: NavController, productList: Map<String, Int>, product: String?) {
     val quantities = remember { mutableStateMapOf<String, Int>().apply { putAll(productList) } }
@@ -193,18 +202,39 @@ fun DisplayProductList(navController: NavController, productList: Map<String, In
         productList.forEach { (type, quantity) ->
             val productType = type.replace("_", " ")
                 .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
+            var expanded by remember { mutableStateOf(false) }
+
             Card(
+                onClick = {
+                    if (product.toString() == "Vegetable") {
+                        navController.navigate(
+                            Screen.OrderConfirmation.createRoute(product.toString(), productType, quantity)
+                        )
+                    } else {
+                        expanded = !expanded
+                    }
+                },
                 modifier = Modifier
                     .padding(vertical = 16.dp)
                     .animateContentSize()
                     .fillMaxWidth()
+                    .clickable {
+                        if (product.toString() == "Vegetable") {
+                            navController.navigate(
+                                Screen.OrderConfirmation.createRoute(
+                                    product.toString(),
+                                    productType,
+                                    quantity
+                                )
+                            )
+                        } else {
+                            expanded = !expanded
+                        }
+                    }
             ) {
-                var expanded by remember { mutableStateOf(false) }
                 Column(
-                    Modifier
-                        .clickable { expanded = !expanded }
-                        .padding(16.dp)
-                ) {
+                    modifier = Modifier.padding(16.dp)
+                ) {1
                     Text(
                         text = productType,
                         fontSize = 20.sp,
@@ -212,20 +242,23 @@ fun DisplayProductList(navController: NavController, productList: Map<String, In
                         modifier = Modifier.padding(8.dp)
                     )
                     Text(
-                        text = "${quantity}kg",
+                        text = if (product.toString() != "Vegetable") "${quantity}kg" else "",
                         fontSize = 20.sp,
                         modifier = Modifier.padding(8.dp)
                     )
+
                     AnimatedVisibility(expanded) {
-                        QuantitySelector(
-                            onQuantityChange = { newQty ->
-                                quantities[type] = newQty
-                            },
-                            navController = navController,
-                            product = product,
-                            productType = productType,
-                            maxQuantity = quantity
-                        )
+                        if (product.toString() != "Vegetable") {
+                            QuantitySelector(
+                                onQuantityChange = { newQty ->
+                                    quantities[type] = newQty
+                                },
+                                navController = navController,
+                                product = product,
+                                productType = productType,
+                                maxQuantity = quantity
+                            )
+                        }
                     }
                 }
             }
