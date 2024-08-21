@@ -9,10 +9,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
@@ -98,6 +102,7 @@ fun LoginScreen(loginUser: (String, String) -> Unit) {
     val MAX_CHARACTERS = 25
     var showDialog by remember { mutableStateOf(false) }
     var errorDialogMessage by remember { mutableStateOf("") }
+    var showRegisterDialog by remember { mutableStateOf(false) }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -187,9 +192,76 @@ fun LoginScreen(loginUser: (String, String) -> Unit) {
             fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clickable {
-                val intent = Intent(context, RegisterActivity::class.java)
-                context.startActivity(intent)
-                (context as? ComponentActivity)?.finish()
+                showRegisterDialog = true // Show the register dialog
             })
+        if (showRegisterDialog) {
+            AlertDialog(
+                onDismissRequest = { showRegisterDialog = false },
+                title = { Text(text = "Register As") },
+                text = {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(text = "Choose your role")
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                Button(
+                                    onClick = {
+                                        showRegisterDialog = false
+                                        val intent = Intent(context, RegisterActivity::class.java)
+                                        context.startActivity(intent)
+                                        (context as? ComponentActivity)?.finish()
+                                    }
+                                ) {
+                                    Text(text = "Farmer")
+                                }
+
+                                Button(
+                                    onClick = {
+                                        showRegisterDialog = false
+                                        val intent = Intent(context, RegisterActivity::class.java)
+                                        context.startActivity(intent)
+                                        (context as? ComponentActivity)?.finish()
+                                    }
+                                ) {
+                                    Text(text = "Client")
+                                }
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    // Empty/null
+                },
+                dismissButton = {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Button(
+                            onClick = { showRegisterDialog = false }
+                        ) {
+                            Text(text = "Cancel")
+                        }
+                    }
+                }
+            )
+        }
+
+
+
+
+
     }
 }
+
