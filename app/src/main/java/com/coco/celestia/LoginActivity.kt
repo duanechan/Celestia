@@ -34,17 +34,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import com.google.firebase.initialize
 
 class LoginActivity : ComponentActivity() {
@@ -90,7 +86,7 @@ fun LoginScreen(loginUser: (String, String) -> Unit) {
     val maxCharacters = 25
     var showDialog by remember { mutableStateOf(false) }
     var errorDialogMessage by remember { mutableStateOf("") }
-    var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
     Column(
@@ -106,10 +102,10 @@ fun LoginScreen(loginUser: (String, String) -> Unit) {
         Spacer(modifier = Modifier.height(35.dp))
 
         OutlinedTextField(
-            value = username,
+            value = email,
             onValueChange = {
                 if (it.length <= maxCharacters) {
-                    username = it
+                    email = it
                 }
             },
             label = { Text(text = "Username") },
@@ -138,11 +134,11 @@ fun LoginScreen(loginUser: (String, String) -> Unit) {
 
         Button(
             onClick = {
-                if (username.isEmpty() || password.isEmpty()) {
+                if (email.isEmpty() || password.isEmpty()) {
                     errorDialogMessage = "Failed"
                     showDialog = true
                 } else {
-                    loginUser(username, password)
+                    loginUser(email, password)
                 }
             },
             modifier = Modifier
@@ -157,7 +153,7 @@ fun LoginScreen(loginUser: (String, String) -> Unit) {
                     Text(text = if (errorDialogMessage.isNotEmpty()) "Login Failed" else "Login Successful!")
                 },
                 text = {
-                    Text(text = if (errorDialogMessage.isNotEmpty()) "Try again" else "Welcome back, $username!")
+                    Text(text = if (errorDialogMessage.isNotEmpty()) "Try again" else "Welcome back!")
                 },
                 confirmButton = {
                     Button(

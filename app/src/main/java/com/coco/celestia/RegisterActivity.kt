@@ -64,7 +64,7 @@ class RegisterActivity : ComponentActivity() {
         }
     }
 
-    private fun registerUser(email: String, username: String, firstname: String, lastname: String, password: String) {
+    private fun registerUser(email: String, firstname: String, lastname: String, password: String) {
         val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
         auth.createUserWithEmailAndPassword(email, password)
@@ -72,7 +72,7 @@ class RegisterActivity : ComponentActivity() {
                 if (task.isSuccessful) {
                     val user = auth.currentUser
                     user?.let {
-                        val userData = UserData(email, username, firstname, lastname, password)
+                        val userData = UserData(email, firstname, lastname, password)
 
                         databaseReference.push().setValue(userData)
                             .addOnCompleteListener{
@@ -96,7 +96,7 @@ class RegisterActivity : ComponentActivity() {
 
 
 @Composable
-fun RegisterScreen(registerUser: (String, String, String, String, String) -> Unit, showMessage: (String) -> Unit) {
+fun RegisterScreen(registerUser: (String, String, String, String) -> Unit, showMessage: (String) -> Unit) {
 
     val maxChar = 25
     var showDialog by remember { mutableStateOf(false) }
@@ -104,7 +104,6 @@ fun RegisterScreen(registerUser: (String, String, String, String, String) -> Uni
     var email by remember { mutableStateOf("") }
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
-    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
 
@@ -127,20 +126,6 @@ fun RegisterScreen(registerUser: (String, String, String, String, String) -> Uni
                 }
             },
             label = { Text(text = "Email") },
-            singleLine = true,
-            maxLines = 1
-        )
-
-        Spacer(modifier = Modifier.height(2.dp))
-
-        OutlinedTextField(
-            value = username,
-            onValueChange = {
-                if (it.length <= maxChar) {
-                    username = it
-                }
-            },
-            label = { Text(text = "Username") },
             singleLine = true,
             maxLines = 1
         )
@@ -209,8 +194,8 @@ fun RegisterScreen(registerUser: (String, String, String, String, String) -> Uni
 
         Button(
             onClick = {
-                if (email.isNotEmpty() && username.isNotEmpty() && firstName.isNotEmpty() && lastName.isNotEmpty() && password.isNotEmpty()) {
-                    registerUser(email, username, firstName, lastName, password)
+                if (email.isNotEmpty() && firstName.isNotEmpty() && lastName.isNotEmpty() && password.isNotEmpty()) {
+                    registerUser(email, firstName, lastName, password)
                 } else {
                     showMessage("All fields must be filled.")
                 }
@@ -227,7 +212,7 @@ fun RegisterScreen(registerUser: (String, String, String, String, String) -> Uni
                     Text(text = if (errorDialogMessage.isNotEmpty()) "Registration Failed" else "Registration Successful!")
                 },
                 text = {
-                    Text(text = if (errorDialogMessage.isNotEmpty()) "Try again" else "Welcome, $username!")
+                    Text(text = if (errorDialogMessage.isNotEmpty()) "Try again" else "Welcome!")
                 },
                 confirmButton = {
                     Button(
