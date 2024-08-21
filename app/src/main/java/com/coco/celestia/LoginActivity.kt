@@ -55,11 +55,10 @@ class LoginActivity : ComponentActivity() {
         Firebase.initialize(this)
         setContent {
             CelestiaTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0xFFF2E3DB)) // Hex color))
+                        .background(Color(0xFFF2E3DB))
                 ) {
                     databaseReference = FirebaseDatabase.getInstance().getReference().child("users")
                     LoginScreen(loginUser = ::loginUser)
@@ -95,7 +94,7 @@ class LoginActivity : ComponentActivity() {
 @Composable
 fun LoginScreen(loginUser: (String, String) -> Unit) {
 
-    val MAX_CHARACTERS = 25
+    val maxCharacters = 25
     var showDialog by remember { mutableStateOf(false) }
     var errorDialogMessage by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
@@ -116,7 +115,7 @@ fun LoginScreen(loginUser: (String, String) -> Unit) {
         OutlinedTextField(
             value = username,
             onValueChange = {
-                if (it.length <= MAX_CHARACTERS) {
+                if (it.length <= maxCharacters) {
                     username = it
                 }
             },

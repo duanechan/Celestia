@@ -43,6 +43,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.initialize
+import java.util.UUID
 
 class RegisterActivity : ComponentActivity() {
     private lateinit var databaseReference : DatabaseReference
@@ -52,11 +53,10 @@ class RegisterActivity : ComponentActivity() {
 
         setContent {
             CelestiaTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0xFFF2E3DB)) // Hex color))
+                        .background(Color(0xFFF2E3DB))
                 ) {
                     databaseReference = FirebaseDatabase.getInstance().getReference("users")
                     RegisterScreen(

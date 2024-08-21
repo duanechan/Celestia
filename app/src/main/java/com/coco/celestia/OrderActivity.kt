@@ -48,6 +48,7 @@ fun OrderPanel() {
 
     LaunchedEffect(Unit) {
         fetchOrderList(
+            filter = "Coffee, Meat",
             onSuccess = { orders ->
                 orderList = orders
             },
@@ -83,7 +84,7 @@ fun OrderItem(order: OrderData) {
 }
 
 fun fetchOrderList(
-    filter: String = "Coffee, Meat",
+    filter: String,
     onSuccess: (List<OrderData>) -> Unit,
     onError: () -> Unit
 ) {
