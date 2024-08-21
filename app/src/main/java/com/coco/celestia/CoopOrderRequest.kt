@@ -44,6 +44,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlin.reflect.full.memberProperties
 
 class CoopOrderRequest : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,7 +56,7 @@ class CoopOrderRequest : ComponentActivity() {
                         .fillMaxSize()
                         .background(Color(0xFFF2E3DB))
                 ) {
-                    OrderRequestPanel()
+                    OrderRequestPanel("Coffee, Meat")
                 }
             }
         }
@@ -63,7 +64,7 @@ class CoopOrderRequest : ComponentActivity() {
 }
 
 @Composable
-fun OrderRequestPanel() {
+fun OrderRequestPanel(keywords: String) {
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -75,6 +76,7 @@ fun OrderRequestPanel() {
         Spacer(modifier = Modifier.height(150.dp))
         LaunchedEffect(Unit) {
             listenForOrderUpdates(
+                filter = keywords,
                 onSuccess = { orders ->
                     orderList = orders
                 },
@@ -106,6 +108,7 @@ fun OrderRequestPanel() {
 }
 
 fun listenForOrderUpdates(
+    filter: String,
     onSuccess: (List<OrderData>) -> Unit,
     onError: (Exception) -> Unit
 ) {
@@ -113,9 +116,19 @@ fun listenForOrderUpdates(
 
     databaseReference.addValueEventListener(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
+            val filterKeywords = filter.split(",").map { it.trim() }
+
             val orders = snapshot.children
                 .mapNotNull { it.getValue(OrderData::class.java) }
-                .filter { it.status == "PENDING" }
+                .filter { product ->
+                    val matches = filterKeywords.any { keyword ->
+                        OrderData::class.memberProperties.any { prop ->
+                            val value = prop.get(product)
+                            value?.toString()?.contains(keyword, ignoreCase = true) == true
+                        }
+                    }
+                    matches && product.status == "PENDING"
+                }
             onSuccess(orders)
         }
 
