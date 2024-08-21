@@ -1,5 +1,6 @@
 package com.coco.celestia
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -7,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,6 +24,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.modifier.modifierLocalMapOf
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -59,6 +63,13 @@ fun SupplierInventory() {
             .background(LightGreen)
             .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp)){
                 Text(text = "Inventory", fontSize = 31.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Spacer(modifier = Modifier.weight(1f))
+            Button(onClick = { }) {
+                Image(
+                    painter = painterResource(id = R.drawable.notification_icon),
+                    contentDescription = "Notification Icon",
+                    modifier = Modifier.size(30.dp))
+            }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
