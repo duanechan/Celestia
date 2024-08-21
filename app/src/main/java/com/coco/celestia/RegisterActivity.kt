@@ -32,18 +32,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coco.celestia.ui.theme.CelestiaTheme
-import com.google.firebase.Firebase
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import com.google.firebase.initialize
-import java.util.UUID
+
 
 class RegisterActivity : ComponentActivity() {
     private lateinit var databaseReference : DatabaseReference
@@ -70,16 +65,31 @@ class RegisterActivity : ComponentActivity() {
     }
 
     private fun registerUser(email: String, username: String, firstname: String, lastname: String, password: String) {
-        val userData = UserData(email, username, firstname, lastname, password)
+        val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
-        databaseReference.push().setValue(userData)
-            .addOnCompleteListener{
-                Toast.makeText(this@RegisterActivity, "Register Successful", Toast.LENGTH_SHORT).show()
-                startActivity(Intent(this@RegisterActivity, LoginActivity::class.java))
-                finish()
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
+                    user?.let {
+                        val userData = UserData(email, username, firstname, lastname, password)
+
+                        databaseReference.push().setValue(userData)
+                            .addOnCompleteListener{
+                                Toast.makeText(this@RegisterActivity, "Register Successful", Toast.LENGTH_SHORT).show()
+                                startActivity(Intent(this@RegisterActivity, LoginActivity::class.java))
+                                finish()
+                            }
+                            .addOnFailureListener{
+                                Toast.makeText(this@RegisterActivity, "error ${it.message}", Toast.LENGTH_SHORT).show()
+                            }
+                    }
+                } else {
+                    Toast.makeText(this@RegisterActivity, "Error: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                }
             }
-            .addOnFailureListener{
-                Toast.makeText(this@RegisterActivity, "error ${it.message}", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener {
+                Toast.makeText(this@RegisterActivity, "Error: ${it.message}", Toast.LENGTH_SHORT).show()
             }
     }
 }
@@ -88,7 +98,7 @@ class RegisterActivity : ComponentActivity() {
 @Composable
 fun RegisterScreen(registerUser: (String, String, String, String, String) -> Unit, showMessage: (String) -> Unit) {
 
-    val MAX_CHARACTERS = 25
+    val maxChar = 25
     var showDialog by remember { mutableStateOf(false) }
     val errorDialogMessage by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -112,7 +122,7 @@ fun RegisterScreen(registerUser: (String, String, String, String, String) -> Uni
         OutlinedTextField(
             value = email,
             onValueChange = {
-                if (it.length <= MAX_CHARACTERS) {
+                if (it.length <= maxChar) {
                     email = it
                 }
             },
@@ -126,7 +136,7 @@ fun RegisterScreen(registerUser: (String, String, String, String, String) -> Uni
         OutlinedTextField(
             value = username,
             onValueChange = {
-                if (it.length <= MAX_CHARACTERS) {
+                if (it.length <= maxChar) {
                     username = it
                 }
             },
@@ -140,7 +150,7 @@ fun RegisterScreen(registerUser: (String, String, String, String, String) -> Uni
         OutlinedTextField(
             value = firstName,
             onValueChange = {
-                if (it.length <= MAX_CHARACTERS) {
+                if (it.length <= maxChar) {
                     firstName = it
                 }
             },
@@ -154,7 +164,7 @@ fun RegisterScreen(registerUser: (String, String, String, String, String) -> Uni
         OutlinedTextField(
             value = lastName,
             onValueChange = {
-                if (it.length <= MAX_CHARACTERS) {
+                if (it.length <= maxChar) {
                     lastName = it
                 }
             },
@@ -168,7 +178,7 @@ fun RegisterScreen(registerUser: (String, String, String, String, String) -> Uni
         OutlinedTextField(
             value = password,
             onValueChange = {
-                if (it.length <= MAX_CHARACTERS) {
+                if (it.length <= maxChar) {
                     password = it
                 }
             },
@@ -184,7 +194,7 @@ fun RegisterScreen(registerUser: (String, String, String, String, String) -> Uni
         OutlinedTextField(
             value = confirmPassword,
             onValueChange = {
-                if (it.length <= MAX_CHARACTERS) {
+                if (it.length <= maxChar) {
                     confirmPassword = it
                 }
             },

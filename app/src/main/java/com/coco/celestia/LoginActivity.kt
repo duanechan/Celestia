@@ -67,27 +67,20 @@ class LoginActivity : ComponentActivity() {
         }
     }
 
-    private fun loginUser(username: String, password: String) {
-        databaseReference.orderByChild("username").equalTo(username).addListenerForSingleValueEvent(object : ValueEventListener{
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.exists()) {
-                    for (userSnapshot in snapshot.children) {
-                        if (userSnapshot.child("password").value.toString() == password) {
-                            Toast.makeText(this@LoginActivity, "Login Successful", Toast.LENGTH_SHORT).show()
-                            startActivity(Intent(this@LoginActivity, MainActivity::class.java))
-                            finish()
-                            return
-                        }
-                    }
+    private fun loginUser(email: String, password: String) {
+        FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    Toast.makeText(this@LoginActivity, "Login Successful", Toast.LENGTH_SHORT).show()
+                    startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                    finish()
                 } else {
                     Toast.makeText(this@LoginActivity, "Login Failed", Toast.LENGTH_SHORT).show()
                 }
             }
-
-            override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@LoginActivity, "Database Error: ${error.message}", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener {
+                Toast.makeText(this@LoginActivity, "Login Error: ${it.message}", Toast.LENGTH_SHORT).show()
             }
-        })
     }
 }
 
