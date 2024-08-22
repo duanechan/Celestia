@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,8 +38,14 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.ui.theme.Orange
+import com.coco.celestia.viewmodel.OrderState
+import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.UserState
+import com.coco.celestia.viewmodel.UserViewModel
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -65,78 +72,84 @@ class CoopOrderRequest : ComponentActivity() {
 
 @Composable
 fun OrderRequestPanel(keywords: String) {
+    val orderViewModel: OrderViewModel = viewModel()
+    val orderData by orderViewModel.orderData.observeAsState(emptyList())
+    val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
+    val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    var isError by remember { mutableStateOf(false) }
+
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        var orderList by remember { mutableStateOf<List<OrderData>>(emptyList()) }
-        var isError by remember { mutableStateOf(false) }
-
         Text(text = "Order Request", fontSize = 25.sp)
         Spacer(modifier = Modifier.height(150.dp))
         LaunchedEffect(Unit) {
-            listenForOrderUpdates(
+            orderViewModel.fetchOrders(
+                uid = auth.currentUser?.uid.toString(),
                 filter = keywords,
-                onSuccess = { orders ->
-                    orderList = orders
-                },
-                onError = {
-                    isError = true
-                }
+                onError = { isError = true }
             )
         }
-
-        if (isError) {
-            Text("Failed to load orders.")
-        } else {
-            if (orderList.isEmpty()) Text(text = "Awit man! No pending orders.")
-            LazyColumn {
-                items(orderList) { order ->
-                    OrderItemDecision(
-                        order,
-                        onAccept = {
-                            updateOrderStatus(order, true) {}
-                        },
-                        onReject = {
-                            updateOrderStatus(order, false) {}
-                        }
-                    )
+        when (orderState) {
+            is OrderState.LOADING -> {
+                Text("Loading orders...")
+            }
+            is OrderState.ERROR -> {
+                Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}")
+            }
+            is OrderState.EMPTY -> {
+                Text("Awit man! No pending orders.")
+            }
+            is OrderState.SUCCESS -> {
+                LazyColumn {
+                    items(orderData) { order ->
+                        OrderItemDecision(
+                            order,
+                            onAccept = {
+                                updateOrderStatus(order, true) {}
+                            },
+                            onReject = {
+                                updateOrderStatus(order, false) {}
+                            }
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-fun listenForOrderUpdates(
-    filter: String,
-    onSuccess: (List<OrderData>) -> Unit,
-    onError: (Exception) -> Unit
-) {
-    val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("orders")
-
-    databaseReference.addValueEventListener(object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-            val filterKeywords = filter.split(",").map { it.trim() }
-
-            val orders = snapshot.children
-                .mapNotNull { it.getValue(OrderData::class.java) }
-                .filter { product ->
-                    val matches = filterKeywords.any { keyword ->
-                        OrderData::class.memberProperties.any { prop ->
-                            val value = prop.get(product)
-                            value?.toString()?.contains(keyword, ignoreCase = true) == true
-                        }
-                    }
-                    matches && product.status == "PENDING"
-                }
-            onSuccess(orders)
-        }
-
-        override fun onCancelled(error: DatabaseError) {
-            onError(error.toException())
-        }
-    })
-}
+//fun listenForOrderUpdates(
+//    filter: String,
+//    onSuccess: (List<OrderData>) -> Unit,
+//    onError: (Exception) -> Unit
+//) {
+//    val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("orders")
+//
+//    databaseReference.addValueEventListener(object : ValueEventListener {
+//        override fun onDataChange(snapshot: DataSnapshot) {
+//            val filterKeywords = filter.split(",").map { it.trim() }
+//
+//            val orders = snapshot.children
+//                .mapNotNull { it.getValue(OrderData::class.java) }
+//                .filter { product ->
+//                    val matches = filterKeywords.any { keyword ->
+//                        OrderData::class.memberProperties.any { prop ->
+//                            val value = prop.get(product)
+//                            value?.toString()?.contains(keyword, ignoreCase = true) == true
+//                        }
+//                    }
+//                    matches && product.status == "PENDING"
+//                }
+//            onSuccess(orders)
+//        }
+//
+//        override fun onCancelled(error: DatabaseError) {
+//            onError(error.toException())
+//        }
+//    })
+//}
 
 @Composable
 fun OrderItemDecision(
@@ -236,7 +249,8 @@ fun updateOrderStatus(
     onComplete: () -> Unit
 ) {
     val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("orders")
-    val query = databaseReference.orderByChild("orderId").equalTo(order.orderId)
+    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+    val query = databaseReference.child(uid).orderByChild("orderId").equalTo(order.orderId)
 
     query.addListenerForSingleValueEvent(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {

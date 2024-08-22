@@ -1,10 +1,10 @@
 package com.coco.celestia
 
 data class UserData(
-    val email: String,
-    val firstname: String,
-    val lastname: String,
-    val password: String
+    val email: String = "",
+    val firstname: String = "",
+    val lastname: String = "",
+    val password: String = ""
 )
 
 data class OrderData(

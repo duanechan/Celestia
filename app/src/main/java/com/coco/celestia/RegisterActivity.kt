@@ -1,5 +1,6 @@
 package com.coco.celestia
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -21,7 +22,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -34,15 +37,17 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.startActivity
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.ui.theme.CelestiaTheme
+import com.coco.celestia.viewmodel.UserState
+import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 
 
 class RegisterActivity : ComponentActivity() {
-    private lateinit var databaseReference : DatabaseReference
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -53,59 +58,85 @@ class RegisterActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(Color(0xFFF2E3DB))
                 ) {
-                    databaseReference = FirebaseDatabase.getInstance().getReference("users")
+                    val userViewModel: UserViewModel = viewModel()
+                    val userState by userViewModel.userState.observeAsState(UserState.LOADING)
+
                     RegisterScreen(
-                        registerUser = ::registerUser,
+                        context = this,
+                        registerUser = { email, firstName, lastName, password ->
+                            userViewModel.register(email, firstName, lastName, password)
+                        },
+                        userState = userState,
                         showMessage = { message ->
                             Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-                        })
+                        },
+                        onSuccess = {
+                            startActivity(Intent(this, LoginActivity::class.java))
+                            finish()
+                        }
+                    )
                 }
             }
         }
     }
 
-    private fun registerUser(email: String, firstname: String, lastname: String, password: String) {
-        val auth: FirebaseAuth = FirebaseAuth.getInstance()
-
-        auth.createUserWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    val user = auth.currentUser
-                    user?.let {
-                        val userData = UserData(email, firstname, lastname, password)
-
-                        databaseReference.push().setValue(userData)
-                            .addOnCompleteListener{
-                                Toast.makeText(this@RegisterActivity, "Register Successful", Toast.LENGTH_SHORT).show()
-                                startActivity(Intent(this@RegisterActivity, LoginActivity::class.java))
-                                finish()
-                            }
-                            .addOnFailureListener{
-                                Toast.makeText(this@RegisterActivity, "error ${it.message}", Toast.LENGTH_SHORT).show()
-                            }
-                    }
-                } else {
-                    Toast.makeText(this@RegisterActivity, "Error: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .addOnFailureListener {
-                Toast.makeText(this@RegisterActivity, "Error: ${it.message}", Toast.LENGTH_SHORT).show()
-            }
-    }
+//    private fun registerUser(email: String, firstname: String, lastname: String, password: String) {
+//        val auth: FirebaseAuth = FirebaseAuth.getInstance()
+//
+//        auth.createUserWithEmailAndPassword(email, password)
+//            .addOnCompleteListener(this) { task ->
+//                if (task.isSuccessful) {
+//                    val user = auth.currentUser
+//                    user?.let {
+//                        val userData = UserData(email, firstname, lastname, password)
+//
+//                        databaseReference.child(user.uid).setValue(userData)
+//                            .addOnCompleteListener{
+//                                Toast.makeText(this@RegisterActivity, "Register Successful", Toast.LENGTH_SHORT).show()
+//                                startActivity(Intent(this@RegisterActivity, LoginActivity::class.java))
+//                                finish()
+//                            }
+//                            .addOnFailureListener{
+//                                Toast.makeText(this@RegisterActivity, "error ${it.message}", Toast.LENGTH_SHORT).show()
+//                            }
+//                    }
+//                } else {
+//                    Toast.makeText(this@RegisterActivity, "Error: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//            .addOnFailureListener {
+//                Toast.makeText(this@RegisterActivity, "Error: ${it.message}", Toast.LENGTH_SHORT).show()
+//            }
+//    }
 }
 
 
 @Composable
-fun RegisterScreen(registerUser: (String, String, String, String) -> Unit, showMessage: (String) -> Unit) {
-
+fun RegisterScreen(
+    context: Context,
+    registerUser: (String, String, String, String) -> Unit,
+    userState: UserState, showMessage: (String) -> Unit,
+    onSuccess: () -> Unit
+) {
     val maxChar = 25
-    var showDialog by remember { mutableStateOf(false) }
-    val errorDialogMessage by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+
+    LaunchedEffect(userState) {
+        when (userState) {
+            is UserState.ERROR -> {
+                Toast.makeText(context, "Error: ${userState.message}", Toast.LENGTH_SHORT).show()
+            }
+            is UserState.SUCCESS -> {
+                Toast.makeText(context, "Registration Successful", Toast.LENGTH_SHORT).show()
+                onSuccess()
+            }
+            else -> {}
+        }
+    }
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -205,25 +236,6 @@ fun RegisterScreen(registerUser: (String, String, String, String) -> Unit, showM
                 .height(50.dp)) {
             Text(text = "Register")
         }
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false },
-                title = {
-                    Text(text = if (errorDialogMessage.isNotEmpty()) "Registration Failed" else "Registration Successful!")
-                },
-                text = {
-                    Text(text = if (errorDialogMessage.isNotEmpty()) "Try again" else "Welcome!")
-                },
-                confirmButton = {
-                    Button(
-                        onClick = { showDialog = false }
-                    ) {
-                        Text(if (errorDialogMessage.isNotEmpty()) "Retry" else "Let's Go!")
-                    }
-                }
-            )
-        }
-
         Spacer(modifier = Modifier.height(5.dp))
     }
 }

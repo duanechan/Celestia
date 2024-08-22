@@ -1,5 +1,6 @@
 package com.coco.celestia
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -26,7 +27,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -40,7 +43,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.ui.theme.CelestiaTheme
+import com.coco.celestia.viewmodel.UserState
+import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
@@ -55,46 +61,73 @@ class LoginActivity : ComponentActivity() {
         Firebase.initialize(this)
         setContent {
             CelestiaTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color(0xFFF2E3DB))
                 ) {
-                    databaseReference = FirebaseDatabase.getInstance().getReference().child("users")
-                    LoginScreen(loginUser = ::loginUser)
+                    val userViewModel: UserViewModel = viewModel()
+                    val userState by userViewModel.userState.observeAsState(UserState.LOADING)
+
+                    LoginScreen(
+                        context = this,
+                        loginUser = { email, password ->
+                            userViewModel.login(email, password)
+                        },
+                        userState = userState,
+                        onSuccess = {
+                            startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                            finish()
+                        }
+                    )
                 }
             }
         }
     }
 
-    private fun loginUser(email: String, password: String) {
-        FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    Toast.makeText(this@LoginActivity, "Login Successful", Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this@LoginActivity, MainActivity::class.java))
-                    finish()
-                } else {
-                    Toast.makeText(this@LoginActivity, "Login Failed", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .addOnFailureListener {
-                Toast.makeText(this@LoginActivity, "Login Error: ${it.message}", Toast.LENGTH_SHORT).show()
-            }
-    }
+//    private fun loginUser(email: String, password: String) {
+//        FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
+//            .addOnCompleteListener(this) { task ->
+//                if (task.isSuccessful) {
+//                    Toast.makeText(this@LoginActivity, "Login Successful", Toast.LENGTH_SHORT).show()
+//                    startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+//                    finish()
+//                } else {
+//                    Toast.makeText(this@LoginActivity, "Login Failed", Toast.LENGTH_SHORT).show()
+//                }
+//            }
+//            .addOnFailureListener {
+//                Toast.makeText(this@LoginActivity, "Login Error: ${it.message}", Toast.LENGTH_SHORT).show()
+//            }
+//    }
 }
 
 @Composable
-fun LoginScreen(loginUser: (String, String) -> Unit) {
-
+fun LoginScreen(
+    context: Context,
+    loginUser: (String, String) -> Unit,
+    userState: UserState,
+    onSuccess: () -> Unit
+) {
     val maxCharacters = 25
     var showDialog by remember { mutableStateOf(false) }
     var errorDialogMessage by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var showRegisterDialog by remember { mutableStateOf(false) }
-    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
+    LaunchedEffect(userState) {
+        when (userState) {
+            is UserState.ERROR -> {
+                Toast.makeText(context, "Error: ${userState.message}", Toast.LENGTH_SHORT).show()
+            }
+            is UserState.SUCCESS -> {
+                Toast.makeText(context, "Login Successful", Toast.LENGTH_SHORT).show()
+                onSuccess()
+            }
+            else -> {}
+        }
+    }
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -247,11 +280,6 @@ fun LoginScreen(loginUser: (String, String) -> Unit) {
                 }
             )
         }
-
-
-
-
-
     }
 }
 

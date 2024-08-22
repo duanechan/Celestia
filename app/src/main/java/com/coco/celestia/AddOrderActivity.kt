@@ -1,11 +1,9 @@
 package com.coco.celestia
 
-import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -14,7 +12,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,6 +31,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -42,13 +40,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.ui.theme.CelestiaTheme
+import com.coco.celestia.viewmodel.OrderState
+import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.UserState
+import com.coco.celestia.viewmodel.UserViewModel
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -56,12 +61,10 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import java.time.Instant
 import java.util.Date
-import java.util.UUID
 import java.util.Locale
-import kotlin.math.exp
+import java.util.UUID
 
 class AddOrderActivity : ComponentActivity() {
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -173,19 +176,15 @@ fun OrderDetails(
     productList: Map<String, Int>,
     onProductsFetched: (Map<String, Int>) -> Unit
 ) {
-    when (product) {
-        "Coffee" -> {
-            LaunchedEffect(Unit) {
+    LaunchedEffect(Unit) {
+        when (product) {
+            "Coffee" -> {
                 fetchProductByType("coffee", onProductsFetched)
             }
-        }
-        "Meat" -> {
-            LaunchedEffect(Unit) {
+            "Meat" -> {
                 fetchProductByType("meat", onProductsFetched)
             }
-        }
-        else -> {
-            LaunchedEffect(Unit) {
+            else -> {
                 fetchProductByType("vegetable", onProductsFetched)
             }
         }
@@ -347,9 +346,11 @@ fun QuantitySelector(
 }
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ConfirmOrderRequestPanel(navController: NavController, product: String?, type: String?, quantity: Int?) {
+    val orderViewModel: OrderViewModel = viewModel()
+    val orderState by orderViewModel.orderState.observeAsState()
+    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var city by remember { mutableStateOf("") }
     var postalCode by remember { mutableStateOf("") }
     var barangay by remember { mutableStateOf("") }
@@ -445,7 +446,8 @@ fun ConfirmOrderRequestPanel(navController: NavController, product: String?, typ
                         streetAndNumber,
                         additionalInfo
                     )
-                    placeOrder(navController, order)
+                    orderViewModel.placeOrder(uid, order)
+
                 } else {
                     Toast.makeText(
                         navController.context,
@@ -459,13 +461,32 @@ fun ConfirmOrderRequestPanel(navController: NavController, product: String?, typ
                 .height(50.dp)) {
             Text(text = "Submit")
         }
+        when (orderState) {
+            is OrderState.LOADING -> {
+                Toast.makeText(navController.context, "Placing order..", Toast.LENGTH_SHORT).show()
+            }
+            is OrderState.ERROR -> {
+                Toast.makeText(navController.context, "Error: ${(orderState as OrderState.ERROR).message}", Toast.LENGTH_SHORT).show()
+            }
+            is OrderState.EMPTY -> {
+                Toast.makeText(navController.context, "Error: ${(orderState as OrderState.ERROR).message}", Toast.LENGTH_SHORT).show()
+            }
+            is OrderState.SUCCESS -> {
+                Toast.makeText(navController.context, "Order placed.", Toast.LENGTH_SHORT).show()
+                navController.navigate(Screen.AddOrder.route)
+            }
+
+            else -> {}
+        }
     }
 }
 
 private fun placeOrder(navController: NavController, order: OrderData) {
     val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("orders")
-    databaseReference.push().setValue(order)
-        .addOnCompleteListener{
+    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+
+    val orderRef = databaseReference.child(uid).push()
+    orderRef.setValue(order).addOnCompleteListener{
             Toast.makeText(navController.context, "Order Placed", Toast.LENGTH_SHORT).show()
             navController.navigate(Screen.AddOrder.route)
         }
