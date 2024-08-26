@@ -21,3 +21,9 @@ data class OrderData(
     val street: String = "",
     val additionalInfo: String = ""
 )
+
+data class ProductData(
+    val name: String = "",
+    val quantity: Int = 0,
+    val type: String = ""
+)

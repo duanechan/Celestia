@@ -26,7 +26,6 @@ sealed class OrderState {
 
 class OrderViewModel : ViewModel() {
     private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("orders")
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val _orderData = MutableLiveData<List<OrderData>>()
     private val _orderState = MutableLiveData<OrderState>()
     val orderData: LiveData<List<OrderData>> = _orderData
@@ -35,7 +34,10 @@ class OrderViewModel : ViewModel() {
     /**
      * Fetches order data from the database based on the provided UID and order ID.
      */
-    fun fetchOrder(uid: String, orderId: String) {
+    fun fetchOrder(
+        uid: String,
+        orderId: String
+    ) {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
             try {
@@ -67,46 +69,87 @@ class OrderViewModel : ViewModel() {
     fun fetchOrders(
         uid: String,
         filter: String,
-        onError: (Exception) -> Unit
     ) {
-        database.child(uid).addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val filterKeywords = filter.split(",").map { it.trim() }
+        viewModelScope.launch {
+            _orderState.value = OrderState.LOADING
+            database.child(uid).addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val filterKeywords = filter.split(",").map { it.trim() }
 
-                val orders = snapshot.children
-                    .mapNotNull { it.getValue(OrderData::class.java) }
-                    .filter { product ->
-                        val matches = filterKeywords.any { keyword ->
-                            OrderData::class.memberProperties.any { prop ->
-                                val value = prop.get(product)
-                                value?.toString()?.contains(keyword, ignoreCase = true) == true
+                    val orders = snapshot.children
+                        .mapNotNull { it.getValue(OrderData::class.java) }
+                        .filter { product ->
+                            val matches = filterKeywords.any { keyword ->
+                                OrderData::class.memberProperties.any { prop ->
+                                    val value = prop.get(product)
+                                    value?.toString()?.contains(keyword, ignoreCase = true) == true
+                                }
                             }
+                            matches && product.status == "PENDING"
                         }
-                        matches && product.status == "PENDING"
-                    }
 
-                _orderData.value = orders
-                _orderState.value = if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS
-            }
+                    _orderData.value = orders
+                    _orderState.value = if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS
+                }
 
-            override fun onCancelled(error: DatabaseError) {
-                _orderState.value = OrderState.ERROR(error.message)
-                onError(error.toException())
-            }
-        })
+                override fun onCancelled(error: DatabaseError) {
+                    _orderState.value = OrderState.ERROR(error.message)
+                }
+            })
+        }
     }
 
     /**
      * Places an order in the database based on the provided UID.
      */
-    fun placeOrder(uid: String, order: OrderData) {
-        val query = database.child(uid).push()
-        query.setValue(order)
-            .addOnCompleteListener {
-                _orderState.value = OrderState.SUCCESS
-            }
-            .addOnFailureListener { exception ->
-                _orderState.value = OrderState.ERROR(exception.message ?: "Unknown error")
-            }
+    fun placeOrder(
+        uid: String,
+        order: OrderData
+    ) {
+        viewModelScope.launch {
+            _orderState.value = OrderState.LOADING
+            val query = database.child(uid).push()
+            query.setValue(order)
+                .addOnCompleteListener {
+                    _orderState.value = OrderState.SUCCESS
+                }
+                .addOnFailureListener { exception ->
+                    _orderState.value = OrderState.ERROR(exception.message ?: "Unknown error")
+                }
+        }
+    }
+
+    /**
+     * Updates an order in the database based on the provided UID.
+     */
+    fun updateOrder(
+        uid: String,
+        updatedOrderData: OrderData
+    ) {
+        val query = database.child(uid).orderByChild("orderId").equalTo(updatedOrderData.orderId)
+
+        viewModelScope.launch {
+            _orderState.value = OrderState.LOADING
+            query.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        val orderSnapshot = snapshot.children.first()
+                        orderSnapshot.ref.setValue(updatedOrderData)
+                            .addOnSuccessListener {
+                                _orderState.value = OrderState.SUCCESS
+                            }
+                            .addOnFailureListener { exception ->
+                                _orderState.value = OrderState.ERROR(exception.message ?: "Unknown error")
+                            }
+                    } else {
+                        _orderState.value = OrderState.EMPTY
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    _orderState.value = OrderState.ERROR(error.message)
+                }
+            })
+        }
     }
 }

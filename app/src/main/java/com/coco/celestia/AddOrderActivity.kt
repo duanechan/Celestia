@@ -51,6 +51,8 @@ import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.ProductState
+import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -151,7 +153,7 @@ fun fetchProductByType(
         override fun onDataChange(snapshot: DataSnapshot) {
             val productList = snapshot.children.mapNotNull {
                 it.key?.let { key ->
-                    if (it.child("type").getValue(String::class.java) == "vegetable") {
+                    if (it.child("type").getValue(String::class.java) == "Vegetable") {
                         key to 0
                     } else {
                         key to it.child("quantity").getValue(Int::class.java)
@@ -179,13 +181,13 @@ fun OrderDetails(
     LaunchedEffect(Unit) {
         when (product) {
             "Coffee" -> {
-                fetchProductByType("coffee", onProductsFetched)
+                fetchProductByType("Coffee", onProductsFetched)
             }
             "Meat" -> {
-                fetchProductByType("meat", onProductsFetched)
+                fetchProductByType("Meat", onProductsFetched)
             }
             else -> {
-                fetchProductByType("vegetable", onProductsFetched)
+                fetchProductByType("Vegetable", onProductsFetched)
             }
         }
     }
@@ -481,16 +483,16 @@ fun ConfirmOrderRequestPanel(navController: NavController, product: String?, typ
     }
 }
 
-private fun placeOrder(navController: NavController, order: OrderData) {
-    val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("orders")
-    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-
-    val orderRef = databaseReference.child(uid).push()
-    orderRef.setValue(order).addOnCompleteListener{
-            Toast.makeText(navController.context, "Order Placed", Toast.LENGTH_SHORT).show()
-            navController.navigate(Screen.AddOrder.route)
-        }
-        .addOnFailureListener{
-            Toast.makeText(navController.context, "Error: ${it.message}", Toast.LENGTH_SHORT).show()
-        }
-}
+//private fun placeOrder(navController: NavController, order: OrderData) {
+//    val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("orders")
+//    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+//
+//    val orderRef = databaseReference.child(uid).push()
+//    orderRef.setValue(order).addOnCompleteListener{
+//            Toast.makeText(navController.context, "Order Placed", Toast.LENGTH_SHORT).show()
+//            navController.navigate(Screen.AddOrder.route)
+//        }
+//        .addOnFailureListener{
+//            Toast.makeText(navController.context, "Error: ${it.message}", Toast.LENGTH_SHORT).show()
+//        }
+//}

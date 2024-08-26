@@ -25,7 +25,7 @@
             android:theme="@style/Theme.Celestia">
         </activity>
         <activity
-            android:name=".OrderActivity"
+            android:name=".ViewOrderActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Celestia">
@@ -71,7 +71,12 @@
             android:label="@string/app_name"
             android:theme="@style/Theme.Celestia">
         </activity>
-
+        <activity
+            android:name=".ClientActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Celestia">
+        </activity>
     </application>
 
 </manifest>

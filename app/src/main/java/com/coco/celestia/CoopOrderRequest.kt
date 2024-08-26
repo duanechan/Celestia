@@ -1,6 +1,7 @@
 package com.coco.celestia
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.animateContentSize
@@ -82,13 +83,10 @@ fun OrderRequestPanel(keywords: String) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Order Request", fontSize = 25.sp)
-        Spacer(modifier = Modifier.height(150.dp))
         LaunchedEffect(Unit) {
             orderViewModel.fetchOrders(
                 uid = auth.currentUser?.uid.toString(),
-                filter = keywords,
-                onError = { isError = true }
+                filter = keywords
             )
         }
         when (orderState) {
@@ -107,10 +105,16 @@ fun OrderRequestPanel(keywords: String) {
                         OrderItemDecision(
                             order,
                             onAccept = {
-                                updateOrderStatus(order, true) {}
+                                orderViewModel.updateOrder(
+                                    auth.currentUser?.uid.toString(),
+                                    order.copy(status = "ACCEPTED"),
+                                )
                             },
                             onReject = {
-                                updateOrderStatus(order, false) {}
+                                orderViewModel.updateOrder(
+                                    auth.currentUser?.uid.toString(),
+                                    order.copy(status = "REJECTED"),
+                                )
                             }
                         )
                     }
@@ -224,7 +228,7 @@ fun OrderItemDecision(
                 Button(
                     onClick = {
                         showDialog = false
-                        if (action == "ACCEPTED") onAccept() else onReject()
+                        if (action == "Accept") onAccept() else onReject()
                     }
                 ) {
                     Text("Yes")
@@ -243,33 +247,33 @@ fun OrderItemDecision(
     }
 }
 
-fun updateOrderStatus(
-    order: OrderData,
-    accepted: Boolean,
-    onComplete: () -> Unit
-) {
-    val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("orders")
-    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-    val query = databaseReference.child(uid).orderByChild("orderId").equalTo(order.orderId)
-
-    query.addListenerForSingleValueEvent(object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-            if (snapshot.exists()) {
-                val orderSnapshot = snapshot.children.first()
-                orderSnapshot.ref.child("status").setValue(if (accepted) "ACCEPTED" else "REJECTED")
-                    .addOnSuccessListener {
-                        onComplete()
-                    }
-                    .addOnFailureListener { exception ->
-                        println("Error updating order status: ${exception.message}")
-                    }
-            } else {
-                println("No order found with ID: ${order.orderId}")
-            }
-        }
-
-        override fun onCancelled(error: DatabaseError) {
-            println("Error querying orders: ${error.message}")
-        }
-    })
-}
+//fun updateOrderStatus(
+//    order: OrderData,
+//    accepted: Boolean,
+//    onComplete: () -> Unit
+//) {
+//    val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("orders")
+//    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+//    val query = databaseReference.child(uid).orderByChild("orderId").equalTo(order.orderId)
+//
+//    query.addListenerForSingleValueEvent(object : ValueEventListener {
+//        override fun onDataChange(snapshot: DataSnapshot) {
+//            if (snapshot.exists()) {
+//                val orderSnapshot = snapshot.children.first()
+//                orderSnapshot.ref.child("status").setValue(if (accepted) "ACCEPTED" else "REJECTED")
+//                    .addOnSuccessListener {
+//                        onComplete()
+//                    }
+//                    .addOnFailureListener { exception ->
+//                        println("Error updating order status: ${exception.message}")
+//                    }
+//            } else {
+//                println("No order found with ID: ${order.orderId}")
+//            }
+//        }
+//
+//        override fun onCancelled(error: DatabaseError) {
+//            println("Error querying orders: ${error.message}")
+//        }
+//    })
+//}
