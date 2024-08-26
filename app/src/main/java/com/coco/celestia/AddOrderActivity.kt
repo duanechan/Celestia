@@ -1,6 +1,7 @@
 package com.coco.celestia
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,6 +19,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -33,6 +36,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,6 +57,7 @@ import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -122,9 +127,76 @@ fun ProductCard(product: String, navController: NavController) {
     Spacer(modifier = Modifier.height(15.dp))
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProductTypeCard(product: ProductData, navController: NavController) {
+    var expanded by remember { mutableStateOf(false) }
+    val productName = product.name
+    val productType = product.type
+    val productQuantity = product.quantity
+    Card(
+        onClick = {
+            if (productType == "Vegetable") {
+                navController.navigate(
+                    Screen.OrderConfirmation.createRoute(productType, productName, productQuantity)
+                )
+            } else {
+                expanded = !expanded
+            }
+        },
+        modifier = Modifier
+            .padding(vertical = 16.dp)
+            .animateContentSize()
+            .fillMaxWidth()
+            .clickable {
+                if (product.toString() == "Vegetable") {
+                    navController.navigate(
+                        Screen.OrderConfirmation.createRoute(
+                            productName,
+                            productType,
+                            productQuantity
+                        )
+                    )
+                } else {
+                    expanded = !expanded
+                }
+            }
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = productName,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(8.dp)
+            )
+            Text(
+                text = if (productType != "Vegetable") "${productQuantity}kg" else "",
+                fontSize = 20.sp,
+                modifier = Modifier.padding(8.dp)
+            )
+
+            AnimatedVisibility(expanded) {
+                if (productType != "Vegetable") {
+                    QuantitySelector(
+                        navController = navController,
+                        productType = productType,
+                        productName = productName,
+                        maxQuantity = productQuantity
+                    )
+                }
+            }
+        }
+    }
+    Spacer(modifier = Modifier.height(15.dp))
+}
+
 @Composable
 fun OrderDetailsPanel(navController: NavController, product: String?) {
-    var productList by remember { mutableStateOf(mapOf<String, Int>()) }
+    val productViewModel: ProductViewModel = viewModel()
+    val productData by productViewModel.productData.observeAsState(emptyList())
+    val productState by productViewModel.productState.observeAsState()
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -134,134 +206,26 @@ fun OrderDetailsPanel(navController: NavController, product: String?) {
             .padding(16.dp)
     ) {
         Text(
-            text = product.toString(),
-            fontSize = 25.sp)
+            text = product ?: "Unknown Product",
+            fontSize = 25.sp
+        )
         Spacer(modifier = Modifier.height(150.dp))
-        OrderDetails(navController, product, productList) {
-            productList = it
-        }
-    }
-}
-
-fun fetchProductByType(
-    product: String?,
-    onProductsFetched: (Map<String, Int>) -> Unit
-) {
-    val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("products")
-
-    databaseReference.orderByChild("type").equalTo(product).addListenerForSingleValueEvent(object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-            val productList = snapshot.children.mapNotNull {
-                it.key?.let { key ->
-                    if (it.child("type").getValue(String::class.java) == "Vegetable") {
-                        key to 0
-                    } else {
-                        key to it.child("quantity").getValue(Int::class.java)
-                    }
-                }
+        product?.let {
+            LaunchedEffect(product) {
+                productViewModel.fetchProduct(product)
             }
-                .filter { it.second != null }.associate { it.first to it.second!! }
-            onProductsFetched(productList)
-        }
-
-        override fun onCancelled(error: DatabaseError) {
-
-        }
-    })
-}
-
-
-@Composable
-fun OrderDetails(
-    navController: NavController,
-    product: String?,
-    productList: Map<String, Int>,
-    onProductsFetched: (Map<String, Int>) -> Unit
-) {
-    LaunchedEffect(Unit) {
-        when (product) {
-            "Coffee" -> {
-                fetchProductByType("Coffee", onProductsFetched)
-            }
-            "Meat" -> {
-                fetchProductByType("Meat", onProductsFetched)
-            }
-            else -> {
-                fetchProductByType("Vegetable", onProductsFetched)
-            }
-        }
-    }
-    DisplayProductList(navController, productList, product)
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DisplayProductList(navController: NavController, productList: Map<String, Int>, product: String?) {
-    val quantities = remember { mutableStateMapOf<String, Int>().apply { putAll(productList) } }
-
-    if (productList.isNotEmpty()) {
-        productList.forEach { (type, quantity) ->
-            val productType = type.replace("_", " ")
-                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
-            var expanded by remember { mutableStateOf(false) }
-
-            Card(
-                onClick = {
-                    if (product.toString() == "Vegetable") {
-                        navController.navigate(
-                            Screen.OrderConfirmation.createRoute(product.toString(), productType, quantity)
-                        )
-                    } else {
-                        expanded = !expanded
-                    }
-                },
-                modifier = Modifier
-                    .padding(vertical = 16.dp)
-                    .animateContentSize()
-                    .fillMaxWidth()
-                    .clickable {
-                        if (product.toString() == "Vegetable") {
-                            navController.navigate(
-                                Screen.OrderConfirmation.createRoute(
-                                    product.toString(),
-                                    productType,
-                                    quantity
-                                )
-                            )
-                        } else {
-                            expanded = !expanded
-                        }
-                    }
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {1
-                    Text(
-                        text = productType,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(8.dp)
-                    )
-                    Text(
-                        text = if (product.toString() != "Vegetable") "${quantity}kg" else "",
-                        fontSize = 20.sp,
-                        modifier = Modifier.padding(8.dp)
-                    )
-
-                    AnimatedVisibility(expanded) {
-                        if (product.toString() != "Vegetable") {
-                            QuantitySelector(
-                                onQuantityChange = { newQty ->
-                                    quantities[type] = newQty
-                                },
-                                navController = navController,
-                                product = product,
-                                productType = productType,
-                                maxQuantity = quantity
-                            )
+            when (productState) {
+                is ProductState.EMPTY -> Text("No products available.")
+                is ProductState.ERROR -> Text("Error: ${(productState as ProductState.ERROR).message}")
+                is ProductState.LOADING -> Text("Loading products...")
+                is ProductState.SUCCESS -> {
+                    LazyColumn {
+                        items(productData) { product ->
+                            ProductTypeCard(product, navController)
                         }
                     }
                 }
+                null -> Text("Unknown state")
             }
         }
     }
@@ -270,9 +234,8 @@ fun DisplayProductList(navController: NavController, productList: Map<String, In
 @Composable
 fun QuantitySelector(
     navController: NavController,
-    onQuantityChange: (Int) -> Unit,
-    product: String?,
     productType: String?,
+    productName: String?,
     maxQuantity: Int
 ) {
     var quantity by remember { mutableIntStateOf(0) }
@@ -328,7 +291,7 @@ fun QuantitySelector(
 
         Button(
             onClick = {
-                navController.navigate(Screen.OrderConfirmation.createRoute(product.toString(), productType.toString(), quantity))
+                navController.navigate(Screen.OrderConfirmation.createRoute(productType.toString(), productName.toString(), quantity))
             }
         ) {
             Text("Add Order", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
@@ -341,16 +304,13 @@ fun QuantitySelector(
             modifier = Modifier.padding(top = 8.dp)
         )
     }
-
-    LaunchedEffect(quantity) {
-        onQuantityChange(quantity)
-    }
 }
 
 
 @Composable
 fun ConfirmOrderRequestPanel(navController: NavController, product: String?, type: String?, quantity: Int?) {
     val orderViewModel: OrderViewModel = viewModel()
+    val transactionViewModel: TransactionViewModel = viewModel()
     val orderState by orderViewModel.orderState.observeAsState()
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var city by remember { mutableStateOf("") }
@@ -358,6 +318,24 @@ fun ConfirmOrderRequestPanel(navController: NavController, product: String?, typ
     var barangay by remember { mutableStateOf("") }
     var streetAndNumber by remember { mutableStateOf("") }
     var additionalInfo by remember { mutableStateOf("") }
+
+    when (orderState) {
+        is OrderState.LOADING -> {
+            Toast.makeText(navController.context, "Placing order..", Toast.LENGTH_SHORT).show()
+        }
+        is OrderState.ERROR -> {
+            Toast.makeText(navController.context, "Error: ${(orderState as OrderState.ERROR).message}", Toast.LENGTH_SHORT).show()
+        }
+        is OrderState.EMPTY -> {
+            Toast.makeText(navController.context, "Error: ${(orderState as OrderState.ERROR).message}", Toast.LENGTH_SHORT).show()
+        }
+        is OrderState.SUCCESS -> {
+            Toast.makeText(navController.context, "Order placed.", Toast.LENGTH_SHORT).show()
+            navController.navigate(Screen.AddOrder.route)
+        }
+
+        else -> {}
+    }
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -436,7 +414,7 @@ fun ConfirmOrderRequestPanel(navController: NavController, product: String?, typ
                     && additionalInfo.isNotEmpty()
                 ) {
                     val order = OrderData(
-                        UUID.randomUUID().toString(),
+                        "ORDR{${UUID.randomUUID()}}",
                         Date.from(Instant.now()).toString(),
                         "PENDING",
                         product.toString(),
@@ -449,7 +427,11 @@ fun ConfirmOrderRequestPanel(navController: NavController, product: String?, typ
                         additionalInfo
                     )
                     orderViewModel.placeOrder(uid, order)
-
+                    val transaction = TransactionData(
+                        "TRNSCTN{${UUID.randomUUID()}}",
+                        order
+                    )
+                    transactionViewModel.recordTransaction(uid, transaction)
                 } else {
                     Toast.makeText(
                         navController.context,
@@ -463,36 +445,5 @@ fun ConfirmOrderRequestPanel(navController: NavController, product: String?, typ
                 .height(50.dp)) {
             Text(text = "Submit")
         }
-        when (orderState) {
-            is OrderState.LOADING -> {
-                Toast.makeText(navController.context, "Placing order..", Toast.LENGTH_SHORT).show()
-            }
-            is OrderState.ERROR -> {
-                Toast.makeText(navController.context, "Error: ${(orderState as OrderState.ERROR).message}", Toast.LENGTH_SHORT).show()
-            }
-            is OrderState.EMPTY -> {
-                Toast.makeText(navController.context, "Error: ${(orderState as OrderState.ERROR).message}", Toast.LENGTH_SHORT).show()
-            }
-            is OrderState.SUCCESS -> {
-                Toast.makeText(navController.context, "Order placed.", Toast.LENGTH_SHORT).show()
-                navController.navigate(Screen.AddOrder.route)
-            }
-
-            else -> {}
-        }
     }
 }
-
-//private fun placeOrder(navController: NavController, order: OrderData) {
-//    val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("orders")
-//    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-//
-//    val orderRef = databaseReference.child(uid).push()
-//    orderRef.setValue(order).addOnCompleteListener{
-//            Toast.makeText(navController.context, "Order Placed", Toast.LENGTH_SHORT).show()
-//            navController.navigate(Screen.AddOrder.route)
-//        }
-//        .addOnFailureListener{
-//            Toast.makeText(navController.context, "Error: ${it.message}", Toast.LENGTH_SHORT).show()
-//        }
-//}

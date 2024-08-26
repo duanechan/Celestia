@@ -27,3 +27,8 @@ data class ProductData(
     val quantity: Int = 0,
     val type: String = ""
 )
+
+data class TransactionData(
+    val transactionId: String = "",
+    val order: OrderData = OrderData()
+)
