@@ -54,7 +54,7 @@ import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.ui.theme.Pink40
 import kotlinx.coroutines.launch
 
-class SupplierActivity: ComponentActivity(){
+class CoopActivity: ComponentActivity(){
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

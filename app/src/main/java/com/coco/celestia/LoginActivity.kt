@@ -70,6 +70,8 @@ class LoginActivity : ComponentActivity() {
                             val intent = when (role) {
                                 "Farmer" -> Intent(this@LoginActivity, FarmerOrderRequest::class.java)
                                 "Client" -> Intent(this@LoginActivity, ClientActivity::class.java)
+                                "Admin" -> Intent(this@LoginActivity, AdminActivity::class.java)
+                                "Coop" -> Intent(this@LoginActivity, CoopActivity::class.java)
                                 else -> Intent(this@LoginActivity, MainActivity::class.java)
                             }
                             startActivity(intent)
