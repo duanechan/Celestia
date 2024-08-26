@@ -52,14 +52,14 @@ class UserViewModel : ViewModel() {
     /**
      * Registers a new user with the provided email, first name, last name, and password.
      */
-    fun register(email: String, firstname: String, lastname: String, password: String) {
+    fun register(email: String, firstname: String, lastname: String, password: String, role: String) {
         viewModelScope.launch {
             _userState.value = UserState.LOADING
             try {
                 val result = auth.createUserWithEmailAndPassword(email, password).await()
                 val user = result.user
                 user?.let {
-                    val userData = UserData(email, firstname, lastname, password)
+                    val userData = UserData(email, firstname, lastname, password, role)
                     database.child(user.uid).setValue(userData).await()
                     _userState.value = UserState.SUCCESS
                 } ?: run {

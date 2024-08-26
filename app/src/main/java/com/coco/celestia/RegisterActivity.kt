@@ -9,15 +9,20 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DismissState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -63,8 +68,8 @@ class RegisterActivity : ComponentActivity() {
 
                     RegisterScreen(
                         context = this,
-                        registerUser = { email, firstName, lastName, password ->
-                            userViewModel.register(email, firstName, lastName, password)
+                        registerUser = { email, firstName, lastName, password, role ->
+                            userViewModel.register(email, firstName, lastName, password, role)
                         },
                         userState = userState,
                         showMessage = { message ->
@@ -114,7 +119,7 @@ class RegisterActivity : ComponentActivity() {
 @Composable
 fun RegisterScreen(
     context: Context,
-    registerUser: (String, String, String, String) -> Unit,
+    registerUser: (String, String, String, String, String) -> Unit,
     userState: UserState, showMessage: (String) -> Unit,
     onSuccess: () -> Unit
 ) {
@@ -124,6 +129,8 @@ fun RegisterScreen(
     var lastName by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var showRoleDialog by remember { mutableStateOf(true) }
+    var selectedRole by remember { mutableStateOf("") }
 
     LaunchedEffect(userState) {
         when (userState) {
@@ -138,104 +145,165 @@ fun RegisterScreen(
         }
     }
 
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Image(painter = painterResource(id = R.drawable.a), contentDescription = "Login Image",
-            modifier = Modifier.size(195.dp))
+    if (showRoleDialog) {
+        AlertDialog(
+            onDismissRequest = { showRoleDialog = false },
+            title = { Text(text = "Register As") },
+            text = {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(text = "Choose your role")
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    selectedRole = "Farmer"
+                                    showRoleDialog = false
+                                }
+                            ) {
+                                Text(text = "Farmer")
+                            }
 
-        Text(text = "CoCo", fontSize = 54.sp, fontWeight = FontWeight.Bold)
-        Text(text = "Coop Connects", fontSize = 15.sp)
-        Spacer(modifier = Modifier.height(35.dp))
-
-        OutlinedTextField(
-            value = email,
-            onValueChange = {
-                if (it.length <= maxChar) {
-                    email = it
+                            Button(
+                                onClick = {
+                                    selectedRole = "Client"
+                                    showRoleDialog = false
+                                }
+                            ) {
+                                Text(text = "Client")
+                            }
+                        }
+                    }
                 }
             },
-            label = { Text(text = "Email") },
-            singleLine = true,
-            maxLines = 1
+            confirmButton = {},
+            dismissButton = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Button(
+                        onClick = {
+                            showRoleDialog = false
+                            val intent = Intent(context, LoginActivity::class.java)
+                            context.startActivity(intent)
+                            (context as? ComponentActivity)?.finish()
+                        }
+                    ) {
+                        Text(text = "Cancel")
+                    }
+                }
+            }
         )
+    } else {
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Image(painter = painterResource(id = R.drawable.a), contentDescription = "Login Image",
+                modifier = Modifier.size(195.dp))
 
-        Spacer(modifier = Modifier.height(2.dp))
+            Text(text = "CoCo", fontSize = 54.sp, fontWeight = FontWeight.Bold)
+            Text(text = "Coop Connects", fontSize = 15.sp)
+            Spacer(modifier = Modifier.height(35.dp))
 
-        OutlinedTextField(
-            value = firstName,
-            onValueChange = {
-                if (it.length <= maxChar) {
-                    firstName = it
-                }
-            },
-            label = { Text(text = "First Name") },
-            singleLine = true,
-            maxLines = 1
-        )
+            OutlinedTextField(
+                value = email,
+                onValueChange = {
+                    if (it.length <= maxChar) {
+                        email = it
+                    }
+                },
+                label = { Text(text = "Email") },
+                singleLine = true,
+                maxLines = 1
+            )
 
-        Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
-        OutlinedTextField(
-            value = lastName,
-            onValueChange = {
-                if (it.length <= maxChar) {
-                    lastName = it
-                }
-            },
-            label = { Text(text = "Last Name") },
-            singleLine = true,
-            maxLines = 1
-        )
+            OutlinedTextField(
+                value = firstName,
+                onValueChange = {
+                    if (it.length <= maxChar) {
+                        firstName = it
+                    }
+                },
+                label = { Text(text = "First Name") },
+                singleLine = true,
+                maxLines = 1
+            )
 
-        Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
-        OutlinedTextField(
-            value = password,
-            onValueChange = {
-                if (it.length <= maxChar) {
-                    password = it
-                }
-            },
-            label = { Text(text = "Password") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            visualTransformation = PasswordVisualTransformation(),
-            singleLine = true,
-            maxLines = 1
-        )
+            OutlinedTextField(
+                value = lastName,
+                onValueChange = {
+                    if (it.length <= maxChar) {
+                        lastName = it
+                    }
+                },
+                label = { Text(text = "Last Name") },
+                singleLine = true,
+                maxLines = 1
+            )
 
-        Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
-        OutlinedTextField(
-            value = confirmPassword,
-            onValueChange = {
-                if (it.length <= maxChar) {
-                    confirmPassword = it
-                }
-            },
-            label = { Text(text = "Confirm Password") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            visualTransformation = PasswordVisualTransformation(),
-            singleLine = true,
-            maxLines = 1
-        )
+            OutlinedTextField(
+                value = password,
+                onValueChange = {
+                    if (it.length <= maxChar) {
+                        password = it
+                    }
+                },
+                label = { Text(text = "Password") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true,
+                maxLines = 1
+            )
 
-        Spacer(modifier = Modifier.height(15.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
-        Button(
-            onClick = {
-                if (email.isNotEmpty() && firstName.isNotEmpty() && lastName.isNotEmpty() && password.isNotEmpty()) {
-                    registerUser(email, firstName, lastName, password)
-                } else {
-                    showMessage("All fields must be filled.")
-                }
-            },
-            modifier = Modifier
-                .width(285.dp)
-                .height(50.dp)) {
-            Text(text = "Register")
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = {
+                    if (it.length <= maxChar) {
+                        confirmPassword = it
+                    }
+                },
+                label = { Text(text = "Confirm Password") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                visualTransformation = PasswordVisualTransformation(),
+                singleLine = true,
+                maxLines = 1
+            )
+
+            Spacer(modifier = Modifier.height(15.dp))
+
+            Button(
+                onClick = {
+                    if (email.isNotEmpty() && firstName.isNotEmpty() && lastName.isNotEmpty() && password.isNotEmpty()) {
+                        registerUser(email, firstName, lastName, password, selectedRole)
+                    } else {
+                        showMessage("All fields must be filled.")
+                    }
+                },
+                modifier = Modifier
+                    .width(285.dp)
+                    .height(50.dp)) {
+                Text(text = "Register")
+            }
+            Spacer(modifier = Modifier.height(5.dp))
         }
-        Spacer(modifier = Modifier.height(5.dp))
     }
 }

@@ -10,14 +10,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
@@ -48,14 +44,9 @@ import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.initialize
 
 class LoginActivity : ComponentActivity() {
-    private lateinit var databaseReference: DatabaseReference
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Firebase.initialize(this)
@@ -148,7 +139,7 @@ fun LoginScreen(
                     email = it
                 }
             },
-            label = { Text(text = "Username") },
+            label = { Text(text = "Email") },
             singleLine = true,
             maxLines = 1
         )
@@ -218,67 +209,9 @@ fun LoginScreen(
                 showRegisterDialog = true // Show the register dialog
             })
         if (showRegisterDialog) {
-            AlertDialog(
-                onDismissRequest = { showRegisterDialog = false },
-                title = { Text(text = "Register As") },
-                text = {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(text = "Choose your role")
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                Button(
-                                    onClick = {
-                                        showRegisterDialog = false
-                                        val intent = Intent(context, RegisterActivity::class.java)
-                                        context.startActivity(intent)
-                                        (context as? ComponentActivity)?.finish()
-                                    }
-                                ) {
-                                    Text(text = "Farmer")
-                                }
-
-                                Button(
-                                    onClick = {
-                                        showRegisterDialog = false
-                                        val intent = Intent(context, RegisterActivity::class.java)
-                                        context.startActivity(intent)
-                                        (context as? ComponentActivity)?.finish()
-                                    }
-                                ) {
-                                    Text(text = "Client")
-                                }
-                            }
-                        }
-                    }
-                },
-                confirmButton = {
-                    // Empty/null
-                },
-                dismissButton = {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Button(
-                            onClick = { showRegisterDialog = false }
-                        ) {
-                            Text(text = "Cancel")
-                        }
-                    }
-                }
-            )
+            val intent = Intent(context, RegisterActivity::class.java)
+            context.startActivity(intent)
+            (context as? ComponentActivity)?.finish()
         }
     }
 }
