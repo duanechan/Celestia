@@ -66,8 +66,13 @@ class LoginActivity : ComponentActivity() {
                             userViewModel.login(email, password)
                         },
                         userState = userState,
-                        onSuccess = {
-                            startActivity(Intent(this@LoginActivity, MainActivity::class.java))
+                        onSuccess = { role ->
+                            val intent = when (role) {
+                                "Farmer" -> Intent(this@LoginActivity, FarmerOrderRequest::class.java)
+                                "Client" -> Intent(this@LoginActivity, ClientActivity::class.java)
+                                else -> Intent(this@LoginActivity, MainActivity::class.java)
+                            }
+                            startActivity(intent)
                             finish()
                         }
                     )
@@ -98,7 +103,7 @@ fun LoginScreen(
     context: Context,
     loginUser: (String, String) -> Unit,
     userState: UserState,
-    onSuccess: () -> Unit
+    onSuccess: (String) -> Unit
 ) {
     val maxCharacters = 25
     var showDialog by remember { mutableStateOf(false) }
@@ -112,9 +117,10 @@ fun LoginScreen(
             is UserState.ERROR -> {
                 Toast.makeText(context, "Error: ${userState.message}", Toast.LENGTH_SHORT).show()
             }
-            is UserState.SUCCESS -> {
+            is UserState.LOGIN_SUCCESS -> {
+                val role = userState.role
                 Toast.makeText(context, "Login Successful", Toast.LENGTH_SHORT).show()
-                onSuccess()
+                onSuccess(role)
             }
             else -> {}
         }

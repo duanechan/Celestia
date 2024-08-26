@@ -79,6 +79,7 @@ fun HomeScreen() {
             is UserState.SUCCESS -> Text("Welcome ${(userData?.firstname + " " + userData?.lastname)}!", fontSize = 20.sp, fontFamily = FontFamily.Serif)
             is UserState.EMPTY -> Text("User data not found.", fontSize = 20.sp, fontFamily = FontFamily.Serif)
             is UserState.ERROR -> Text("Failed to load user data. (Error: ${(userState as UserState.ERROR).message})", fontSize = 20.sp, fontFamily = FontFamily.Serif)
+            is UserState.LOGIN_SUCCESS -> Text("Welcome ${(userData?.firstname + " " + userData?.lastname)}!", fontSize = 20.sp, fontFamily = FontFamily.Serif)
         }
     }
 }

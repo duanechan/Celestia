@@ -14,6 +14,7 @@ import kotlinx.coroutines.tasks.await
 sealed class UserState {
     object LOADING : UserState()
     object SUCCESS : UserState()
+    data class LOGIN_SUCCESS (val role: String): UserState()
     object EMPTY : UserState()
     data class ERROR(val message: String) : UserState()
 }
@@ -81,7 +82,16 @@ class UserViewModel : ViewModel() {
                 val result = auth.signInWithEmailAndPassword(email, password).await()
                 val user = result.user
                 user?.let {
-                    _userState.value = UserState.SUCCESS
+                    database.child(user.uid).get().addOnSuccessListener { snapshot ->
+                        val userRole = snapshot.child("role").getValue(String::class.java)
+                        if (userRole != null) {
+                            _userState.value = UserState.LOGIN_SUCCESS(userRole)
+                        } else {
+                            _userState.value = UserState.ERROR("Role not found")
+                        }
+                    }.addOnFailureListener {
+                        _userState.value = UserState.ERROR("Login failed")
+                    }
                 } ?: run {
                     _userState.value = UserState.ERROR("Login failed")
                 }
