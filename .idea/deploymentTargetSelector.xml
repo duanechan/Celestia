@@ -2,13 +2,16 @@
 <project version="4">
   <component name="deploymentTargetSelector">
     <selectionStates>
-      <SelectionState runConfigName="AddOrderActivity">
+      <SelectionState runConfigName="SupplierDashboard">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="FarmerOrderRequest">
+      <SelectionState runConfigName="CoopActivity">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="ClientTransaction">
+      <SelectionState runConfigName="ClientActivity">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="ClientDashboard">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

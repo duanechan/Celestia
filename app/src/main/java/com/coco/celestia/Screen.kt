@@ -16,6 +16,9 @@ sealed class Screen(val route: String) {
     object Supplier: Screen( route = "supplier_dashboard")
     object SupplierInventory: Screen( route = "supplier_inventory")
     object SupplierOrder: Screen( route = "supplier_order")
+    object Client: Screen( route = "client_dashboard")
+    object ClientOrder: Screen( route = "client_order")
+    object ClientContact: Screen( route = "client_contact")
 }
 
 // TODO: Add more screens or separate them by making another Screen class here

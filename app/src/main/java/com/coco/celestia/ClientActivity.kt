@@ -79,7 +79,7 @@ class ClientActivity: ComponentActivity(){
 @Preview
 @Composable
 fun ClientDashboard() {
-    Image(painter = painterResource(id = R.drawable.dashboardmock), contentDescription = "Login Image",
+    Image(painter = painterResource(id = R.drawable.clientdashboardmock), contentDescription = "Login Image",
         modifier = Modifier.size(1000.dp))
 
     Spacer(modifier = Modifier.height(50.dp))
@@ -118,7 +118,7 @@ fun ClientNavDrawer(){
                         coroutineScope.launch {
                             drawerState.close()
                         }
-                        navigationController.navigate(Screen.Supplier.route){
+                        navigationController.navigate(Screen.Client.route){
                             popUpTo(0)
                         }
                     })
@@ -131,7 +131,7 @@ fun ClientNavDrawer(){
                         coroutineScope.launch {
                             drawerState.close()
                         }
-                        navigationController.navigate(Screen.SupplierInventory.route){
+                        navigationController.navigate(Screen.ClientOrder.route){
                             popUpTo(0)
                         }
                     })
@@ -144,7 +144,7 @@ fun ClientNavDrawer(){
                         coroutineScope.launch {
                             drawerState.close()
                         }
-                        navigationController.navigate(Screen.SupplierOrder.route){
+                        navigationController.navigate(Screen.ClientContact.route){
                             popUpTo(0)
                         }
                     })
@@ -185,10 +185,10 @@ fun ClientNavDrawer(){
             }
         ) {
             NavHost(navController = navigationController,
-                startDestination = Screen.Supplier.route){
-                composable(Screen.Supplier.route){ SupplierDashboard() }
-                composable(Screen.SupplierInventory.route){ SupplierInventory() }
-                composable(Screen.SupplierOrder.route){ SupplierOrder() }
+                startDestination = Screen.Client.route){
+                composable(Screen.Client.route){ ClientDashboard() }
+                composable(Screen.ClientOrder.route){ ClientOrder() }
+                composable(Screen.ClientContact.route){ ClientContact() }
             }
         }
     }
