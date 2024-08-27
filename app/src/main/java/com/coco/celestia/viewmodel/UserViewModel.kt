@@ -61,7 +61,7 @@ class UserViewModel : ViewModel() {
                 val result = auth.createUserWithEmailAndPassword(email, password).await()
                 val user = result.user
                 user?.let {
-                    val userData = UserData(email, firstname, lastname, password, role)
+                    val userData = UserData(email, firstname, lastname, role)
                     database.child(user.uid).setValue(userData).await()
                     _userState.value = UserState.SUCCESS
                 } ?: run {
