@@ -1,7 +1,6 @@
 package com.coco.celestia
 
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.animateContentSize
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
@@ -44,15 +42,8 @@ import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
-import com.coco.celestia.viewmodel.UserState
-import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import kotlin.reflect.full.memberProperties
 
 class CoopOrderRequest : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -74,6 +65,7 @@ class CoopOrderRequest : ComponentActivity() {
 @Composable
 fun OrderRequestPanel(keywords: String) {
     val orderViewModel: OrderViewModel = viewModel()
+    val transactionViewModel: TransactionViewModel = viewModel()
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -109,11 +101,25 @@ fun OrderRequestPanel(keywords: String) {
                                     auth.currentUser?.uid.toString(),
                                     order.copy(status = "ACCEPTED"),
                                 )
+                                transactionViewModel.recordTransaction(
+                                    auth.currentUser?.uid.toString(),
+                                    TransactionData(
+                                        "TRNSCTN{${order.orderId}}",
+                                        order.copy(status = "ACCEPTED")
+                                    )
+                                )
                             },
                             onReject = {
                                 orderViewModel.updateOrder(
                                     auth.currentUser?.uid.toString(),
                                     order.copy(status = "REJECTED"),
+                                )
+                                transactionViewModel.recordTransaction(
+                                    auth.currentUser?.uid.toString(),
+                                    TransactionData(
+                                        "TRNSCTN{${order.orderId}}",
+                                        order.copy(status = "ACCEPTED")
+                                    )
                                 )
                             }
                         )

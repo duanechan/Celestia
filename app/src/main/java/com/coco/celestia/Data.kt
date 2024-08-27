@@ -31,3 +31,11 @@ data class TransactionData(
     val transactionId: String = "",
     val order: OrderData = OrderData()
 )
+
+data class ContactData(
+    val name: String = "",
+    val contactNumber: Long = 0,
+    val email: String = "",
+    val facebook: String = "",
+    val role: String = "",
+)
