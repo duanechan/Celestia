@@ -119,6 +119,7 @@ fun fetchContacts(onContactsFetched: (Map<String, String>) -> Unit) {
     })
 }
 
+
 @Composable
 fun ItemLists(itemList: Map<String, String>) {
     if (itemList.isNotEmpty()) {
