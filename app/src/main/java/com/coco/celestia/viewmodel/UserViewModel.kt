@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.UserData
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.launch
@@ -68,9 +69,12 @@ class UserViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 _userState.value = UserState.ERROR(e.message ?: "Unknown error")
+            } catch (e: FirebaseAuthUserCollisionException) {
+                _userState.value = UserState.ERROR("Account already exists")
             }
         }
     }
+
 
     /**
      * Logs in a user with the provided email and password.
