@@ -22,7 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.DismissState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,14 +42,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
 
 
 class RegisterActivity : ComponentActivity() {
@@ -84,35 +80,6 @@ class RegisterActivity : ComponentActivity() {
             }
         }
     }
-
-//    private fun registerUser(email: String, firstname: String, lastname: String, password: String) {
-//        val auth: FirebaseAuth = FirebaseAuth.getInstance()
-//
-//        auth.createUserWithEmailAndPassword(email, password)
-//            .addOnCompleteListener(this) { task ->
-//                if (task.isSuccessful) {
-//                    val user = auth.currentUser
-//                    user?.let {
-//                        val userData = UserData(email, firstname, lastname, password)
-//
-//                        databaseReference.child(user.uid).setValue(userData)
-//                            .addOnCompleteListener{
-//                                Toast.makeText(this@RegisterActivity, "Register Successful", Toast.LENGTH_SHORT).show()
-//                                startActivity(Intent(this@RegisterActivity, LoginActivity::class.java))
-//                                finish()
-//                            }
-//                            .addOnFailureListener{
-//                                Toast.makeText(this@RegisterActivity, "error ${it.message}", Toast.LENGTH_SHORT).show()
-//                            }
-//                    }
-//                } else {
-//                    Toast.makeText(this@RegisterActivity, "Error: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
-//                }
-//            }
-//            .addOnFailureListener {
-//                Toast.makeText(this@RegisterActivity, "Error: ${it.message}", Toast.LENGTH_SHORT).show()
-//            }
-//    }
 }
 
 
@@ -131,6 +98,7 @@ fun RegisterScreen(
     var confirmPassword by remember { mutableStateOf("") }
     var showRoleDialog by remember { mutableStateOf(true) }
     var selectedRole by remember { mutableStateOf("") }
+    var isValidEmail by remember { mutableStateOf(true) }
 
     LaunchedEffect(userState) {
         when (userState) {
@@ -221,14 +189,24 @@ fun RegisterScreen(
                 onValueChange = {
                     if (it.length <= maxChar) {
                         email = it
+                        isValidEmail = isValidEmail(it)
                     }
                 },
                 label = { Text(text = "Email") },
+                isError = !isValidEmail,
                 singleLine = true,
                 maxLines = 1
             )
 
             Spacer(modifier = Modifier.height(2.dp))
+
+            if (!isValidEmail) {
+                Text(
+                    text = "Invalid email format",
+                    color = Color.Red,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
             OutlinedTextField(
                 value = firstName,
@@ -306,4 +284,9 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(5.dp))
         }
     }
+}
+
+fun isValidEmail (email: String): Boolean {
+    val emailPattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+"
+    return email.matches(emailPattern.toRegex())
 }
