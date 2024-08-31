@@ -5,9 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.OrderData
-import com.coco.celestia.UserData
-import com.google.android.gms.tasks.Tasks.await
-import com.google.firebase.auth.FirebaseAuth
+import com.coco.celestia.ProductData
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
