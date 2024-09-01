@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun SupplierOrder(){
+fun CoopOrder(){
     Box(modifier = Modifier.fillMaxSize()){
         Column (modifier = Modifier
             .fillMaxSize()

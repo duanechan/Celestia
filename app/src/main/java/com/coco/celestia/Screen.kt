@@ -13,12 +13,15 @@ sealed class Screen(val route: String) {
             "add_order/$product/$type/$quantity"
     }
     object Admin: Screen(route = "admin_dashboard")
-    object Supplier: Screen( route = "supplier_dashboard")
-    object SupplierInventory: Screen( route = "supplier_inventory")
-    object SupplierOrder: Screen( route = "supplier_order")
+    object Coop: Screen( route = "coop_dashboard")
+    object CoopInventory: Screen( route = "coop_inventory")
+    object CoopOrder: Screen( route = "coop_order")
     object Client: Screen( route = "client_dashboard")
     object ClientOrder: Screen( route = "client_order")
     object ClientContact: Screen( route = "client_contact")
+    object Farmer: Screen( route = "farmer_dashboard")
+    object FarmerInventory: Screen( route = "farmer_inventory")
+    object FarmerManageOrder: Screen( route = "farmer_manage_order")
 }
 
 // TODO: Add more screens or separate them by making another Screen class here

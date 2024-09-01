@@ -1,5 +1,6 @@
 package com.coco.celestia
 
+
 import android.annotation.SuppressLint
 import android.graphics.drawable.Icon
 import android.os.Bundle
@@ -54,7 +55,7 @@ import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.ui.theme.Pink40
 import kotlinx.coroutines.launch
 
-class CoopActivity: ComponentActivity(){
+class FarmerActivity: ComponentActivity(){
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,8 +67,8 @@ class CoopActivity: ComponentActivity(){
                         .fillMaxSize()
                         .background(BgColor) // Hex color))
                 ) {
-                    CoopDashboard()
-                    CoopNavDrawer()
+                    FarmerDashboard()
+                    FarmerNavDrawer()
 
                 }
             }
@@ -77,20 +78,20 @@ class CoopActivity: ComponentActivity(){
 
 @Preview
 @Composable
-fun CoopDashboard() {
-    Image(painter = painterResource(id = R.drawable.dashboardmock), contentDescription = "Login Image",
+fun FarmerDashboard() {
+    Image(painter = painterResource(id = R.drawable.clientdashboardmock), contentDescription = "Login Image",
         modifier = Modifier.size(1000.dp))
 
     Spacer(modifier = Modifier.height(50.dp))
 
-    Text(text = "Coop Dashboard Test", fontSize = 50.sp, modifier =  Modifier.padding(50.dp,350.dp))
+    Text(text = "Farmer Dashboard Test", fontSize = 50.sp, modifier =  Modifier.padding(50.dp,350.dp))
 }
 
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CoopNavDrawer(){
+fun FarmerNavDrawer(){
     val navigationController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -106,7 +107,7 @@ fun CoopNavDrawer(){
                     .fillMaxWidth()
                     .height(150.dp)
                 ){
-                    Text(text = "Coop User1")
+                    Text(text = "Farmer User1")
                 }
                 Divider()
                 NavigationDrawerItem(
@@ -117,33 +118,33 @@ fun CoopNavDrawer(){
                         coroutineScope.launch {
                             drawerState.close()
                         }
-                        navigationController.navigate(Screen.Coop.route){
+                        navigationController.navigate(Screen.Farmer.route){
                             popUpTo(0)
                         }
                     })
 
                 NavigationDrawerItem(
-                    label = { Text(text = "Inventory", color = Orange) },
+                    label = { Text(text = "Orders", color = Orange) },
                     selected = false,
                     icon = { Icon(imageVector = Icons.Default.List, contentDescription = "Items", tint = DarkGreen)},
                     onClick = {
                         coroutineScope.launch {
                             drawerState.close()
                         }
-                        navigationController.navigate(Screen.CoopInventory.route){
+                        navigationController.navigate(Screen.FarmerInventory.route){
                             popUpTo(0)
                         }
                     })
 
                 NavigationDrawerItem(
-                    label = { Text(text = "Manage Orders", color = Orange) },
+                    label = { Text(text = "Contact Inquiry", color = Orange) },
                     selected = false,
                     icon = { Icon(imageVector = Icons.Default.CheckCircle, contentDescription = "Orders", tint = DarkGreen)},
                     onClick = {
                         coroutineScope.launch {
                             drawerState.close()
                         }
-                        navigationController.navigate(Screen.CoopOrder.route){
+                        navigationController.navigate(Screen.FarmerManageOrder.route){
                             popUpTo(0)
                         }
                     })
@@ -165,7 +166,7 @@ fun CoopNavDrawer(){
         Scaffold(
             topBar = {
                 val coroutineScope = rememberCoroutineScope()
-                TopAppBar(title = { Text(text = "Coop User 1")},
+                TopAppBar(title = { Text(text = "Client User 1")},
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Orange,
                         titleContentColor = Color.White,
@@ -184,10 +185,10 @@ fun CoopNavDrawer(){
             }
         ) {
             NavHost(navController = navigationController,
-                startDestination = Screen.Coop.route){
-                composable(Screen.Coop.route){ CoopDashboard() }
-                composable(Screen.CoopInventory.route){ CoopInventory() }
-                composable(Screen.CoopOrder.route){ CoopOrder() }
+                startDestination = Screen.Farmer.route){
+                composable(Screen.Farmer.route){ FarmerDashboard() }
+                composable(Screen.FarmerInventory.route){ FarmerInventory() }
+                composable(Screen.FarmerManageOrder.route){ FarmerManageOrder() }
             }
         }
     }

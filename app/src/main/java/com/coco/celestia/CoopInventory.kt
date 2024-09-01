@@ -42,7 +42,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
-fun SupplierInventory() {
+fun CoopInventory() {
     var itemList by remember { mutableStateOf(mapOf<String, Int>()) }
 
     LaunchedEffect(Unit) {
