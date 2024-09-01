@@ -42,8 +42,6 @@ import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
-import com.coco.celestia.viewmodel.UserState
-import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 class ViewOrderActivity : ComponentActivity() {
@@ -117,7 +115,7 @@ fun OrderItem(order: OrderData) {
                     .padding(16.dp)
                     .animateContentSize()
             ) {
-                Text(text = if (order.product != "Vegetable") "${order.type}, ${order.quantity}kg" else order.type,
+                Text(text = if (order.orderData.type != "Vegetable") "${order.orderData.name}, ${order.orderData.quantity}kg" else order.orderData.name,
                     fontSize = 30.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif)
                 Text(text = "${order.status} ●", fontSize = 20.sp, fontWeight = FontWeight.Light, color = Orange)
                 Text(text = "${order.street}, ${order.barangay}, ${order.city} ${order.postalCode}")
@@ -157,13 +155,13 @@ fun EditOrderDialog(order: OrderData, onDismiss: () -> Unit) {
     val productViewModel: ProductViewModel = viewModel()
     val productData by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
-    var selectedType by remember { mutableStateOf(order.type) }
+    var selectedType by remember { mutableStateOf(order.orderData.type) }
+    var editedQuantity by remember { mutableStateOf(order.orderData.quantity.toString()) }
     val orderViewModel: OrderViewModel = viewModel()
     var expanded by remember { mutableStateOf(false) }
-    var editedQuantity by remember { mutableStateOf(order.quantity.toString()) }
 
     LaunchedEffect(Unit) {
-        productViewModel.fetchProduct(order.product)
+        productViewModel.fetchProduct(order.orderData.name)
     }
 
     AlertDialog(
@@ -229,9 +227,11 @@ fun EditOrderDialog(order: OrderData, onDismiss: () -> Unit) {
             Button(
                 onClick = {
                     val quantity = editedQuantity.toIntOrNull() ?: 0
+                    val updatedProductData = order.orderData.copy(type = selectedType, quantity = quantity)
+                    val updatedOrder = order.copy(orderData = updatedProductData)
                     orderViewModel.updateOrder(
                         uid,
-                        order.copy(type = selectedType, quantity = quantity)
+                        updatedOrder
                     )
                     onDismiss()
                 }

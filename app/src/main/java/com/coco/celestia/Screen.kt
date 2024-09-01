@@ -5,12 +5,12 @@ sealed class Screen(val route: String) {
     object Home: Screen(route = "home")
     object Register: Screen(route = "register")
     object AddOrder : Screen("add_order")
-    object OrderDetails : Screen("add_order/{product}") {
-        fun createRoute(product: String) = "add_order/$product"
+    object OrderDetails : Screen("add_order/{type}") {
+        fun createRoute(type: String) = "add_order/$type"
     }
-    object OrderConfirmation : Screen("add_order/{product}/{type}/{quantity}") {
-        fun createRoute(product: String, type: String, quantity: Int) =
-            "add_order/$product/$type/$quantity"
+    object OrderConfirmation : Screen("add_order/{type}/{name}/{quantity}") {
+        fun createRoute(type: String, name: String, quantity: Int) =
+            "add_order/$type/$name/$quantity"
     }
     object Admin: Screen(route = "admin_dashboard")
     object Coop: Screen( route = "coop_dashboard")

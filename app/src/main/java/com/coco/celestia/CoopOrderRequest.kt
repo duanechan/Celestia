@@ -130,37 +130,6 @@ fun OrderRequestPanel(keywords: String) {
     }
 }
 
-//fun listenForOrderUpdates(
-//    filter: String,
-//    onSuccess: (List<OrderData>) -> Unit,
-//    onError: (Exception) -> Unit
-//) {
-//    val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("orders")
-//
-//    databaseReference.addValueEventListener(object : ValueEventListener {
-//        override fun onDataChange(snapshot: DataSnapshot) {
-//            val filterKeywords = filter.split(",").map { it.trim() }
-//
-//            val orders = snapshot.children
-//                .mapNotNull { it.getValue(OrderData::class.java) }
-//                .filter { product ->
-//                    val matches = filterKeywords.any { keyword ->
-//                        OrderData::class.memberProperties.any { prop ->
-//                            val value = prop.get(product)
-//                            value?.toString()?.contains(keyword, ignoreCase = true) == true
-//                        }
-//                    }
-//                    matches && product.status == "PENDING"
-//                }
-//            onSuccess(orders)
-//        }
-//
-//        override fun onCancelled(error: DatabaseError) {
-//            onError(error.toException())
-//        }
-//    })
-//}
-
 @Composable
 fun OrderItemDecision(
     order: OrderData,
@@ -182,7 +151,7 @@ fun OrderItemDecision(
                     .padding(16.dp)
                     .animateContentSize()
             ) {
-                Text(text = if (order.product != "Vegetable") "${order.type}, ${order.quantity}kg" else order.type,
+                Text(text = if (order.orderData.type != "Vegetable") "${order.orderData.name}, ${order.orderData.quantity}kg" else order.orderData.name,
                     fontSize = 30.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif)
                 Text(text = "${order.status} ●", fontSize = 20.sp, fontWeight = FontWeight.Light, color = Orange)
                 Text(text = "${order.street}, ${order.barangay}, ${order.city} ${order.postalCode}")
@@ -194,14 +163,16 @@ fun OrderItemDecision(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    OutlinedButton(
-                        onClick = {
-                            action = "Reject"
-                            showDialog = true
-                        },
-                        colors = ButtonDefaults.buttonColors(contentColor = Color.Red, containerColor = Color.White)
-                    ) {
-                        Text("Reject")
+                    if (order.orderData.type != "Vegetable") {
+                        OutlinedButton(
+                            onClick = {
+                                action = "Reject"
+                                showDialog = true
+                            },
+                            colors = ButtonDefaults.buttonColors(contentColor = Color.Red, containerColor = Color.White)
+                        ) {
+                            Text("Reject")
+                        }
                     }
 
                     Button(
@@ -252,34 +223,3 @@ fun OrderItemDecision(
         )
     }
 }
-
-//fun updateOrderStatus(
-//    order: OrderData,
-//    accepted: Boolean,
-//    onComplete: () -> Unit
-//) {
-//    val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("orders")
-//    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-//    val query = databaseReference.child(uid).orderByChild("orderId").equalTo(order.orderId)
-//
-//    query.addListenerForSingleValueEvent(object : ValueEventListener {
-//        override fun onDataChange(snapshot: DataSnapshot) {
-//            if (snapshot.exists()) {
-//                val orderSnapshot = snapshot.children.first()
-//                orderSnapshot.ref.child("status").setValue(if (accepted) "ACCEPTED" else "REJECTED")
-//                    .addOnSuccessListener {
-//                        onComplete()
-//                    }
-//                    .addOnFailureListener { exception ->
-//                        println("Error updating order status: ${exception.message}")
-//                    }
-//            } else {
-//                println("No order found with ID: ${order.orderId}")
-//            }
-//        }
-//
-//        override fun onCancelled(error: DatabaseError) {
-//            println("Error querying orders: ${error.message}")
-//        }
-//    })
-//}

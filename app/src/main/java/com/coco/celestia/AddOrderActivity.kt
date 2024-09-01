@@ -308,7 +308,7 @@ fun QuantitySelector(
 
 
 @Composable
-fun ConfirmOrderRequestPanel(navController: NavController, product: String?, type: String?, quantity: Int?) {
+fun ConfirmOrderRequestPanel(navController: NavController, type: String?, name: String?, quantity: Int?) {
     val orderViewModel: OrderViewModel = viewModel()
     val transactionViewModel: TransactionViewModel = viewModel()
     val orderState by orderViewModel.orderState.observeAsState()
@@ -417,9 +417,11 @@ fun ConfirmOrderRequestPanel(navController: NavController, product: String?, typ
                         "ORDR{${UUID.randomUUID()}}",
                         Date.from(Instant.now()).toString(),
                         "PENDING",
-                        product.toString(),
-                        type.toString(),
-                        quantity!!,
+                        ProductData(
+                            name.toString(),
+                            quantity!!,
+                            type.toString()
+                        ),
                         city,
                         postalCode.toInt(),
                         barangay,
