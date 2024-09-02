@@ -1,5 +1,6 @@
 package com.coco.celestia
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,7 +25,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
@@ -45,8 +51,8 @@ class MainActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(Color(0xFFF2E3DB)) // Hex color))
                 ) {
-                    HomeScreen()
-//                    startActivity(Intent(this, LoginActivity::class.java))
+                    val navController = rememberNavController()
+                    NavGraph(navController = navController)
                 }
             }
         }
@@ -56,16 +62,14 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navController: NavController) {
     val currentUser = FirebaseAuth.getInstance().currentUser
     val userViewModel: UserViewModel = viewModel()
     val userData by userViewModel.userData.observeAsState()
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
 
     LaunchedEffect(currentUser?.uid) {
-        if (currentUser != null) {
-            userViewModel.fetchUser(currentUser.uid)
-        }
+        userViewModel.fetchUser(currentUser!!.uid)
     }
 
     Column(
@@ -80,6 +84,7 @@ fun HomeScreen() {
             is UserState.EMPTY -> Text("User data not found.", fontSize = 20.sp, fontFamily = FontFamily.Serif)
             is UserState.ERROR -> Text("Failed to load user data. (Error: ${(userState as UserState.ERROR).message})", fontSize = 20.sp, fontFamily = FontFamily.Serif)
             is UserState.LOGIN_SUCCESS -> Text("Welcome ${(userData?.firstname + " " + userData?.lastname)}!", fontSize = 20.sp, fontFamily = FontFamily.Serif)
+            else -> {}
         }
     }
 }

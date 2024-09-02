@@ -1,6 +1,7 @@
 package com.coco.celestia
 
 sealed class Screen(val route: String) {
+    object Loading: Screen(route = "loading")
     object Login: Screen(route = "login")
     object Home: Screen(route = "home")
     object Register: Screen(route = "register")

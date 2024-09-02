@@ -79,10 +79,10 @@ class AddOrderActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0xFFF2E3DB)) // Hex color))
+                        .background(Color(0xFFF2E3DB))
                 ) {
-                    val navController = rememberNavController()
-                    AddOrderNav(navController = navController)
+//                    val navController = rememberNavController()
+//                    NavGraph(navController = navController)
                 }
             }
         }

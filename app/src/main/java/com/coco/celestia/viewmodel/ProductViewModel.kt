@@ -42,4 +42,23 @@ class ProductViewModel : ViewModel() {
             }
         }
     }
+
+    fun fetchProducts() {
+        viewModelScope.launch {
+            _productState.value = ProductState.LOADING
+            try {
+                val snapshot = database.orderByChild("type").get().await()
+                if (snapshot.exists()) {
+                    val products = snapshot.children.mapNotNull { it.getValue(ProductData::class.java) }
+                    _productData.value = products
+                    _productState.value = if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
+                } else {
+                    _productData.value = emptyList()
+                    _productState.value = ProductState.EMPTY
+                }
+            } catch(e: Exception) {
+                _productState.value = ProductState.ERROR(e.message ?: "Unknown error")
+            }
+        }
+    }
 }

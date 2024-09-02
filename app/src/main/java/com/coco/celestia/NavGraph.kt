@@ -1,19 +1,54 @@
 package com.coco.celestia
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.coco.celestia.viewmodel.UserState
+import com.coco.celestia.viewmodel.UserViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun AddOrderNav(navController: NavHostController) {
+fun NavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = Screen.AddOrder.route
+        startDestination = Screen.Loading.route,
     ) {
-        composable(Screen.AddOrder.route) { AddOrderPanel(navController) }
+        composable(route = Screen.Loading.route) {
+            LoadingScreen(navController)
+        }
+        composable(route = Screen.Login.route) {
+            LoginScreen(navController)
+        }
+        composable(route = Screen.Register.route) {
+            RegisterScreen(navController)
+        }
+        composable(route = Screen.Farmer.route) {
+            FarmerDashboard()
+            FarmerNavDrawer(navController)
+        }
+        composable(route = Screen.Client.route) {
+            ClientDashboard()
+            ClientNavDrawer(navController)
+        }
+        composable(route = Screen.Admin.route) {
+            // TODO: Admin Dashboard
+        }
+        composable(route = Screen.Coop.route) {
+            CoopDashboard()
+            CoopNavDrawer(navController)
+        }
+        composable(route = Screen.Home.route) {
+            HomeScreen(navController)
+        }
+        composable(route = Screen.AddOrder.route) {
+            AddOrderPanel(navController)
+        }
         composable(
             route = Screen.OrderDetails.route,
             arguments = listOf(navArgument("type") { type = NavType.StringType })
@@ -34,4 +69,26 @@ fun AddOrderNav(navController: NavHostController) {
             ConfirmOrderRequestPanel(navController, type, name, quantity)
         }
     }
+}
+
+/**
+ * Determines start destination based on user authentication and role.
+ */
+@Composable
+fun setStartDestination(): String {
+    val userViewModel: UserViewModel = viewModel()
+    val userData by userViewModel.userData.observeAsState()
+    val currentUser = FirebaseAuth.getInstance().currentUser
+
+    if (currentUser != null) {
+        userViewModel.fetchUser(currentUser.uid)
+        return when (userData?.role) {
+            "Farmer" -> Screen.Farmer.route
+            "Client" -> Screen.Client.route
+            "Admin" -> Screen.Admin.route
+            "Coop" -> Screen.Coop.route
+            else -> Screen.Login.route
+        }
+    }
+    return Screen.Login.route
 }

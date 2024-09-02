@@ -1,5 +1,6 @@
 package com.coco.celestia.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -15,9 +16,10 @@ import kotlinx.coroutines.tasks.await
 sealed class UserState {
     object LOADING : UserState()
     object SUCCESS : UserState()
+    data object REGISTER_SUCCESS: UserState()
     data class LOGIN_SUCCESS (val role: String): UserState()
     object EMPTY : UserState()
-    data class ERROR(val message: String) : UserState()
+    data class ERROR (val message: String) : UserState()
 }
 
 class UserViewModel : ViewModel() {
@@ -63,7 +65,7 @@ class UserViewModel : ViewModel() {
                 user?.let {
                     val userData = UserData(email, firstname, lastname, role)
                     database.child(user.uid).setValue(userData).await()
-                    _userState.value = UserState.SUCCESS
+                    _userState.value = UserState.REGISTER_SUCCESS
                 } ?: run {
                     _userState.value = UserState.ERROR("Registration failed")
                 }
@@ -99,6 +101,22 @@ class UserViewModel : ViewModel() {
                 } ?: run {
                     _userState.value = UserState.ERROR("Login failed")
                 }
+            } catch (e: Exception) {
+                _userState.value = UserState.ERROR(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    /**
+     * Logs out the current user.
+     */
+    fun logout() {
+        viewModelScope.launch {
+            _userState.value = UserState.LOADING
+            try {
+                auth.signOut()
+                _userData.value = null
+                _userState.value = UserState.SUCCESS
             } catch (e: Exception) {
                 _userState.value = UserState.ERROR(e.message ?: "Unknown error")
             }

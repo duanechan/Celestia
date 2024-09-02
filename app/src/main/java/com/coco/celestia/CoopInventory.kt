@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -30,8 +31,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.ui.theme.LightGreen
 import com.coco.celestia.ui.theme.PurpleGrey40
+import com.coco.celestia.viewmodel.OrderState
+import com.coco.celestia.viewmodel.ProductState
+import com.coco.celestia.viewmodel.ProductViewModel
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -43,12 +48,12 @@ import java.util.Locale
 @Preview
 @Composable
 fun CoopInventory() {
-    var itemList by remember { mutableStateOf(mapOf<String, Int>()) }
+    val productViewModel: ProductViewModel = viewModel()
+    val productData by productViewModel.productData.observeAsState(emptyList())
+    val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
 
     LaunchedEffect(Unit) {
-        fetchProducts { products ->
-            itemList = products
-        }
+        productViewModel.fetchProducts()
     }
 
     Column(
@@ -98,29 +103,42 @@ fun CoopInventory() {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        ItemList(itemList)
+        when (productState) {
+            is ProductState.LOADING -> {
+                Text("Loading products...")
+            }
+            is ProductState.ERROR -> {
+                Text("Failed to load products: ${(productState as ProductState.ERROR).message}")
+            }
+            is ProductState.EMPTY -> {
+                Text("No products available.")
+            }
+            is ProductState.SUCCESS -> {
+                ItemList(productData)
+            }
+        }
     }
 }
 
-fun fetchProducts(onProductsFetched: (Map<String, Int>) -> Unit) {
-    val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("products")
-    databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-            val productList = snapshot.children.mapNotNull {
-                it.key?.let { key -> key to it.child("quantity").getValue(Int::class.java) }
-            }
-                .filter { it.second != null }.associate { it.first to it.second!! }
-            onProductsFetched(productList)
-        }
-
-        override fun onCancelled(error: DatabaseError) {
-
-        }
-    })
-}
+//fun fetchProducts(onProductsFetched: (Map<String, Int>) -> Unit) {
+//    val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("products")
+//    databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
+//        override fun onDataChange(snapshot: DataSnapshot) {
+//            val productList = snapshot.children.mapNotNull {
+//                it.key?.let { key -> key to it.child("quantity").getValue(Int::class.java) }
+//            }
+//                .filter { it.second != null }.associate { it.first to it.second!! }
+//            onProductsFetched(productList)
+//        }
+//
+//        override fun onCancelled(error: DatabaseError) {
+//
+//        }
+//    })
+//}
 
 @Composable
-fun ItemList(itemList: Map<String, Int>) {
+fun ItemList(itemList: List<ProductData>) {
     if (itemList.isNotEmpty()) {
         itemList.forEach { (type, quantity) ->
             val productType = type.replace("_", " ")

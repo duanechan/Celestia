@@ -3,6 +3,7 @@ package com.coco.celestia
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -43,6 +44,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
@@ -59,23 +62,10 @@ class RegisterActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(Color(0xFFF2E3DB))
                 ) {
-                    val userViewModel: UserViewModel = viewModel()
-                    val userState by userViewModel.userState.observeAsState(UserState.LOADING)
-
-                    RegisterScreen(
-                        context = this,
-                        registerUser = { email, firstName, lastName, password, role ->
-                            userViewModel.register(email, firstName, lastName, password, role)
-                        },
-                        userState = userState,
-                        showMessage = { message ->
-                            Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
-                        },
-                        onSuccess = {
-                            startActivity(Intent(this, LoginActivity::class.java))
-                            finish()
-                        }
-                    )
+//                    val userViewModel: UserViewModel = viewModel()
+//                    val userState by userViewModel.userState.observeAsState(UserState.LOADING)
+//                    var navController = rememberNavController()
+//                    RegisterScreen(navController)
                 }
             }
         }
@@ -84,12 +74,9 @@ class RegisterActivity : ComponentActivity() {
 
 
 @Composable
-fun RegisterScreen(
-    context: Context,
-    registerUser: (String, String, String, String, String) -> Unit,
-    userState: UserState, showMessage: (String) -> Unit,
-    onSuccess: () -> Unit
-) {
+fun RegisterScreen(mainNavController: NavController) {
+    val userViewModel: UserViewModel = viewModel()
+    val userState by userViewModel.userState.observeAsState(UserState.LOADING)
     val maxChar = 25
     var email by remember { mutableStateOf("") }
     var firstName by remember { mutableStateOf("") }
@@ -101,13 +88,14 @@ fun RegisterScreen(
     var isValidEmail by remember { mutableStateOf(true) }
 
     LaunchedEffect(userState) {
+        Log.d("RegisterScreen", "User state changed: $userState")
         when (userState) {
             is UserState.ERROR -> {
-                Toast.makeText(context, "Error: ${userState.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(mainNavController.context, "Error: ${(userState as UserState.ERROR).message}", Toast.LENGTH_SHORT).show()
             }
-            is UserState.SUCCESS -> {
-                Toast.makeText(context, "Registration Successful", Toast.LENGTH_SHORT).show()
-                onSuccess()
+            is UserState.REGISTER_SUCCESS -> {
+                Toast.makeText(mainNavController.context, "Registration Successful", Toast.LENGTH_SHORT).show()
+                mainNavController.navigate(Screen.Login.route)
             }
             else -> {}
         }
@@ -162,9 +150,9 @@ fun RegisterScreen(
                     Button(
                         onClick = {
                             showRoleDialog = false
-                            val intent = Intent(context, LoginActivity::class.java)
-                            context.startActivity(intent)
-                            (context as? ComponentActivity)?.finish()
+                            mainNavController.navigate(Screen.Login.route) {
+                                popUpTo(Screen.Login.route) { inclusive = true }
+                            }
                         }
                     ) {
                         Text(text = "Cancel")
@@ -271,9 +259,9 @@ fun RegisterScreen(
             Button(
                 onClick = {
                     if (email.isNotEmpty() && firstName.isNotEmpty() && lastName.isNotEmpty() && password.isNotEmpty()) {
-                        registerUser(email, firstName, lastName, password, selectedRole)
+                        userViewModel.register(email, firstName, lastName, password, selectedRole)
                     } else {
-                        showMessage("All fields must be filled.")
+                        Toast.makeText(mainNavController.context, "All text must be filled", Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier

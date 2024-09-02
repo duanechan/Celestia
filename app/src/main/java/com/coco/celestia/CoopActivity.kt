@@ -44,6 +44,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -52,6 +54,7 @@ import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.ui.theme.Pink40
+import com.coco.celestia.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
 
 class CoopActivity: ComponentActivity(){
@@ -66,9 +69,9 @@ class CoopActivity: ComponentActivity(){
                         .fillMaxSize()
                         .background(BgColor) // Hex color))
                 ) {
+                    val navController = rememberNavController()
                     CoopDashboard()
-                    CoopNavDrawer()
-
+                    CoopNavDrawer(navController)
                 }
             }
         }
@@ -90,9 +93,10 @@ fun CoopDashboard() {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CoopNavDrawer(){
+fun CoopNavDrawer(mainNavController: NavController){
     val navigationController = rememberNavController()
     val coroutineScope = rememberCoroutineScope()
+    val userViewModel: UserViewModel = viewModel()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val context = LocalContext.current.applicationContext
 
@@ -157,8 +161,11 @@ fun CoopNavDrawer(){
                         coroutineScope.launch {
                             drawerState.close()
                         }
-                        //Initial
+                        mainNavController.navigate(Screen.Login.route) {
+                            popUpTo(mainNavController.graph.startDestinationId)
+                        }
                         Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
+                        userViewModel.logout()
                     })
             }
         }) {
