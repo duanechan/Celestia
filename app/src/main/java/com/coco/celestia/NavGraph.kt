@@ -9,7 +9,6 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -17,10 +16,10 @@ import com.google.firebase.auth.FirebaseAuth
 fun NavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Loading.route,
+        startDestination = Screen.Splash.route,
     ) {
-        composable(route = Screen.Loading.route) {
-            LoadingScreen(navController)
+        composable(route = Screen.Splash.route) {
+            SplashScreen(navController)
         }
         composable(route = Screen.Login.route) {
             LoginScreen(navController)
@@ -69,26 +68,4 @@ fun NavGraph(navController: NavHostController) {
             ConfirmOrderRequestPanel(navController, type, name, quantity)
         }
     }
-}
-
-/**
- * Determines start destination based on user authentication and role.
- */
-@Composable
-fun setStartDestination(): String {
-    val userViewModel: UserViewModel = viewModel()
-    val userData by userViewModel.userData.observeAsState()
-    val currentUser = FirebaseAuth.getInstance().currentUser
-
-    if (currentUser != null) {
-        userViewModel.fetchUser(currentUser.uid)
-        return when (userData?.role) {
-            "Farmer" -> Screen.Farmer.route
-            "Client" -> Screen.Client.route
-            "Admin" -> Screen.Admin.route
-            "Coop" -> Screen.Coop.route
-            else -> Screen.Login.route
-        }
-    }
-    return Screen.Login.route
 }
