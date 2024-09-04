@@ -20,6 +20,9 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
@@ -28,6 +31,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -48,6 +53,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.CelestiaTheme
@@ -93,109 +99,77 @@ fun CoopDashboard() {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CoopNavDrawer(mainNavController: NavController){
+fun CoopNavDrawer(mainNavController: NavController) {
     val navigationController = rememberNavController()
-    val coroutineScope = rememberCoroutineScope()
     val userViewModel: UserViewModel = viewModel()
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val context = LocalContext.current.applicationContext
+    val context = LocalContext.current
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        gesturesEnabled = true,
-        drawerContent = {
-            ModalDrawerSheet {
-                Box(modifier = Modifier
-                    .background(Pink40)
-                    .fillMaxWidth()
-                    .height(150.dp)
-                ){
-                    Text(text = "Coop User1")
-                }
-                Divider()
-                NavigationDrawerItem(
-                    label = { Text(text = "Dashboard", color = Orange) },
-                    selected = false,
-                    icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard", tint = DarkGreen)},
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text = "Coop User 1") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Orange,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
+            )
+        },
+        bottomBar = {
+            NavigationBar(
+                containerColor = Orange,
+                contentColor = DarkGreen
+            ) {
+                val currentDestination = navigationController.currentBackStackEntryAsState().value?.destination?.route
+                NavigationBarItem(
+                    icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard") },
+                    label = { Text("Dashboard") },
+                    selected = currentDestination == Screen.Coop.route,
                     onClick = {
-                        coroutineScope.launch {
-                            drawerState.close()
-                        }
-                        navigationController.navigate(Screen.Coop.route){
+                        navigationController.navigate(Screen.Coop.route) {
                             popUpTo(0)
                         }
-                    })
-
-                NavigationDrawerItem(
-                    label = { Text(text = "Inventory", color = Orange) },
-                    selected = false,
-                    icon = { Icon(imageVector = Icons.Default.List, contentDescription = "Items", tint = DarkGreen)},
+                    }
+                )
+                NavigationBarItem(
+                    icon = { Icon(imageVector = Icons.Default.List, contentDescription = "Items") },
+                    label = { Text("Items") },
+                    selected = currentDestination == Screen.CoopInventory.route,
                     onClick = {
-                        coroutineScope.launch {
-                            drawerState.close()
-                        }
-                        navigationController.navigate(Screen.CoopInventory.route){
+                        navigationController.navigate(Screen.CoopInventory.route) {
                             popUpTo(0)
                         }
-                    })
-
-                NavigationDrawerItem(
-                    label = { Text(text = "Manage Orders", color = Orange) },
-                    selected = false,
-                    icon = { Icon(imageVector = Icons.Default.CheckCircle, contentDescription = "Orders", tint = DarkGreen)},
+                    }
+                )
+                NavigationBarItem(
+                    icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Orders") },
+                    label = { Text("Orders") },
+                    selected = currentDestination == Screen.CoopOrder.route,
                     onClick = {
-                        coroutineScope.launch {
-                            drawerState.close()
-                        }
-                        navigationController.navigate(Screen.CoopOrder.route){
+                        navigationController.navigate(Screen.CoopOrder.route) {
                             popUpTo(0)
                         }
-                    })
-
-
-                NavigationDrawerItem(
-                    label = { Text(text = "Logout", color = Orange) },
+                    }
+                )
+                NavigationBarItem(
+                    icon = { Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Logout") },
+                    label = { Text("Logout") },
                     selected = false,
-                    icon = { Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Logout", tint = DarkGreen)},
                     onClick = {
-                        coroutineScope.launch {
-                            drawerState.close()
-                        }
                         mainNavController.navigate(Screen.Login.route) {
                             popUpTo(mainNavController.graph.startDestinationId)
                         }
                         Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
                         userViewModel.logout()
-                    })
+                    }
+                )
             }
-        }) {
-        Scaffold(
-            topBar = {
-                val coroutineScope = rememberCoroutineScope()
-                TopAppBar(title = { Text(text = "Coop User 1")},
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Orange,
-                        titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White
-                    ), navigationIcon = {
-                        IconButton(onClick = {
-                            coroutineScope.launch {
-                                drawerState.open()
-                            }
-                        }) {
-                            Icon(
-                                Icons.Rounded.Menu, contentDescription = "MenuButton"
-                            )
-                        }
-                    })
-            }
-        ) {
-            NavHost(navController = navigationController,
-                startDestination = Screen.Coop.route){
-                composable(Screen.Coop.route){ CoopDashboard() }
-                composable(Screen.CoopInventory.route){ CoopInventory() }
-                composable(Screen.CoopOrder.route){ CoopOrder() }
-            }
+        }
+    ) {
+        NavHost(navController = navigationController, startDestination = Screen.Coop.route) {
+            composable(Screen.Coop.route) { CoopDashboard() }
+            composable(Screen.CoopInventory.route) { CoopInventory() }
+            composable(Screen.CoopOrder.route) { CoopOrder() }
         }
     }
 }
