@@ -1,11 +1,13 @@
 package com.coco.celestia.viewmodel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.UserData
+import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.database.DatabaseReference
@@ -105,6 +107,25 @@ class UserViewModel : ViewModel() {
                 _userState.value = UserState.ERROR(e.message ?: "Unknown error")
             }
         }
+    }
+
+    fun sendPasswordResetEmail(context: Context, email: String) {
+        viewModelScope.launch {
+            _userState.value = UserState.LOADING
+            try {
+                auth.sendPasswordResetEmail(email)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            Toast.makeText(context, "Reset email sent successfully.", Toast.LENGTH_LONG).show()
+                        } else {
+                            _userState.value = UserState.ERROR(task.exception?.message ?: "Unknown Error")
+                        }
+                    }
+            } catch (e: Exception) {
+                _userState.value = UserState.ERROR(e.message ?: "Unknown Error")
+            }
+        }
+
     }
 
     /**

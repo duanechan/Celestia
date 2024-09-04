@@ -24,6 +24,9 @@ fun NavGraph(navController: NavHostController) {
         composable(route = Screen.Login.route) {
             LoginScreen(navController)
         }
+        composable(route = Screen.ForgotPassword.route) {
+            ForgotPasswordScreen(navController)
+        }
         composable(route = Screen.Register.route) {
             RegisterScreen(navController)
         }
