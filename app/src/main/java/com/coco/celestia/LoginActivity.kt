@@ -149,7 +149,7 @@ fun LoginScreen(mainNavController: NavController) {
                 }
             },
             modifier = Modifier
-                .fillMaxWidth()
+                .width(285.dp)
                 .height(50.dp)
         ) {
             Text(text = "Login")
