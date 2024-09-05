@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -158,7 +159,11 @@ fun ClientOrder(navController: NavController, orderViewModel: OrderViewModel, us
                 is OrderState.SUCCESS -> {
                     var orderCount = 1
                     orderData.forEach { order ->
-                        OrderCards(orderCount, order, userData!!)
+                        userData?.let { user ->
+                            OrderCards(orderCount, order, user)
+                        } ?: run {
+                            CircularProgressIndicator() // TODO: Improve UI (Navigate to orders and logout to view)
+                        }
                         orderCount++
                     }
                 }
@@ -254,9 +259,11 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
                         "PENDING" -> {
                             Color(0xFFFF8C00)
                         }
+
                         "ACCEPTED" -> {
                             Color.Green
                         }
+
                         else -> {
                             Color.Red
                         }

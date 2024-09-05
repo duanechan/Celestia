@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.viewmodel.UserState
@@ -75,23 +76,6 @@ fun LoginScreen(mainNavController: NavController, userViewModel: UserViewModel) 
         )
     }
 
-//    LaunchedEffect(userState) {
-//        when (userState) {
-//            is UserState.ERROR -> {
-//                Toast.makeText(navController.context, "Error: ${(userState as UserState.ERROR).message}", Toast.LENGTH_SHORT).show()
-//            }
-//            is UserState.LOGIN_SUCCESS -> {
-//                Toast.makeText(navController.context, "Login Successful", Toast.LENGTH_SHORT).show()
-//                val role = (userState as UserState.LOGIN_SUCCESS).role
-//                redirect(role, mainNavController)
-//            }
-//            is UserState.REGISTER_SUCCESS -> {
-//                Toast.makeText(navController.context, "You can now log in!", Toast.LENGTH_SHORT).show()
-//            }
-//            else -> {}
-//        }
-//    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -134,10 +118,6 @@ fun LoginScreen(mainNavController: NavController, userViewModel: UserViewModel) 
 
         Button(
             onClick = {
-//                if (email.isEmpty() || password.isEmpty()) {
-//                    errorDialogMessage = "Fields cannot be empty"
-//                } else {
-//                }
                 userViewModel.login(email, password)
                 Log.d("LoginScreen", "$userState")
                 loginDialog = true
@@ -193,13 +173,13 @@ fun LoginScreen(mainNavController: NavController, userViewModel: UserViewModel) 
     }
 }
 
-fun redirectUser(role: String, mainNavController: NavController) {
+fun redirectUser(role: String, navController: NavController) {
     when (role) {
-        "Farmer" -> mainNavController.navigate(Screen.Farmer.route)
-        "Client" -> mainNavController.navigate(Screen.Client.route)
-        "Admin" -> mainNavController.navigate(Screen.Admin.route)
-        "Coop" -> mainNavController.navigate(Screen.Coop.route)
+        "Farmer" -> navController.navigate(Screen.Farmer.route)
+        "Client" -> navController.navigate(Screen.Client.route)
+        "Admin" -> navController.navigate(Screen.Admin.route)
+        "Coop" -> navController.navigate(Screen.Coop.route)
         // TODO: Handle unknown role
-        else -> mainNavController.navigate(Screen.Home.route)
+        else -> navController.navigate(Screen.Home.route)
     }
 }

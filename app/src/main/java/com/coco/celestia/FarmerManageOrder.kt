@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -159,7 +160,11 @@ fun FarmerManageOrder(
                 is OrderState.SUCCESS -> {
                     var orderCount = 1
                     orderData.forEach { order ->
-                        ManageOrderCards(orderCount, order, userData!!)
+                        userData?.let { user ->
+                            ManageOrderCards(orderCount, order, user)
+                        } ?: run {
+                            CircularProgressIndicator() // TODO: Improve UI (Navigate to orders and logout to view)
+                        }
                         orderCount++
                     }
                 }
