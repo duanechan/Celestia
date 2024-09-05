@@ -184,7 +184,7 @@ fun AdminNavDrawer(mainNavController: NavController) {
                 )
                 NavigationBarItem(
                     icon = { Icon(imageVector = Icons.Default.Person, contentDescription = "User Management") },
-                    label = { Text("Orders") },
+                    label = { Text("User Management") },
                     selected = currentDestination == Screen.AdminUserManagement.route,
                     onClick = {
                         navigationController.navigate(Screen.AdminUserManagement.route) {
