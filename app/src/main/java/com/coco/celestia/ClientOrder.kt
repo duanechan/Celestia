@@ -129,12 +129,13 @@ fun ClientOrder() {
         FloatingActionButton(
             onClick = { /* Handle add order click */ },
             modifier = Modifier
-                .align(Alignment.BottomEnd)  // Aligns the button to the bottom end
-                .padding(16.dp),
-            containerColor = LightGreen  // Set the background color of the button
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+                .padding(bottom = 100.dp),
+                containerColor = LightGreen
         ) {
             Icon(
-                imageVector = Icons.Default.Add,  // Ensure this is your plus icon resource
+                imageVector = Icons.Default.Add,
                 contentDescription = "Add Order",
                 tint = Color.White
             )
