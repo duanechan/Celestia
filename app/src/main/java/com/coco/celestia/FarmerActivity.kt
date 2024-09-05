@@ -111,6 +111,7 @@ fun FarmerNavDrawer(mainNavController: NavController){
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val context = LocalContext.current.applicationContext
     var exitDialog by remember { mutableStateOf(false) }
+    var logoutDialog by remember { mutableStateOf(false) }
 
     BackHandler {
         exitDialog = true
@@ -120,6 +121,20 @@ fun FarmerNavDrawer(mainNavController: NavController){
         ExitDialog(
             onDismiss = { exitDialog = false },
             onExit = { (mainNavController.context as Activity).finish() }
+        )
+    }
+
+    if (logoutDialog) {
+        LogoutDialog(
+            onDismiss = { logoutDialog = false },
+            onLogout = {
+                userViewModel.logout()
+                mainNavController.navigate(Screen.Login.route) {
+                    popUpTo(mainNavController.graph.startDestinationId)
+                }
+                Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
+                logoutDialog = false
+            }
         )
     }
 
@@ -184,11 +199,7 @@ fun FarmerNavDrawer(mainNavController: NavController){
                         coroutineScope.launch {
                             drawerState.close()
                         }
-                        userViewModel.logout()
-                        mainNavController.navigate(Screen.Login.route) {
-                            popUpTo(mainNavController.graph.startDestinationId)
-                        }
-                        Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
+                        logoutDialog = true
                     })
             }
         }) {

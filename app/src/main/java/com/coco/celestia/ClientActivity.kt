@@ -86,6 +86,7 @@ fun ClientNavDrawer(mainNavController: NavController) {
     val userViewModel: UserViewModel = viewModel()
     val context = LocalContext.current
     var exitDialog by remember { mutableStateOf(false) }
+    var logoutDialog by remember { mutableStateOf(false) }
 
     BackHandler {
         exitDialog = true
@@ -98,6 +99,19 @@ fun ClientNavDrawer(mainNavController: NavController) {
         )
     }
 
+    if (logoutDialog) {
+        LogoutDialog(
+            onDismiss = { logoutDialog = false },
+            onLogout = {
+                userViewModel.logout()
+                mainNavController.navigate(Screen.Login.route) {
+                    popUpTo(mainNavController.graph.startDestinationId)
+                }
+                Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
+                logoutDialog = false
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -150,20 +164,14 @@ fun ClientNavDrawer(mainNavController: NavController) {
                     icon = { Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Logout") },
                     label = { Text("Logout") },
                     selected = false,
-                    onClick = {
-                        mainNavController.navigate(Screen.Login.route) {
-                            popUpTo(mainNavController.graph.startDestinationId)
-                        }
-                        Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
-                        userViewModel.logout()
-                    }
+                    onClick = { logoutDialog = true }
                 )
             }
         }
     ) {
         NavHost(navController = navigationController, startDestination = Screen.Client.route) {
             composable(Screen.Client.route) { ClientDashboard() }
-            composable(Screen.AddOrder.route) { ClientOrder() }
+            composable(Screen.Client.route) { ClientOrder() }
             composable(Screen.ClientContact.route) { ClientContact() }
         }
     }
