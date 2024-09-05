@@ -72,6 +72,7 @@ import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.ui.theme.Pink40
 import com.coco.celestia.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
+import kotlin.math.log
 
 class AdminActivity: ComponentActivity(){
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -117,6 +118,7 @@ fun NavDrawer(mainNavController: NavController){
     val context = LocalContext.current.applicationContext
     val userViewModel: UserViewModel = viewModel()
     var exitDialog by remember { mutableStateOf(false) }
+    var logoutDialog by remember { mutableStateOf(false) }
 
     BackHandler {
         exitDialog = true
@@ -126,6 +128,20 @@ fun NavDrawer(mainNavController: NavController){
         ExitDialog(
             onDismiss = { exitDialog = false },
             onExit = { (mainNavController.context as Activity).finish() }
+        )
+    }
+
+    if (logoutDialog) {
+        LogoutDialog(
+            onDismiss = { logoutDialog = false },
+            onLogout = {
+                userViewModel.logout()
+                mainNavController.navigate(Screen.Login.route) {
+                    popUpTo(mainNavController.graph.startDestinationId)
+                }
+                Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
+                logoutDialog = false
+            }
         )
     }
 
@@ -202,11 +218,7 @@ fun NavDrawer(mainNavController: NavController){
                         coroutineScope.launch {
                             drawerState.close()
                         }
-                        mainNavController.navigate(Screen.Login.route) {
-                            popUpTo(mainNavController.graph.startDestinationId)
-                        }
-                        Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
-                        userViewModel.logout()
+                        logoutDialog = true
                     })
             }
         }) {

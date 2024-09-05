@@ -23,8 +23,6 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
@@ -33,8 +31,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -60,7 +56,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.CelestiaTheme
@@ -109,11 +104,14 @@ fun FarmerDashboard() {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FarmerNavDrawer(mainNavController: NavController) {
+fun FarmerNavDrawer(mainNavController: NavController){
     val navigationController = rememberNavController()
+    val coroutineScope = rememberCoroutineScope()
     val userViewModel: UserViewModel = viewModel()
-    val context = LocalContext.current
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val context = LocalContext.current.applicationContext
     var exitDialog by remember { mutableStateOf(false) }
+    var logoutDialog by remember { mutableStateOf(false) }
 
     BackHandler {
         exitDialog = true
@@ -126,62 +124,114 @@ fun FarmerNavDrawer(mainNavController: NavController) {
         )
     }
 
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(text = "Farmer User 1") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Orange,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
-                )
-            )
-        },
-        bottomBar = {
-            NavigationBar(
-                containerColor = Orange,
-                contentColor = DarkGreen
-            ) {
-                val currentDestination = navigationController.currentBackStackEntryAsState().value?.destination?.route
-                NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard") },
-                    label = { Text("Dashboard") },
-                    selected = currentDestination == Screen.Farmer.route,
-                    onClick = {
-                        navigationController.navigate(Screen.Farmer.route) {
-                            popUpTo(0)
-                        }
-                    }
-                )
-                NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Orders") },
-                    label = { Text("Orders") },
-                    selected = currentDestination == Screen.FarmerManageOrder.route,
-                    onClick = {
-                        navigationController.navigate(Screen.FarmerManageOrder.route) {
-                            popUpTo(0)
-                        }
-                    }
-                )
-                NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Logout") },
-                    label = { Text("Logout") },
-                    selected = false,
-                    onClick = {
-                        mainNavController.navigate(Screen.Login.route) {
-                            popUpTo(mainNavController.graph.startDestinationId)
-                        }
-                        Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
-                        userViewModel.logout()
-                    }
-                )
+    if (logoutDialog) {
+        LogoutDialog(
+            onDismiss = { logoutDialog = false },
+            onLogout = {
+                userViewModel.logout()
+                mainNavController.navigate(Screen.Login.route) {
+                    popUpTo(mainNavController.graph.startDestinationId)
+                }
+                Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
+                logoutDialog = false
             }
-        }
-    ) {
-        NavHost(navController = navigationController, startDestination = Screen.Farmer.route) {
-            composable(Screen.Farmer.route) { FarmerDashboard() }
-            composable(Screen.FarmerManageOrder.route) { FarmerManageOrder() }
+        )
+    }
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        gesturesEnabled = true,
+        drawerContent = {
+            ModalDrawerSheet {
+                Box(modifier = Modifier
+                    .background(Pink40)
+                    .fillMaxWidth()
+                    .height(150.dp)
+                ){
+                    Text(text = "Farmer User1")
+                }
+                Divider()
+                NavigationDrawerItem(
+                    label = { Text(text = "Dashboard", color = Orange) },
+                    selected = false,
+                    icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard", tint = DarkGreen)},
+                    onClick = {
+                        coroutineScope.launch {
+                            drawerState.close()
+                        }
+                        navigationController.navigate(Screen.Farmer.route){
+                            popUpTo(0)
+                        }
+                    })
+
+                NavigationDrawerItem(
+                    label = { Text(text = "Orders", color = Orange) },
+                    selected = false,
+                    icon = { Icon(imageVector = Icons.Default.List, contentDescription = "Items", tint = DarkGreen)},
+                    onClick = {
+                        coroutineScope.launch {
+                            drawerState.close()
+                        }
+                        navigationController.navigate(Screen.FarmerInventory.route){
+                            popUpTo(0)
+                        }
+                    })
+
+                NavigationDrawerItem(
+                    label = { Text(text = "Contact Inquiry", color = Orange) },
+                    selected = false,
+                    icon = { Icon(imageVector = Icons.Default.CheckCircle, contentDescription = "Orders", tint = DarkGreen)},
+                    onClick = {
+                        coroutineScope.launch {
+                            drawerState.close()
+                        }
+                        navigationController.navigate(Screen.FarmerManageOrder.route){
+                            popUpTo(0)
+                        }
+                    })
+
+
+                NavigationDrawerItem(
+                    label = { Text(text = "Logout", color = Orange) },
+                    selected = false,
+                    icon = { Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Logout", tint = DarkGreen)},
+                    onClick = {
+                        coroutineScope.launch {
+                            drawerState.close()
+                        }
+                        logoutDialog = true
+                    })
+            }
+        }) {
+        Scaffold(
+            topBar = {
+                val coroutineScope = rememberCoroutineScope()
+                TopAppBar(title = { Text(text = "Client User 1")},
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Orange,
+                        titleContentColor = Color.White,
+                        navigationIconContentColor = Color.White
+                    ), navigationIcon = {
+                        IconButton(onClick = {
+                            coroutineScope.launch {
+                                drawerState.open()
+                            }
+                        }) {
+                            Icon(
+                                Icons.Rounded.Menu, contentDescription = "MenuButton"
+                            )
+                        }
+                    })
+            }
+        ) {
+            NavHost(
+                navController = navigationController,
+                startDestination = Screen.Farmer.route
+            ){
+                composable(Screen.Farmer.route){ FarmerDashboard() }
+                composable(Screen.FarmerInventory.route){ FarmerInventory() }
+                composable(Screen.FarmerManageOrder.route){ FarmerManageOrder() }
+            }
         }
     }
 }
