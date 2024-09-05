@@ -104,20 +104,20 @@ fun ClientOrder() {
                 }
             }
 
-            Row {
+            Row() {
                 Text(
                     text = "Order Status",
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    modifier = Modifier.padding(top = 15.dp, start = 30.dp)
+                    color = Color.Black,
+                    modifier = Modifier.padding(top = 0.dp, start = 30.dp)
                 )
                 Text(
                     text = "Status",
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    modifier = Modifier.padding(top = 15.dp, start = 190.dp)
+                    color = Color.Black,
+                    modifier = Modifier.padding(top = 0.dp, start = 231.dp)
                 )
 
             }
@@ -148,7 +148,7 @@ fun OrderCards() {
     Row {
         Card(
             modifier = Modifier
-                .width(300.dp)
+                .width(355.dp)
                 .height(125.dp)
                 .offset(x = (-16).dp, y = 0.dp)
                 .padding(top = 0.dp, bottom = 5.dp, start = 30.dp, end = 0.dp),
@@ -199,12 +199,12 @@ fun OrderCards() {
 
             }
         }
-        Spacer(modifier = Modifier.width(5.dp))
+        Spacer(modifier = Modifier.width(0.dp))
         Box(
             modifier = Modifier
                 .size(width = 75.dp, height = 120.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(Color.White)
+                .background(Color.Gray)
         ){
             Text(
                 text = "Status None",
