@@ -27,6 +27,8 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
@@ -35,6 +37,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -53,10 +57,8 @@ import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,12 +66,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.Orange
-import com.coco.celestia.ui.theme.Pink40
 import com.coco.celestia.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.log
@@ -111,12 +113,10 @@ fun AdminDashboard() {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NavDrawer(mainNavController: NavController){
+fun AdminNavDrawer(mainNavController: NavController) {
     val navigationController = rememberNavController()
-    val coroutineScope = rememberCoroutineScope()
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val context = LocalContext.current.applicationContext
     val userViewModel: UserViewModel = viewModel()
+    val context = LocalContext.current
     var exitDialog by remember { mutableStateOf(false) }
     var logoutDialog by remember { mutableStateOf(false) }
 
@@ -145,111 +145,67 @@ fun NavDrawer(mainNavController: NavController){
         )
     }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        gesturesEnabled = true,
-        drawerContent = { 
-            ModalDrawerSheet {
-                Box(modifier = Modifier
-                    .background(Pink40)
-                    .fillMaxWidth()
-                    .height(150.dp)
-                ){
-                    Text(text = "Admin User1")
-                }
-                Divider()
-                NavigationDrawerItem(
-                    label = { Text(text = "Dashboard", color = Orange) },
-                    selected = false,
-                    icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard", tint = DarkGreen)},
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text = "Admin User 1") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Orange,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
+            )
+        },
+        bottomBar = {
+            NavigationBar(
+                containerColor = Orange,
+                contentColor = DarkGreen
+            ) {
+                val currentDestination = navigationController.currentBackStackEntryAsState().value?.destination?.route
+                NavigationBarItem(
+                    icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard") },
+                    label = { Text("Dashboard") },
+                    selected = currentDestination == Screen.Admin.route,
                     onClick = {
-                        coroutineScope.launch {
-                            drawerState.close()
-                        }
-                        navigationController.navigate(Screen.Admin.route){
+                        navigationController.navigate(Screen.Admin.route) {
                             popUpTo(0)
                         }
-                    })
-
-                NavigationDrawerItem(
-                    label = { Text(text = "Inventory", color = Orange) },
-                    selected = false,
-                    icon = { Icon(imageVector = Icons.Default.List, contentDescription = "Items", tint = DarkGreen)},
+                    }
+                )
+                NavigationBarItem(
+                    icon = { Icon(imageVector = Icons.Default.List, contentDescription = "Items") },
+                    label = { Text("Items") },
+                    selected = currentDestination == Screen.AdminInventory.route,
                     onClick = {
-                        coroutineScope.launch {
-                            drawerState.close()
-                        }
-                        navigationController.navigate(Screen.AdminInventory.route){
+                        navigationController.navigate(Screen.AdminInventory.route) {
                             popUpTo(0)
                         }
-                    })
-
-                NavigationDrawerItem(
-                    label = { Text(text = "Orders", color = Orange) },
-                    selected = false,
-                    icon = { Icon(imageVector = Icons.Default.CheckCircle, contentDescription = "Orders", tint = DarkGreen)},
+                    }
+                )
+                NavigationBarItem(
+                    icon = { Icon(imageVector = Icons.Default.Person, contentDescription = "User Management") },
+                    label = { Text("Orders") },
+                    selected = currentDestination == Screen.AdminUserManagement.route,
                     onClick = {
-                        coroutineScope.launch {
-                            drawerState.close()
-                        }
-                        navigationController.navigate(Screen.AdminOrder.route){
+                        navigationController.navigate(Screen.AdminUserManagement.route) {
                             popUpTo(0)
                         }
-                    })
-
-                NavigationDrawerItem(
-                    label = { Text(text = "User Management", color = Orange) },
+                    }
+                )
+                NavigationBarItem(
+                    icon = { Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Logout") },
+                    label = { Text("Logout") },
                     selected = false,
-                    icon = { Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "User Management", tint = DarkGreen)},
-                    onClick = {
-                        coroutineScope.launch {
-                            drawerState.close()
-                        }
-                        navigationController.navigate(Screen.AdminUserManagement.route){
-                            popUpTo(0)
-                        }
-                    })
-
-                NavigationDrawerItem(
-                    label = { Text(text = "Logout", color = Orange) },
-                    selected = false,
-                    icon = { Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Logout", tint = DarkGreen)},
-                    onClick = {
-                        coroutineScope.launch {
-                            drawerState.close()
-                        }
-                        logoutDialog = true
-                    })
+                    onClick = { logoutDialog = true }
+                )
             }
-        }) {
-        Scaffold(
-            topBar = {
-                val coroutineScope = rememberCoroutineScope()
-                TopAppBar(title = { Text(text = "Admin Dashboard")},
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Orange,
-                        titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White
-                    ), navigationIcon = {
-                        IconButton(onClick = {
-                            coroutineScope.launch {
-                                drawerState.open()
-                            }
-                        }) {
-                            Icon(
-                                Icons.Rounded.Menu, contentDescription = "MenuButton"
-                            )
-                        }
-                    })
-            }
-        ) {
-            NavHost(navController = navigationController,
-                startDestination = Screen.Admin.route){
-                composable(Screen.Admin.route){ AdminDashboard()}
-                composable(Screen.AdminInventory.route){ AdminInventory()}
-                composable(Screen.AdminOrder.route){ AdminOrder()}
-                composable(Screen.AdminUserManagement.route){ AdminUserManagement()}
-            }
+        }
+    ) {
+        NavHost(navController = navigationController, startDestination = Screen.Admin.route) {
+            composable(Screen.Admin.route) { AdminInventory() }
+            composable(Screen.AdminInventory.route) { AdminInventory() }
+            composable(Screen.AdminUserManagement.route) { AdminUserManagement() }
         }
     }
 }
+

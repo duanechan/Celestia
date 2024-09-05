@@ -22,10 +22,8 @@ sealed class Screen(val route: String) {
     object ClientOrder: Screen( route = "client_order")
     object ClientContact: Screen( route = "client_contact")
     object Farmer: Screen( route = "farmer_dashboard")
-    object FarmerInventory: Screen( route = "farmer_inventory")
     object FarmerManageOrder: Screen( route = "farmer_manage_order")
     object AdminInventory: Screen( route = "admin_inventory")
-    object AdminOrder: Screen( route = "admin_order")
     object AdminUserManagement: Screen( route = "admin_user_management")
 }
 

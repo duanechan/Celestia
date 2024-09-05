@@ -43,7 +43,7 @@ fun NavGraph(
         }
         composable(route = Screen.Admin.route) {
             AdminDashboard()
-            NavDrawer(navController)
+            AdminNavDrawer(navController)
         }
         composable(route = Screen.Coop.route) {
             CoopDashboard()
