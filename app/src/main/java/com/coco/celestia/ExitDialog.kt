@@ -1,0 +1,34 @@
+package com.coco.celestia
+
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavController
+
+@Composable
+fun ExitDialog(onDismiss: () -> Unit, onExit: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        title = {
+            Text(text = "Exiting")
+        },
+        text = {
+            Text(text = "Are you sure you want to leave the app?")
+        },
+        confirmButton = {
+            Button(
+                onClick = { onExit() }
+            ) {
+                Text(text = "Exit")
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = { onDismiss() }
+            ) {
+                Text(text = "Cancel")
+            }
+        }
+    )
+}

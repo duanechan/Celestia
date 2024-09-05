@@ -2,10 +2,12 @@ package com.coco.celestia
 
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.graphics.drawable.Icon
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -39,7 +41,10 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -73,9 +78,11 @@ class FarmerActivity: ComponentActivity(){
                         .fillMaxSize()
                         .background(BgColor) // Hex color))
                 ) {
-//                    val navController = rememberNavController()
-//                    FarmerDashboard()
-//                    FarmerNavDrawer(navController)
+                    val navController = rememberNavController()
+                    NavGraph(
+                        navController = navController,
+                        startDestination = Screen.Farmer.route
+                    )
                 }
             }
         }
@@ -103,6 +110,18 @@ fun FarmerNavDrawer(mainNavController: NavController){
     val userViewModel: UserViewModel = viewModel()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val context = LocalContext.current.applicationContext
+    var exitDialog by remember { mutableStateOf(false) }
+
+    BackHandler {
+        exitDialog = true
+    }
+
+    if (exitDialog) {
+        ExitDialog(
+            onDismiss = { exitDialog = false },
+            onExit = { (mainNavController.context as Activity).finish() }
+        )
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,

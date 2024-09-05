@@ -1,10 +1,12 @@
 package com.coco.celestia
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.graphics.drawable.Icon
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -41,7 +43,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -76,8 +82,10 @@ class CoopActivity: ComponentActivity(){
                         .background(BgColor) // Hex color))
                 ) {
                     val navController = rememberNavController()
-                    CoopDashboard()
-                    CoopNavDrawer(navController)
+                    NavGraph(
+                        navController = navController,
+                        startDestination = Screen.Coop.route
+                    )
                 }
             }
         }
@@ -103,6 +111,18 @@ fun CoopNavDrawer(mainNavController: NavController) {
     val navigationController = rememberNavController()
     val userViewModel: UserViewModel = viewModel()
     val context = LocalContext.current
+    var exitDialog by remember { mutableStateOf(false) }
+
+    BackHandler {
+        exitDialog = true
+    }
+
+    if (exitDialog) {
+        ExitDialog(
+            onDismiss = { exitDialog = false },
+            onExit = { (mainNavController.context as Activity).finish() }
+        )
+    }
 
     Scaffold(
         topBar = {

@@ -13,10 +13,13 @@ import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun NavGraph(navController: NavHostController) {
+fun NavGraph(
+    navController: NavHostController,
+    startDestination: String = Screen.Splash.route
+) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Splash.route,
+        startDestination = startDestination,
     ) {
         composable(route = Screen.Splash.route) {
             SplashScreen(navController)
@@ -39,7 +42,8 @@ fun NavGraph(navController: NavHostController) {
             ClientNavDrawer(navController)
         }
         composable(route = Screen.Admin.route) {
-            // TODO: Admin Dashboard
+            AdminDashboard()
+            NavDrawer(navController)
         }
         composable(route = Screen.Coop.route) {
             CoopDashboard()
