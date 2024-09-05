@@ -112,6 +112,7 @@ fun CoopNavDrawer(mainNavController: NavController) {
     val userViewModel: UserViewModel = viewModel()
     val context = LocalContext.current
     var exitDialog by remember { mutableStateOf(false) }
+    var logoutDialog by remember { mutableStateOf(false) }
 
     BackHandler {
         exitDialog = true
@@ -121,6 +122,20 @@ fun CoopNavDrawer(mainNavController: NavController) {
         ExitDialog(
             onDismiss = { exitDialog = false },
             onExit = { (mainNavController.context as Activity).finish() }
+        )
+    }
+
+    if (logoutDialog) {
+        LogoutDialog(
+            onDismiss = { logoutDialog = false },
+            onLogout = {
+                userViewModel.logout()
+                mainNavController.navigate(Screen.Login.route) {
+                    popUpTo(mainNavController.graph.startDestinationId)
+                }
+                Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
+                logoutDialog = false
+            }
         )
     }
 
@@ -175,13 +190,7 @@ fun CoopNavDrawer(mainNavController: NavController) {
                     icon = { Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Logout") },
                     label = { Text("Logout") },
                     selected = false,
-                    onClick = {
-                        mainNavController.navigate(Screen.Login.route) {
-                            popUpTo(mainNavController.graph.startDestinationId)
-                        }
-                        Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
-                        userViewModel.logout()
-                    }
+                    onClick = { logoutDialog = true }
                 )
             }
         }

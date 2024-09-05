@@ -1,10 +1,7 @@
 package com.coco.celestia
 
 import android.app.Activity
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -20,7 +17,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -60,7 +56,7 @@ fun LoginScreen(mainNavController: NavController) {
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var showDialog by remember { mutableStateOf(false) }
+    var loginDialog by remember { mutableStateOf(false) }
     var exitDialog by remember { mutableStateOf(false) }
     var errorDialogMessage by remember { mutableStateOf("") }
 
@@ -75,7 +71,7 @@ fun LoginScreen(mainNavController: NavController) {
         )
     }
 
-    LaunchedEffect(userState) {
+    LaunchedEffect(loginDialog) {
         when (userState) {
             is UserState.ERROR -> {
                 Toast.makeText(navController.context, "Error: ${(userState as UserState.ERROR).message}", Toast.LENGTH_SHORT).show()
@@ -141,12 +137,12 @@ fun LoginScreen(mainNavController: NavController) {
 
         Button(
             onClick = {
-                if (email.isEmpty() || password.isEmpty()) {
-                    errorDialogMessage = "Fields cannot be empty"
-                    showDialog = true
-                } else {
-                    userViewModel.login(email, password)
-                }
+//                if (email.isEmpty() || password.isEmpty()) {
+//                    errorDialogMessage = "Fields cannot be empty"
+//                } else {
+//                }
+                userViewModel.login(email, password)
+                loginDialog = true
             },
             modifier = Modifier
                 .width(285.dp)
@@ -155,17 +151,32 @@ fun LoginScreen(mainNavController: NavController) {
             Text(text = "Login")
         }
 
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false },
-                title = { Text(text = if (errorDialogMessage.isNotEmpty()) "Login Failed" else "Login Successful!") },
-                text = { Text(text = if (errorDialogMessage.isNotEmpty()) errorDialogMessage else "Welcome back!") },
-                confirmButton = {
-                    Button(
-                        onClick = { showDialog = false }
-                    ) {
-                        Text(if (errorDialogMessage.isNotEmpty()) "Retry" else "Let's Go!")
+        if (loginDialog) {
+            LoginDialog(
+                onDismiss = { loginDialog = false },
+                onLogin = {
+                    when (userState) {
+                        is UserState.ERROR -> {
+                            Toast.makeText(navController.context, "Error: ${(userState as UserState.ERROR).message}", Toast.LENGTH_SHORT).show()
+                        }
+                        is UserState.LOGIN_SUCCESS -> {
+                            Toast.makeText(navController.context, "Login Successful", Toast.LENGTH_SHORT).show()
+                            val role = (userState as UserState.LOGIN_SUCCESS).role
+                            when (role) {
+                                "Farmer" -> mainNavController.navigate(Screen.Farmer.route)
+                                "Client" -> mainNavController.navigate(Screen.Client.route)
+                                "Admin" -> mainNavController.navigate(Screen.Admin.route)
+                                "Coop" -> mainNavController.navigate(Screen.Coop.route)
+                                // TODO: Handle unknown role
+                                else -> mainNavController.navigate(Screen.Home.route)
+                            }
+                        }
+                        is UserState.REGISTER_SUCCESS -> {
+                            Toast.makeText(navController.context, "You can now log in!", Toast.LENGTH_SHORT).show()
+                        }
+                        else -> {}
                     }
+                    loginDialog = false
                 }
             )
         }

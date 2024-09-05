@@ -88,25 +88,30 @@ class UserViewModel : ViewModel() {
     fun login(email: String, password: String) {
         viewModelScope.launch {
             _userState.value = UserState.LOADING
-            try {
-                val result = auth.signInWithEmailAndPassword(email, password).await()
-                val user = result.user
-                user?.let {
-                    database.child(user.uid).get().addOnSuccessListener { snapshot ->
-                        val userRole = snapshot.child("role").getValue(String::class.java)
-                        if (userRole != null) {
-                            _userState.value = UserState.LOGIN_SUCCESS(userRole)
-                        } else {
-                            _userState.value = UserState.ERROR("Role not found")
+            if (email.isEmpty() || password.isEmpty()) {
+                _userState.value = UserState.ERROR("Fields cannot be empty")
+            } else {
+                try {
+                    val result = auth.signInWithEmailAndPassword(email, password).await()
+                    val user = result.user
+                    user?.let {
+                        database.child(user.uid).get().addOnSuccessListener { snapshot ->
+                            val userRole = snapshot.child("role").getValue(String::class.java)
+                            if (userRole != null) {
+                                _userData.value = snapshot.getValue(UserData::class.java)
+                                _userState.value = UserState.LOGIN_SUCCESS(userRole)
+                            } else {
+                                _userState.value = UserState.ERROR("Role not found")
+                            }
+                        }.addOnFailureListener {
+                            _userState.value = UserState.ERROR("Login failed")
                         }
-                    }.addOnFailureListener {
+                    } ?: run {
                         _userState.value = UserState.ERROR("Login failed")
                     }
-                } ?: run {
-                    _userState.value = UserState.ERROR("Login failed")
+                } catch (e: Exception) {
+                    _userState.value = UserState.ERROR(e.message ?: "Unknown error")
                 }
-            } catch (e: Exception) {
-                _userState.value = UserState.ERROR(e.message ?: "Unknown error")
             }
         }
     }
