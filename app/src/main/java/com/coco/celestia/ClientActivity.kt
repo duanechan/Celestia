@@ -171,7 +171,7 @@ fun ClientNavDrawer(mainNavController: NavController) {
     ) {
         NavHost(navController = navigationController, startDestination = Screen.Client.route) {
             composable(Screen.Client.route) { ClientDashboard() }
-            composable(Screen.Client.route) { ClientOrder() }
+            composable(Screen.ClientOrder.route) { ClientOrder() }
             composable(Screen.ClientContact.route) { ClientContact() }
         }
     }
