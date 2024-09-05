@@ -1,11 +1,13 @@
 package com.coco.celestia
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -59,7 +61,19 @@ fun LoginScreen(mainNavController: NavController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showDialog by remember { mutableStateOf(false) }
+    var exitDialog by remember { mutableStateOf(false) }
     var errorDialogMessage by remember { mutableStateOf("") }
+
+    BackHandler {
+        exitDialog = true
+    }
+
+    if (exitDialog) {
+        ExitDialog(
+            onDismiss = { exitDialog = false },
+            onExit = { (mainNavController.context as Activity).finish() }
+        )
+    }
 
     LaunchedEffect(userState) {
         when (userState) {
@@ -135,7 +149,7 @@ fun LoginScreen(mainNavController: NavController) {
                 }
             },
             modifier = Modifier
-                .fillMaxWidth()
+                .width(285.dp)
                 .height(50.dp)
         ) {
             Text(text = "Login")

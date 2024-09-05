@@ -1,9 +1,11 @@
 package com.coco.celestia
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -17,7 +19,11 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -51,8 +57,10 @@ class ClientActivity : ComponentActivity() {
                         .background(BgColor)
                 ) {
                     val navController = rememberNavController()
-                    ClientDashboard()
-                    ClientNavDrawer(navController)
+                    NavGraph(
+                        navController = navController,
+                        startDestination = Screen.Client.route
+                    )
                 }
             }
         }
@@ -77,6 +85,19 @@ fun ClientNavDrawer(mainNavController: NavController) {
     val navigationController = rememberNavController()
     val userViewModel: UserViewModel = viewModel()
     val context = LocalContext.current
+    var exitDialog by remember { mutableStateOf(false) }
+
+    BackHandler {
+        exitDialog = true
+    }
+
+    if (exitDialog) {
+        ExitDialog(
+            onDismiss = { exitDialog = false },
+            onExit = { (mainNavController.context as Activity).finish() }
+        )
+    }
+
 
     Scaffold(
         topBar = {

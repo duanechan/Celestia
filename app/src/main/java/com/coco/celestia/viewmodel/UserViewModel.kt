@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.coco.celestia.UserData
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -18,6 +19,7 @@ import kotlinx.coroutines.tasks.await
 sealed class UserState {
     object LOADING : UserState()
     object SUCCESS : UserState()
+    object EMAIL_SENT_SUCCESS: UserState()
     data object REGISTER_SUCCESS: UserState()
     data class LOGIN_SUCCESS (val role: String): UserState()
     object EMPTY : UserState()
@@ -109,14 +111,14 @@ class UserViewModel : ViewModel() {
         }
     }
 
-    fun sendPasswordResetEmail(context: Context, email: String) {
+    fun sendPasswordResetEmail(email: String) {
         viewModelScope.launch {
             _userState.value = UserState.LOADING
             try {
                 auth.sendPasswordResetEmail(email)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(context, "Reset email sent successfully.", Toast.LENGTH_LONG).show()
+                            _userState.value = UserState.EMAIL_SENT_SUCCESS
                         } else {
                             _userState.value = UserState.ERROR(task.exception?.message ?: "Unknown Error")
                         }
@@ -125,7 +127,6 @@ class UserViewModel : ViewModel() {
                 _userState.value = UserState.ERROR(e.message ?: "Unknown Error")
             }
         }
-
     }
 
     /**
