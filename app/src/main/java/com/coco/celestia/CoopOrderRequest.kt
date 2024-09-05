@@ -126,6 +126,8 @@ fun OrderRequestPanel(keywords: String) {
                     }
                 }
             }
+
+            else -> {}
         }
     }
 }

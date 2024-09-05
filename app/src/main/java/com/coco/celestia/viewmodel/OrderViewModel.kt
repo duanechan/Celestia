@@ -83,7 +83,7 @@ class OrderViewModel : ViewModel() {
                                     value?.toString()?.contains(keyword, ignoreCase = true) == true
                                 }
                             }
-                            matches && product.status == "PENDING"
+                            matches
                         }
 
                     _orderData.value = orders

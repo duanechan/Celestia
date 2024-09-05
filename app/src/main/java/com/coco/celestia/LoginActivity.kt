@@ -2,6 +2,7 @@ package com.coco.celestia
 
 import android.app.Activity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -42,7 +43,11 @@ class LoginActivity : ComponentActivity() {
                         .fillMaxSize()
                         .background(Color(0xFFF2E3DB))
                 ) {
-
+                    val navController = rememberNavController()
+                    NavGraph(
+                        navController = navController,
+                        startDestination = Screen.Login.route
+                    )
                 }
             }
         }
@@ -50,15 +55,14 @@ class LoginActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginScreen(mainNavController: NavController) {
+fun LoginScreen(mainNavController: NavController, userViewModel: UserViewModel) {
     val navController = rememberNavController()
-    val userViewModel: UserViewModel = viewModel()
+    val userData by userViewModel.userData.observeAsState()
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var loginDialog by remember { mutableStateOf(false) }
     var exitDialog by remember { mutableStateOf(false) }
-    var errorDialogMessage by remember { mutableStateOf("") }
 
     BackHandler {
         exitDialog = true
@@ -71,29 +75,22 @@ fun LoginScreen(mainNavController: NavController) {
         )
     }
 
-    LaunchedEffect(loginDialog) {
-        when (userState) {
-            is UserState.ERROR -> {
-                Toast.makeText(navController.context, "Error: ${(userState as UserState.ERROR).message}", Toast.LENGTH_SHORT).show()
-            }
-            is UserState.LOGIN_SUCCESS -> {
-                Toast.makeText(navController.context, "Login Successful", Toast.LENGTH_SHORT).show()
-                val role = (userState as UserState.LOGIN_SUCCESS).role
-                when (role) {
-                    "Farmer" -> mainNavController.navigate(Screen.Farmer.route)
-                    "Client" -> mainNavController.navigate(Screen.Client.route)
-                    "Admin" -> mainNavController.navigate(Screen.Admin.route)
-                    "Coop" -> mainNavController.navigate(Screen.Coop.route)
-                    // TODO: Handle unknown role
-                    else -> mainNavController.navigate(Screen.Home.route)
-                }
-            }
-            is UserState.REGISTER_SUCCESS -> {
-                Toast.makeText(navController.context, "You can now log in!", Toast.LENGTH_SHORT).show()
-            }
-            else -> {}
-        }
-    }
+//    LaunchedEffect(userState) {
+//        when (userState) {
+//            is UserState.ERROR -> {
+//                Toast.makeText(navController.context, "Error: ${(userState as UserState.ERROR).message}", Toast.LENGTH_SHORT).show()
+//            }
+//            is UserState.LOGIN_SUCCESS -> {
+//                Toast.makeText(navController.context, "Login Successful", Toast.LENGTH_SHORT).show()
+//                val role = (userState as UserState.LOGIN_SUCCESS).role
+//                redirect(role, mainNavController)
+//            }
+//            is UserState.REGISTER_SUCCESS -> {
+//                Toast.makeText(navController.context, "You can now log in!", Toast.LENGTH_SHORT).show()
+//            }
+//            else -> {}
+//        }
+//    }
 
     Column(
         modifier = Modifier
@@ -142,6 +139,7 @@ fun LoginScreen(mainNavController: NavController) {
 //                } else {
 //                }
                 userViewModel.login(email, password)
+                Log.d("LoginScreen", "$userState")
                 loginDialog = true
             },
             modifier = Modifier
@@ -153,6 +151,7 @@ fun LoginScreen(mainNavController: NavController) {
 
         if (loginDialog) {
             LoginDialog(
+                userViewModel = userViewModel,
                 onDismiss = { loginDialog = false },
                 onLogin = {
                     when (userState) {
@@ -162,14 +161,7 @@ fun LoginScreen(mainNavController: NavController) {
                         is UserState.LOGIN_SUCCESS -> {
                             Toast.makeText(navController.context, "Login Successful", Toast.LENGTH_SHORT).show()
                             val role = (userState as UserState.LOGIN_SUCCESS).role
-                            when (role) {
-                                "Farmer" -> mainNavController.navigate(Screen.Farmer.route)
-                                "Client" -> mainNavController.navigate(Screen.Client.route)
-                                "Admin" -> mainNavController.navigate(Screen.Admin.route)
-                                "Coop" -> mainNavController.navigate(Screen.Coop.route)
-                                // TODO: Handle unknown role
-                                else -> mainNavController.navigate(Screen.Home.route)
-                            }
+                            redirectUser(role, mainNavController)
                         }
                         is UserState.REGISTER_SUCCESS -> {
                             Toast.makeText(navController.context, "You can now log in!", Toast.LENGTH_SHORT).show()
@@ -198,5 +190,16 @@ fun LoginScreen(mainNavController: NavController) {
                 mainNavController.navigate(Screen.Register.route)
             }
         )
+    }
+}
+
+fun redirectUser(role: String, mainNavController: NavController) {
+    when (role) {
+        "Farmer" -> mainNavController.navigate(Screen.Farmer.route)
+        "Client" -> mainNavController.navigate(Screen.Client.route)
+        "Admin" -> mainNavController.navigate(Screen.Admin.route)
+        "Coop" -> mainNavController.navigate(Screen.Coop.route)
+        // TODO: Handle unknown role
+        else -> mainNavController.navigate(Screen.Home.route)
     }
 }

@@ -42,6 +42,7 @@ import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.ui.theme.Pink40
+import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
 
@@ -81,9 +82,12 @@ fun ClientDashboard() {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ClientNavDrawer(mainNavController: NavController) {
+fun ClientNavDrawer(
+    mainNavController: NavController,
+    userViewModel: UserViewModel,
+    orderViewModel: OrderViewModel
+) {
     val navigationController = rememberNavController()
-    val userViewModel: UserViewModel = viewModel()
     val context = LocalContext.current
     var exitDialog by remember { mutableStateOf(false) }
     var logoutDialog by remember { mutableStateOf(false) }
@@ -105,7 +109,7 @@ fun ClientNavDrawer(mainNavController: NavController) {
             onLogout = {
                 userViewModel.logout()
                 mainNavController.navigate(Screen.Login.route) {
-                    popUpTo(mainNavController.graph.startDestinationId)
+                    popUpTo(0)
                 }
                 Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
                 logoutDialog = false
@@ -140,6 +144,7 @@ fun ClientNavDrawer(mainNavController: NavController) {
                         }
                     }
                 )
+                // TODO: Fix logout crash when navigating to client orders
                 NavigationBarItem(
                     icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Orders") },
                     label = { Text("Orders") },
@@ -171,7 +176,7 @@ fun ClientNavDrawer(mainNavController: NavController) {
     ) {
         NavHost(navController = navigationController, startDestination = Screen.Client.route) {
             composable(Screen.Client.route) { ClientDashboard() }
-            composable(Screen.ClientOrder.route) { ClientOrder() }
+            composable(Screen.ClientOrder.route) { ClientOrder(navigationController, orderViewModel, userViewModel) }
             composable(Screen.ClientContact.route) { ClientContact() }
         }
     }

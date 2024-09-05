@@ -18,8 +18,7 @@ import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 
 @Composable
-fun LoginDialog(onDismiss: () -> Unit, onLogin: () -> Unit) {
-    val userViewModel: UserViewModel = viewModel()
+fun LoginDialog(userViewModel: UserViewModel, onDismiss: () -> Unit, onLogin: () -> Unit) {
     val userData by userViewModel.userData.observeAsState()
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
 

@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -91,6 +92,9 @@ class AddOrderActivity : ComponentActivity() {
 
 @Composable
 fun AddOrderPanel(navController: NavController) {
+    BackHandler {
+        navController.navigateUp()
+    }
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -226,6 +230,7 @@ fun OrderDetailsPanel(navController: NavController, product: String?) {
                     }
                 }
                 null -> Text("Unknown state")
+                else -> {}
             }
         }
     }

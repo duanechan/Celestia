@@ -1,5 +1,6 @@
 package com.coco.celestia
 
+import android.view.SurfaceControl.Transaction
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -9,23 +10,38 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.coco.celestia.viewmodel.ContactViewModel
+import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = Screen.Splash.route
+    startDestination: String = Screen.Splash.route,
+    contactViewModel: ContactViewModel = viewModel(),
+    orderViewModel: OrderViewModel = viewModel(),
+    productViewModel: ProductViewModel = viewModel(),
+    transactionViewModel: TransactionViewModel = viewModel(),
+    userViewModel: UserViewModel = viewModel(),
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination,
     ) {
         composable(route = Screen.Splash.route) {
-            SplashScreen(navController)
+            SplashScreen(
+                navController = navController,
+                userViewModel = userViewModel
+            )
         }
         composable(route = Screen.Login.route) {
-            LoginScreen(navController)
+            LoginScreen(
+                mainNavController = navController,
+                userViewModel = userViewModel
+            )
         }
         composable(route = Screen.ForgotPassword.route) {
             ForgotPasswordScreen(navController)
@@ -35,11 +51,11 @@ fun NavGraph(
         }
         composable(route = Screen.Farmer.route) {
             FarmerDashboard()
-            FarmerNavDrawer(navController)
+            FarmerNavDrawer(navController, userViewModel, orderViewModel)
         }
         composable(route = Screen.Client.route) {
             ClientDashboard()
-            ClientNavDrawer(navController)
+            ClientNavDrawer(navController, userViewModel, orderViewModel)
         }
         composable(route = Screen.Admin.route) {
             AdminDashboard()

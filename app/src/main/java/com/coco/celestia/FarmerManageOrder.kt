@@ -30,7 +30,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -40,16 +42,37 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.coco.celestia.ui.theme.LightGreen
 import com.coco.celestia.ui.theme.PurpleGrey40
+import com.coco.celestia.viewmodel.OrderState
+import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.UserViewModel
+import com.google.firebase.auth.FirebaseAuth
 
-@Preview
+//@Preview
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun FarmerManageOrder() {
+fun FarmerManageOrder(
+    mainNavController: NavController,
+    userViewModel: UserViewModel,
+    orderViewModel: OrderViewModel
+) {
+    val userData by userViewModel.userData.observeAsState()
+    val orderData by orderViewModel.orderData.observeAsState(emptyList())
+    val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
+    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+
+    LaunchedEffect(Unit) {
+        orderViewModel.fetchOrders(
+            uid = uid,
+            filter = "Vegetable"
+        )
+        userViewModel.fetchUser(uid)
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -123,14 +146,35 @@ fun FarmerManageOrder() {
             }
 
             Spacer(modifier = Modifier.height(10.dp))
-            ManageOrderCards()
+            when (orderState) {
+                is OrderState.LOADING -> {
+                    Text("Loading orders...")
+                }
+                is OrderState.ERROR -> {
+                    Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}")
+                }
+                is OrderState.EMPTY -> {
+                    Text("Empty orders.")
+                }
+                is OrderState.SUCCESS -> {
+                    var orderCount = 1
+                    orderData.forEach { order ->
+                        ManageOrderCards(orderCount, order, userData!!)
+                        orderCount++
+                    }
+                }
+            }
         }
 
     }
 }
 
 @Composable
-fun ManageOrderCards() {
+fun ManageOrderCards(orderCount: Int, order: OrderData, user: UserData) {
+    var expanded by remember { mutableStateOf(false) }
+    val clientName = "${user.firstname} ${user.lastname}"
+    val orderId = order.orderId.substring(5,9).uppercase()
+    val orderStatus = order.status
     Row {
         Card(
             modifier = Modifier
@@ -140,7 +184,6 @@ fun ManageOrderCards() {
                 .padding(top = 0.dp, bottom = 5.dp, start = 30.dp, end = 0.dp),
             colors = CardDefaults.cardColors(containerColor = LightGreen)
         ) {
-            var expanded by remember { mutableStateOf(false) }
             Column(
                 Modifier
                     .clickable { expanded = !expanded }
@@ -154,7 +197,7 @@ fun ManageOrderCards() {
                             .background(Color.White)
                     ){
                         Text(
-                            text = "1",
+                            text = orderCount.toString(),
                             fontSize = 50.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black,
@@ -164,7 +207,7 @@ fun ManageOrderCards() {
 
                     Column {
                         Text(
-                            text = "Order ID ####",
+                            text = "Order ID: $orderId",
                             fontSize = 25.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
@@ -172,7 +215,7 @@ fun ManageOrderCards() {
                         )
 
                         Text(
-                            text = "Client Name:",
+                            text = "Client Name: $clientName",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Normal,
                             color = Color.White,
@@ -190,10 +233,22 @@ fun ManageOrderCards() {
             modifier = Modifier
                 .size(width = 75.dp, height = 120.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(Color.Gray)
+                .background(
+                    when (orderStatus) {
+                        "PENDING" -> {
+                            Color(0xFFFF8C00)
+                        }
+                        "ACCEPTED" -> {
+                            Color.Green
+                        }
+                        else -> {
+                            Color.Red
+                        }
+                    }
+                )
         ){
             Text(
-                text = "Status None",
+                text = orderStatus,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
