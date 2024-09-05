@@ -163,7 +163,7 @@ fun NavDrawer(mainNavController: NavController){
                         coroutineScope.launch {
                             drawerState.close()
                         }
-                        navigationController.navigate(Screen.Admin.route){
+                        navigationController.navigate(Screen.AdminInventory.route){
                             popUpTo(0)
                         }
                     })
@@ -176,7 +176,7 @@ fun NavDrawer(mainNavController: NavController){
                         coroutineScope.launch {
                             drawerState.close()
                         }
-                        navigationController.navigate(Screen.Admin.route){
+                        navigationController.navigate(Screen.AdminOrder.route){
                             popUpTo(0)
                         }
                     })
@@ -189,7 +189,7 @@ fun NavDrawer(mainNavController: NavController){
                         coroutineScope.launch {
                             drawerState.close()
                         }
-                        navigationController.navigate(Screen.Admin.route){
+                        navigationController.navigate(Screen.AdminUserManagement.route){
                             popUpTo(0)
                         }
                     })
@@ -234,6 +234,9 @@ fun NavDrawer(mainNavController: NavController){
             NavHost(navController = navigationController,
                 startDestination = Screen.Admin.route){
                 composable(Screen.Admin.route){ AdminDashboard()}
+                composable(Screen.AdminInventory.route){ AdminInventory()}
+                composable(Screen.AdminOrder.route){ AdminOrder()}
+                composable(Screen.AdminUserManagement.route){ AdminUserManagement()}
             }
         }
     }

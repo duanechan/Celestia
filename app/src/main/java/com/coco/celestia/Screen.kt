@@ -24,6 +24,9 @@ sealed class Screen(val route: String) {
     object Farmer: Screen( route = "farmer_dashboard")
     object FarmerInventory: Screen( route = "farmer_inventory")
     object FarmerManageOrder: Screen( route = "farmer_manage_order")
+    object AdminInventory: Screen( route = "admin_inventory")
+    object AdminOrder: Screen( route = "admin_order")
+    object AdminUserManagement: Screen( route = "admin_user_management")
 }
 
 // TODO: Add more screens or separate them by making another Screen class here

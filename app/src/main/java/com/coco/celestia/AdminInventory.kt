@@ -1,6 +1,6 @@
 package com.coco.celestia
 
-fun FarmerInventory() {
+fun AdminInventory() {
 
 
 }
