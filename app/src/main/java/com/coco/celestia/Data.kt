@@ -4,7 +4,10 @@ data class UserData(
     val email: String = "",
     val firstname: String = "",
     val lastname: String = "",
-    val role: String = ""
+    val role: String = "",
+    val phoneNumber: String = "",
+    val streetNumber: String = "",
+    val barangay: String = ""
 )
 
 data class OrderData(
@@ -36,4 +39,9 @@ data class ContactData(
     val email: String = "",
     val facebook: String = "",
     val role: String = "",
+)
+
+data class LocationData(
+    val street: String = "",
+    val barangay: String = ""
 )

@@ -9,12 +9,16 @@ import androidx.lifecycle.viewModelScope
 import com.coco.celestia.UserData
 import android.widget.Toast
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.coco.celestia.OrderData
 import com.coco.celestia.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -147,6 +151,9 @@ class UserViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Sends a password reset email to the provided email address.
+     */
     fun sendPasswordResetEmail(email: String) {
         viewModelScope.launch {
             _userState.value = UserState.LOADING
@@ -162,6 +169,39 @@ class UserViewModel : ViewModel() {
             } catch (e: Exception) {
                 _userState.value = UserState.ERROR(e.message ?: "Unknown Error")
             }
+        }
+    }
+
+    /**
+     * Updates a user in the database based on the provided email.
+     */
+    fun updateUser(
+        uid: String,
+        updatedUserData: UserData
+    ) {
+        val query = database.child(uid)
+
+        viewModelScope.launch {
+            _userState.value = UserState.LOADING
+            query.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        snapshot.ref.setValue(updatedUserData)
+                            .addOnSuccessListener {
+                                _userState.value = UserState.SUCCESS
+                            }
+                            .addOnFailureListener { exception ->
+                                _userState.value = UserState.ERROR(exception.message ?: "Unknown error")
+                            }
+                    } else {
+                        _userState.value = UserState.EMPTY
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    _userState.value = UserState.ERROR(error.message)
+                }
+            })
         }
     }
 

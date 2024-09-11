@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -45,11 +47,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.coco.celestia.screens.Profile
 import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.viewmodel.ContactViewModel
+import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 
@@ -92,6 +96,7 @@ fun ClientDashboard() {
 fun ClientNavDrawer(
     navController: NavController,
     contactViewModel: ContactViewModel,
+    locationViewModel: LocationViewModel,
     userViewModel: UserViewModel,
     orderViewModel: OrderViewModel
 ) {
@@ -163,8 +168,18 @@ fun ClientNavDrawer(
                     }
                 )
                 NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.Person, contentDescription = "Contact Inquiry") },
-                    label = { Text("Contact Inquiry") },
+                    icon = { Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile") },
+                    label = { Text("Profile") },
+                    selected = currentDestination == Screen.Profile.route,
+                    onClick = {
+                        navigationController.navigate(Screen.Profile.route) {
+                            popUpTo(0)
+                        }
+                    }
+                )
+                NavigationBarItem(
+                    icon = { Icon(imageVector = Icons.Default.Call, contentDescription = "Contact Inquiry") },
+                    label = { Text("Contact") },
                     selected = currentDestination == Screen.ClientContact.route,
                     onClick = {
                         navigationController.navigate(Screen.ClientContact.route) {
@@ -185,6 +200,7 @@ fun ClientNavDrawer(
             composable(Screen.Client.route) { ClientDashboard() }
             composable(Screen.ClientOrder.route) { ClientOrder(navController, orderViewModel, userViewModel) }
             composable(Screen.ClientContact.route) { ClientContact(contactViewModel) }
+            composable(Screen.Profile.route) { Profile(navController, userViewModel, locationViewModel) }
         }
     }
 }

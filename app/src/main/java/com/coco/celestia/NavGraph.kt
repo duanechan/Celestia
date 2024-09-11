@@ -7,7 +7,9 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.coco.celestia.screens.Profile
 import com.coco.celestia.viewmodel.ContactViewModel
+import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
@@ -18,6 +20,7 @@ fun NavGraph(
     navController: NavHostController,
     startDestination: String = Screen.Splash.route,
     contactViewModel: ContactViewModel = viewModel(),
+    locationViewModel: LocationViewModel = viewModel(),
     orderViewModel: OrderViewModel = viewModel(),
     productViewModel: ProductViewModel = viewModel(),
     transactionViewModel: TransactionViewModel = viewModel(),
@@ -48,6 +51,14 @@ fun NavGraph(
                 userViewModel = userViewModel
             )
         }
+        composable(route = Screen.Profile.route) {
+            Profile(
+                navController = navController,
+                userViewModel = userViewModel,
+                locationViewModel = locationViewModel
+            )
+        }
+
         composable(route = Screen.Farmer.route) {
             FarmerDashboard()
             FarmerNavDrawer(
@@ -61,6 +72,7 @@ fun NavGraph(
             ClientNavDrawer(
                 navController = navController,
                 contactViewModel = contactViewModel,
+                locationViewModel = locationViewModel,
                 userViewModel = userViewModel,
                 orderViewModel = orderViewModel
             )
