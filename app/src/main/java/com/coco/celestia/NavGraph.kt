@@ -1,9 +1,6 @@
 package com.coco.celestia
 
-import android.view.SurfaceControl.Transaction
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -15,7 +12,6 @@ import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
-import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun NavGraph(
@@ -44,39 +40,62 @@ fun NavGraph(
             )
         }
         composable(route = Screen.ForgotPassword.route) {
-            ForgotPasswordScreen(navController)
+            ForgotPasswordScreen(navController = navController)
         }
         composable(route = Screen.Register.route) {
-            RegisterScreen(navController)
+            RegisterScreen(
+                navController = navController,
+                userViewModel = userViewModel
+            )
         }
         composable(route = Screen.Farmer.route) {
             FarmerDashboard()
-            FarmerNavDrawer(navController, userViewModel, orderViewModel)
+            FarmerNavDrawer(
+                navController = navController,
+                userViewModel = userViewModel,
+                orderViewModel = orderViewModel
+            )
         }
         composable(route = Screen.Client.route) {
             ClientDashboard()
-            ClientNavDrawer(navController, userViewModel, orderViewModel)
+            ClientNavDrawer(
+                navController = navController,
+                contactViewModel = contactViewModel,
+                userViewModel = userViewModel,
+                orderViewModel = orderViewModel
+            )
         }
         composable(route = Screen.Admin.route) {
             AdminDashboard()
-            AdminNavDrawer(navController)
+            AdminNavDrawer(
+                mainNavController = navController,
+                productViewModel = productViewModel,
+                userViewModel = userViewModel
+            )
         }
         composable(route = Screen.Coop.route) {
             CoopDashboard()
-            CoopNavDrawer(navController)
+            CoopNavDrawer(
+                mainNavController = navController,
+                userViewModel = userViewModel
+            )
         }
         composable(route = Screen.Home.route) {
-            HomeScreen(navController)
+            HomeScreen(navController = navController)
         }
         composable(route = Screen.AddOrder.route) {
-            AddOrderPanel(navController)
+            AddOrderPanel(navController = navController)
         }
         composable(
             route = Screen.OrderDetails.route,
             arguments = listOf(navArgument("type") { type = NavType.StringType })
         ) { backStack ->
             val type = backStack.arguments?.getString("type")
-            OrderDetailsPanel(navController, type)
+            OrderDetailsPanel(
+                navController = navController,
+                type = type,
+                productViewModel = productViewModel
+            )
         }
         composable(
             route = Screen.OrderConfirmation.route,
@@ -88,7 +107,14 @@ fun NavGraph(
             val type = backStack.arguments?.getString("type")
             val name = backStack.arguments?.getString("name")
             val quantity = backStack.arguments?.getInt("quantity")
-            ConfirmOrderRequestPanel(navController, type, name, quantity)
+            ConfirmOrderRequestPanel(
+                navController = navController,
+                type = type,
+                name = name,
+                quantity = quantity,
+                orderViewModel = orderViewModel,
+                transactionViewModel = transactionViewModel
+            )
         }
     }
 }

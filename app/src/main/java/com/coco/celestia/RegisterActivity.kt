@@ -74,8 +74,7 @@ class RegisterActivity : ComponentActivity() {
 
 
 @Composable
-fun RegisterScreen(mainNavController: NavController) {
-    val userViewModel: UserViewModel = viewModel()
+fun RegisterScreen(navController: NavController, userViewModel: UserViewModel) {
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
     val maxChar = 25
     var email by remember { mutableStateOf("") }
@@ -91,11 +90,11 @@ fun RegisterScreen(mainNavController: NavController) {
         Log.d("RegisterScreen", "User state changed: $userState")
         when (userState) {
             is UserState.ERROR -> {
-                Toast.makeText(mainNavController.context, "Error: ${(userState as UserState.ERROR).message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(navController.context, "Error: ${(userState as UserState.ERROR).message}", Toast.LENGTH_SHORT).show()
             }
             is UserState.REGISTER_SUCCESS -> {
-                Toast.makeText(mainNavController.context, "Registration Successful", Toast.LENGTH_SHORT).show()
-                mainNavController.navigate(Screen.Login.route)
+                Toast.makeText(navController.context, "Registration Successful", Toast.LENGTH_SHORT).show()
+                navController.navigate(Screen.Login.route)
             }
             else -> {}
         }
@@ -150,7 +149,7 @@ fun RegisterScreen(mainNavController: NavController) {
                     Button(
                         onClick = {
                             showRoleDialog = false
-                            mainNavController.navigate(Screen.Login.route) {
+                            navController.navigate(Screen.Login.route) {
                                 popUpTo(Screen.Login.route) { inclusive = true }
                             }
                         }
@@ -261,7 +260,7 @@ fun RegisterScreen(mainNavController: NavController) {
                     if (email.isNotEmpty() && firstName.isNotEmpty() && lastName.isNotEmpty() && password.isNotEmpty()) {
                         userViewModel.register(email, firstName, lastName, password, selectedRole)
                     } else {
-                        Toast.makeText(mainNavController.context, "All text must be filled", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(navController.context, "All text must be filled", Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier

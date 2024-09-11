@@ -26,7 +26,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -39,12 +41,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coco.celestia.ui.theme.LightGreen
 import com.coco.celestia.ui.theme.PurpleGrey40
+import com.coco.celestia.viewmodel.UserViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview
 @Composable
-fun AdminUserManagement() {
+fun AdminUserManagement(userViewModel: UserViewModel) {
+    val usersData by userViewModel.usersData.observeAsState()
+    var text by remember { mutableStateOf("") }
+    var active by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        userViewModel.fetchUsers()
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -69,10 +80,6 @@ fun AdminUserManagement() {
             }
 
             Spacer(modifier = Modifier.height(10.dp))
-
-            var text by remember { mutableStateOf("") }
-            var active by remember { mutableStateOf(false) }
-            var expanded by remember { mutableStateOf(false) }
 
             // Search Bar and Filter
             Row(

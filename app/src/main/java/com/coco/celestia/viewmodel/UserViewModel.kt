@@ -8,6 +8,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.UserData
 import android.widget.Toast
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.coco.celestia.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -30,8 +32,10 @@ class UserViewModel : ViewModel() {
     private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("users")
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val _userData = MutableLiveData<UserData?>()
+    private val _usersData = MutableLiveData<List<UserData?>>()
     private val _userState = MutableLiveData<UserState>()
     val userData: LiveData<UserData?> = _userData
+    val usersData: LiveData<List<UserData?>> = _usersData
     val userState: LiveData<UserState> = _userState
 
     /**
@@ -52,6 +56,33 @@ class UserViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 _userData.value = null
+                _userState.value = UserState.ERROR(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    /**
+     * Fetches a list of all users from the database.
+     */
+    fun fetchUsers() {
+        viewModelScope.launch {
+            _userState.value = UserState.LOADING
+            try {
+                val snapshot = database.get().await()
+                if (snapshot.exists()) {
+                    val users = mutableListOf<UserData?>()
+                    for (userSnapshot in snapshot.children) {
+                        val userInfo = userSnapshot.getValue(UserData::class.java)
+                        users.add(userInfo)
+                    }
+                    _usersData.value = users
+                    _userState.value = UserState.SUCCESS
+                } else {
+                    _usersData.value = emptyList()
+                    _userState.value = UserState.EMPTY
+                }
+            } catch (e: Exception) {
+                _usersData.value = emptyList()
                 _userState.value = UserState.ERROR(e.message ?: "Unknown error")
             }
         }

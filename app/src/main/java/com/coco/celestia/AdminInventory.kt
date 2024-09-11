@@ -45,10 +45,8 @@ import com.google.firebase.database.ValueEventListener
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview
 @Composable
-fun AdminInventory() {
-    val productViewModel: ProductViewModel = viewModel()
+fun AdminInventory(productViewModel: ProductViewModel) {
     val productData by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
 

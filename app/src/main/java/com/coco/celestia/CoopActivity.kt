@@ -107,9 +107,8 @@ fun CoopDashboard() {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CoopNavDrawer(mainNavController: NavController) {
+fun CoopNavDrawer(mainNavController: NavController, userViewModel: UserViewModel) {
     val navigationController = rememberNavController()
-    val userViewModel: UserViewModel = viewModel()
     val context = LocalContext.current
     var exitDialog by remember { mutableStateOf(false) }
     var logoutDialog by remember { mutableStateOf(false) }

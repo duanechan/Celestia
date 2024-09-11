@@ -49,6 +49,7 @@ import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.Orange
+import com.coco.celestia.viewmodel.ContactViewModel
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 
@@ -89,7 +90,8 @@ fun ClientDashboard() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClientNavDrawer(
-    mainNavController: NavController,
+    navController: NavController,
+    contactViewModel: ContactViewModel,
     userViewModel: UserViewModel,
     orderViewModel: OrderViewModel
 ) {
@@ -105,7 +107,7 @@ fun ClientNavDrawer(
     if (exitDialog) {
         ExitDialog(
             onDismiss = { exitDialog = false },
-            onExit = { (mainNavController.context as Activity).finish() }
+            onExit = { (navController.context as Activity).finish() }
         )
     }
 
@@ -114,7 +116,7 @@ fun ClientNavDrawer(
             onDismiss = { logoutDialog = false },
             onLogout = {
                 userViewModel.logout()
-                mainNavController.navigate(Screen.Login.route) {
+                navController.navigate(Screen.Login.route) {
                     popUpTo(0)
                 }
                 Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
@@ -181,8 +183,8 @@ fun ClientNavDrawer(
     ) {
         NavHost(navController = navigationController, startDestination = Screen.Client.route) {
             composable(Screen.Client.route) { ClientDashboard() }
-            composable(Screen.ClientOrder.route) { ClientOrder(mainNavController, orderViewModel, userViewModel) }
-            composable(Screen.ClientContact.route) { ClientContact() }
+            composable(Screen.ClientOrder.route) { ClientOrder(navController, orderViewModel, userViewModel) }
+            composable(Screen.ClientContact.route) { ClientContact(contactViewModel) }
         }
     }
 }

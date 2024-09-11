@@ -49,6 +49,7 @@ import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.Orange
+import com.coco.celestia.viewmodel.ContactViewModel
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 
@@ -91,7 +92,7 @@ fun FarmerDashboard() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FarmerNavDrawer(
-    mainNavController: NavController,
+    navController: NavController,
     userViewModel: UserViewModel,
     orderViewModel: OrderViewModel
 ) {
@@ -107,7 +108,7 @@ fun FarmerNavDrawer(
     if (exitDialog) {
         ExitDialog(
             onDismiss = { exitDialog = false },
-            onExit = { (mainNavController.context as Activity).finish() }
+            onExit = { (navController.context as Activity).finish() }
         )
     }
 
@@ -116,8 +117,8 @@ fun FarmerNavDrawer(
             onDismiss = { logoutDialog = false },
             onLogout = {
                 userViewModel.logout()
-                mainNavController.navigate(Screen.Login.route) {
-                    popUpTo(mainNavController.graph.startDestinationId)
+                navController.navigate(Screen.Login.route) {
+                    popUpTo(navController.graph.startDestinationId)
                 }
                 Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
                 logoutDialog = false
@@ -173,7 +174,7 @@ fun FarmerNavDrawer(
     ) {
         NavHost(navController = navigationController, startDestination = Screen.Farmer.route) {
             composable(Screen.Farmer.route) { FarmerDashboard() }
-            composable(Screen.FarmerManageOrder.route) { FarmerManageOrder(mainNavController, userViewModel, orderViewModel) }
+            composable(Screen.FarmerManageOrder.route) { FarmerManageOrder(navController, userViewModel, orderViewModel) }
         }
     }
 }

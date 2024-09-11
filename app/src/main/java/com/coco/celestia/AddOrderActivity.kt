@@ -93,7 +93,7 @@ class AddOrderActivity : ComponentActivity() {
 @Composable
 fun AddOrderPanel(navController: NavController) {
     BackHandler {
-        navController.navigateUp()
+        navController.navigateUp() // TODO: Can't go back to client dashboard after one full cycle
     }
     Column(
         verticalArrangement = Arrangement.Center,
@@ -197,8 +197,7 @@ fun ProductTypeCard(product: ProductData, navController: NavController) {
 }
 
 @Composable
-fun OrderDetailsPanel(navController: NavController, product: String?) {
-    val productViewModel: ProductViewModel = viewModel()
+fun OrderDetailsPanel(navController: NavController, type: String?, productViewModel: ProductViewModel) {
     val productData by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState()
 
@@ -210,13 +209,13 @@ fun OrderDetailsPanel(navController: NavController, product: String?) {
             .padding(16.dp)
     ) {
         Text(
-            text = product ?: "Unknown Product",
+            text = type ?: "Unknown Product",
             fontSize = 25.sp
         )
         Spacer(modifier = Modifier.height(150.dp))
-        product?.let {
-            LaunchedEffect(product) {
-                productViewModel.fetchProduct(product)
+        type?.let {
+            LaunchedEffect(type) {
+                productViewModel.fetchProduct(type)
             }
             when (productState) {
                 is ProductState.EMPTY -> Text("No products available.")
@@ -313,9 +312,14 @@ fun QuantitySelector(
 
 
 @Composable
-fun ConfirmOrderRequestPanel(navController: NavController, type: String?, name: String?, quantity: Int?) {
-    val orderViewModel: OrderViewModel = viewModel()
-    val transactionViewModel: TransactionViewModel = viewModel()
+fun ConfirmOrderRequestPanel(
+    navController: NavController,
+    type: String?,
+    name: String?,
+    quantity: Int?,
+    orderViewModel: OrderViewModel,
+    transactionViewModel: TransactionViewModel
+) {
     val orderState by orderViewModel.orderState.observeAsState()
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var city by remember { mutableStateOf("") }
@@ -336,7 +340,7 @@ fun ConfirmOrderRequestPanel(navController: NavController, type: String?, name: 
         }
         is OrderState.SUCCESS -> {
             Toast.makeText(navController.context, "Order placed.", Toast.LENGTH_SHORT).show()
-            navController.navigate(Screen.AddOrder.route)
+            navController.navigate(Screen.ClientOrder.route)
         }
 
         else -> {}
@@ -433,11 +437,11 @@ fun ConfirmOrderRequestPanel(navController: NavController, type: String?, name: 
                         streetAndNumber,
                         additionalInfo
                     )
-                    orderViewModel.placeOrder(uid, order)
                     val transaction = TransactionData(
                         "TRNSCTN{${UUID.randomUUID()}}",
                         order
                     )
+                    orderViewModel.placeOrder(uid, order)
                     transactionViewModel.recordTransaction(uid, transaction)
                 } else {
                     Toast.makeText(

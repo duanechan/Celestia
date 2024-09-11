@@ -43,7 +43,7 @@ class ClientTransaction : ComponentActivity() {
                         .fillMaxSize()
                         .background(Color(0xFFF2E3DB)) // Hex color))
                 ) {
-                    TransactionPanel()
+                    TransactionPanel(transactionViewModel = viewModel())
                 }
             }
         }
@@ -51,10 +51,9 @@ class ClientTransaction : ComponentActivity() {
 }
 
 @Composable
-fun TransactionPanel() {
+fun TransactionPanel(transactionViewModel: TransactionViewModel) {
     val auth = FirebaseAuth.getInstance()
     val uid = auth.currentUser?.uid.toString()
-    val transactionViewModel: TransactionViewModel = viewModel()
     val transactionData by transactionViewModel.transactionData.observeAsState(emptyList())
     val transactionState by transactionViewModel.transactionState.observeAsState(TransactionState.LOADING)
 

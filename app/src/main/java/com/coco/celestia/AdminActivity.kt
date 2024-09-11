@@ -72,6 +72,7 @@ import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.Orange
+import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.log
@@ -113,9 +114,8 @@ fun AdminDashboard() {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminNavDrawer(mainNavController: NavController) {
+fun AdminNavDrawer(mainNavController: NavController, productViewModel: ProductViewModel, userViewModel: UserViewModel) {
     val navigationController = rememberNavController()
-    val userViewModel: UserViewModel = viewModel()
     val context = LocalContext.current
     var exitDialog by remember { mutableStateOf(false) }
     var logoutDialog by remember { mutableStateOf(false) }
@@ -202,9 +202,9 @@ fun AdminNavDrawer(mainNavController: NavController) {
         }
     ) {
         NavHost(navController = navigationController, startDestination = Screen.Admin.route) {
-            composable(Screen.Admin.route) { AdminInventory() }
-            composable(Screen.AdminInventory.route) { AdminInventory() }
-            composable(Screen.AdminUserManagement.route) { AdminUserManagement() }
+            composable(Screen.Admin.route) { AdminInventory(productViewModel) }
+            composable(Screen.AdminInventory.route) { AdminInventory(productViewModel) }
+            composable(Screen.AdminUserManagement.route) { AdminUserManagement(userViewModel) }
         }
     }
 }
