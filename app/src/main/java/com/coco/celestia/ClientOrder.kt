@@ -153,10 +153,10 @@ fun ClientOrder(navController: NavController, orderViewModel: OrderViewModel, us
                 is OrderState.ERROR -> {
                     Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}")
                 }
-                is OrderState.EMPTY, OrderState.SUCCESS -> {
+                is OrderState.EMPTY -> {
                     Text("Empty orders.")
                 }
-                is OrderState.FETCHED -> {
+                is OrderState.FETCHED, OrderState.SUCCESS -> {
                     var orderCount = 1
                     orderData.forEach { order ->
                         userData?.let { user ->

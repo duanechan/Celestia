@@ -93,7 +93,7 @@ class AddOrderActivity : ComponentActivity() {
 @Composable
 fun AddOrderPanel(navController: NavController) {
     BackHandler {
-        navController.navigateUp() // TODO: Can't go back to client dashboard after one full cycle
+        navController.navigateUp()
     }
     Column(
         verticalArrangement = Arrangement.Center,
@@ -229,7 +229,6 @@ fun OrderDetailsPanel(navController: NavController, type: String?, productViewMo
                     }
                 }
                 null -> Text("Unknown state")
-                else -> {}
             }
         }
     }
@@ -340,7 +339,7 @@ fun ConfirmOrderRequestPanel(
         }
         is OrderState.SUCCESS -> {
             Toast.makeText(navController.context, "Order placed.", Toast.LENGTH_SHORT).show()
-            navController.navigate(Screen.ClientOrder.route)
+            navController.navigate(Screen.Client.route)
         }
 
         else -> {}
