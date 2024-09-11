@@ -94,6 +94,7 @@ fun OrderPanel() {
                 }
             }
         }
+        else -> {}
     }
 
 }
@@ -211,6 +212,8 @@ fun EditOrderDialog(order: OrderData, onDismiss: () -> Unit) {
                                     DropdownMenuItem(text = { Text("No products available.") }, onClick = {})
                                 }
                             }
+
+                            else -> {}
                         }
                     }
                 }
