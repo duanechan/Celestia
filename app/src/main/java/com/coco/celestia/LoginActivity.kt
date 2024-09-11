@@ -29,6 +29,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.ui.theme.CelestiaTheme
+import com.coco.celestia.util.redirectUser
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.FirebaseApp
@@ -170,16 +171,5 @@ fun LoginScreen(mainNavController: NavController, userViewModel: UserViewModel) 
                 mainNavController.navigate(Screen.Register.route)
             }
         )
-    }
-}
-
-fun redirectUser(role: String, navController: NavController) {
-    when (role) {
-        "Farmer" -> navController.navigate(Screen.Farmer.route)
-        "Client" -> navController.navigate(Screen.Client.route)
-        "Admin" -> navController.navigate(Screen.Admin.route)
-        "Coop" -> navController.navigate(Screen.Coop.route)
-        // TODO: Handle unknown role
-        else -> navController.navigate(Screen.Home.route)
     }
 }

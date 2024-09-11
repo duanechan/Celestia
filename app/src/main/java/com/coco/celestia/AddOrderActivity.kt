@@ -54,6 +54,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.ui.theme.CelestiaTheme
+import com.coco.celestia.util.redirectUser
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
@@ -316,9 +317,11 @@ fun ConfirmOrderRequestPanel(
     type: String?,
     name: String?,
     quantity: Int?,
+    userViewModel: UserViewModel,
     orderViewModel: OrderViewModel,
     transactionViewModel: TransactionViewModel
 ) {
+    val userData by userViewModel.userData.observeAsState()
     val orderState by orderViewModel.orderState.observeAsState()
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var city by remember { mutableStateOf("") }
@@ -339,7 +342,7 @@ fun ConfirmOrderRequestPanel(
         }
         is OrderState.SUCCESS -> {
             Toast.makeText(navController.context, "Order placed.", Toast.LENGTH_SHORT).show()
-            navController.navigate(Screen.Client.route)
+            redirectUser(userData!!.role, navController)
         }
 
         else -> {}

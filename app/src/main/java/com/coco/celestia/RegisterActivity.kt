@@ -47,6 +47,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.ui.theme.CelestiaTheme
+import com.coco.celestia.util.isValidEmail
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 
@@ -271,9 +272,4 @@ fun RegisterScreen(navController: NavController, userViewModel: UserViewModel) {
             Spacer(modifier = Modifier.height(5.dp))
         }
     }
-}
-
-fun isValidEmail (email: String): Boolean {
-    val emailPattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+"
-    return email.matches(emailPattern.toRegex())
 }

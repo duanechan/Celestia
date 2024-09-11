@@ -113,6 +113,7 @@ fun NavGraph(
                 name = name,
                 quantity = quantity,
                 orderViewModel = orderViewModel,
+                userViewModel = userViewModel,
                 transactionViewModel = transactionViewModel
             )
         }
