@@ -73,24 +73,6 @@ import java.util.Date
 import java.util.Locale
 import java.util.UUID
 
-class AddOrderActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            CelestiaTheme {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0xFFF2E3DB))
-                ) {
-//                    val navController = rememberNavController()
-//                    NavGraph(navController = navController)
-                }
-            }
-        }
-    }
-}
-
 @Composable
 fun AddOrderPanel(navController: NavController) {
     BackHandler {
@@ -272,9 +254,10 @@ fun QuantitySelector(
 
             TextField(
                 value = quantity.toString(),
-                onValueChange = {
-                    quantity = it.toInt()
+                onValueChange = { newValue ->
+                    quantity = newValue.toIntOrNull() ?: 0
                 },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier
                     .width(225.dp)
             )
