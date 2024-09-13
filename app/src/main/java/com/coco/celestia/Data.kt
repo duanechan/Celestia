@@ -15,11 +15,8 @@ data class OrderData(
     val orderDate: String = "",
     val status: String = "",
     var orderData: ProductData = ProductData(),
-    val city: String = "",
-    val postalCode: Int = 0,
     val barangay: String = "",
     val street: String = "",
-    val additionalInfo: String = ""
 )
 
 data class ProductData(

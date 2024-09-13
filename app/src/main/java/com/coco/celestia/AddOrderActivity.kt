@@ -1,11 +1,8 @@
 package com.coco.celestia
 
-import android.os.Bundle
-import android.util.Log
+
 import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -14,7 +11,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -28,8 +24,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -37,40 +31,27 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.util.redirectUser
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
-import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
 import java.time.Instant
 import java.util.Date
-import java.util.Locale
 import java.util.UUID
 
 @Composable
@@ -307,11 +288,8 @@ fun ConfirmOrderRequestPanel(
     val userData by userViewModel.userData.observeAsState()
     val orderState by orderViewModel.orderState.observeAsState()
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-    var city by remember { mutableStateOf("") }
-    var postalCode by remember { mutableStateOf("") }
-    var barangay by remember { mutableStateOf("") }
-    var streetAndNumber by remember { mutableStateOf("") }
-    var additionalInfo by remember { mutableStateOf("") }
+    val barangay = userData?.barangay ?: ""
+    val streetNumber = userData?.streetNumber ?: ""
 
     when (orderState) {
         is OrderState.LOADING -> {
@@ -321,125 +299,39 @@ fun ConfirmOrderRequestPanel(
             Toast.makeText(navController.context, "Error: ${(orderState as OrderState.ERROR).message}", Toast.LENGTH_SHORT).show()
         }
         is OrderState.EMPTY -> {
-            Toast.makeText(navController.context, "Error: ${(orderState as OrderState.ERROR).message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(navController.context, "No data available.", Toast.LENGTH_SHORT).show()
         }
         is OrderState.SUCCESS -> {
-            Toast.makeText(navController.context, "Order placed.", Toast.LENGTH_SHORT).show()
-            redirectUser(userData!!.role, navController)
+            if (userData != null) {
+                Toast.makeText(navController.context, "Order placed.", Toast.LENGTH_SHORT).show()
+                redirectUser(userData!!.role, navController)
+            }
         }
 
         else -> {}
     }
 
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(text = "Delivery Address", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(20.dp))
-        OutlinedTextField(
-            value = city,
-            onValueChange = {
-                if (it.length <= 15) {
-                    city = it
-                }
-            },
-            label = { Text(text = "City") },
-            singleLine = true,
-            maxLines = 1
+    if (barangay.isNotEmpty() && streetNumber.isNotEmpty()) {
+        val order = OrderData(
+            "ORDR{${UUID.randomUUID()}}",
+            Date.from(Instant.now()).toString(),
+            "PENDING",
+            ProductData(
+                name.toString(),
+                quantity!!,
+                type.toString()
+            ),
+            barangay,
+            streetNumber
         )
-        Spacer(modifier = Modifier.height(15.dp))
-        OutlinedTextField(
-            value = postalCode,
-            onValueChange = {
-                if (it.length <= 4) {
-                    postalCode = it
-                }
-            },
-            label = { Text(text = "Postal Code") },
-            singleLine = true,
-            maxLines = 1,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        val transaction = TransactionData(
+            "TRNSCTN{${UUID.randomUUID()}}",
+            order
         )
-        Spacer(modifier = Modifier.height(15.dp))
-        OutlinedTextField(
-            value = barangay,
-            onValueChange = {
-                if (it.length <= 15) {
-                    barangay = it
-                }
-            },
-            label = { Text(text = "Barangay") },
-            singleLine = true,
-            maxLines = 1
-        )
-        Spacer(modifier = Modifier.height(15.dp))
-        OutlinedTextField(
-            value = streetAndNumber,
-            onValueChange = {
-                if (it.length <= 50) {
-                    streetAndNumber = it
-                }
-            },
-            label = { Text(text = "Street and Number") },
-            singleLine = true,
-            maxLines = 1
-        )
-        Spacer(modifier = Modifier.height(15.dp))
-        OutlinedTextField(
-            value = additionalInfo,
-            onValueChange = {
-                if (it.length <= 50) {
-                    additionalInfo = it
-                }
-            },
-            label = { Text(text = "Additional Information") },
-            singleLine = true,
-            maxLines = 1
-        )
-        Spacer(modifier = Modifier.height(15.dp))
-        Button(
-            onClick = {
-                if (
-                    city.isNotEmpty()
-                    && postalCode.isNotEmpty()
-                    && barangay.isNotEmpty()
-                    && streetAndNumber.isNotEmpty()
-                    && additionalInfo.isNotEmpty()
-                ) {
-                    val order = OrderData(
-                        "ORDR{${UUID.randomUUID()}}",
-                        Date.from(Instant.now()).toString(),
-                        "PENDING",
-                        ProductData(
-                            name.toString(),
-                            quantity!!,
-                            type.toString()
-                        ),
-                        city,
-                        postalCode.toInt(),
-                        barangay,
-                        streetAndNumber,
-                        additionalInfo
-                    )
-                    val transaction = TransactionData(
-                        "TRNSCTN{${UUID.randomUUID()}}",
-                        order
-                    )
-                    orderViewModel.placeOrder(uid, order)
-                    transactionViewModel.recordTransaction(uid, transaction)
-                } else {
-                    Toast.makeText(
-                        navController.context,
-                        "All fields must be filled.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            },
-            modifier = Modifier
-                .width(285.dp)
-                .height(50.dp)) {
-            Text(text = "Submit")
-        }
+        orderViewModel.placeOrder(uid, order)
+        transactionViewModel.recordTransaction(uid, transaction)
+    } else {
+        Toast.makeText(navController.context, "Please complete your address details.", Toast.LENGTH_SHORT).show()
+        navController.navigate(Screen.Profile.route)
     }
 }

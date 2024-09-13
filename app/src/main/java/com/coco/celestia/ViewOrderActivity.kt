@@ -119,8 +119,7 @@ fun OrderItem(order: OrderData) {
                 Text(text = if (order.orderData.type != "Vegetable") "${order.orderData.name}, ${order.orderData.quantity}kg" else order.orderData.name,
                     fontSize = 30.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif)
                 Text(text = "${order.status} ●", fontSize = 20.sp, fontWeight = FontWeight.Light, color = Orange)
-                Text(text = "${order.street}, ${order.barangay}, ${order.city} ${order.postalCode}")
-                Text(text = order.additionalInfo, fontStyle = FontStyle.Italic)
+                Text(text = "${order.street}, ${order.barangay}")
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(text = order.orderDate)
                 Spacer(modifier = Modifier.height(8.dp))
