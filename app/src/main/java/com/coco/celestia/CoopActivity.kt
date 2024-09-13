@@ -50,6 +50,7 @@ import com.coco.celestia.dialogs.LogoutDialog
 import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.ui.theme.DarkGreen
+import com.coco.celestia.ui.theme.LightGreen
 import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.viewmodel.UserViewModel
 
@@ -123,19 +124,9 @@ fun CoopNavDrawer(mainNavController: NavController, userViewModel: UserViewModel
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(text = "Coop User 1") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Orange,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
-                )
-            )
-        },
         bottomBar = {
             NavigationBar(
-                containerColor = Orange,
+                containerColor = Color.White,
                 contentColor = DarkGreen
             ) {
                 val currentDestination = navigationController.currentBackStackEntryAsState().value?.destination?.route
