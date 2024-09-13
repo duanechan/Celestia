@@ -291,47 +291,44 @@ fun ConfirmOrderRequestPanel(
     val barangay = userData?.barangay ?: ""
     val streetNumber = userData?.streetNumber ?: ""
 
+    LaunchedEffect(barangay, streetNumber) {
+        if (barangay.isEmpty() && streetNumber.isEmpty()) {
+            Toast.makeText(navController.context, "Please complete your address details.", Toast.LENGTH_SHORT).show()
+            navController.navigate(Screen.Profile.route) {
+                popUpTo(Screen.OrderConfirmation.route) { inclusive = true }
+            }
+        } else {
+            val order = OrderData(
+                "ORDR{${UUID.randomUUID()}}",
+                Date.from(Instant.now()).toString(),
+                "PENDING",
+                ProductData(
+                    name.toString(),
+                    quantity!!,
+                    type.toString()
+                ),
+                barangay,
+                streetNumber
+            )
+            val transaction = TransactionData(
+                "TRNSCTN{${UUID.randomUUID()}}",
+                order
+            )
+            orderViewModel.placeOrder(uid, order)
+            transactionViewModel.recordTransaction(uid, transaction)
+        }
+    }
     when (orderState) {
         is OrderState.LOADING -> {
-            Toast.makeText(navController.context, "Placing order..", Toast.LENGTH_SHORT).show()
+            Toast.makeText(navController.context, "Placing order...", Toast.LENGTH_SHORT).show()
         }
         is OrderState.ERROR -> {
             Toast.makeText(navController.context, "Error: ${(orderState as OrderState.ERROR).message}", Toast.LENGTH_SHORT).show()
         }
-        is OrderState.EMPTY -> {
-            Toast.makeText(navController.context, "No data available.", Toast.LENGTH_SHORT).show()
-        }
         is OrderState.SUCCESS -> {
-            if (userData != null) {
-                Toast.makeText(navController.context, "Order placed.", Toast.LENGTH_SHORT).show()
-                redirectUser(userData!!.role, navController)
-            }
+            Toast.makeText(navController.context, "Order placed.", Toast.LENGTH_SHORT).show()
+            redirectUser(userData!!.role, navController)
         }
-
         else -> {}
-    }
-
-    if (barangay.isNotEmpty() && streetNumber.isNotEmpty()) {
-        val order = OrderData(
-            "ORDR{${UUID.randomUUID()}}",
-            Date.from(Instant.now()).toString(),
-            "PENDING",
-            ProductData(
-                name.toString(),
-                quantity!!,
-                type.toString()
-            ),
-            barangay,
-            streetNumber
-        )
-        val transaction = TransactionData(
-            "TRNSCTN{${UUID.randomUUID()}}",
-            order
-        )
-        orderViewModel.placeOrder(uid, order)
-        transactionViewModel.recordTransaction(uid, transaction)
-    } else {
-        Toast.makeText(navController.context, "Please complete your address details.", Toast.LENGTH_SHORT).show()
-        navController.navigate(Screen.Profile.route)
     }
 }
