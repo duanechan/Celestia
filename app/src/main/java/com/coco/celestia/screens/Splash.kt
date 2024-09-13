@@ -64,7 +64,7 @@ fun SplashScreen(userViewModel: UserViewModel, navController: NavHostController)
             visible = false
             when (userState) {
                 is UserState.SUCCESS -> {
-                    val name = "${userData?.firstname} ${userData?.lastname}"
+                    val firstName = "${userData?.firstname}"
                     val role = userData?.role
                     val destination = when (role) {
                         "Farmer" -> Screen.Farmer.route
@@ -73,7 +73,7 @@ fun SplashScreen(userViewModel: UserViewModel, navController: NavHostController)
                         "Coop" -> Screen.Coop.route
                         else -> Screen.Login.route
                     }
-                    Toast.makeText(navController.context, "Welcome back, $name!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(navController.context, "Welcome back, $firstName!", Toast.LENGTH_SHORT).show()
                     navController.navigate(destination) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }

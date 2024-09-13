@@ -171,7 +171,7 @@ fun CoopNavDrawer(mainNavController: NavController, userViewModel: UserViewModel
     ) {
         NavHost(navController = navigationController, startDestination = Screen.Coop.route) {
             composable(Screen.Coop.route) { CoopDashboard() }
-            composable(Screen.CoopInventory.route) { CoopInventory() }
+            composable(Screen.CoopInventory.route) { CoopInventory(navController = mainNavController) }
             composable(Screen.CoopOrder.route) { CoopOrder() }
         }
     }

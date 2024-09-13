@@ -100,6 +100,17 @@ fun NavGraph(
             AddOrderPanel(navController = navController)
         }
         composable(
+            route = Screen.CoopProductInventory.route,
+            arguments = listOf(
+                navArgument("type") { type = NavType.StringType })
+        ) { backStack ->
+            val type = backStack.arguments?.getString("type")
+            ProductTypeInventory(
+                navController = navController,
+                type = type
+            )
+        }
+        composable(
             route = Screen.OrderDetails.route,
             arguments = listOf(navArgument("type") { type = NavType.StringType })
         ) { backStack ->

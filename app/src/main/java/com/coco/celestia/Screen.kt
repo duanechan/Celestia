@@ -19,6 +19,9 @@ sealed class Screen(val route: String) {
     object Coop: Screen( route = "coop_dashboard")
     object CoopInventory: Screen( route = "coop_inventory")
     object CoopOrder: Screen( route = "coop_order")
+    object CoopProductInventory: Screen("coop_inventory/{type}") {
+        fun createRoute(type: String) = "coop_inventory/$type"
+    }
     object Client: Screen( route = "client_dashboard")
     object ClientOrder: Screen( route = "client_order")
     object ClientContact: Screen( route = "client_contact")
@@ -27,5 +30,3 @@ sealed class Screen(val route: String) {
     object AdminInventory: Screen( route = "admin_inventory")
     object AdminUserManagement: Screen( route = "admin_user_management")
 }
-
-// TODO: Add more screens or separate them by making another Screen class here
