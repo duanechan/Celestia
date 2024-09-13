@@ -22,10 +22,12 @@ protoliteWellKnownTypes = "18.0.0"
 navigationRuntimeKtx = "2.7.7"
 runtimeLivedata = "1.6.8"
 media3Decoder = "1.4.1"
+toolsCore = "1.0.0-alpha09"
 
 [libraries]
 accompanist-coil = { module = "com.google.accompanist:accompanist-coil", version.ref = "accompanistCoil" }
 accompanist-navigation-animation = { module = "com.google.accompanist:accompanist-navigation-animation" }
+accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version = "0.30.1" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx" }
@@ -56,6 +58,7 @@ androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navig
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
 ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-media3-decoder = { group = "androidx.media3", name = "media3-decoder", version.ref = "media3Decoder" }
+androidx-tools-core = { group = "androidx.privacysandbox.tools", name = "tools-core", version.ref = "toolsCore" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

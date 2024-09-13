@@ -1,4 +1,4 @@
-package com.coco.celestia
+package com.coco.celestia.dialogs
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -6,20 +6,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 
 @Composable
-fun LogoutDialog(onDismiss: () -> Unit, onLogout: () -> Unit) {
+fun SaveInfoDialog(onSave: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = {
-            Text(text = "Logging out")
+            Text(text = "Save Information")
         },
         text = {
-            Text(text = "Do you want to log out?")
+            Text(text = "Are you sure you want to save and update your information?")
         },
         confirmButton = {
             Button(
-                onClick = { onLogout() }
+                onClick = { onSave() }
             ) {
-                Text(text = "Logout")
+                Text(text = "Save")
             }
         },
         dismissButton = {

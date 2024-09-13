@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.coco.celestia.screens.Profile
+import com.coco.celestia.screens.SplashScreen
 import com.coco.celestia.viewmodel.ContactViewModel
 import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.OrderViewModel

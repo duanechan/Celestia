@@ -37,6 +37,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.LocationData
 import com.coco.celestia.R
+import com.coco.celestia.dialogs.SaveInfoDialog
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.util.isValidEmail
 import com.coco.celestia.viewmodel.LocationState
@@ -104,6 +105,7 @@ fun ProfileScreen(
     var updatedStreetNumber by remember { mutableStateOf(streetNumber) }
     var updatedBarangay by remember { mutableStateOf(barangay) }
     var saveButtonEnabled by remember { mutableStateOf(false) }
+    var saveInfoDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(userState) {
         userViewModel.fetchUser(uid)
@@ -119,6 +121,27 @@ fun ProfileScreen(
         updatedPhoneNumber.isNotEmpty() &&
         updatedStreetNumber.isNotEmpty() &&
         isValidEmail(updatedEmail)
+
+    if (saveInfoDialog) {
+        SaveInfoDialog(
+            onSave = {
+                userData?.let {
+                    userViewModel.updateUser(
+                        uid,
+                        it.copy(
+                            email = updatedEmail,
+                            phoneNumber = updatedPhoneNumber,
+                            streetNumber = updatedStreetNumber,
+                            barangay = updatedBarangay
+                        )
+                    )
+                }
+                Toast.makeText(navController.context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
+                saveInfoDialog = false
+            },
+            onDismiss = { saveInfoDialog = false }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -152,7 +175,7 @@ fun ProfileScreen(
         OutlinedTextField(
             value = updatedStreetNumber,
             onValueChange = { updatedStreetNumber = it },
-            label = { Text(text = "House No.") },
+            label = { Text(text = "Street No.") },
             singleLine = true,
             maxLines = 1,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -184,20 +207,7 @@ fun ProfileScreen(
             }
         }
         Button(
-            onClick = {
-                userData?.let {
-                    userViewModel.updateUser(
-                        uid,
-                        it.copy(
-                            email = updatedEmail,
-                            phoneNumber = updatedPhoneNumber,
-                            streetNumber = updatedStreetNumber,
-                            barangay = updatedBarangay
-                        )
-                    )
-                }
-                Toast.makeText(navController.context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
-            },
+            onClick = { saveInfoDialog = true },
             enabled = saveButtonEnabled,
         ) {
             Text(text = "Save")

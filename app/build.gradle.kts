@@ -53,7 +53,9 @@ android {
 
 dependencies {
     implementation(libs.glide.v4142)
+    //noinspection KaptUsageInsteadOfKsp
     kapt(libs.compiler)
+    implementation(libs.accompanist.systemuicontroller)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
     implementation(libs.kotlin.reflect)

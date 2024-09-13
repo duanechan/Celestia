@@ -24,10 +24,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.coco.celestia.dialogs.ExitDialog
+import com.coco.celestia.dialogs.LoginDialog
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.util.redirectUser
 import com.coco.celestia.viewmodel.UserState

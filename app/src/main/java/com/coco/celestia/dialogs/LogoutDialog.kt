@@ -1,26 +1,25 @@
-package com.coco.celestia
+package com.coco.celestia.dialogs
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavController
 
 @Composable
-fun ExitDialog(onDismiss: () -> Unit, onExit: () -> Unit) {
+fun LogoutDialog(onDismiss: () -> Unit, onLogout: () -> Unit) {
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = {
-            Text(text = "Exiting")
+            Text(text = "Logging out")
         },
         text = {
-            Text(text = "Are you sure you want to leave the app?")
+            Text(text = "Do you want to log out?")
         },
         confirmButton = {
             Button(
-                onClick = { onExit() }
+                onClick = { onLogout() }
             ) {
-                Text(text = "Exit")
+                Text(text = "Logout")
             }
         },
         dismissButton = {
