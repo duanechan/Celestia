@@ -13,8 +13,11 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,7 +26,10 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.modifier.modifierLocalMapOf
 import androidx.compose.ui.res.painterResource
@@ -32,8 +38,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.coco.celestia.ui.theme.BgColor
+import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.LightGreen
 import com.coco.celestia.ui.theme.PurpleGrey40
+import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
@@ -58,7 +67,8 @@ fun CoopInventory() {
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
+            .height(860.dp)
             .padding(top = 75.dp)
             .verticalScroll(rememberScrollState())
     ){
@@ -118,6 +128,7 @@ fun CoopInventory() {
             }
         }
     }
+    TopBar()
 }
 
 //fun fetchProducts(onProductsFetched: (Map<String, Int>) -> Unit) {
@@ -181,4 +192,51 @@ fun ItemCard(productType: String, quantity: Int) {
             )
         }
     }
+}
+// Define the gradient brush
+val GradientBrush = Brush.linearGradient(
+    colors = listOf(
+        Color(0xFF83CA95),
+        Color(0xFF41644A)
+    ),
+    start = Offset(0f, 0f),
+    end = Offset(500f, 0f)
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TopBar() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(75.dp)
+            .background(GradientBrush)  // Apply the gradient background
+    ) {
+        TopAppBar(
+            title = {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),  // Fills the entire width
+                    contentAlignment = Alignment.Center  // Aligns the content to the center
+                ) {
+                    Text(
+                        text = "Inventory",
+                        fontFamily = mintsansFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent, // Make TopAppBar background transparent
+                titleContentColor = Color.White
+            ),
+            modifier = Modifier.background(Color.Transparent)  // Ensure transparency in TopAppBar
+        )
+    }
+}
+
+@Preview
+@Composable
+fun TopBarPreview(){
+    TopBar()
 }
