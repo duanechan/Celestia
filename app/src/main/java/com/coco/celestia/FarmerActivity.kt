@@ -51,7 +51,6 @@ import com.coco.celestia.dialogs.ExitDialog
 import com.coco.celestia.dialogs.LogoutDialog
 import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.CelestiaTheme
-import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
@@ -173,7 +172,7 @@ fun FarmerNavDrawer(
 
                 //Add Product
                 NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.AddCircle, contentDescription = "Add Product", tint = Color(0xFF013220)) },
+                    icon = { Icon(imageVector = Icons.Default.AddCircle, contentDescription = "Add Product", tint = Color(0xFF013220), modifier = Modifier.size(60.dp)) },
                     label = null,
                     selected = currentDestination == Screen.FarmerAddProduct.route,
                     onClick = {
@@ -208,6 +207,7 @@ fun FarmerNavDrawer(
         NavHost(navController = navigationController, startDestination = Screen.Farmer.route) {
             composable(Screen.Farmer.route) { FarmerDashboard() }
             composable(Screen.FarmerInventory.route) { FarmerInventoryScreen() }
+            composable(Screen.FarmerAddProduct.route) { FarmerAddProductScreen() }
             composable(Screen.FarmerManageOrder.route) { FarmerManageOrder(navController, userViewModel, orderViewModel) }
         }
     }
