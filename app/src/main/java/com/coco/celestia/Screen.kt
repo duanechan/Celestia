@@ -34,4 +34,6 @@ sealed class Screen(val route: String) {
     //farmer
     object Farmer: Screen( route = "farmer_dashboard")
     object FarmerManageOrder: Screen( route = "farmer_manage_order")
+    object FarmerInventory: Screen ( route = "farmer_inventory")
+    object FarmerAddProduct: Screen( route = "farmer_add_product")
 }

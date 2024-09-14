@@ -16,8 +16,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -140,12 +142,14 @@ fun FarmerNavDrawer(
         },
         bottomBar = {
             NavigationBar(
-                containerColor = Orange,
-                contentColor = DarkGreen
+                containerColor = Color.White,
+                contentColor = Color.Green
             ) {
                 val currentDestination = navigationController.currentBackStackEntryAsState().value?.destination?.route
+
+                //Dashboard
                 NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard") },
+                    icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard", tint = Color(0xFF013220)) },
                     label = { Text("Dashboard") },
                     selected = currentDestination == Screen.Farmer.route,
                     onClick = {
@@ -154,8 +158,34 @@ fun FarmerNavDrawer(
                         }
                     }
                 )
+
+                //Inventory
                 NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Manage Orders") },
+                    icon = { Icon(imageVector = Icons.Default.List, contentDescription = "Inventory", tint = Color(0xFF013220)) },
+                    label = { Text("Inventory") },
+                    selected = currentDestination == Screen.FarmerInventory.route,
+                    onClick = {
+                        navigationController.navigate(Screen.FarmerInventory.route) {
+                            popUpTo(0)
+                        }
+                    }
+                )
+
+                //Add Product
+                NavigationBarItem(
+                    icon = { Icon(imageVector = Icons.Default.AddCircle, contentDescription = "Add Product", tint = Color(0xFF013220)) },
+                    label = null,
+                    selected = currentDestination == Screen.FarmerAddProduct.route,
+                    onClick = {
+                        navigationController.navigate(Screen.FarmerAddProduct.route) {
+                            popUpTo(0)
+                        }
+                    }
+                )
+
+                //Orders
+                NavigationBarItem(
+                    icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Manage Orders", tint = Color(0xFF013220)) },
                     label = { Text("Orders") },
                     selected = currentDestination == Screen.FarmerManageOrder.route,
                     onClick = {
@@ -164,8 +194,10 @@ fun FarmerNavDrawer(
                         }
                     }
                 )
+
+                //Logout -> lagay ko nalang sa loob ng user profile yung option na to laters
                 NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Logout") },
+                    icon = { Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Logout", tint = Color(0xFF013220)) },
                     label = { Text("Logout") },
                     selected = false,
                     onClick = { logoutDialog = true }
@@ -175,6 +207,7 @@ fun FarmerNavDrawer(
     ) {
         NavHost(navController = navigationController, startDestination = Screen.Farmer.route) {
             composable(Screen.Farmer.route) { FarmerDashboard() }
+            composable(Screen.FarmerInventory.route) { FarmerInventoryScreen() }
             composable(Screen.FarmerManageOrder.route) { FarmerManageOrder(navController, userViewModel, orderViewModel) }
         }
     }
