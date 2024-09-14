@@ -179,7 +179,7 @@ fun AdminNavDrawer(mainNavController: NavController, productViewModel: ProductVi
             composable(Screen.Admin.route) { AdminInventory(productViewModel) }
             composable(Screen.AdminInventory.route) { AdminInventory(productViewModel) }
             composable(Screen.AdminUserManagement.route) { AdminUserManagement(userViewModel)}
-            composable(Screen.AdminProfile.route) { AdminProfile() }
+            composable(Screen.AdminProfile.route) { AdminProfile(userViewModel, navigationController) }
         }
     }
 }
