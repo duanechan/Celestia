@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
@@ -49,6 +50,7 @@ import com.coco.celestia.dialogs.ExitDialog
 import com.coco.celestia.dialogs.LogoutDialog
 import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.CelestiaTheme
+import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.viewmodel.ProductViewModel
@@ -63,8 +65,8 @@ class AdminActivity: ComponentActivity(){
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(BgColor) // Hex color))
+                        .fillMaxSize(),
+                        color = DarkBlue// Hex color))
                 ) {
                     val navController = rememberNavController()
                     NavGraph(
@@ -81,8 +83,9 @@ class AdminActivity: ComponentActivity(){
 @Composable
 fun AdminDashboard() {
     Image(painter = painterResource(id = R.drawable.dashboardmock), contentDescription = "Login Image",
-        modifier = Modifier.size(1000.dp))
-    
+        modifier = Modifier.size(1000.dp)
+            .background(DarkBlue))
+
     Spacer(modifier = Modifier.height(50.dp))
 
     Text(text = "For Testing", fontSize = 50.sp, modifier =  Modifier.padding(50.dp,350.dp))
@@ -123,20 +126,10 @@ fun AdminNavDrawer(mainNavController: NavController, productViewModel: ProductVi
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(text = "Admin User 1") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Orange,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
-                )
-            )
-        },
         bottomBar = {
             NavigationBar(
-                containerColor = Orange,
-                contentColor = DarkGreen
+                containerColor = Color.White,
+                contentColor = DarkBlue
             ) {
                 val currentDestination = navigationController.currentBackStackEntryAsState().value?.destination?.route
                 NavigationBarItem(
@@ -150,8 +143,8 @@ fun AdminNavDrawer(mainNavController: NavController, productViewModel: ProductVi
                     }
                 )
                 NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.List, contentDescription = "Items") },
-                    label = { Text("Items") },
+                    icon = { Icon(imageVector = Icons.Default.List, contentDescription = "Inventory") },
+                    label = { Text("Inventory") },
                     selected = currentDestination == Screen.AdminInventory.route,
                     onClick = {
                         navigationController.navigate(Screen.AdminInventory.route) {
@@ -161,7 +154,7 @@ fun AdminNavDrawer(mainNavController: NavController, productViewModel: ProductVi
                 )
                 NavigationBarItem(
                     icon = { Icon(imageVector = Icons.Default.Person, contentDescription = "User Management") },
-                    label = { Text("User Management") },
+                    label = { Text("User Management", fontSize = 10.sp) },
                     selected = currentDestination == Screen.AdminUserManagement.route,
                     onClick = {
                         navigationController.navigate(Screen.AdminUserManagement.route) {
@@ -170,10 +163,14 @@ fun AdminNavDrawer(mainNavController: NavController, productViewModel: ProductVi
                     }
                 )
                 NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Logout") },
-                    label = { Text("Logout") },
-                    selected = false,
-                    onClick = { logoutDialog = true }
+                    icon = { Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile") },
+                    label = { Text("Profile", fontSize = 10.sp) },
+                    selected = currentDestination == Screen.AdminProfile.route,
+                    onClick = {
+                        navigationController.navigate(Screen.AdminProfile.route) {
+                            popUpTo(0)
+                        }
+                    }
                 )
             }
         }
@@ -181,7 +178,8 @@ fun AdminNavDrawer(mainNavController: NavController, productViewModel: ProductVi
         NavHost(navController = navigationController, startDestination = Screen.Admin.route) {
             composable(Screen.Admin.route) { AdminInventory(productViewModel) }
             composable(Screen.AdminInventory.route) { AdminInventory(productViewModel) }
-            composable(Screen.AdminUserManagement.route) { AdminUserManagement(userViewModel) }
+            composable(Screen.AdminUserManagement.route) { AdminUserManagement(userViewModel)}
+            composable(Screen.AdminProfile.route) { AdminProfile() }
         }
     }
 }

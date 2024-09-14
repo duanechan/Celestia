@@ -32,6 +32,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.coco.celestia.ui.theme.DarkBlue
+import com.coco.celestia.ui.theme.Gray
 import com.coco.celestia.ui.theme.LightGreen
 import com.coco.celestia.ui.theme.PurpleGrey40
 import com.coco.celestia.viewmodel.OrderState
@@ -57,13 +59,13 @@ fun AdminInventory(productViewModel: ProductViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(DarkBlue)
             .padding(top = 75.dp)
             .verticalScroll(rememberScrollState())
     ){
         Row(modifier = Modifier
             .fillMaxWidth()
             .height(100.dp)
-            .background(LightGreen)
             .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp)){
             Text(text = "Inventory", fontSize = 31.sp, fontWeight = FontWeight.Bold, color = Color.White)
             Spacer(modifier = Modifier.weight(1f))
@@ -90,7 +92,7 @@ fun AdminInventory(productViewModel: ProductViewModel) {
                 onSearch = {},
                 active = false,
                 onActiveChange = {},
-                placeholder = { Text(text = "Search...", color = Color.Black, fontSize = 15.sp)},
+                placeholder = { Text(text = "Search...", color = DarkBlue, fontSize = 15.sp)},
                 leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon")},
                 modifier = Modifier
                     .width(225.dp)
@@ -155,7 +157,7 @@ fun AdminItemCard(productType: String, quantity: Int) {
         .offset(x = (-16).dp, y = 0.dp)
         .padding(top = 0.dp, bottom = 5.dp, start = 30.dp, end = 0.dp),
         colors = CardDefaults.cardColors(
-            containerColor = LightGreen
+            containerColor = Color.White
         )) {
         var expanded by remember { mutableStateOf(false) }
         Column(
@@ -167,14 +169,14 @@ fun AdminItemCard(productType: String, quantity: Int) {
                 text = productType,
                 fontSize = 35.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = Gray,
                 modifier = Modifier.padding(top = 15.dp, start = 10.dp)
             )
             Text(
                 text = "${quantity}kg",
                 fontSize = 25.sp,
                 fontWeight = FontWeight.Light,
-                color = Color.White,
+                color = Gray,
                 modifier = Modifier.padding(top = 15.dp, start = 10.dp)
             )
         }

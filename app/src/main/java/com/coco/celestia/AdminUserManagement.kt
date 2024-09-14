@@ -39,6 +39,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.coco.celestia.ui.theme.DarkBlue
+import com.coco.celestia.ui.theme.Gray
 import com.coco.celestia.ui.theme.LightGreen
 import com.coco.celestia.ui.theme.PurpleGrey40
 import com.coco.celestia.viewmodel.UserViewModel
@@ -60,6 +62,7 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
         Column(
             modifier = Modifier
                 .fillMaxHeight()
+                .background(DarkBlue)
                 .padding(top = 75.dp)
                 .verticalScroll(rememberScrollState()) // Scrollable column
         ) {
@@ -68,7 +71,7 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
-                    .background(LightGreen)
+                    .background(DarkBlue)
                     .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp)
             ) {
                 Text(
@@ -126,7 +129,7 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
                 DropdownMenu(
                     expanded = expanded,
                     onDismissRequest = { expanded = false },
-                    modifier = Modifier.background(Color.White)
+                    modifier = Modifier.background(Gray)
                 ) {
                     DropdownMenuItem(onClick = { /* Handle filter option 1 */ }) {
                         Text(text = "Filter Option 1")
