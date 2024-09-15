@@ -7,6 +7,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.coco.celestia.components.NavDrawer
 import com.coco.celestia.screens.Profile
 import com.coco.celestia.screens.SplashScreen
 import com.coco.celestia.viewmodel.ContactViewModel
@@ -52,44 +53,55 @@ fun NavGraph(
                 userViewModel = userViewModel
             )
         }
-        composable(route = Screen.Profile.route) {
-            Profile(
-                navController = navController,
-                userViewModel = userViewModel,
-                locationViewModel = locationViewModel
-            )
-        }
         composable(route = Screen.Farmer.route) {
             FarmerDashboard()
-            FarmerNavDrawer(
+            NavDrawer(
+                role = "Farmer",
                 navController = navController,
-                userViewModel = userViewModel,
-                orderViewModel = orderViewModel
+                contactViewModel = contactViewModel,
+                locationViewModel = locationViewModel,
+                orderViewModel = orderViewModel,
+                productViewModel = productViewModel,
+                transactionViewModel = transactionViewModel,
+                userViewModel = userViewModel
             )
         }
         composable(route = Screen.Client.route) {
             ClientDashboard()
-            ClientNavDrawer(
+            NavDrawer(
+                role = "Client",
                 navController = navController,
                 contactViewModel = contactViewModel,
                 locationViewModel = locationViewModel,
-                userViewModel = userViewModel,
-                orderViewModel = orderViewModel
+                orderViewModel = orderViewModel,
+                productViewModel = productViewModel,
+                transactionViewModel = transactionViewModel,
+                userViewModel = userViewModel
             )
         }
         composable(route = Screen.Admin.route) {
             AdminDashboard()
-            AdminNavDrawer(
-                mainNavController = navController,
+            NavDrawer(
+                role = "Admin",
+                navController = navController,
+                contactViewModel = contactViewModel,
+                locationViewModel = locationViewModel,
+                orderViewModel = orderViewModel,
                 productViewModel = productViewModel,
-                userViewModel = userViewModel,
-                locationViewModel = locationViewModel
+                transactionViewModel = transactionViewModel,
+                userViewModel = userViewModel
             )
         }
         composable(route = Screen.Coop.route) {
             CoopDashboard()
-            CoopNavDrawer(
-                mainNavController = navController,
+            NavDrawer(
+                role = "Coop",
+                navController = navController,
+                contactViewModel = contactViewModel,
+                locationViewModel = locationViewModel,
+                orderViewModel = orderViewModel,
+                productViewModel = productViewModel,
+                transactionViewModel = transactionViewModel,
                 userViewModel = userViewModel
             )
         }

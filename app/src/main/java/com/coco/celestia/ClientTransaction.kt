@@ -26,6 +26,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.ui.theme.CelestiaTheme
+import com.coco.celestia.util.formatDate
 import com.coco.celestia.viewmodel.TransactionState
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -132,16 +133,4 @@ fun StyledText(transactionDate: String, productQuantity: String, productType: St
         },
         modifier = Modifier.padding(20.dp)
     )
-}
-
-fun formatDate(dateString: String): String? {
-    return try {
-        val inputFormat = SimpleDateFormat("EEE MMM dd HH:mm:ss 'GMT'Z yyyy", Locale.ENGLISH)
-        val date = inputFormat.parse(dateString)
-        val outputFormat = SimpleDateFormat("M/dd/yy - h:mm a", Locale.ENGLISH)
-        outputFormat.format(date!!)
-    } catch (e: Exception) {
-        e.printStackTrace()
-        null
-    }
 }

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
@@ -49,9 +50,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.dialogs.ExitDialog
 import com.coco.celestia.dialogs.LogoutDialog
+import com.coco.celestia.screens.Profile
 import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.ui.theme.Orange
+import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 
@@ -96,7 +99,8 @@ fun FarmerDashboard() {
 fun FarmerNavDrawer(
     navController: NavController,
     userViewModel: UserViewModel,
-    orderViewModel: OrderViewModel
+    orderViewModel: OrderViewModel,
+    locationViewModel: LocationViewModel
 ) {
     val navigationController = rememberNavController()
     val context = LocalContext.current
@@ -194,12 +198,15 @@ fun FarmerNavDrawer(
                     }
                 )
 
-                //Logout -> lagay ko nalang sa loob ng user profile yung option na to laters
                 NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Logout", tint = Color(0xFF013220)) },
-                    label = { Text("Logout") },
-                    selected = false,
-                    onClick = { logoutDialog = true }
+                    icon = { Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile", tint = Color(0xFF013220)) },
+                    label = { Text("Profile") },
+                    selected = currentDestination == Screen.Profile.route,
+                    onClick = {
+                        navigationController.navigate(Screen.Profile.route) {
+                            popUpTo(0)
+                        }
+                    }
                 )
             }
         }
@@ -209,6 +216,7 @@ fun FarmerNavDrawer(
             composable(Screen.FarmerInventory.route) { FarmerInventoryScreen() }
             composable(Screen.FarmerAddProduct.route) { FarmerAddProductScreen() }
             composable(Screen.FarmerManageOrder.route) { FarmerManageOrder(navController, userViewModel, orderViewModel) }
+            composable(Screen.Profile.route) { Profile(navController, userViewModel, locationViewModel) }
         }
     }
 }

@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.dialogs.ExitDialog
-import com.coco.celestia.util.redirectUser
+import com.coco.celestia.util.routeHandler
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 
@@ -66,7 +66,10 @@ fun LoginScreen(mainNavController: NavController, userViewModel: UserViewModel) 
         is UserState.LOGIN_SUCCESS -> {
             Toast.makeText(navController.context, "Welcome, $firstName!", Toast.LENGTH_SHORT).show()
             val role = (userState as UserState.LOGIN_SUCCESS).role
-            redirectUser(role, mainNavController)
+            val route = routeHandler(role)
+            mainNavController.navigate(route.dashboard) {
+                popUpTo(Screen.Splash.route)
+            }
         }
         is UserState.REGISTER_SUCCESS -> {
             Toast.makeText(navController.context, "You can now log in!", Toast.LENGTH_SHORT).show()

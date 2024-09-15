@@ -42,7 +42,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.coco.celestia.util.redirectUser
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
@@ -327,7 +326,11 @@ fun ConfirmOrderRequestPanel(
         }
         is OrderState.SUCCESS -> {
             Toast.makeText(navController.context, "Order placed.", Toast.LENGTH_SHORT).show()
-            redirectUser(userData!!.role, navController)
+            userData?.let {
+                navController.navigate(Screen.Client.route) {
+                    popUpTo(Screen.Splash.route)
+                }
+            }
         }
         else -> {}
     }

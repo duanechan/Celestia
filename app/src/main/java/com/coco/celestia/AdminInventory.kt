@@ -120,23 +120,6 @@ fun AdminInventory(productViewModel: ProductViewModel) {
     }
 }
 
-//fun fetchProducts(onProductsFetched: (Map<String, Int>) -> Unit) {
-//    val databaseReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("products")
-//    databaseReference.addListenerForSingleValueEvent(object : ValueEventListener {
-//        override fun onDataChange(snapshot: DataSnapshot) {
-//            val productList = snapshot.children.mapNotNull {
-//                it.key?.let { key -> key to it.child("quantity").getValue(Int::class.java) }
-//            }
-//                .filter { it.second != null }.associate { it.first to it.second!! }
-//            onProductsFetched(productList)
-//        }
-//
-//        override fun onCancelled(error: DatabaseError) {
-//
-//        }
-//    })
-//}
-
 @Composable
 fun AdminItemList(itemList: List<ProductData>) {
     if (itemList.isNotEmpty()) {

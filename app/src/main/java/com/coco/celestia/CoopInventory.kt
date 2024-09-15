@@ -177,52 +177,7 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
     }
 }
 
-//@Composable
-//fun ItemList(itemList: List<ProductData>) {
-//    if (itemList.isNotEmpty()) {
-//        itemList.forEach { (type, quantity) ->
-//            val productType = type.replace("_", " ")
-//                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
-//            ItemCard(productType, quantity)
-//            Spacer(modifier = Modifier.height(10.dp))
-//        }
-//    }
-//}
-//
-//@Composable
-//fun ItemCard(productType: String, quantity: Int) {
-//    Card(modifier = Modifier
-//        .width(500.dp)
-//        .height(200.dp)
-//        .offset(x = (-16).dp, y = 0.dp)
-//        .padding(top = 0.dp, bottom = 5.dp, start = 30.dp, end = 0.dp),
-//        colors = CardDefaults.cardColors(
-//            containerColor = LightGreen
-//        )) {
-//        var expanded by remember { mutableStateOf(false) }
-//        Column(
-//            Modifier
-//                .clickable { expanded = !expanded }
-//                .padding(16.dp)
-//        ) {
-//            Text(
-//                text = productType,
-//                fontSize = 35.sp,
-//                fontWeight = FontWeight.Bold,
-//                color = Color.White,
-//                modifier = Modifier.padding(top = 15.dp, start = 10.dp)
-//            )
-//            Text(
-//                text = "${quantity}kg",
-//                fontSize = 25.sp,
-//                fontWeight = FontWeight.Light,
-//                color = Color.White,
-//                modifier = Modifier.padding(top = 15.dp, start = 10.dp)
-//            )
-//        }
-//    }
-//}
-// Define the gradient brush
+// Define the gradient brush TODO: Move to a more appropriate folder
 val GradientBrush = Brush.linearGradient(
     colors = listOf(
         Color(0xFF83CA95),
