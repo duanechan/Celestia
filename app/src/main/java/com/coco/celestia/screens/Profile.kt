@@ -4,15 +4,21 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -37,6 +43,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.LocationData
 import com.coco.celestia.R
+import com.coco.celestia.Screen
+import com.coco.celestia.dialogs.LogoutDialog
 import com.coco.celestia.dialogs.SaveInfoDialog
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.util.isValidEmail
@@ -52,33 +60,34 @@ fun ProfilePagePreview() {
     val userViewModel: UserViewModel = viewModel()
     val locationViewModel: LocationViewModel = viewModel()
     val userData by userViewModel.userData.observeAsState()
-    val firstName = userData!!.firstname
-    val lastName = userData!!.lastname
-    val email = userData!!.email
-    val phoneNumber = "123-456-789"
-    val houseNo = "66"
-    val barangay = "Bakakeng"
+    userData?.let {
+        val firstName = it.firstname
+        val lastName = it.lastname
+        val email = it.email
+        val phoneNumber = it.phoneNumber
+        val streetNumber = it.streetNumber
+        val barangay = it.barangay
 
-    CelestiaTheme {
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFF2E3DB))
-        ) {
-            ProfileScreen(
-                navController,
-                userViewModel,
-                locationViewModel,
-                firstName,
-                lastName,
-                email,
-                phoneNumber,
-                houseNo,
-                barangay
-            )
+        CelestiaTheme {
+            Surface(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFFF2E3DB))
+            ) {
+                ProfileScreen(
+                    navController,
+                    userViewModel,
+                    locationViewModel,
+                    firstName,
+                    lastName,
+                    email,
+                    phoneNumber,
+                    streetNumber,
+                    barangay
+                )
+            }
         }
     }
-
 }
 
 
@@ -106,10 +115,25 @@ fun ProfileScreen(
     var updatedBarangay by remember { mutableStateOf(barangay) }
     var saveButtonEnabled by remember { mutableStateOf(false) }
     var saveInfoDialog by remember { mutableStateOf(false) }
+    var logoutDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(userState) {
         userViewModel.fetchUser(uid)
         locationViewModel.fetchLocations("")
+    }
+
+    if (logoutDialog) {
+        LogoutDialog(
+            onDismiss = { logoutDialog = false },
+            onLogout = {
+                userViewModel.logout()
+                navController.navigate(Screen.Login.route) {
+                    popUpTo(0)
+                }
+                Toast.makeText(navController.context, "Logout", Toast.LENGTH_SHORT).show()
+                logoutDialog = false
+            }
+        )
     }
 
     saveButtonEnabled =
@@ -212,6 +236,22 @@ fun ProfileScreen(
         ) {
             Text(text = "Save")
         }
+        Button(
+            onClick = { logoutDialog = true },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.White,
+                contentColor = Color.DarkGray
+            ),
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.ExitToApp,
+                contentDescription = "Logout",
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Logout")
+        }
     }
 }
 
@@ -222,23 +262,26 @@ fun Profile(
     locationViewModel: LocationViewModel
 ) {
     val userData by userViewModel.userData.observeAsState()
-    val firstName = userData!!.firstname
-    val lastName = userData!!.lastname
-    val email = userData!!.email
-    val phoneNumber = userData!!.phoneNumber
-    val streetNumber = userData!!.streetNumber
-    val barangay = userData!!.barangay
 
-    ProfileScreen(
-        navController,
-        userViewModel,
-        locationViewModel,
-        firstName,
-        lastName,
-        email,
-        phoneNumber,
-        streetNumber,
-        barangay
-    )
+    userData?.let {
+        val firstName = it.firstname
+        val lastName = it.lastname
+        val email = it.email
+        val phoneNumber = it.phoneNumber
+        val streetNumber = it.streetNumber
+        val barangay = it.barangay
+
+        ProfileScreen(
+            navController,
+            userViewModel,
+            locationViewModel,
+            firstName,
+            lastName,
+            email,
+            phoneNumber,
+            streetNumber,
+            barangay
+        )
+    }
 }
 

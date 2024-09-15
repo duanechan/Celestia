@@ -19,7 +19,6 @@ sealed class OrderState {
     object LOADING : OrderState()
     object SUCCESS : OrderState()
     object EMPTY : OrderState()
-    object FETCHED : OrderState()
     data class ERROR(val message: String) : OrderState()
 }
 
@@ -88,7 +87,7 @@ class OrderViewModel : ViewModel() {
                         }
 
                     _orderData.value = orders
-                    _orderState.value = if (orders.isEmpty()) OrderState.EMPTY else OrderState.FETCHED
+                    _orderState.value = if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS
                 }
 
                 override fun onCancelled(error: DatabaseError) {

@@ -60,7 +60,11 @@ import com.google.firebase.auth.FirebaseAuth
 @OptIn(ExperimentalMaterial3Api::class)
 //@Preview
 @Composable
-fun ClientOrder(navController: NavController, orderViewModel: OrderViewModel, userViewModel: UserViewModel) {
+fun ClientOrder(
+    navController: NavController,
+    orderViewModel: OrderViewModel,
+    userViewModel: UserViewModel
+) {
     val userData by userViewModel.userData.observeAsState()
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
@@ -156,7 +160,7 @@ fun ClientOrder(navController: NavController, orderViewModel: OrderViewModel, us
                 is OrderState.EMPTY -> {
                     Text("Empty orders.")
                 }
-                is OrderState.FETCHED, OrderState.SUCCESS -> {
+                is OrderState.SUCCESS -> {
                     var orderCount = 1
                     orderData.forEach { order ->
                         userData?.let { user ->

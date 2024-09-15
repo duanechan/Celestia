@@ -48,11 +48,13 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.dialogs.ExitDialog
 import com.coco.celestia.dialogs.LogoutDialog
+import com.coco.celestia.screens.Profile
 import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.Orange
+import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 
@@ -94,7 +96,12 @@ fun AdminDashboard() {
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminNavDrawer(mainNavController: NavController, productViewModel: ProductViewModel, userViewModel: UserViewModel) {
+fun AdminNavDrawer(
+    mainNavController: NavController,
+    productViewModel: ProductViewModel,
+    userViewModel: UserViewModel,
+    locationViewModel: LocationViewModel
+) {
     val navigationController = rememberNavController()
     val context = LocalContext.current
     var exitDialog by remember { mutableStateOf(false) }
@@ -179,7 +186,7 @@ fun AdminNavDrawer(mainNavController: NavController, productViewModel: ProductVi
             composable(Screen.Admin.route) { AdminInventory(productViewModel) }
             composable(Screen.AdminInventory.route) { AdminInventory(productViewModel) }
             composable(Screen.AdminUserManagement.route) { AdminUserManagement(userViewModel)}
-            composable(Screen.AdminProfile.route) { AdminProfile(userViewModel, navigationController) }
+            composable(Screen.AdminProfile.route) { Profile(mainNavController, userViewModel, locationViewModel) }
         }
     }
 }

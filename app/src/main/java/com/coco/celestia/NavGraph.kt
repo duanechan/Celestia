@@ -59,7 +59,6 @@ fun NavGraph(
                 locationViewModel = locationViewModel
             )
         }
-
         composable(route = Screen.Farmer.route) {
             FarmerDashboard()
             FarmerNavDrawer(
@@ -83,7 +82,8 @@ fun NavGraph(
             AdminNavDrawer(
                 mainNavController = navController,
                 productViewModel = productViewModel,
-                userViewModel = userViewModel
+                userViewModel = userViewModel,
+                locationViewModel = locationViewModel
             )
         }
         composable(route = Screen.Coop.route) {

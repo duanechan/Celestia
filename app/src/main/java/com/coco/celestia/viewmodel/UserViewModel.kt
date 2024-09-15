@@ -1,18 +1,11 @@
 package com.coco.celestia.viewmodel
 
-import android.content.Context
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.UserData
-import android.widget.Toast
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.coco.celestia.OrderData
-import com.coco.celestia.User
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError

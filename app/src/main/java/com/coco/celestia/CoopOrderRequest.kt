@@ -88,10 +88,10 @@ fun OrderRequestPanel(keywords: String) {
             is OrderState.ERROR -> {
                 Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}")
             }
-            is OrderState.EMPTY, OrderState.SUCCESS -> {
+            is OrderState.EMPTY -> {
                 Text("Awit man! No pending orders.")
             }
-            is OrderState.FETCHED -> {
+            is OrderState.SUCCESS -> {
                 LazyColumn {
                     items(orderData) { order ->
                         OrderItemDecision(

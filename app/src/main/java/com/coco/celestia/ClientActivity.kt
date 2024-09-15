@@ -102,9 +102,7 @@ fun ClientNavDrawer(
     orderViewModel: OrderViewModel
 ) {
     val navigationController = rememberNavController()
-    val context = LocalContext.current
     var exitDialog by remember { mutableStateOf(false) }
-    var logoutDialog by remember { mutableStateOf(false) }
 
     BackHandler {
         exitDialog = true
@@ -114,20 +112,6 @@ fun ClientNavDrawer(
         ExitDialog(
             onDismiss = { exitDialog = false },
             onExit = { (navController.context as Activity).finish() }
-        )
-    }
-
-    if (logoutDialog) {
-        LogoutDialog(
-            onDismiss = { logoutDialog = false },
-            onLogout = {
-                userViewModel.logout()
-                navController.navigate(Screen.Login.route) {
-                    popUpTo(0)
-                }
-                Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
-                logoutDialog = false
-            }
         )
     }
 
@@ -168,16 +152,7 @@ fun ClientNavDrawer(
                         }
                     }
                 )
-                NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile") },
-                    label = { Text("Profile") },
-                    selected = currentDestination == Screen.Profile.route,
-                    onClick = {
-                        navigationController.navigate(Screen.Profile.route) {
-                            popUpTo(0)
-                        }
-                    }
-                )
+
                 NavigationBarItem(
                     icon = { Icon(imageVector = Icons.Default.Call, contentDescription = "Contact Inquiry") },
                     label = { Text("Contact") },
@@ -189,10 +164,14 @@ fun ClientNavDrawer(
                     }
                 )
                 NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.ExitToApp, contentDescription = "Logout") },
-                    label = { Text("Logout") },
-                    selected = false,
-                    onClick = { logoutDialog = true }
+                    icon = { Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile") },
+                    label = { Text("Profile") },
+                    selected = currentDestination == Screen.Profile.route,
+                    onClick = {
+                        navigationController.navigate(Screen.Profile.route) {
+                            popUpTo(0)
+                        }
+                    }
                 )
             }
         }
