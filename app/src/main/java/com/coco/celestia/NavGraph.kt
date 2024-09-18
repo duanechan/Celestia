@@ -1,6 +1,11 @@
 package com.coco.celestia
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -54,7 +59,6 @@ fun NavGraph(
             )
         }
         composable(route = Screen.Farmer.route) {
-            FarmerDashboard()
             NavDrawer(
                 role = "Farmer",
                 navController = navController,
@@ -115,12 +119,17 @@ fun NavGraph(
             route = Screen.CoopProductInventory.route,
             arguments = listOf(
                 navArgument("type") { type = NavType.StringType })
-        ) { backStack ->
+        ) {
+            backStack ->
             val type = backStack.arguments?.getString("type")
-            ProductTypeInventory(
-                navController = navController,
-                type = type
-            )
+
+            Column(modifier = Modifier.fillMaxSize()){
+                ProductTypeInventory(
+                    navController = navController,
+                    type = type,
+                )
+                BottomNavigationBar(navController = navController)
+            }
         }
         composable(
             route = Screen.OrderDetails.route,

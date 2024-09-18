@@ -10,14 +10,27 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -36,7 +49,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
@@ -125,7 +141,8 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
     LaunchedEffect(Unit) {
         productViewModel.fetchProduct(type.toString())
     }
-    Column {
+    TopBar()
+    Column( modifier = Modifier.height(795.dp)) {
         Text(text = type.toString(), fontSize = 25.sp, fontWeight = FontWeight.Bold)
         productData.forEach { product ->
             Card(
@@ -199,8 +216,8 @@ fun TopBar() {
         TopAppBar(
             title = {
                 Box(
-                    modifier = Modifier.fillMaxWidth(),  // Fills the entire width
-                    contentAlignment = Alignment.Center  // Aligns the content to the center
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "Inventory",
@@ -211,16 +228,82 @@ fun TopBar() {
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent, // Make TopAppBar background transparent
+                containerColor = Color.Transparent,
                 titleContentColor = Color.White
             ),
-            modifier = Modifier.background(Color.Transparent)  // Ensure transparency in TopAppBar
+            modifier = Modifier.background(Color.Transparent)
         )
     }
 }
 
-@Preview
 @Composable
-fun TopBarPreview(){
-    TopBar()
+fun BottomNavigationBar(navController: NavHostController) {
+    Box(modifier = Modifier.fillMaxWidth()) {
+        NavigationBar(
+            containerColor = Color.White,
+            contentColor = DarkGreen,
+            modifier = Modifier.padding(horizontal = 0.dp) // Adjust padding to create space for the FAB
+        ) {
+            val currentDestination = navController.currentBackStackEntryAsState().value?.destination?.route
+            NavigationBarItem(
+                icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard") },
+                label = { Text("Dashboard") },
+                selected = currentDestination == Screen.Coop.route,
+                onClick = {
+                    navController.navigate(Screen.Coop.route) {
+                        popUpTo(0)
+                    }
+                }
+            )
+            NavigationBarItem(
+                icon = { Icon(imageVector = Icons.Default.List, contentDescription = "Items") },
+                label = { Text("Items") },
+                selected = currentDestination == Screen.CoopInventory.route,
+                onClick = {
+                    navController.navigate(Screen.CoopInventory.route) {
+                        popUpTo(0)
+                    }
+                }
+            )
+
+            NavigationBarItem(
+                icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Orders") },
+                label = { Text("Orders") },
+                selected = currentDestination == Screen.CoopOrder.route,
+                onClick = {
+                    navController.navigate(Screen.CoopOrder.route) {
+                        popUpTo(0)
+                    }
+                }
+            )
+            NavigationBarItem(
+                icon = { Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile") },
+                label = { Text("Profile") },
+                selected = currentDestination == Screen.Profile.route,
+                onClick = {
+                    navController.navigate(Screen.Profile.route) {
+                        popUpTo(0)
+                    }
+                }
+            )
+        }
+
+        // Floating Action Button (FAB)
+        FloatingActionButton(
+            onClick = { /* Handle click action for the FAB */ },
+            shape = CircleShape,
+            containerColor = DarkGreen,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .offset(y = -30.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add",
+                tint = Color.White,
+                modifier = Modifier.size(24.dp))
+        }
+    }
 }
+
+
