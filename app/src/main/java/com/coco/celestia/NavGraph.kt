@@ -132,6 +132,16 @@ fun NavGraph(
             }
         }
         composable(
+            route = Screen.CoopAddProductInventory.route,
+            arguments = listOf(
+                navArgument("type") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val type = backStackEntry.arguments?.getString("type")
+            AddProductForm(navController = navController, type = type)
+        }
+
+        composable(
             route = Screen.OrderDetails.route,
             arguments = listOf(navArgument("type") { type = NavType.StringType })
         ) { backStack ->
