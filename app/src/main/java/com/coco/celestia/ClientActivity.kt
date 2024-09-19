@@ -51,8 +51,8 @@ import com.coco.celestia.dialogs.LogoutDialog
 import com.coco.celestia.screens.Profile
 import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.CelestiaTheme
-import com.coco.celestia.ui.theme.DarkGreen
-import com.coco.celestia.ui.theme.Orange
+import com.coco.celestia.ui.theme.VeryDarkGreen
+import com.coco.celestia.ui.theme.LightOrange
 import com.coco.celestia.viewmodel.ContactViewModel
 import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.OrderViewModel
@@ -120,7 +120,7 @@ fun ClientNavDrawer(
             TopAppBar(
                 title = { Text(text = "Client User 1") },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Orange,
+                    containerColor = LightOrange,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -128,8 +128,8 @@ fun ClientNavDrawer(
         },
         bottomBar = {
             NavigationBar(
-                containerColor = Orange,
-                contentColor = DarkGreen
+                containerColor = LightOrange,
+                contentColor = Color.White
             ) {
                 val currentDestination = navigationController.currentBackStackEntryAsState().value?.destination?.route
                 NavigationBarItem(

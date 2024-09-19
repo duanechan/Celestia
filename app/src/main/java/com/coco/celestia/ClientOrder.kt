@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.ui.theme.LightGreen
+import com.coco.celestia.ui.theme.VeryDarkGreen
 import com.coco.celestia.ui.theme.PurpleGrey40
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
@@ -89,7 +90,7 @@ fun ClientOrder(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
-                    .background(LightGreen)
+                    .background(VeryDarkGreen)
                     .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp)
             ) {
                 Text(
@@ -182,7 +183,7 @@ fun ClientOrder(
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
                 .padding(bottom = 100.dp),
-                containerColor = LightGreen
+            containerColor = VeryDarkGreen
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
@@ -208,7 +209,7 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
                 .height(125.dp)
                 .offset(x = (-16).dp, y = 0.dp)
                 .padding(top = 0.dp, bottom = 5.dp, start = 30.dp, end = 0.dp),
-            colors = CardDefaults.cardColors(containerColor = LightGreen)
+            colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
         ) {
             Column(
                 Modifier

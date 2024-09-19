@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coco.celestia.ui.theme.LightGreen
 import com.coco.celestia.ui.theme.PurpleGrey40
+import com.coco.celestia.ui.theme.VeryDarkGreen
 import com.coco.celestia.viewmodel.ContactState
 import com.coco.celestia.viewmodel.ContactViewModel
 
@@ -66,7 +67,7 @@ fun ClientContact(contactViewModel: ContactViewModel) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(100.dp)
-                .background(LightGreen)
+                .background(VeryDarkGreen)
                 .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp)
         ) {
             Text(text = "Contact Inquiry", fontSize = 31.sp, fontWeight = FontWeight.Bold, color = Color.White)
@@ -143,7 +144,7 @@ fun ItemCards(contact: ContactData) {
             .height(200.dp)
             .offset(x = (-16).dp, y = 0.dp)
             .padding(top = 0.dp, bottom = 5.dp, start = 30.dp, end = 0.dp),
-        colors = CardDefaults.cardColors(containerColor = LightGreen)
+        colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
     ) {
         var expanded by remember { mutableStateOf(false) }
         Column(
