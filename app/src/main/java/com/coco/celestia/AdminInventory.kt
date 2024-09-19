@@ -62,30 +62,34 @@ fun AdminInventory(productViewModel: ProductViewModel) {
             .background(DarkBlue)
             .padding(top = 75.dp)
             .verticalScroll(rememberScrollState())
-    ){
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp)
-            .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp)){
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp)
+                .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp)
+        ) {
             Text(text = "Inventory", fontSize = 31.sp, fontWeight = FontWeight.Bold, color = Color.White)
             Spacer(modifier = Modifier.weight(1f))
-            Button(onClick = { }) {
+            Button(onClick = { /* TODO: Handle notification click */ }) {
                 Image(
                     painter = painterResource(id = R.drawable.notification_icon),
                     contentDescription = "Notification Icon",
-                    modifier = Modifier.size(30.dp))
+                    modifier = Modifier.size(30.dp)
+                )
             }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        var text by remember {mutableStateOf("")}
-        var active by remember{ mutableStateOf(false) }
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp)
-            .background(PurpleGrey40)
-            .padding(top = 10.dp, bottom = 15.dp, start = 25.dp, end = 16.dp)){
+        var text by remember { mutableStateOf("") }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .background(PurpleGrey40)
+                .padding(top = 10.dp, bottom = 15.dp, start = 25.dp, end = 16.dp)
+        ) {
             SearchBar(
                 query = text,
                 onQueryChange = {},
@@ -101,17 +105,37 @@ fun AdminInventory(productViewModel: ProductViewModel) {
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Row for aligned buttons
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Button(onClick = { /* TODO: Handle coffee button click */ }) {
+                Text("Coffee")
+            }
+            Button(onClick = { /* TODO: Handle meat button click */ }) {
+                Text("Meat")
+            }
+            Button(onClick = { /* TODO: Handle vegetable button click */ }) {
+                Text("Vegetable")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         when (productState) {
             is ProductState.LOADING -> {
-                Text("Loading products...")
+                Text("Loading products...", color = Color.White)
             }
             is ProductState.ERROR -> {
-                Text("Failed to load products: ${(productState as ProductState.ERROR).message}")
+                Text("Failed to load products: ${(productState as ProductState.ERROR).message}", color = Color.Red)
             }
             is ProductState.EMPTY -> {
-                Text("No products available.")
+                Text("No products available.", color = Color.White)
             }
             is ProductState.SUCCESS -> {
                 AdminItemList(productData)
@@ -119,7 +143,6 @@ fun AdminInventory(productViewModel: ProductViewModel) {
         }
     }
 }
-
 @Composable
 fun AdminItemList(itemList: List<ProductData>) {
     if (itemList.isNotEmpty()) {
