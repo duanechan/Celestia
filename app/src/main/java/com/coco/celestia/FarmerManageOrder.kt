@@ -19,14 +19,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
@@ -37,7 +35,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -53,7 +50,6 @@ import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 
-//@Preview
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun FarmerManageOrder(
@@ -106,16 +102,18 @@ fun FarmerManageOrder(
                 Spacer(modifier = Modifier.height(10.dp))
 
                 var text by remember { mutableStateOf("") }
-                var active by remember{ mutableStateOf(false) }
-                Row(modifier = Modifier
-                    .width(150.dp)
-                    .height(50.dp)
-                    .background(PurpleGrey40)
-                    .padding(top = 10.dp, bottom = 15.dp, start = 0.dp, end = 0.dp)){
+                var active by remember { mutableStateOf(false) }
+                Row(
+                    modifier = Modifier
+                        .width(150.dp)
+                        .height(50.dp)
+                        .background(PurpleGrey40)
+                        .padding(top = 10.dp, bottom = 15.dp)
+                ) {
                     SearchBar(
                         query = text,
-                        onQueryChange = {},
-                        onSearch = {},
+                        onQueryChange = { /* Handle query change */ },
+                        onSearch = { /* Handle search */ },
                         active = false,
                         onActiveChange = {},
                         placeholder = { Text(text = "Search...", color = Color.Black, fontSize = 15.sp) },
@@ -128,7 +126,7 @@ fun FarmerManageOrder(
                 }
             }
 
-            Row() {
+            Row {
                 Text(
                     text = "Order Status",
                     fontSize = 17.sp,
@@ -143,10 +141,10 @@ fun FarmerManageOrder(
                     color = Color.Black,
                     modifier = Modifier.padding(top = 0.dp, start = 231.dp)
                 )
-
             }
 
             Spacer(modifier = Modifier.height(10.dp))
+
             when (orderState) {
                 is OrderState.LOADING -> {
                     Text("Loading orders...")
@@ -155,22 +153,25 @@ fun FarmerManageOrder(
                     Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}")
                 }
                 is OrderState.EMPTY -> {
-                    Text("Empty orders.")
+                    Text("No orders available.")
                 }
                 is OrderState.SUCCESS -> {
-                    var orderCount = 1
-                    orderData.forEach { order ->
-                        userData?.let { user ->
-                            ManageOrderCards(orderCount, order, user)
-                        } ?: run {
-                            CircularProgressIndicator() // TODO: Improve UI (Navigate to orders and logout to view)
+                    if (orderData.isEmpty()) {
+                        Text("No orders available.")
+                    } else {
+                        var orderCount = 1
+                        orderData.forEach { order ->
+                            if (userData == null) {
+                                CircularProgressIndicator() // Show loading indicator if userData is not yet ready
+                            } else {
+                                ManageOrderCards(orderCount, order, userData!!)
+                                orderCount++
+                            }
                         }
-                        orderCount++
                     }
                 }
             }
         }
-
     }
 }
 
@@ -178,8 +179,9 @@ fun FarmerManageOrder(
 fun ManageOrderCards(orderCount: Int, order: OrderData, user: UserData) {
     var expanded by remember { mutableStateOf(false) }
     val clientName = "${user.firstname} ${user.lastname}"
-    val orderId = order.orderId.substring(5,9).uppercase()
+    val orderId = order.orderId.substring(5, 9).uppercase()
     val orderStatus = order.status
+
     Row {
         Card(
             modifier = Modifier
@@ -194,13 +196,13 @@ fun ManageOrderCards(orderCount: Int, order: OrderData, user: UserData) {
                     .clickable { expanded = !expanded }
                     .padding(16.dp)
             ) {
-                Row(){
+                Row {
                     Box(
                         modifier = Modifier
                             .size(width = 50.dp, height = 150.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(Color.White)
-                    ){
+                    ) {
                         Text(
                             text = orderCount.toString(),
                             fontSize = 50.sp,
@@ -227,10 +229,7 @@ fun ManageOrderCards(orderCount: Int, order: OrderData, user: UserData) {
                             modifier = Modifier.padding(top = 0.dp, start = 10.dp)
                         )
                     }
-
-
                 }
-
             }
         }
         Spacer(modifier = Modifier.width(0.dp))
@@ -240,18 +239,12 @@ fun ManageOrderCards(orderCount: Int, order: OrderData, user: UserData) {
                 .clip(RoundedCornerShape(10.dp))
                 .background(
                     when (orderStatus) {
-                        "PENDING" -> {
-                            Color(0xFFFF8C00)
-                        }
-                        "ACCEPTED" -> {
-                            Color.Green
-                        }
-                        else -> {
-                            Color.Red
-                        }
+                        "PENDING" -> Color(0xFFFF8C00)
+                        "ACCEPTED" -> Color.Green
+                        else -> Color.Red
                     }
                 )
-        ){
+        ) {
             Text(
                 text = orderStatus,
                 fontSize = 15.sp,
@@ -260,8 +253,5 @@ fun ManageOrderCards(orderCount: Int, order: OrderData, user: UserData) {
                 modifier = Modifier.padding(top = 15.dp, start = 10.dp)
             )
         }
-
     }
-
-
 }

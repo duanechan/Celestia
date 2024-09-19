@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,6 +18,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.ui.theme.CelestiaTheme
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+
 
 // Initial Code
 data class Product(
@@ -65,16 +69,6 @@ fun FarmerInventoryScreen(viewModel: FarmerInventoryViewModel = viewModel()) {
                 ProductCard(product)
             }
         }
-
-        // Add Product button (this is just an example and can be extended)
-        Button(
-            onClick = {
-                // Add product action here
-            },
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(text = "Add Product")
-        }
     }
 }
 
@@ -83,20 +77,36 @@ fun FarmerInventoryScreen(viewModel: FarmerInventoryViewModel = viewModel()) {
 fun ProductCard(product: Product) {
     Card(
         modifier = Modifier
-            .padding(vertical = 8.dp)
+            .padding(vertical = 20.dp)
             .fillMaxSize(),
-        // Updated to use shadowElevation for Material3 API
-        colors = androidx.compose.material3.CardDefaults.cardColors(),
+        colors = androidx.compose.material3.CardDefaults.cardColors(
+            containerColor = Color.Transparent // Transparent to allow the gradient
+        ),
         elevation = androidx.compose.material3.CardDefaults.cardElevation(
             defaultElevation = 4.dp
         )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Product: ${product.name}")
-            Text(text = "Quantity: ${product.quantity}")
+        Box(
+            modifier = Modifier
+                .fillMaxSize() // Ensure the Box fills the entire card
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color(0xFF41644A), // Hex for #41644A
+                            Color(0xFF83CA95)  // Hex for #83CA95
+                        )
+                    )
+                )
+                .padding(70.dp)
+        ) {
+            Column {
+                Text(text = "Product: ${product.name}")
+                Text(text = "Quantity: ${product.quantity}")
+            }
         }
     }
 }
+
 
 
 // Preview for FarmerInventoryScreen

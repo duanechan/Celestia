@@ -17,8 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -53,7 +51,6 @@ import com.coco.celestia.dialogs.LogoutDialog
 import com.coco.celestia.screens.Profile
 import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.CelestiaTheme
-import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
@@ -137,7 +134,7 @@ fun FarmerNavDrawer(
             TopAppBar(
                 title = { Text(text = "Farmer User 1") },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Orange,
+                    containerColor = Color(0xFF41644A),
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -174,18 +171,6 @@ fun FarmerNavDrawer(
                     }
                 )
 
-                //Add Product
-                NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.AddCircle, contentDescription = "Add Product", tint = Color(0xFF013220), modifier = Modifier.size(60.dp)) },
-                    label = null,
-                    selected = currentDestination == Screen.FarmerAddProduct.route,
-                    onClick = {
-                        navigationController.navigate(Screen.FarmerAddProduct.route) {
-                            popUpTo(0)
-                        }
-                    }
-                )
-
                 //Orders
                 NavigationBarItem(
                     icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Manage Orders", tint = Color(0xFF013220)) },
@@ -214,7 +199,6 @@ fun FarmerNavDrawer(
         NavHost(navController = navigationController, startDestination = Screen.Farmer.route) {
             composable(Screen.Farmer.route) { FarmerDashboard() }
             composable(Screen.FarmerInventory.route) { FarmerInventoryScreen() }
-            composable(Screen.FarmerAddProduct.route) { FarmerAddProductScreen() }
             composable(Screen.FarmerManageOrder.route) { FarmerManageOrder(navController, userViewModel, orderViewModel) }
             composable(Screen.Profile.route) { Profile(navController, userViewModel, locationViewModel) }
         }

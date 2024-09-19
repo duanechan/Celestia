@@ -42,7 +42,7 @@ import com.coco.celestia.ClientOrder
 import com.coco.celestia.CoopDashboard
 import com.coco.celestia.CoopInventory
 import com.coco.celestia.CoopOrder
-import com.coco.celestia.FarmerAddProductScreen
+//import com.coco.celestia.FarmerAddProductScreen
 import com.coco.celestia.FarmerDashboard
 import com.coco.celestia.FarmerInventoryScreen
 import com.coco.celestia.FarmerManageOrder
@@ -173,11 +173,11 @@ fun NavDrawerNavHost(
                 }
             }
         }
-        if (role == "Farmer") {
-            composable(Screen.FarmerAddProduct.route) {
-                FarmerAddProductScreen()
-            }
-        }
+//        if (role == "Farmer") {
+//            composable(Screen.FarmerAddProduct.route) {
+//                FarmerAddProductScreen()
+//            }
+//        }
         composable(Screen.Profile.route) {
             Profile(
                 navController = navController,
@@ -205,7 +205,7 @@ fun NavDrawerTopBar(role: String) {
             TopAppBar(
                 title = { Text(text = "Farmer User 1") },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Orange,
+                    containerColor = Color(0xFF41644A),
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
