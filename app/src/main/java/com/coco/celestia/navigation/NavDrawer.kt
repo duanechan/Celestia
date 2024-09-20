@@ -3,6 +3,7 @@ package com.coco.celestia.navigation
 import android.app.Activity
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -31,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,15 +61,36 @@ fun NavDrawerTopBar(role: String, firstName: String, lastName: String) {
                     navigationIconContentColor = Color.White
                 )
             )
-        "Farmer" ->
-            TopAppBar(
-                title = { Text(text = fullName) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF41644A),
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+        "Farmer" -> {
+            GradientTopBar(fullName = fullName)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun GradientTopBar(fullName: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.horizontalGradient(
+                    colors = listOf(
+                        Color(0xFF41644A),  // First color (#41644A)
+                        Color(0xFF83CA95)   // Second color (#83CA95)
+                    )
                 )
             )
+    ) {
+        TopAppBar(
+            title = { Text(text = fullName) },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+                titleContentColor = Color.White,
+                navigationIconContentColor = Color.White
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
