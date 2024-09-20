@@ -73,7 +73,7 @@ fun SplashScreen(userViewModel: UserViewModel, navController: NavHostController)
                         "Coop" -> Screen.Coop.route
                         else -> Screen.Login.route
                     }
-                    Toast.makeText(navController.context, "Welcome back, $firstName!", Toast.LENGTH_SHORT).show()
+//                    Toast.makeText(navController.context, "Welcome back, $firstName!", Toast.LENGTH_SHORT).show()
                     navController.navigate(destination) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }
@@ -100,13 +100,6 @@ fun SplashScreen(userViewModel: UserViewModel, navController: NavHostController)
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-//            TODO: 🥹
-//            item {
-//                GlideImage(imageRes = R.drawable.catroll)
-//            }
-//            item {
-//                Text("Loading...", fontSize = 20.sp, fontFamily = FontFamily.Monospace)
-//            }
             item {
                 Image(
                     painter = painterResource(id = R.drawable.a),
@@ -119,29 +112,4 @@ fun SplashScreen(userViewModel: UserViewModel, navController: NavHostController)
             }
         }
     }
-}
-
-
-@Composable
-fun GlideImage(modifier: Modifier = Modifier, @DrawableRes imageRes: Int) {
-    val context = LocalContext.current
-    AndroidView(
-        factory = {
-            ImageView(context).apply {
-                Glide.with(context)
-                    .asGif()
-                    .load(imageRes)
-                    .apply(RequestOptions().fitCenter())
-                    .into(this)
-            }
-        },
-        modifier = modifier
-    )
-}
-
-
-@Preview
-@Composable
-fun GifPreview() {
-    GlideImage(imageRes = R.drawable.catroll)
 }

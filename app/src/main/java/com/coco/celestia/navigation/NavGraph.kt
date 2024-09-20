@@ -1,18 +1,37 @@
-package com.coco.celestia
+package com.coco.celestia.navigation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.coco.celestia.components.NavDrawer
+import com.coco.celestia.AddOrderPanel
+import com.coco.celestia.AddProductForm
+import com.coco.celestia.AdminDashboard
+import com.coco.celestia.AdminInventory
+import com.coco.celestia.AdminUserManagement
+import com.coco.celestia.BottomNavigationBar
+import com.coco.celestia.ClientContact
+import com.coco.celestia.ClientDashboard
+import com.coco.celestia.ClientOrder
+import com.coco.celestia.ConfirmOrderRequestPanel
+import com.coco.celestia.CoopDashboard
+import com.coco.celestia.CoopInventory
+import com.coco.celestia.CoopOrder
+import com.coco.celestia.FarmerDashboard
+import com.coco.celestia.FarmerInventoryScreen
+import com.coco.celestia.FarmerManageOrder
+import com.coco.celestia.ForgotPasswordScreen
+import com.coco.celestia.LoginScreen
+import com.coco.celestia.OrderDetailsPanel
+import com.coco.celestia.ProductTypeInventory
+import com.coco.celestia.RegisterScreen
+import com.coco.celestia.Screen
 import com.coco.celestia.screens.Profile
 import com.coco.celestia.screens.SplashScreen
 import com.coco.celestia.viewmodel.ContactViewModel
@@ -59,58 +78,48 @@ fun NavGraph(
             )
         }
         composable(route = Screen.Farmer.route) {
-            NavDrawer(
-                role = "Farmer",
-                navController = navController,
-                contactViewModel = contactViewModel,
-                locationViewModel = locationViewModel,
-                orderViewModel = orderViewModel,
-                productViewModel = productViewModel,
-                transactionViewModel = transactionViewModel,
-                userViewModel = userViewModel
+            FarmerDashboard()
+        }
+        composable(route = Screen.FarmerManageOrder.route) {
+            FarmerManageOrder(
+                mainNavController = navController,
+                userViewModel = userViewModel,
+                orderViewModel = orderViewModel
             )
+        }
+        composable(route = Screen.FarmerInventory.route) {
+            FarmerInventoryScreen()
         }
         composable(route = Screen.Client.route) {
             ClientDashboard()
-            NavDrawer(
-                role = "Client",
+        }
+        composable(route = Screen.ClientOrder.route) {
+            ClientOrder(
                 navController = navController,
-                contactViewModel = contactViewModel,
-                locationViewModel = locationViewModel,
                 orderViewModel = orderViewModel,
-                productViewModel = productViewModel,
-                transactionViewModel = transactionViewModel,
                 userViewModel = userViewModel
             )
+        }
+        composable(route = Screen.ClientContact.route) {
+            ClientContact(contactViewModel = contactViewModel)
         }
         composable(route = Screen.Admin.route) {
             AdminDashboard()
-            NavDrawer(
-                role = "Admin",
-                navController = navController,
-                contactViewModel = contactViewModel,
-                locationViewModel = locationViewModel,
-                orderViewModel = orderViewModel,
-                productViewModel = productViewModel,
-                transactionViewModel = transactionViewModel,
-                userViewModel = userViewModel
-            )
+        }
+        composable(route = Screen.AdminInventory.route) {
+            AdminInventory(productViewModel = productViewModel)
+        }
+        composable(route = Screen.AdminUserManagement.route) {
+            AdminUserManagement(userViewModel = userViewModel)
         }
         composable(route = Screen.Coop.route) {
             CoopDashboard()
-            NavDrawer(
-                role = "Coop",
-                navController = navController,
-                contactViewModel = contactViewModel,
-                locationViewModel = locationViewModel,
-                orderViewModel = orderViewModel,
-                productViewModel = productViewModel,
-                transactionViewModel = transactionViewModel,
-                userViewModel = userViewModel
-            )
         }
-        composable(route = Screen.Home.route) {
-            HomeScreen(navController = navController)
+        composable(route = Screen.CoopOrder.route) {
+            CoopOrder()
+        }
+        composable(route = Screen.CoopInventory.route) {
+            CoopInventory(navController = navController)
         }
         composable(route = Screen.AddOrder.route) {
             AddOrderPanel(navController = navController)
@@ -119,17 +128,12 @@ fun NavGraph(
             route = Screen.CoopProductInventory.route,
             arguments = listOf(
                 navArgument("type") { type = NavType.StringType })
-        ) {
-            backStack ->
+        ) { backStack ->
             val type = backStack.arguments?.getString("type")
-
-            Column(modifier = Modifier.fillMaxSize()){
-                ProductTypeInventory(
-                    navController = navController,
-                    type = type,
-                )
-                BottomNavigationBar(navController = navController)
-            }
+            ProductTypeInventory(
+                navController = navController,
+                type = type,
+            )
         }
         composable(
             route = Screen.CoopAddProductInventory.route,
@@ -170,6 +174,13 @@ fun NavGraph(
                 orderViewModel = orderViewModel,
                 userViewModel = userViewModel,
                 transactionViewModel = transactionViewModel
+            )
+        }
+        composable(route = Screen.Profile.route) {
+            Profile(
+                navController = navController,
+                userViewModel = userViewModel,
+                locationViewModel = locationViewModel
             )
         }
     }

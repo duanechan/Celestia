@@ -64,7 +64,7 @@ fun LoginScreen(mainNavController: NavController, userViewModel: UserViewModel) 
             Toast.makeText(navController.context, "Error: ${(userState as UserState.ERROR).message}", Toast.LENGTH_SHORT).show()
         }
         is UserState.LOGIN_SUCCESS -> {
-            Toast.makeText(navController.context, "Welcome, $firstName!", Toast.LENGTH_SHORT).show()
+//            Toast.makeText(navController.context, "Welcome, $firstName!", Toast.LENGTH_SHORT).show()
             val role = (userState as UserState.LOGIN_SUCCESS).role
             val route = routeHandler(role)
             mainNavController.navigate(route.dashboard) {
