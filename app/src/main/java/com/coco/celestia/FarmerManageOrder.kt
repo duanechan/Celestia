@@ -276,9 +276,9 @@ fun OrderStatusCard(orderStatus: String) {
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
             containerColor = when (orderStatus) {
-                "Accepted" -> Color(0xFF4CAF50)  // Green
-                "Pending" -> Color(0xFFFFA500)   // Orange
-                "Rejected" -> Color(0xFFF44336)  // Red
+                "ACCEPTED" -> Color(0xFF4CAF50)  // Green
+                "PENDING" -> Color(0xFFFFA500)   // Orange
+                "REJECTED" -> Color(0xFFF44336)  // Red
                 else -> Color.Gray
             }
         )
@@ -291,9 +291,9 @@ fun OrderStatusCard(orderStatus: String) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val icon: ImageVector = when (orderStatus) {
-                "Accepted" -> Icons.Default.Check
-                "Pending" -> Icons.Default.Refresh
-                "Rejected" -> Icons.Default.Clear
+                "ACCEPTED" -> Icons.Default.Check
+                "PENDING" -> Icons.Default.Refresh
+                "REJECTED" -> Icons.Default.Clear
                 else -> Icons.Default.Star
             }
 
@@ -308,7 +308,7 @@ fun OrderStatusCard(orderStatus: String) {
 
             Text(
                 text = orderStatus,
-                fontSize = 12.sp,
+                fontSize = 7.5.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
