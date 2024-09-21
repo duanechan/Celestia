@@ -61,4 +61,22 @@ class ProductViewModel : ViewModel() {
             }
         }
     }
+
+    fun addProduct(product: ProductData) {
+        viewModelScope.launch {
+            _productState.value = ProductState.LOADING
+            val query = database.child(product.name.lowercase())
+            query.setValue(product)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        _productState.value = ProductState.SUCCESS
+                    } else {
+                        _productState.value = ProductState.ERROR(task.exception?.message ?: "Unknown error")
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    _productState.value = ProductState.ERROR(exception.message ?: "Unknown error")
+                }
+        }
+    }
 }

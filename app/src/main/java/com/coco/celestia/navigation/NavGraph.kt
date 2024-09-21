@@ -3,6 +3,12 @@ package com.coco.celestia.navigation
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -46,6 +52,8 @@ import com.coco.celestia.viewmodel.UserViewModel
 fun NavGraph(
     navController: NavHostController,
     startDestination: String = Screen.Splash.route,
+    onAddProduct: (String) -> Unit,
+    onSaveProduct: (String, String, String, Int) -> Unit,
     contactViewModel: ContactViewModel = viewModel(),
     locationViewModel: LocationViewModel = viewModel(),
     orderViewModel: OrderViewModel = viewModel(),
@@ -53,6 +61,12 @@ fun NavGraph(
     transactionViewModel: TransactionViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
 ) {
+    var productType by remember { mutableStateOf("") }
+    var productName by remember { mutableStateOf("") }
+    var farmerName by remember { mutableStateOf("") }
+    var addressName by remember { mutableStateOf("") }
+    var quantityAmount by remember { mutableIntStateOf(0) }
+
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -120,6 +134,13 @@ fun NavGraph(
             CoopOrder()
         }
         composable(route = Screen.CoopInventory.route) {
+            LaunchedEffect(Unit) {
+               productName = ""
+               farmerName = ""
+               addressName = ""
+               quantityAmount = 0
+            }
+
             CoopInventory(navController = navController)
         }
         composable(route = Screen.AddOrder.route) {
@@ -131,19 +152,30 @@ fun NavGraph(
                 navArgument("type") { type = NavType.StringType })
         ) { backStack ->
             val type = backStack.arguments?.getString("type")
+            LaunchedEffect(type) {
+                productType = type.toString()
+                onAddProduct(productType)
+            }
             ProductTypeInventory(
                 navController = navController,
-                type = type,
+                type = productType,
             )
         }
-        composable(
-            route = Screen.CoopAddProductInventory.route,
-            arguments = listOf(
-                navArgument("type") { type = NavType.StringType }
+        composable(route = Screen.CoopAddProductInventory.route) {
+            LaunchedEffect(productName, farmerName, addressName, quantityAmount) {
+                onSaveProduct(productName, farmerName, addressName, quantityAmount)
+            }
+
+            AddProductForm(
+                productName = productName,
+                farmerName = farmerName,
+                address = addressName,
+                quantity = quantityAmount,
+                onProductNameChange = { productName = it },
+                onFarmerNameChange = { farmerName = it },
+                onAddressChange = { addressName = it },
+                onQuantityChange = { newValue -> quantityAmount = newValue.toIntOrNull() ?: 0 }
             )
-        ) { backStackEntry ->
-            val type = backStackEntry.arguments?.getString("type")
-            AddProductForm(navController = navController, type = type)
         }
         composable(
             route = Screen.FarmerProductInventory.route,

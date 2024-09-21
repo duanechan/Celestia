@@ -203,7 +203,16 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
 }
 
 @Composable
-fun AddProductForm(navController: NavController, type: String?) {
+fun AddProductForm(
+    productName: String,
+    farmerName: String,
+    address: String,
+    quantity: Int,
+    onProductNameChange: (String) -> Unit,
+    onFarmerNameChange: (String) -> Unit,
+    onAddressChange: (String) -> Unit,
+    onQuantityChange: (String) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -218,24 +227,24 @@ fun AddProductForm(navController: NavController, type: String?) {
 
         // Product Name
         OutlinedTextField(
-            value = "",
-            onValueChange = {},
+            value = productName,
+            onValueChange = onProductNameChange,
             label = { Text("Product Name") },
             modifier = Modifier.fillMaxWidth()
         )
 
         // Farmer's Name
         OutlinedTextField(
-            value = "",
-            onValueChange = {},
+            value = farmerName,
+            onValueChange = onFarmerNameChange,
             label = { Text("Farmer's Name") },
             modifier = Modifier.fillMaxWidth()
         )
 
         // Address
         OutlinedTextField(
-            value = "",
-            onValueChange = {},
+            value = address,
+            onValueChange = onAddressChange,
             label = { Text("Address") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -276,30 +285,13 @@ fun AddProductForm(navController: NavController, type: String?) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             OutlinedTextField(
-                value = "36.8",
-                onValueChange = {},
+                value = quantity.toString(),
+                onValueChange = onQuantityChange,
                 label = { Text("Qty.") },
                 modifier = Modifier.weight(1f)
             )
             Spacer(modifier = Modifier.width(12.dp))
             DropdownField(label = "Kg", items = listOf("Kg"))
-        }
-        Box(modifier = Modifier.fillMaxWidth()){
-            // Floating Action Button (FAB)
-            FloatingActionButton(
-                onClick = { val productType = "coffee"
-                    navController.navigate(Screen.CoopAddProductInventory.createRoute(type = productType))},
-                shape = CircleShape,
-                containerColor = DarkGreen,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "Add",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp))
-            }
         }
     }
 }
@@ -312,6 +304,7 @@ fun DropdownField(label: String, items: List<String>) {
     Box(
         modifier = Modifier
             .wrapContentSize(Alignment.TopStart)
+            .width(150.dp)
     ) {
         OutlinedTextField(
             value = selectedText,

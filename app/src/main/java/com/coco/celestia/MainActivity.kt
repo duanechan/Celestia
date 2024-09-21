@@ -3,6 +3,7 @@ package com.coco.celestia
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -13,6 +14,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -54,7 +56,13 @@ class MainActivity : ComponentActivity() {
 fun App() {
     val navController = rememberNavController()
     val userViewModel: UserViewModel = viewModel()
+    val productViewModel: ProductViewModel = viewModel()
     val userData by userViewModel.userData.observeAsState()
+    var productType by remember { mutableStateOf("") }
+    var productName by remember { mutableStateOf("") }
+    var farmerName by remember { mutableStateOf("") }
+    var addressName by remember { mutableStateOf("") }
+    var quantityAmount by remember { mutableIntStateOf(0) }
     val role = userData?.role
     val firstName = userData?.firstname
     val lastName = userData?.lastname
@@ -85,6 +93,25 @@ fun App() {
             {
                 NavDrawerBottomBar(
                     role = role.toString(),
+                    onAddProduct = { navController.navigate(Screen.CoopAddProductInventory.route) },
+                    onSaveProduct = {
+                        if(productName.isNotEmpty() &&
+                            farmerName.isNotEmpty() &&
+                            addressName.isNotEmpty() &&
+                            quantityAmount > 0)
+                        {
+                            val product = ProductData(
+                                name = productName,
+                                quantity = quantityAmount,
+                                type = productType
+                            )
+                            productViewModel.addProduct(product)
+                            navController.navigate(Screen.CoopInventory.route)
+                            Toast.makeText(navController.context, "${quantityAmount}kg of $productName added to $productType inventory.", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(navController.context, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                        }
+                    },
                     navController = navController
                 )
             }
@@ -92,7 +119,16 @@ fun App() {
     ) { // APP CONTENT
         var exitDialog by remember { mutableStateOf(false) }
 
-        NavGraph(navController = navController)
+        NavGraph(
+            navController = navController,
+            onAddProduct = { productType = it },
+            onSaveProduct = { product, farmer, address, quantity ->
+                productName = product
+                farmerName = farmer
+                addressName = address
+                quantityAmount = quantity
+            }
+        )
 
         BackHandler {
             exitDialog = true

@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
@@ -97,6 +98,8 @@ fun GradientTopBar(fullName: String) {
 @Composable
 fun NavDrawerBottomBar(
     role: String,
+    onAddProduct: () -> Unit,
+    onSaveProduct: () -> Unit,
     navController: NavController
 ) {
     val routes = routeHandler(role)
@@ -200,17 +203,14 @@ fun NavDrawerBottomBar(
                 }
             )
         }
-        if (role == "Coop") {
+        if (role == "Coop" && currentDestination == Screen.CoopProductInventory.route) {
             FloatingActionButton(
-                onClick = {
-                    val productType = "coffee" //Temporary
-                    navController.navigate(Screen.CoopAddProductInventory.createRoute(type = productType))
-                },
+                onClick = onAddProduct,
                 shape = CircleShape,
                 containerColor = DarkGreen,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .offset(y = -30.dp)
+                    .offset(y = (-30).dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -218,6 +218,22 @@ fun NavDrawerBottomBar(
                     tint = Color.White,
                     modifier = Modifier.size(24.dp)
                 )
+            }
+        }
+        if (role == "Coop" && currentDestination == Screen.CoopAddProductInventory.route) {
+            FloatingActionButton(
+                onClick = onSaveProduct,
+                shape = CircleShape,
+                containerColor = DarkGreen,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = (-30).dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Add",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp))
             }
         }
     }
