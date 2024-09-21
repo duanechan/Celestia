@@ -61,7 +61,6 @@ fun NavGraph(
     transactionViewModel: TransactionViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
 ) {
-    var productType by remember { mutableStateOf("") }
     var productName by remember { mutableStateOf("") }
     var farmerName by remember { mutableStateOf("") }
     var addressName by remember { mutableStateOf("") }
@@ -153,12 +152,11 @@ fun NavGraph(
         ) { backStack ->
             val type = backStack.arguments?.getString("type")
             LaunchedEffect(type) {
-                productType = type.toString()
-                onAddProduct(productType)
+                onAddProduct(type.toString())
             }
             ProductTypeInventory(
                 navController = navController,
-                type = productType,
+                type = type,
             )
         }
         composable(route = Screen.CoopAddProductInventory.route) {
