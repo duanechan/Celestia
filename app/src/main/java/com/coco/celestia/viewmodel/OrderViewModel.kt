@@ -5,7 +5,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.OrderData
-import com.coco.celestia.ProductData
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -85,6 +84,46 @@ class OrderViewModel : ViewModel() {
                             }
                             matches
                         }
+
+                    _orderData.value = orders
+                    _orderState.value = if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    _orderState.value = OrderState.ERROR(error.message)
+                }
+            })
+        }
+    }
+
+    fun fetchAllOrders(filter: String, isPending: Boolean = false) {
+        viewModelScope.launch {
+            _orderState.value = OrderState.LOADING
+            database.addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val filterKeywords = filter.split(",").map { it.trim() }
+
+                    val orders = snapshot.children.flatMap { userSnapshot ->
+                        userSnapshot.children.mapNotNull { orderSnapshot ->
+                            orderSnapshot.getValue(OrderData::class.java)
+                        }.filter { orderData ->
+                            if (!isPending) {
+                                orderData.status.equals("PENDING", ignoreCase = true) &&
+                                filterKeywords.any { keyword ->
+                                    OrderData::class.memberProperties.any { prop ->
+                                        prop.get(orderData)?.toString()?.contains(keyword, ignoreCase = true) == true
+                                    }
+                                }
+                            } else {
+                                filterKeywords.any { keyword ->
+                                    OrderData::class.memberProperties.any { prop ->
+                                        prop.get(orderData)?.toString()?.contains(keyword, ignoreCase = true) == true
+                                    }
+                                }
+                            }
+
+                        }
+                    }
 
                     _orderData.value = orders
                     _orderState.value = if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS

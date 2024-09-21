@@ -1,26 +1,26 @@
 package com.coco.celestia
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Surface
+import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,54 +33,50 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.google.firebase.auth.FirebaseAuth
 
-class CoopOrderRequest : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            CelestiaTheme {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0xFFF2E3DB))
-                ) {
-                    OrderRequestPanel("Coffee, Meat")
-                }
-            }
-        }
-    }
-}
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OrderRequestPanel(keywords: String) {
+fun OrderRequestPanel() {
     val orderViewModel: OrderViewModel = viewModel()
     val transactionViewModel: TransactionViewModel = viewModel()
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     val auth: FirebaseAuth = FirebaseAuth.getInstance()
-    var isError by remember { mutableStateOf(false) }
+    var query by remember { mutableStateOf("") }
+    var keywords by remember { mutableStateOf("") }
+
+    LaunchedEffect(keywords) {
+        orderViewModel.fetchAllOrders(filter = keywords)
+    }
 
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        LaunchedEffect(Unit) {
-            orderViewModel.fetchOrders(
-                uid = auth.currentUser?.uid.toString(),
-                filter = keywords
-            )
+        Row {
+            SearchBar(
+                query = query,
+                onQueryChange = { query = it },
+                onSearch = { keywords = query },
+                active = false,
+                onActiveChange = {},
+                leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search") },
+                placeholder = { Text("Search") }
+            ) {
+
+            }
+            // TODO: Implement filter button here.
         }
+
         when (orderState) {
             is OrderState.LOADING -> {
                 Text("Loading orders...")
@@ -127,7 +123,6 @@ fun OrderRequestPanel(keywords: String) {
                 }
             }
 
-            else -> {}
         }
     }
 }

@@ -1,7 +1,5 @@
 package com.coco.celestia.navigation
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -9,7 +7,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -21,14 +18,12 @@ import com.coco.celestia.AddProductForm
 import com.coco.celestia.AdminDashboard
 import com.coco.celestia.AdminInventory
 import com.coco.celestia.AdminUserManagement
-import com.coco.celestia.BottomNavigationBar
 import com.coco.celestia.ClientContact
 import com.coco.celestia.ClientDashboard
 import com.coco.celestia.ClientOrder
 import com.coco.celestia.ConfirmOrderRequestPanel
 import com.coco.celestia.CoopDashboard
 import com.coco.celestia.CoopInventory
-import com.coco.celestia.CoopOrder
 import com.coco.celestia.FarmerDashboard
 import com.coco.celestia.FarmerInventory
 import com.coco.celestia.FarmerManageOrder
@@ -36,6 +31,7 @@ import com.coco.celestia.FarmerProductTypeInventory
 import com.coco.celestia.ForgotPasswordScreen
 import com.coco.celestia.LoginScreen
 import com.coco.celestia.OrderDetailsPanel
+import com.coco.celestia.OrderRequestPanel
 import com.coco.celestia.ProductTypeInventory
 import com.coco.celestia.RegisterScreen
 import com.coco.celestia.Screen
@@ -130,7 +126,7 @@ fun NavGraph(
             CoopDashboard()
         }
         composable(route = Screen.CoopOrder.route) {
-            CoopOrder()
+            OrderRequestPanel()
         }
         composable(route = Screen.CoopInventory.route) {
             LaunchedEffect(Unit) {
