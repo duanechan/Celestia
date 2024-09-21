@@ -94,7 +94,8 @@ fun NavGraph(
             FarmerManageOrder(
                 mainNavController = navController,
                 userViewModel = userViewModel,
-                orderViewModel = orderViewModel
+                orderViewModel = orderViewModel,
+                productViewModel = productViewModel
             )
         }
         composable(route = Screen.FarmerInventory.route) {

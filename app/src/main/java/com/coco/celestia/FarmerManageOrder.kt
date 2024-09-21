@@ -48,30 +48,35 @@ import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.coco.celestia.viewmodel.ProductViewModel
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun FarmerManageOrder(
     mainNavController: NavController,
     userViewModel: UserViewModel,
-    orderViewModel: OrderViewModel
+    orderViewModel: OrderViewModel,
+    productViewModel: ProductViewModel
 ) {
     val userData by userViewModel.userData.observeAsState()
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
+    val productData by productViewModel.productData.observeAsState()
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-
-    var selectedCategory by remember { mutableStateOf("Vegetable") }
-
-    val categoryOptions = listOf("Vegetable", "Meat", "Coffee")
-
+    val categoryOptions = productData?.map { it.name }
+    var selectedCategory by remember { mutableStateOf("") }
     var expandedCategory by remember { mutableStateOf(false) }
 
     // LaunchedEffect to fetch initial data
-    LaunchedEffect(Unit) {
-        orderViewModel.fetchOrders(
-            uid = uid,
-            filter = "Coffee, Meat, Vegetable"
+    LaunchedEffect(selectedCategory) {
+        orderViewModel.fetchAllOrders(
+            filter = selectedCategory,
+            isPending = true,
+            role = "Farmer"
+        )
+        productViewModel.fetchProducts(
+            filter = "",
+            role = "Farmer"
         )
         userViewModel.fetchUser(uid)
     }
@@ -112,7 +117,7 @@ fun FarmerManageOrder(
                 modifier = Modifier.padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Category Dropdown (Vegetable, Meat, Coffee)
+                // Category Dropdown (Lettuce, Onion, Carrot)
                 ExposedDropdownMenuBox(
                     expanded = expandedCategory,
                     onExpandedChange = { expandedCategory = !expandedCategory }
@@ -134,14 +139,19 @@ fun FarmerManageOrder(
                         expanded = expandedCategory,
                         onDismissRequest = { expandedCategory = false }
                     ) {
-                        categoryOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = { Text("-") },
+                            onClick = {
+                                selectedCategory = ""
+                                expandedCategory = false
+                            }
+                        )
+                        categoryOptions?.forEach { option ->
                             DropdownMenuItem(
                                 text = { Text(option) },
                                 onClick = {
                                     selectedCategory = option
                                     expandedCategory = false
-                                    // Fetch orders based on selected category
-                                    orderViewModel.fetchOrders(uid = uid, filter = selectedCategory)
                                 }
                             )
                         }
@@ -153,15 +163,9 @@ fun FarmerManageOrder(
 
             // Handle different states of order data
             when (orderState) {
-                is OrderState.LOADING -> {
-                    Text("Loading orders...")
-                }
-                is OrderState.ERROR -> {
-                    Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}")
-                }
-                is OrderState.EMPTY -> {
-                    Text("No orders available.")
-                }
+                is OrderState.LOADING -> { Text("Loading orders...") }
+                is OrderState.ERROR -> { Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}") }
+                is OrderState.EMPTY -> { Text("No orders available.") }
                 is OrderState.SUCCESS -> {
                     if (orderData.isEmpty()) {
                         Text("No orders available.")

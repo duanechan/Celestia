@@ -27,9 +27,14 @@ class OrderViewModel : ViewModel() {
     private val _orderState = MutableLiveData<OrderState>()
     val orderData: LiveData<List<OrderData>> = _orderData
     val orderState: LiveData<OrderState> = _orderState
-
     /**
      * Fetches order data from the database based on the provided UID and order ID.
+     *
+     * This function fetches order data from the database based on the provided UID and order ID.
+     *
+     * @param uid The UID of the user whose order is to be fetched.
+     * @param orderId The ID of the order to be fetched.
+     * @throws DatabaseError If there is an error fetching the order.
      */
     fun fetchOrder(
         uid: String,
@@ -59,9 +64,14 @@ class OrderViewModel : ViewModel() {
             }
         }
     }
-
     /**
      * Fetches orders from the database based on the provided UID.
+     *
+     * This function fetches orders from the database based on the provided UID and applies a filter to the orders.
+     *
+     * @param uid The UID of the user whose orders are to be fetched.
+     * @param filter The filter criteria to apply to the orders (e.g., "Packed coffee, Green beans").
+     * @throws DatabaseError If there is an error fetching the orders.
      */
     fun fetchOrders(
         uid: String,
@@ -96,7 +106,21 @@ class OrderViewModel : ViewModel() {
         }
     }
 
-    fun fetchAllOrders(filter: String, isPending: Boolean = false) {
+    /**
+     * Fetches all orders from the database based on the provided filter criteria.
+     *
+     * This function fetches all orders from the database based on the provided filter criteria and role.
+     *
+     * @param filter The filter criteria to apply to the orders (e.g., "Onion, Lettuce, Carrots").
+     * @param isPending If true, only pending orders will be fetched. If false, all orders will be fetched.
+     * @param role The role of the user (e.g., "Coop", "Farmer", "Admin").
+     * @throws DatabaseError If there is an error fetching the orders
+     */
+    fun fetchAllOrders(
+        filter: String,
+        isPending: Boolean = false,
+        role: String
+    ) {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
             database.addValueEventListener(object : ValueEventListener {
@@ -107,19 +131,20 @@ class OrderViewModel : ViewModel() {
                         userSnapshot.children.mapNotNull { orderSnapshot ->
                             orderSnapshot.getValue(OrderData::class.java)
                         }.filter { orderData ->
-                            if (!isPending) {
-                                orderData.status.equals("PENDING", ignoreCase = true) &&
-                                filterKeywords.any { keyword ->
-                                    OrderData::class.memberProperties.any { prop ->
-                                        prop.get(orderData)?.toString()?.contains(keyword, ignoreCase = true) == true
-                                    }
+                            val pending = orderData.status.equals("PENDING", ignoreCase = true)
+                            val coffeeOrMeat = orderData.orderData.type.equals("Coffee", ignoreCase = true) ||
+                                    orderData.orderData.type.equals("Meat", ignoreCase = true)
+                            val vegetable = orderData.orderData.type.equals("Vegetable", ignoreCase = true)
+                            val filtered = filterKeywords.any { keyword ->
+                                OrderData::class.memberProperties.any { prop ->
+                                    prop.get(orderData)?.toString()?.contains(keyword, ignoreCase = true) == true
                                 }
-                            } else {
-                                filterKeywords.any { keyword ->
-                                    OrderData::class.memberProperties.any { prop ->
-                                        prop.get(orderData)?.toString()?.contains(keyword, ignoreCase = true) == true
-                                    }
-                                }
+                            }
+                            when (role) {
+                                "Coop" -> if (isPending) pending && coffeeOrMeat && filtered else coffeeOrMeat && filtered
+                                "Farmer" -> if (isPending) pending && vegetable && filtered else vegetable && filtered
+                                "Admin" -> filtered
+                                else -> false
                             }
 
                         }
@@ -138,6 +163,12 @@ class OrderViewModel : ViewModel() {
 
     /**
      * Places an order in the database based on the provided UID.
+     *
+     * This function places an order in the database based on the provided UID and order data.
+     *
+     * @param uid The UID of the user placing the order.
+     * @param order The order data to be placed.
+     * @throws Exception If there is an error placing the order.
      */
     fun placeOrder(
         uid: String,
@@ -158,6 +189,12 @@ class OrderViewModel : ViewModel() {
 
     /**
      * Updates an order in the database based on the provided UID.
+     *
+     * This function updates an order in the database based on the provided UID and updated order data.
+     *
+     * @param uid The UID of the user placing the order.
+     * @param updatedOrderData The updated order data to be placed.
+     * @throws DatabaseError If there is an error updating the order.
      */
     fun updateOrder(
         uid: String,

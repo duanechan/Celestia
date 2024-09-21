@@ -55,7 +55,11 @@ fun OrderRequestPanel() {
     var keywords by remember { mutableStateOf("") }
 
     LaunchedEffect(keywords) {
-        orderViewModel.fetchAllOrders(filter = keywords)
+        orderViewModel.fetchAllOrders(
+            filter = keywords,
+            isPending = true,
+            role = "Coop"
+        )
     }
 
     Column(

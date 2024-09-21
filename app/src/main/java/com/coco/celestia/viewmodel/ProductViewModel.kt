@@ -24,6 +24,13 @@ class ProductViewModel : ViewModel() {
     val productData: LiveData<List<ProductData>> = _productData
     val productState: LiveData<ProductState> = _productState
 
+    /**
+     * Fetches product data from the database based on the provided type.
+     *
+     * This function fetches product data from the database based on the provided type.
+     *
+     * @param type The type of product to fetch.
+     */
     fun fetchProduct(type: String) {
         viewModelScope.launch {
             _productState.value = ProductState.LOADING
@@ -43,13 +50,37 @@ class ProductViewModel : ViewModel() {
         }
     }
 
-    fun fetchProducts() {
+    /**
+     * Fetches all product data from the database.
+     *
+     * This function fetches all product data from the database.
+     */
+    fun fetchProducts(
+        filter: String,
+        role: String
+    ) {
         viewModelScope.launch {
             _productState.value = ProductState.LOADING
             try {
                 val snapshot = database.orderByChild("type").get().await()
+                val filterKeywords = filter.split(",").map { it.trim() }
                 if (snapshot.exists()) {
-                    val products = snapshot.children.mapNotNull { it.getValue(ProductData::class.java) }
+                    val products = snapshot.children.mapNotNull {
+                        it.getValue(ProductData::class.java)
+                    }.filter { product ->
+                        val coffeeOrMeat = product.type.equals("Coffee", ignoreCase = true) ||
+                                product.type.equals("Meat", ignoreCase = true)
+                        val vegetable = product.type.equals("Vegetable", ignoreCase = true)
+                        val filtered = filterKeywords.any { keyword ->
+                            product.name.contains(keyword, ignoreCase = true)
+                        }
+                        when (role) {
+                            "Coop" -> coffeeOrMeat && filtered
+                            "Farmer" -> vegetable && filtered
+                            "Admin" -> filtered
+                            else -> filtered
+                        }
+                    }
                     _productData.value = products
                     _productState.value = if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
                 } else {

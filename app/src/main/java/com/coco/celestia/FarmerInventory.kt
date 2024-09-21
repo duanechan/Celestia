@@ -38,7 +38,10 @@ fun FarmerInventory(navController: NavController) {
     val farmerProductState by farmerProductViewModel.productState.observeAsState(ProductState.LOADING)
 
     LaunchedEffect(Unit) {
-        farmerProductViewModel.fetchProducts()
+        farmerProductViewModel.fetchProducts(
+            filter = "",
+            role = "Farmer"
+        )
     }
 
     Box(

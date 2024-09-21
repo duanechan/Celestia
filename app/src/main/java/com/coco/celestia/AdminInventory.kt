@@ -53,7 +53,10 @@ fun AdminInventory(productViewModel: ProductViewModel) {
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
 
     LaunchedEffect(Unit) {
-        productViewModel.fetchProducts()
+        productViewModel.fetchProducts(
+            filter = "",
+            role = "Admin"
+        )
     }
 
     Column(

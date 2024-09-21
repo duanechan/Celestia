@@ -73,7 +73,10 @@ fun CoopInventory(navController: NavController) {
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
 
     LaunchedEffect(Unit) {
-        productViewModel.fetchProducts()
+        productViewModel.fetchProducts(
+            filter = "",
+            role = "Coop"
+        )
     }
 
     Column(

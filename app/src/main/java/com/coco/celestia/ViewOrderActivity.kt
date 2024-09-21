@@ -44,23 +44,6 @@ import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.google.firebase.auth.FirebaseAuth
 
-class ViewOrderActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            CelestiaTheme {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0xFFF2E3DB))
-                ) {
-                    OrderPanel()
-                }
-            }
-        }
-    }
-}
-
 @Composable
 fun OrderPanel() {
     val orderViewModel: OrderViewModel = viewModel()
