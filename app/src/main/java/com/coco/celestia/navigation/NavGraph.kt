@@ -24,8 +24,9 @@ import com.coco.celestia.CoopDashboard
 import com.coco.celestia.CoopInventory
 import com.coco.celestia.CoopOrder
 import com.coco.celestia.FarmerDashboard
-import com.coco.celestia.FarmerInventoryScreen
+import com.coco.celestia.FarmerInventory
 import com.coco.celestia.FarmerManageOrder
+import com.coco.celestia.FarmerProductTypeInventory
 import com.coco.celestia.ForgotPasswordScreen
 import com.coco.celestia.LoginScreen
 import com.coco.celestia.OrderDetailsPanel
@@ -88,7 +89,7 @@ fun NavGraph(
             )
         }
         composable(route = Screen.FarmerInventory.route) {
-            FarmerInventoryScreen()
+            FarmerInventory(navController = navController)
         }
         composable(route = Screen.Client.route) {
             ClientDashboard()
@@ -143,6 +144,17 @@ fun NavGraph(
         ) { backStackEntry ->
             val type = backStackEntry.arguments?.getString("type")
             AddProductForm(navController = navController, type = type)
+        }
+        composable(
+            route = Screen.FarmerProductInventory.route,
+            arguments = listOf(
+                navArgument("type") { type = NavType.StringType })
+        ) { backStack ->
+            val type = backStack.arguments?.getString("type")
+            FarmerProductTypeInventory(
+                navController = navController,
+                type = type,
+            )
         }
 
         composable(
