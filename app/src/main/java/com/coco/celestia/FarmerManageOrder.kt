@@ -1,6 +1,8 @@
 package com.coco.celestia
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -67,7 +69,6 @@ fun FarmerManageOrder(
     var selectedCategory by remember { mutableStateOf("") }
     var expandedCategory by remember { mutableStateOf(false) }
 
-    // LaunchedEffect to fetch initial data
     LaunchedEffect(selectedCategory) {
         orderViewModel.fetchAllOrders(
             filter = selectedCategory,
@@ -99,14 +100,14 @@ fun FarmerManageOrder(
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
-                    modifier = Modifier.padding(start = 5.dp)
+                    modifier = Modifier.padding(start = 16.dp)
                 )
                 Text(
                     text = "Status",
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
-                    modifier = Modifier.padding(start = 215.dp)
+                    modifier = Modifier.padding(start = 205.dp)
                 )
             }
 
@@ -114,7 +115,7 @@ fun FarmerManageOrder(
 
             // Dropdown Buttons Row
             Row(
-                modifier = Modifier.padding(10.dp),
+                modifier = Modifier.padding(20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Category Dropdown (Lettuce, Onion, Carrot)
@@ -126,13 +127,28 @@ fun FarmerManageOrder(
                         readOnly = true,
                         value = selectedCategory,
                         onValueChange = {},
-                        label = { Text("Category") },
+                        placeholder = { Text("All") },
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(expandedCategory)
                         },
                         modifier = Modifier
                             .weight(1f)
                             .menuAnchor()
+                            .background(
+                                color = Color(0xFFEAE7DC),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            .border(
+                                BorderStroke(1.dp, Color(0xFF41644A)),
+                                shape = RoundedCornerShape(16.dp)
+                            ),
+                        colors = TextFieldDefaults.textFieldColors(
+                            containerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            errorIndicatorColor = Color.Transparent
+                        )
                     )
 
                     ExposedDropdownMenu(
@@ -140,7 +156,7 @@ fun FarmerManageOrder(
                         onDismissRequest = { expandedCategory = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("-") },
+                            text = { Text("All") },
                             onClick = {
                                 selectedCategory = ""
                                 expandedCategory = false
@@ -319,4 +335,26 @@ fun OrderStatusCard(orderStatus: String) {
         }
     }
 }
+
+// this will display and handle order requests
+// can create new class for this
+@Composable
+fun ManageOrderRequest() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .background(Color(0xFFF2E3DB)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Order Request",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+    }
+}
+
+
 

@@ -5,25 +5,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -43,7 +32,7 @@ import com.coco.celestia.util.routeHandler
 fun NavDrawerTopBar(role: String, firstName: String, lastName: String) {
     val fullName = "$firstName $lastName"
     when (role) {
-        "Client" ->
+        "Client" -> {
             TopAppBar(
                 title = { Text(text = fullName) },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -52,6 +41,7 @@ fun NavDrawerTopBar(role: String, firstName: String, lastName: String) {
                     navigationIconContentColor = Color.White
                 )
             )
+        }
         "Farmer" -> {
             GradientTopBar(fullName = fullName)
         }
@@ -92,9 +82,11 @@ fun NavDrawerBottomBar(
     onSaveProduct: () -> Unit,
     navController: NavController
 ) {
+    var showOrderOptions by remember { mutableStateOf(false) }
     val routes = routeHandler(role)
     val bottomBarColors: Pair<Color, Color> = bottomColorConfig(role)
     val currentDestination = navController.currentBackStackEntryAsState().value?.destination?.route
+
     Box(modifier = Modifier.fillMaxWidth()) {
         NavigationBar(
             containerColor = bottomBarColors.first,
@@ -106,10 +98,11 @@ fun NavDrawerBottomBar(
                 selected = currentDestination == routes.dashboard,
                 onClick = {
                     navController.navigate(routes.dashboard) {
-                        popUpTo(0)
+                        popUpTo(navController.graph.startDestinationId)
                     }
                 }
             )
+
             if (role == "Client" || role == "Coop" || role == "Farmer") {
                 NavigationBarItem(
                     icon = {
@@ -120,11 +113,7 @@ fun NavDrawerBottomBar(
                     },
                     label = { Text("Orders") },
                     selected = currentDestination == routes.orders,
-                    onClick = {
-                        navController.navigate(routes.orders) {
-                            popUpTo(0)
-                        }
-                    }
+                    onClick = { showOrderOptions = !showOrderOptions }
                 )
             }
 
@@ -135,7 +124,7 @@ fun NavDrawerBottomBar(
                     selected = currentDestination == routes.inventory,
                     onClick = {
                         navController.navigate(routes.inventory) {
-                            popUpTo(0)
+                            popUpTo(navController.graph.startDestinationId)
                         }
                     }
                 )
@@ -153,7 +142,7 @@ fun NavDrawerBottomBar(
                     selected = currentDestination == Screen.AdminUserManagement.route,
                     onClick = {
                         navController.navigate(Screen.AdminUserManagement.route) {
-                            popUpTo(0)
+                            popUpTo(navController.graph.startDestinationId)
                         }
                     }
                 )
@@ -171,7 +160,48 @@ fun NavDrawerBottomBar(
                     selected = currentDestination == Screen.ClientContact.route,
                     onClick = {
                         navController.navigate(Screen.ClientContact.route) {
-                            popUpTo(0)
+                            popUpTo(navController.graph.startDestinationId)
+                        }
+                    }
+                )
+            }
+
+            //Drop down menu for farmer side
+            DropdownMenu(
+                expanded = showOrderOptions,
+                onDismissRequest = { showOrderOptions = false },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFF5A8F5C))
+            ) {
+                DropdownMenuItem(
+                    onClick = {
+                        showOrderOptions = false
+                        navController.navigate(Screen.FarmerManageOrder.route)
+                    },
+                    text = {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(), // Make the Box fill the width of the item
+                            contentAlignment = Alignment.Center // Center align the text
+                        ) {
+                            Text("Order Status", color = Color.White)
+                        }
+                    }
+                )
+
+                Divider(color = Color.White, thickness = 1.dp)
+
+                DropdownMenuItem(
+                    onClick = {
+                        showOrderOptions = false
+                        navController.navigate(Screen.FarmerManageOrderRequest.route)
+                    },
+                    text = {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(), // Make the Box fill the width of the item
+                            contentAlignment = Alignment.Center // Center align the text
+                        ) {
+                            Text("Order Request", color = Color.White)
                         }
                     }
                 )
@@ -188,11 +218,12 @@ fun NavDrawerBottomBar(
                 selected = currentDestination == Screen.Profile.route,
                 onClick = {
                     navController.navigate(Screen.Profile.route) {
-                        popUpTo(0)
+                        popUpTo(navController.graph.startDestinationId)
                     }
                 }
             )
         }
+
         if (role == "Coop" && currentDestination == Screen.CoopProductInventory.route) {
             FloatingActionButton(
                 onClick = onAddProduct,
@@ -221,9 +252,10 @@ fun NavDrawerBottomBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "Add",
+                    contentDescription = "Save",
                     tint = Color.White,
-                    modifier = Modifier.size(24.dp))
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     }
@@ -238,3 +270,4 @@ fun bottomColorConfig(role: String): Pair<Color, Color> {
         else -> Pair(Color.White, Color.Black) // Default
     }
 }
+

@@ -138,13 +138,13 @@ fun ProfileScreen(
 
     saveButtonEnabled =
         (updatedEmail != email ||
-        updatedPhoneNumber != phoneNumber ||
-        updatedStreetNumber != streetNumber ||
-        updatedBarangay != barangay) &&
-        updatedEmail.isNotEmpty() &&
-        updatedPhoneNumber.isNotEmpty() &&
-        updatedStreetNumber.isNotEmpty() &&
-        isValidEmail(updatedEmail)
+                updatedPhoneNumber != phoneNumber ||
+                updatedStreetNumber != streetNumber ||
+                updatedBarangay != barangay) &&
+                updatedEmail.isNotEmpty() &&
+                updatedPhoneNumber.isNotEmpty() &&
+                updatedStreetNumber.isNotEmpty() &&
+                isValidEmail(updatedEmail)
 
     if (saveInfoDialog) {
         SaveInfoDialog(
@@ -169,7 +169,7 @@ fun ProfileScreen(
 
     Column(
         modifier = Modifier
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 80.dp),
     ) {
         Image(
             painter = painterResource(id = R.drawable.profile_icon),

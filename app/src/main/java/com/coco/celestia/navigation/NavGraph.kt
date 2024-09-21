@@ -1,7 +1,6 @@
 package com.coco.celestia.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -13,36 +12,10 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.coco.celestia.AddOrderPanel
-import com.coco.celestia.AddProductForm
-import com.coco.celestia.AdminDashboard
-import com.coco.celestia.AdminInventory
-import com.coco.celestia.AdminUserManagement
-import com.coco.celestia.ClientContact
-import com.coco.celestia.ClientDashboard
-import com.coco.celestia.ClientOrder
-import com.coco.celestia.ConfirmOrderRequestPanel
-import com.coco.celestia.CoopDashboard
-import com.coco.celestia.CoopInventory
-import com.coco.celestia.FarmerDashboard
-import com.coco.celestia.FarmerInventory
-import com.coco.celestia.FarmerManageOrder
-import com.coco.celestia.FarmerProductTypeInventory
-import com.coco.celestia.ForgotPasswordScreen
-import com.coco.celestia.LoginScreen
-import com.coco.celestia.OrderDetailsPanel
-import com.coco.celestia.OrderRequestPanel
-import com.coco.celestia.ProductTypeInventory
-import com.coco.celestia.RegisterScreen
-import com.coco.celestia.Screen
+import com.coco.celestia.*
 import com.coco.celestia.screens.Profile
 import com.coco.celestia.screens.SplashScreen
-import com.coco.celestia.viewmodel.ContactViewModel
-import com.coco.celestia.viewmodel.LocationViewModel
-import com.coco.celestia.viewmodel.OrderViewModel
-import com.coco.celestia.viewmodel.ProductViewModel
-import com.coco.celestia.viewmodel.TransactionViewModel
-import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.*
 
 @Composable
 fun NavGraph(
@@ -101,6 +74,9 @@ fun NavGraph(
         composable(route = Screen.FarmerInventory.route) {
             FarmerInventory(navController = navController)
         }
+        composable(Screen.FarmerManageOrderRequest.route) {
+            ManageOrderRequest()
+        }
         composable(route = Screen.Client.route) {
             ClientDashboard()
         }
@@ -130,13 +106,6 @@ fun NavGraph(
             OrderRequestPanel()
         }
         composable(route = Screen.CoopInventory.route) {
-            LaunchedEffect(Unit) {
-               productName = ""
-               farmerName = ""
-               addressName = ""
-               quantityAmount = 0
-            }
-
             CoopInventory(navController = navController)
         }
         composable(route = Screen.AddOrder.route) {
@@ -148,19 +117,12 @@ fun NavGraph(
                 navArgument("type") { type = NavType.StringType })
         ) { backStack ->
             val type = backStack.arguments?.getString("type")
-            LaunchedEffect(type) {
-                onAddProduct(type.toString())
-            }
             ProductTypeInventory(
                 navController = navController,
-                type = type,
+                type = type
             )
         }
         composable(route = Screen.CoopAddProductInventory.route) {
-            LaunchedEffect(productName, farmerName, addressName, quantityAmount) {
-                onSaveProduct(productName, farmerName, addressName, quantityAmount)
-            }
-
             AddProductForm(
                 productName = productName,
                 farmerName = farmerName,
@@ -175,15 +137,16 @@ fun NavGraph(
         composable(
             route = Screen.FarmerProductInventory.route,
             arguments = listOf(
-                navArgument("type") { type = NavType.StringType })
-        ) { backStack ->
-            val type = backStack.arguments?.getString("type")
-            FarmerProductTypeInventory(
-                navController = navController,
-                type = type,
+                navArgument("productName") { type = NavType.StringType },
+                navArgument("quantity") { type = NavType.IntType }
             )
-        }
+        ) { backStackEntry ->
+            val productName = backStackEntry.arguments?.getString("productName")
+            val quantity = backStackEntry.arguments?.getInt("quantity")
+            val product = ProductData(name = productName ?: "", quantity = quantity ?: 0)
 
+            FarmerProductTypeInventory(product = product)
+        }
         composable(
             route = Screen.OrderDetails.route,
             arguments = listOf(navArgument("type") { type = NavType.StringType })
@@ -200,7 +163,8 @@ fun NavGraph(
             arguments = listOf(
                 navArgument("type") { type = NavType.StringType },
                 navArgument("name") { type = NavType.StringType },
-                navArgument("quantity") { type = NavType.IntType })
+                navArgument("quantity") { type = NavType.IntType }
+            )
         ) { backStack ->
             val type = backStack.arguments?.getString("type")
             val name = backStack.arguments?.getString("name")

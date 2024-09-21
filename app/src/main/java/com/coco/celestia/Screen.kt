@@ -37,6 +37,9 @@ sealed class Screen(val route: String) {
     object Farmer: Screen( route = "farmer_dashboard")
     object FarmerManageOrder: Screen( route = "farmer_manage_order")
     object FarmerInventory: Screen ( route = "farmer_inventory")
+    object FarmerManageOrderRequest: Screen("farmer_manage_order/{type}") {
+        fun createRoute(type: String) = "farmer_manage_order/$type"
+    }
     object FarmerProductInventory: Screen("farmer_inventory/{type}") {
         fun createRoute(type: String) = "farmer_inventory/$type"
     }
