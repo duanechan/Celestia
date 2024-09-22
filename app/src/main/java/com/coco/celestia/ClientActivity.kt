@@ -20,8 +20,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
-import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.CelestiaTheme
+import com.coco.celestia.ui.theme.LightGray
 
 class ClientActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -32,7 +32,7 @@ class ClientActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(BgColor)
+                        .background(LightGray)
                 ) {
                     val navController = rememberNavController()
 //                    NavGraph(
@@ -49,7 +49,8 @@ class ClientActivity : ComponentActivity() {
 @Composable
 fun ClientDashboard() {
     Image(painter = painterResource(id = R.drawable.clientdashboardmock), contentDescription = "Login Image",
-        modifier = Modifier.size(1000.dp))
+        modifier = Modifier.size(1000.dp)
+        .background(LightGray))
 
     Spacer(modifier = Modifier.height(50.dp))
 

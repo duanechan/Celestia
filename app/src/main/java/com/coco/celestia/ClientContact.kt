@@ -37,8 +37,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.coco.celestia.ui.theme.LightGreen
 import com.coco.celestia.ui.theme.PurpleGrey40
+import com.coco.celestia.ui.theme.VeryDarkPurple
 import com.coco.celestia.ui.theme.VeryDarkGreen
 import com.coco.celestia.viewmodel.ContactState
 import com.coco.celestia.viewmodel.ContactViewModel
@@ -86,7 +86,7 @@ fun ClientContact(contactViewModel: ContactViewModel) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
-                .background(PurpleGrey40)
+                .background(VeryDarkPurple)
                 .padding(top = 10.dp, bottom = 15.dp, start = 25.dp, end = 16.dp)
         ) {
             SearchBar(

@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -53,6 +54,7 @@ import androidx.navigation.NavController
 import com.coco.celestia.ui.theme.LightGreen
 import com.coco.celestia.ui.theme.VeryDarkGreen
 import com.coco.celestia.ui.theme.PurpleGrey40
+import com.coco.celestia.ui.theme.VeryDarkPurple
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
@@ -115,7 +117,7 @@ fun ClientOrder(
                 Row(modifier = Modifier
                     .width(150.dp)
                     .height(50.dp)
-                    .background(PurpleGrey40)
+                    .background(VeryDarkPurple) //TODO: adjust space of search bar and notification
                     .padding(top = 10.dp, bottom = 15.dp, start = 0.dp, end = 0.dp)){
                     SearchBar(
                         query = text,
@@ -266,12 +268,13 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
                         }
 
                         "ACCEPTED" -> {
-                            Color.Green
+                            Color(0xFF4CAF50)
                         }
 
-                        else -> {
-                            Color.Red
+                        "REJECTED" -> {
+                            Color(0xFFF44336)
                         }
+                        else -> Color.Gray
                     }
                 )
         ){

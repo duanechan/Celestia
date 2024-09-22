@@ -20,5 +20,6 @@ val Gray = Color(0xFF3E3E3E)
 
 //Client Palette
 val LightOrange = Color(0xFFDB873A) //navbar
-val LightGray = Color (0xFFE5E5E4) //client bg
+val LightGray = Color (0xFFE5E5E4)  //client bg
 val VeryDarkGreen = Color (0xFF52614E) //client elements
+val VeryDarkPurple = Color (0xFF5D4E61) //client notification and searchbar

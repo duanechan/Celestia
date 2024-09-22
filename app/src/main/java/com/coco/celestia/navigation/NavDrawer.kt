@@ -24,6 +24,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.coco.celestia.Screen
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.DarkGreen
+import com.coco.celestia.ui.theme.LightOrange
 import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.util.routeHandler
 
@@ -36,7 +37,7 @@ fun NavDrawerTopBar(role: String, firstName: String, lastName: String) {
             TopAppBar(
                 title = { Text(text = fullName) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Orange,
+                    containerColor = LightOrange,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -272,7 +273,7 @@ fun NavDrawerBottomBar(
 fun bottomColorConfig(role: String): Pair<Color, Color> {
     return when (role) {
         "Admin" -> Pair(Color.White, DarkBlue)
-        "Client" -> Pair(Orange, DarkGreen)
+        "Client" -> Pair(LightOrange, Color.White)
         "Coop" -> Pair(Color.White, DarkGreen)
         "Farmer" -> Pair(Color.White, Color.Green)
         else -> Pair(Color.White, Color.Black) // Default
