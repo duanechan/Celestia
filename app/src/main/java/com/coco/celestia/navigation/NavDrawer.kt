@@ -103,18 +103,67 @@ fun NavDrawerBottomBar(
                 }
             )
 
-            if (role == "Client" || role == "Coop" || role == "Farmer") {
-                NavigationBarItem(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.ShoppingCart,
-                            contentDescription = "Orders"
-                        )
-                    },
-                    label = { Text("Orders") },
-                    selected = currentDestination == routes.orders,
-                    onClick = { showOrderOptions = !showOrderOptions }
-                )
+            NavigationBarItem(
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.ShoppingCart,
+                        contentDescription = "Orders"
+                    )
+                },
+                label = { Text("Orders") },
+                selected = currentDestination == routes.orders,
+                onClick = {
+                    if (role == "Farmer") {
+                        showOrderOptions = !showOrderOptions
+                    } else {
+                        navController.navigate(routes.orders) {
+                            popUpTo(navController.graph.startDestinationId)
+                        }
+                    }
+                }
+            )
+
+            if (role == "Farmer") {
+                // Drop down menu for the Farmer role
+                DropdownMenu(
+                    expanded = showOrderOptions,
+                    onDismissRequest = { showOrderOptions = false },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF5A8F5C))
+                ) {
+                    DropdownMenuItem(
+                        onClick = {
+                            showOrderOptions = false
+                            navController.navigate(Screen.FarmerManageOrder.route)
+                        },
+                        text = {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("Order Status", color = Color.White)
+                            }
+                        }
+                    )
+
+                    Divider(color = Color.White, thickness = 1.dp)
+
+                    DropdownMenuItem(
+                        onClick = {
+                            showOrderOptions = false
+                            navController.navigate(Screen.FarmerManageOrderRequest.route)
+                        },
+                        text = {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("Order Request", color = Color.White)
+                            }
+                        }
+                    )
+                }
             }
 
             if (role == "Admin" || role == "Coop" || role == "Farmer") {
@@ -161,47 +210,6 @@ fun NavDrawerBottomBar(
                     onClick = {
                         navController.navigate(Screen.ClientContact.route) {
                             popUpTo(navController.graph.startDestinationId)
-                        }
-                    }
-                )
-            }
-
-            //Drop down menu for farmer side
-            DropdownMenu(
-                expanded = showOrderOptions,
-                onDismissRequest = { showOrderOptions = false },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF5A8F5C))
-            ) {
-                DropdownMenuItem(
-                    onClick = {
-                        showOrderOptions = false
-                        navController.navigate(Screen.FarmerManageOrder.route)
-                    },
-                    text = {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(), // Make the Box fill the width of the item
-                            contentAlignment = Alignment.Center // Center align the text
-                        ) {
-                            Text("Order Status", color = Color.White)
-                        }
-                    }
-                )
-
-                Divider(color = Color.White, thickness = 1.dp)
-
-                DropdownMenuItem(
-                    onClick = {
-                        showOrderOptions = false
-                        navController.navigate(Screen.FarmerManageOrderRequest.route)
-                    },
-                    text = {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(), // Make the Box fill the width of the item
-                            contentAlignment = Alignment.Center // Center align the text
-                        ) {
-                            Text("Order Request", color = Color.White)
                         }
                     }
                 )
