@@ -1,4 +1,4 @@
-package com.coco.celestia
+package com.coco.celestia.screens.client
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -18,21 +18,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerIcon.Companion.Text
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.coco.celestia.viewmodel.TransactionData
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.util.formatDate
 import com.coco.celestia.viewmodel.TransactionState
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.google.firebase.auth.FirebaseAuth
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class ClientTransaction : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

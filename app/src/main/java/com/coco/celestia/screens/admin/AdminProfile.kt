@@ -1,7 +1,5 @@
-package com.coco.celestia
+package com.coco.celestia.screens.admin
 
-import android.app.Activity
-import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Spacer
@@ -22,7 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import com.coco.celestia.navigation.Screen
 import com.coco.celestia.dialogs.ExitDialog
 import com.coco.celestia.viewmodel.UserViewModel
 

@@ -13,8 +13,28 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.coco.celestia.*
+import com.coco.celestia.screens.admin.AdminDashboard
+import com.coco.celestia.screens.admin.AdminUserManagement
+import com.coco.celestia.screens.client.ClientDashboard
+import com.coco.celestia.screens.ForgotPasswordScreen
+import com.coco.celestia.screens.LoginScreen
+import com.coco.celestia.screens.coop.OrderRequest
 import com.coco.celestia.screens.Profile
+import com.coco.celestia.screens.RegisterScreen
 import com.coco.celestia.screens.SplashScreen
+import com.coco.celestia.screens.admin.AdminInventory
+import com.coco.celestia.screens.client.ClientContact
+import com.coco.celestia.screens.client.ClientOrder
+import com.coco.celestia.screens.coop.AddProductForm
+import com.coco.celestia.screens.coop.CoopDashboard
+import com.coco.celestia.screens.coop.CoopInventory
+import com.coco.celestia.screens.coop.ProductTypeInventory
+import com.coco.celestia.screens.farmer.FarmerDashboard
+import com.coco.celestia.screens.farmer.FarmerInventory
+import com.coco.celestia.screens.farmer.FarmerInventoryDetail
+import com.coco.celestia.screens.farmer.FarmerManageOrder
+import com.coco.celestia.screens.farmer.FarmerProductTypeInventory
+import com.coco.celestia.screens.farmer.ManageOrderRequest
 import com.coco.celestia.viewmodel.*
 
 @Composable
@@ -103,7 +123,7 @@ fun NavGraph(
             CoopDashboard()
         }
         composable(route = Screen.CoopOrder.route) {
-            OrderRequestPanel()
+            OrderRequest()
         }
         composable(route = Screen.CoopInventory.route) {
             CoopInventory(navController = navController)

@@ -1,4 +1,4 @@
-package com.coco.celestia
+package com.coco.celestia.navigation
 
 data class Routes(
     val dashboard: String,

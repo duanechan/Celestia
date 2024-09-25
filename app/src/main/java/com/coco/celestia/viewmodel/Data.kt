@@ -1,4 +1,4 @@
-package com.coco.celestia
+package com.coco.celestia.viewmodel
 
 data class UserData(
     val email: String = "",

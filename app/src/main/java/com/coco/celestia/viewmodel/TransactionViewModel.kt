@@ -1,19 +1,15 @@
 package com.coco.celestia.viewmodel
 
-import androidx.compose.runtime.State
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.coco.celestia.OrderData
-import com.coco.celestia.TransactionData
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.launch
-import java.util.UUID
 import kotlin.reflect.full.memberProperties
 
 sealed class TransactionState {

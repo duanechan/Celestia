@@ -1,11 +1,9 @@
 package com.coco.celestia
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,16 +20,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.coco.celestia.dialogs.ExitDialog
 import com.coco.celestia.navigation.NavDrawerBottomBar
 import com.coco.celestia.navigation.NavDrawerTopBar
 import com.coco.celestia.navigation.NavGraph
+import com.coco.celestia.navigation.Screen
 import com.coco.celestia.ui.theme.CelestiaTheme
-import com.coco.celestia.viewmodel.ContactViewModel
-import com.coco.celestia.viewmodel.LocationViewModel
-import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.ProductData
 import com.coco.celestia.viewmodel.ProductViewModel
-import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 
 class MainActivity : ComponentActivity() {
@@ -130,15 +125,15 @@ fun App() {
             }
         )
 
-        BackHandler {
-            exitDialog = true
-        }
-
-        if (exitDialog) {
-            ExitDialog(
-                onDismiss = { exitDialog = false },
-                onExit = { (navController.context as Activity).finish() }
-            )
-        }
+//        BackHandler {
+//            exitDialog = true
+//        }
+//
+//        if (exitDialog) {
+//            ExitDialog(
+//                onDismiss = { exitDialog = false },
+//                onExit = { (navController.context as Activity).finish() }
+//            )
+//        }
     }
 }

@@ -1,4 +1,4 @@
-package com.coco.celestia
+package com.coco.celestia.screens.farmer
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
+import com.coco.celestia.viewmodel.ProductData
+import com.coco.celestia.navigation.Screen
 
 
 @Composable
@@ -95,7 +97,7 @@ fun FarmerProductTypeInventory(product: ProductData, navController: NavControlle
             .height(170.dp)
             .padding(horizontal = 20.dp, vertical = 10.dp)
             .clickable {
-                navController.navigate("farmer_inventory_detail/${product.name}")
+                navController.navigate(Screen.FarmerInventoryDetail.createRoute(product.name))
             },
     ) {
         Box(

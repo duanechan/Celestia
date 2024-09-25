@@ -1,4 +1,4 @@
-package com.coco.celestia
+package com.coco.celestia.screens.client
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -37,7 +37,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.coco.celestia.ui.theme.PurpleGrey40
+import com.coco.celestia.viewmodel.ContactData
+import com.coco.celestia.R
 import com.coco.celestia.ui.theme.VeryDarkPurple
 import com.coco.celestia.ui.theme.VeryDarkGreen
 import com.coco.celestia.viewmodel.ContactState

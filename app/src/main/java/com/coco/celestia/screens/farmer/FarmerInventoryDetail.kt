@@ -1,4 +1,4 @@
-package com.coco.celestia
+package com.coco.celestia.screens.farmer
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

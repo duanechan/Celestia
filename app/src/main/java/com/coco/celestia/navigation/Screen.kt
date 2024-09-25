@@ -1,4 +1,4 @@
-package com.coco.celestia
+package com.coco.celestia.navigation
 
 sealed class Screen(val route: String) {
     object Splash: Screen(route = "splash")
@@ -36,7 +36,7 @@ sealed class Screen(val route: String) {
     //farmer
     object Farmer: Screen( route = "farmer_dashboard")
     object FarmerManageOrder: Screen( route = "farmer_manage_order")
-    object FarmerInventory: Screen ( route = "farmer_inventory")
+    object FarmerInventory: Screen( route = "farmer_inventory")
     object FarmerInventoryDetail : Screen(route = "farmer_inventory_detail/{productName}") {
         fun createRoute(type: String) = "farmer_inventory_detail/$type"
     }

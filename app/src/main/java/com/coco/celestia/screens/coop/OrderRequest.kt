@@ -1,4 +1,4 @@
-package com.coco.celestia
+package com.coco.celestia.screens.coop
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -37,6 +37,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.coco.celestia.viewmodel.OrderData
+import com.coco.celestia.viewmodel.TransactionData
 import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
@@ -45,7 +47,7 @@ import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OrderRequestPanel() {
+fun OrderRequest() {
     val orderViewModel: OrderViewModel = viewModel()
     val transactionViewModel: TransactionViewModel = viewModel()
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
@@ -126,7 +128,6 @@ fun OrderRequestPanel() {
                     }
                 }
             }
-
         }
     }
 }

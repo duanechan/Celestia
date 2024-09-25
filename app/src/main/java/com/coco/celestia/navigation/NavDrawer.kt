@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.coco.celestia.Screen
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.LightOrange
@@ -90,6 +89,7 @@ fun NavDrawerBottomBar(
             containerColor = bottomBarColors.first,
             contentColor = bottomBarColors.second
         ) {
+            // Dashboard - Default to all roles
             NavigationBarItem(
                 icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard") },
                 label = { Text("Dashboard") },
@@ -101,25 +101,27 @@ fun NavDrawerBottomBar(
                 }
             )
 
-            NavigationBarItem(
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.ShoppingCart,
-                        contentDescription = "Orders"
-                    )
-                },
-                label = { Text("Orders") },
-                selected = currentDestination == routes.orders,
-                onClick = {
-                    if (role == "Farmer") {
-                        showOrderOptions = !showOrderOptions
-                    } else {
-                        navController.navigate(routes.orders) {
-                            popUpTo(navController.graph.startDestinationId)
+            if(role == "Coop" || role == "Client" || role == "Farmer") {
+                NavigationBarItem(
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = "Orders"
+                        )
+                    },
+                    label = { Text("Orders") },
+                    selected = currentDestination == routes.orders,
+                    onClick = {
+                        if (role == "Farmer") {
+                            showOrderOptions = !showOrderOptions
+                        } else {
+                            navController.navigate(routes.orders) {
+                                popUpTo(navController.graph.startDestinationId)
+                            }
                         }
                     }
-                }
-            )
+                )
+            }
 
             if (role == "Farmer") {
                 // Drop down menu for the Farmer role

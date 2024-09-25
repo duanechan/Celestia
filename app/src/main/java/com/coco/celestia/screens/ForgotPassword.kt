@@ -1,4 +1,4 @@
-package com.coco.celestia
+package com.coco.celestia.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
