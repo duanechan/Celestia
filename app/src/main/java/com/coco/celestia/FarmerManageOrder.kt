@@ -45,7 +45,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Brush
@@ -139,7 +138,7 @@ fun FarmerManageOrder(
                                 shape = RoundedCornerShape(16.dp)
                             )
                             .border(
-                                BorderStroke(1.dp, Color(0xFF41644A)),
+                                BorderStroke(1.dp, Color(0xFF4A2B0E)),
                                 shape = RoundedCornerShape(16.dp)
                             ),
                         colors = TextFieldDefaults.textFieldColors(
@@ -213,7 +212,6 @@ fun ManageOrderCards(orderCount: Int, order: OrderData, user: UserData) {
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        // Main Order Card with Gradient Background
         Card(
             modifier = Modifier
                 .weight(1f)
@@ -228,8 +226,8 @@ fun ManageOrderCards(orderCount: Int, order: OrderData, user: UserData) {
                     .background(
                         Brush.horizontalGradient(
                             colors = listOf(
-                                Color(0xFF41644A),  // Start of gradient
-                                Color(0xFF83CA95)   // End of gradient
+                                Color(0xFF957541),  // Start of gradient
+                                Color(0xFF693F27)   // End of gradient
                             )
                         )
                     )
@@ -297,8 +295,8 @@ fun OrderStatusCard(orderStatus: String) {
         colors = CardDefaults.cardColors(
             containerColor = when (orderStatus) {
                 "ACCEPTED" -> Color(0xFF4CAF50)  // Green
-                "PENDING" -> Color(0xFFFFA500)   // Orange
-                "REJECTED" -> Color(0xFFF44336)  // Red
+                "PENDING" -> Color(0xFFE0A83B)   // Yellow
+                "REJECTED" -> Color(0xFFA2453D)  // Red
                 else -> Color.Gray
             }
         )

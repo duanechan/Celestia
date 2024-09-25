@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -25,7 +23,6 @@ import com.coco.celestia.Screen
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.LightOrange
-import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.util.routeHandler
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,8 +55,8 @@ fun GradientTopBar(fullName: String) {
             .background(
                 Brush.horizontalGradient(
                     colors = listOf(
-                        Color(0xFF41644A),  // First color (#41644A)
-                        Color(0xFF83CA95)   // Second color (#83CA95)
+                        Color(0xFFE0A83B),  // First color (#41644A)0xFFA36361
+                        Color(0xFF7A5C20)   // Second color (#83CA95)0xFFC3B0AD
                     )
                 )
             )
@@ -131,7 +128,7 @@ fun NavDrawerBottomBar(
                     onDismissRequest = { showOrderOptions = false },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFF5A8F5C))
+                        .background(Color(0xFF957541))
                 ) {
                     DropdownMenuItem(
                         onClick = {
@@ -275,7 +272,7 @@ fun bottomColorConfig(role: String): Pair<Color, Color> {
         "Admin" -> Pair(Color.White, DarkBlue)
         "Client" -> Pair(LightOrange, Color.White)
         "Coop" -> Pair(Color.White, DarkGreen)
-        "Farmer" -> Pair(Color.White, Color.Green)
+        "Farmer" -> Pair(Color(0xFFE0A83B), Color.White)
         else -> Pair(Color.White, Color.Black) // Default
     }
 }

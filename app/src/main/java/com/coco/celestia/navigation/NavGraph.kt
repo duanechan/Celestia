@@ -145,7 +145,14 @@ fun NavGraph(
             val quantity = backStackEntry.arguments?.getInt("quantity")
             val product = ProductData(name = productName ?: "", quantity = quantity ?: 0)
 
-            FarmerProductTypeInventory(product = product)
+            FarmerProductTypeInventory(product = product, navController = navController)
+        }
+        composable(
+            route = Screen.FarmerInventoryDetail.route,
+            arguments = listOf(navArgument("productName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val productNameDetail = backStackEntry.arguments?.getString("productName")
+            FarmerInventoryDetail(navController = navController, productName = productNameDetail ?: "")
         }
         composable(
             route = Screen.OrderDetails.route,

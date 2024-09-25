@@ -1,6 +1,7 @@
 package com.coco.celestia
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,6 +20,9 @@ import com.coco.celestia.viewmodel.ProductViewModel
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.Icon
 
 
 @Composable
@@ -75,7 +79,7 @@ fun FarmerInventory(navController: NavController) {
                     }
 
                     items(farmerProductData) { product ->
-                        FarmerProductTypeInventory(product = product)
+                        FarmerProductTypeInventory(product = product, navController = navController)
                     }
                 }
             }
@@ -84,12 +88,15 @@ fun FarmerInventory(navController: NavController) {
 }
 
 @Composable
-fun FarmerProductTypeInventory(product: ProductData) {
+fun FarmerProductTypeInventory(product: ProductData, navController: NavController) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(170.dp)
             .padding(horizontal = 20.dp, vertical = 10.dp)
+            .clickable {
+                navController.navigate("farmer_inventory_detail/${product.name}")
+            },
     ) {
         Box(
             modifier = Modifier
@@ -97,19 +104,42 @@ fun FarmerProductTypeInventory(product: ProductData) {
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color(0xFF41644A), // Start of gradient
-                            Color(0xFF83CA95)  // End of gradient
+                            Color(0xFF693F27), // Start of gradient
+                            Color(0xFF957541)  // End of gradient
                         )
                     )
                 )
         ) {
             Row(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = product.name, fontSize = 18.sp, color = Color.White)
-                Spacer(modifier = Modifier.weight(1f))
-                Text(text = "${product.quantity}kg", fontSize = 18.sp, color = Color.White)
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = product.name,
+                        fontSize = 25.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "${product.quantity}kg",
+                        fontSize = 25.sp,
+                        color = Color.White
+                    )
+                }
+
+                Icon(
+                    imageVector = Icons.Filled.KeyboardArrowRight,
+                    contentDescription = "Navigate",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .align(Alignment.Bottom)
+                )
             }
         }
     }
 }
+
