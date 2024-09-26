@@ -1,4 +1,4 @@
-package com.coco.celestia.navigation
+package com.coco.celestia.screens
 
 sealed class Screen(val route: String) {
     object Splash: Screen(route = "splash")

@@ -57,7 +57,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.coco.celestia.viewmodel.ProductData
-import com.coco.celestia.navigation.Screen
+import com.coco.celestia.screens.Screen
 import com.coco.celestia.screens.admin.DropdownMenuItem
 import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.mintsansFontFamily
@@ -82,9 +82,9 @@ fun CoopInventory(navController: NavController) {
         modifier = Modifier
             .fillMaxWidth()
             .height(860.dp)
-            .padding(top = 75.dp)
             .verticalScroll(rememberScrollState())
     ){
+        TopBar("Inventory")
         Spacer(modifier = Modifier.height(15.dp))
 
         when (productState) {
@@ -102,7 +102,6 @@ fun CoopInventory(navController: NavController) {
             }
         }
     }
-    TopBar()
 }
 
 @Composable
@@ -110,6 +109,7 @@ fun ProductTypeCards(navController: NavController, productData: List<ProductData
     val productsByType = productData.groupBy { it.type }
     val maxQuantity = 1000f // TODO: There should be a max qty.
     productsByType.forEach { (type, productsOfType) ->
+        val highestQuantityByType = productsOfType.sortedByDescending { it.quantity }.take(3)
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -121,11 +121,12 @@ fun ProductTypeCards(navController: NavController, productData: List<ProductData
         ) {
             Column(
                 modifier = Modifier
+                    .verticalScroll(rememberScrollState())
                     .padding(16.dp)
             ) {
                 Text(text = type, fontSize = 25.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(10.dp))
-                productsOfType.forEach { product ->
+                highestQuantityByType.forEach { product ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -151,8 +152,11 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
     LaunchedEffect(Unit) {
         productViewModel.fetchProduct(type.toString())
     }
-    TopBar()
-    Column( modifier = Modifier.height(795.dp)) {
+    Column( modifier = Modifier
+        .height(795.dp)
+        .verticalScroll(rememberScrollState())
+    ) {
+        TopBar("Inventory")
         Text(text = type.toString(), fontSize = 25.sp, fontWeight = FontWeight.Bold)
         productData.forEach { product ->
             Card(
@@ -346,7 +350,7 @@ val GradientBrush = Brush.linearGradient(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar() {
+fun TopBar(title: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -360,7 +364,7 @@ fun TopBar() {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Inventory",
+                        text = title,
                         fontFamily = mintsansFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = Color.White

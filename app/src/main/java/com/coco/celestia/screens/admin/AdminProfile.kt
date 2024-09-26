@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.coco.celestia.navigation.Screen
+import com.coco.celestia.screens.Screen
 import com.coco.celestia.dialogs.ExitDialog
 import com.coco.celestia.viewmodel.UserViewModel
 

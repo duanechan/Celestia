@@ -1,6 +1,7 @@
 package com.coco.celestia.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +22,7 @@ import com.coco.celestia.screens.LoginScreen
 import com.coco.celestia.screens.coop.OrderRequest
 import com.coco.celestia.screens.Profile
 import com.coco.celestia.screens.RegisterScreen
+import com.coco.celestia.screens.Screen
 import com.coco.celestia.screens.SplashScreen
 import com.coco.celestia.screens.admin.AdminInventory
 import com.coco.celestia.screens.client.ClientContact
@@ -137,12 +139,21 @@ fun NavGraph(
                 navArgument("type") { type = NavType.StringType })
         ) { backStack ->
             val type = backStack.arguments?.getString("type")
+
+            LaunchedEffect(type) {
+                onAddProduct(type.toString())
+            }
+
             ProductTypeInventory(
                 navController = navController,
                 type = type
             )
         }
         composable(route = Screen.CoopAddProductInventory.route) {
+            LaunchedEffect(productName, farmerName, addressName, quantityAmount) {
+                onSaveProduct(productName, farmerName, addressName, quantityAmount)
+            }
+
             AddProductForm(
                 productName = productName,
                 farmerName = farmerName,

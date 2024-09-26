@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.coco.celestia.screens.Screen
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.LightOrange

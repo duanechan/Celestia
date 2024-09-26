@@ -23,7 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.navigation.NavDrawerBottomBar
 import com.coco.celestia.navigation.NavDrawerTopBar
 import com.coco.celestia.navigation.NavGraph
-import com.coco.celestia.navigation.Screen
+import com.coco.celestia.screens.Screen
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.viewmodel.ProductData
 import com.coco.celestia.viewmodel.ProductViewModel
@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0xFFF2E3DB)) // Hex color))
+                        .background(Color(0xFFF2E3DB))
                 ) {
                     App()
                 }

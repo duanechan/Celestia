@@ -24,7 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
 import com.coco.celestia.viewmodel.ProductData
-import com.coco.celestia.navigation.Screen
+import com.coco.celestia.screens.Screen
 
 
 @Composable

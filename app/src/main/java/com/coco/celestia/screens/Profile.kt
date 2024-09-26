@@ -40,7 +40,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.R
-import com.coco.celestia.navigation.Screen
 import com.coco.celestia.dialogs.LogoutDialog
 import com.coco.celestia.dialogs.SaveInfoDialog
 import com.coco.celestia.ui.theme.CelestiaTheme

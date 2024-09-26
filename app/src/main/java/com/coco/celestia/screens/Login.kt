@@ -35,7 +35,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.R
-import com.coco.celestia.navigation.Screen
 import com.coco.celestia.dialogs.ExitDialog
 import com.coco.celestia.util.routeHandler
 import com.coco.celestia.viewmodel.UserState
