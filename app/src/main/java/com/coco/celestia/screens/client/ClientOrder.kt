@@ -85,6 +85,7 @@ fun ClientOrder(
                 .padding(top = 75.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            // Row with "Orders" text and notification button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -92,12 +93,7 @@ fun ClientOrder(
                     .background(VeryDarkGreen)
                     .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp)
             ) {
-                Text(
-                    text = "Orders",
-                    fontSize = 31.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                Text(text = "Orders", fontSize = 31.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 Spacer(modifier = Modifier.weight(1f))
                 Button(onClick = { /* Handle notification click */ }) {
                     Image(
@@ -106,31 +102,36 @@ fun ClientOrder(
                         modifier = Modifier.size(30.dp)
                     )
                 }
+            }
 
-                Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+            var text by remember { mutableStateOf("") }
+            var active by remember { mutableStateOf(false) }
 
-                var text by remember { mutableStateOf("") }
-                var active by remember{ mutableStateOf(false) }
-                Row(modifier = Modifier
-                    .width(150.dp)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
                     .height(50.dp)
-                    .background(VeryDarkPurple) //TODO: adjust space of search bar and notification
-                    .padding(top = 10.dp, bottom = 15.dp, start = 0.dp, end = 0.dp)){
-                    SearchBar(
-                        query = text,
-                        onQueryChange = {},
-                        onSearch = {},
-                        active = false,
-                        onActiveChange = {},
-                        placeholder = { Text(text = "Search...", color = Color.Black, fontSize = 15.sp)},
-                        leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon")},
-                        modifier = Modifier
-                            .width(225.dp)
-                            .height(35.dp)){
-                        //TO DO
-                    }
+                    .background(VeryDarkPurple)
+                    .padding(top = 10.dp, bottom = 15.dp, start = 25.dp, end = 16.dp)
+            ) {
+                SearchBar(
+                    query = text,
+                    onQueryChange = { /* Handle query change */ },
+                    onSearch = { /* Handle search action */ },
+                    active = false,
+                    onActiveChange = { },
+                    placeholder = { Text(text = "Search...", color = Color.Black, fontSize = 15.sp) },
+                    leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon") },
+                    modifier = Modifier
+                        .width(225.dp)
+                        .height(35.dp)
+                ){
+                    //todo
                 }
             }
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             Row() {
                 Text(

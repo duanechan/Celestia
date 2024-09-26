@@ -23,6 +23,7 @@ import com.coco.celestia.screens.Screen
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.LightOrange
+import com.coco.celestia.ui.theme.VeryDarkPurple
 import com.coco.celestia.util.routeHandler
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,10 +91,10 @@ fun NavDrawerBottomBar(
             containerColor = bottomBarColors.first,
             contentColor = bottomBarColors.second
         ) {
-            // Dashboard - Default to all roles
+            // Dashboard - Default to all roles except Client
             NavigationBarItem(
-                icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard") },
-                label = { Text("Dashboard") },
+                icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard", tint = if (role == "Client") VeryDarkPurple else bottomBarColors.second) },
+                label = { Text("Dashboard", color = if (role == "Client") Color.White else bottomBarColors.second) },
                 selected = currentDestination == routes.dashboard,
                 onClick = {
                     navController.navigate(routes.dashboard) {
@@ -104,13 +105,8 @@ fun NavDrawerBottomBar(
 
             if(role == "Coop" || role == "Client" || role == "Farmer") {
                 NavigationBarItem(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.ShoppingCart,
-                            contentDescription = "Orders"
-                        )
-                    },
-                    label = { Text("Orders") },
+                    icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Orders", tint = if (role == "Client") VeryDarkPurple else bottomBarColors.second) },
+                    label = { Text("Orders", color = if (role == "Client") Color.White else bottomBarColors.second) },
                     selected = currentDestination == routes.orders,
                     onClick = {
                         if (role == "Farmer") {
@@ -200,13 +196,8 @@ fun NavDrawerBottomBar(
 
             if (role == "Client") {
                 NavigationBarItem(
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Default.Call,
-                            contentDescription = "Contact Inquiry"
-                        )
-                    },
-                    label = { Text("Contact") },
+                    icon = { Icon(imageVector = Icons.Default.Call, contentDescription = "Contact", tint = VeryDarkPurple) },
+                    label = { Text("Contact", color = Color.White) },
                     selected = currentDestination == Screen.ClientContact.route,
                     onClick = {
                         navController.navigate(Screen.ClientContact.route) {
@@ -217,13 +208,8 @@ fun NavDrawerBottomBar(
             }
 
             NavigationBarItem(
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.AccountCircle,
-                        contentDescription = "Profile"
-                    )
-                },
-                label = { Text("Profile") },
+                icon = { Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile", tint = if (role == "Client") VeryDarkPurple else bottomBarColors.second) },
+                label = { Text("Profile", color = if (role == "Client") Color.White else bottomBarColors.second) },
                 selected = currentDestination == Screen.Profile.route,
                 onClick = {
                     navController.navigate(Screen.Profile.route) {
