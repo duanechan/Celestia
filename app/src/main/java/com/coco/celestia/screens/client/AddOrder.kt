@@ -8,9 +8,11 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,6 +25,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -36,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -79,20 +83,54 @@ fun AddOrderPanel(navController: NavController) {
 
 @Composable
 fun ProductCard(product: String, navController: NavController) {
+    val gradient = when (product) {
+        "Meat" -> Brush.linearGradient(
+            colors = listOf(Color(0xFFFF5151), Color(0xFFB06520))
+        )
+        "Coffee" -> Brush.linearGradient(
+            colors = listOf(Color(0xFFB06520), Color(0xFF5D4037))
+        )
+        "Vegetable" -> Brush.linearGradient(
+            colors = listOf(Color(0xFF42654A), Color(0xFF3B8D46))
+        )
+        else -> Brush.linearGradient(
+            colors = listOf(Color.Gray, Color.LightGray)
+        )
+    }
+
+    // Apply gradient inside the card
     Card(
         modifier = Modifier
             .height(150.dp)
             .clickable {
                 navController.navigate(Screen.OrderDetails.createRoute(product))
-            }
+            },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        ),
+        elevation = CardDefaults.elevatedCardElevation(5.dp) // adjust shadow effect here
     ) {
-        Column(
+
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+                .fillMaxSize()
+                .background(brush = gradient) // gradient background here
         ) {
-            Text(text = product, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(20.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = product,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                )
+            }
         }
     }
     Spacer(modifier = Modifier.height(15.dp))
