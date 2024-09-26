@@ -8,6 +8,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlin.reflect.full.memberProperties
 
 sealed class ProductState {
     object LOADING : ProductState()
@@ -71,12 +72,14 @@ class ProductViewModel : ViewModel() {
                                 product.type.equals("Meat", ignoreCase = true)
                         val vegetable = product.type.equals("Vegetable", ignoreCase = true)
                         val filtered = filterKeywords.any { keyword ->
-                            product.name.contains(keyword, ignoreCase = true)
+                            ProductData::class.memberProperties.any { prop ->
+                                val value = prop.get(product)
+                                value?.toString()?.contains(keyword, ignoreCase = true) == true
+                            }
                         }
                         when (role) {
-                            "Coop" -> coffeeOrMeat && filtered
+                            "Coop", "Admin" -> coffeeOrMeat && filtered
                             "Farmer" -> vegetable && filtered
-                            "Admin" -> filtered
                             else -> filtered
                         }
                     }

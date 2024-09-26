@@ -24,6 +24,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -44,10 +45,12 @@ import java.util.Locale
 fun AdminInventory(productViewModel: ProductViewModel) {
     val productData by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
+    var query by remember { mutableStateOf("") }
+    var selectedButton by remember { mutableStateOf<String?>(null) } // Row for aligned buttons
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(query) {
         productViewModel.fetchProducts(
-            filter = "",
+            filter = query,
             role = "Admin"
         )
     }
@@ -76,35 +79,27 @@ fun AdminInventory(productViewModel: ProductViewModel) {
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        var text by remember { mutableStateOf("") }
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
                 .background(PurpleGrey40)
-                .padding(top = 10.dp, bottom = 15.dp, start = 25.dp, end = 16.dp)
-        ) {
+                .padding(5.dp, 0.dp, 5.dp, 10.dp)
+         ) {
             SearchBar(
-                query = text,
-                onQueryChange = {},
-                onSearch = {},
+                query = query,
+                onQueryChange = { query = it },
+                onSearch = { query = it },
                 active = false,
                 onActiveChange = {},
-                placeholder = { Text(text = "Search...", color = DarkBlue, fontSize = 15.sp)},
+                placeholder = { Text(text = "Search", color = DarkBlue)},
                 leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon")},
                 modifier = Modifier
-                    .width(225.dp)
-                    .height(35.dp)){
+            ){
                 //TO DO
             }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
-
-        // Row for aligned buttons
-        var selectedButton by remember { mutableStateOf<String?>(null) }
 
         Row(
             modifier = Modifier
@@ -115,6 +110,7 @@ fun AdminInventory(productViewModel: ProductViewModel) {
             // Coffee Button
             Button(
                 onClick = {
+                    query = "Coffee"
                     selectedButton = if (selectedButton == "Coffee") null else "Coffee"
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -132,6 +128,7 @@ fun AdminInventory(productViewModel: ProductViewModel) {
             // Meat Button
             Button(
                 onClick = {
+                    query = "Meat"
                     selectedButton = if (selectedButton == "Meat") null else "Meat"
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -147,22 +144,23 @@ fun AdminInventory(productViewModel: ProductViewModel) {
             }
 
             // Vegetable Button
-            Button(
-                onClick = {
-                    selectedButton = if (selectedButton == "Vegetable") null else "Vegetable"
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (selectedButton == "Vegetable") Color(0xFF4CAF50) else Color.White
-                ),
-                modifier = Modifier.padding(horizontal = 10.dp)
-            ) {
-                Text(
-                    text = "Vegetable",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (selectedButton == "Vegetable") Color.White else Gray
-                )
-            }
+//            Button(
+//                onClick = {
+//                    query = "Vegetable"
+//                    selectedButton = if (selectedButton == "Vegetable") null else "Vegetable"
+//                },
+//                colors = ButtonDefaults.buttonColors(
+//                    containerColor = if (selectedButton == "Vegetable") Color(0xFF4CAF50) else Color.White
+//                ),
+//                modifier = Modifier.padding(horizontal = 10.dp)
+//            ) {
+//                Text(
+//                    text = "Vegetable",
+//                    fontSize = 20.sp,
+//                    fontWeight = FontWeight.Bold,
+//                    color = if (selectedButton == "Vegetable") Color.White else Gray
+//                )
+//            }
         }
 
         Spacer(modifier = Modifier.height(20.dp))

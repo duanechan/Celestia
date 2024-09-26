@@ -84,10 +84,10 @@ class OrderViewModel : ViewModel() {
 
                     val orders = snapshot.children
                         .mapNotNull { it.getValue(OrderData::class.java) }
-                        .filter { product ->
+                        .filter { order ->
                             val matches = filterKeywords.any { keyword ->
                                 OrderData::class.memberProperties.any { prop ->
-                                    val value = prop.get(product)
+                                    val value = prop.get(order)
                                     value?.toString()?.contains(keyword, ignoreCase = true) == true
                                 }
                             }
