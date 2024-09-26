@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -103,20 +104,64 @@ fun AdminInventory(productViewModel: ProductViewModel) {
         Spacer(modifier = Modifier.height(20.dp))
 
         // Row for aligned buttons
+        var selectedButton by remember { mutableStateOf<String?>(null) }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+                .padding(vertical = 5.dp),
+            horizontalArrangement = Arrangement.Center
         ) {
-            Button(onClick = { /* TODO: Handle coffee button click */ }) {
-                Text("Coffee")
+            // Coffee Button
+            Button(
+                onClick = {
+                    selectedButton = if (selectedButton == "Coffee") null else "Coffee"
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selectedButton == "Coffee") Color(0xFF795548) else Color.White
+                ),
+                modifier = Modifier.padding(horizontal = 10.dp)
+            ) {
+                Text(
+                    text = "Coffee",
+                    fontSize = 20.sp,
+                    color = if (selectedButton == "Coffee") Color.White else Gray
+                )
             }
-            Button(onClick = { /* TODO: Handle meat button click */ }) {
-                Text("Meat")
+
+            // Meat Button
+            Button(
+                onClick = {
+                    selectedButton = if (selectedButton == "Meat") null else "Meat"
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selectedButton == "Meat") Color.Red else Color.White
+                ),
+                modifier = Modifier.padding(horizontal = 10.dp)
+            ) {
+                Text(
+                    text = "Meat",
+                    fontSize = 20.sp,
+                    color = if (selectedButton == "Meat") Color.White else Gray
+                )
             }
-            Button(onClick = { /* TODO: Handle vegetable button click */ }) {
-                Text("Vegetable")
+
+            // Vegetable Button
+            Button(
+                onClick = {
+                    selectedButton = if (selectedButton == "Vegetable") null else "Vegetable"
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selectedButton == "Vegetable") Color(0xFF4CAF50) else Color.White
+                ),
+                modifier = Modifier.padding(horizontal = 10.dp)
+            ) {
+                Text(
+                    text = "Vegetable",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (selectedButton == "Vegetable") Color.White else Gray
+                )
             }
         }
 
