@@ -164,9 +164,17 @@ fun NavDrawerBottomBar(
             }
 
             if (role == "Admin" || role == "Coop" || role == "Farmer") {
+                val (backgroundColor, contentColor) = bottomColorConfig(role)
+
                 NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.List, contentDescription = "Items") },
-                    label = { Text("Items") },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.List,
+                            contentDescription = "Items",
+                            tint = contentColor
+                        )
+                    },
+                    label = { Text("Items", color = contentColor) },
                     selected = currentDestination == routes.inventory,
                     onClick = {
                         navController.navigate(routes.inventory) {
@@ -261,7 +269,7 @@ fun bottomColorConfig(role: String): Pair<Color, Color> {
         "Admin" -> Pair(Color.White, DarkBlue)
         "Client" -> Pair(LightOrange, Color.White)
         "Coop" -> Pair(Color.White, DarkGreen)
-        "Farmer" -> Pair(Color(0xFFE0A83B), Color.White)
+        "Farmer" -> Pair(Color(0xFFE0A83B), Color(0xFF693F27))
         else -> Pair(Color.White, Color.Black) // Default
     }
 }
