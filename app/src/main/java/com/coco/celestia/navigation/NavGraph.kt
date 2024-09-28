@@ -1,5 +1,6 @@
 package com.coco.celestia.navigation
 
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -43,8 +44,6 @@ import com.coco.celestia.viewmodel.*
 fun NavGraph(
     navController: NavHostController,
     startDestination: String = Screen.Splash.route,
-    onAddProduct: (String) -> Unit,
-    onSaveProduct: (String, String, String, Int) -> Unit,
     contactViewModel: ContactViewModel = viewModel(),
     locationViewModel: LocationViewModel = viewModel(),
     orderViewModel: OrderViewModel = viewModel(),
@@ -56,6 +55,7 @@ fun NavGraph(
     var farmerName by remember { mutableStateOf("") }
     var addressName by remember { mutableStateOf("") }
     var quantityAmount by remember { mutableIntStateOf(0) }
+    var productType by remember { mutableStateOf("") }
 
     NavHost(
         navController = navController,
@@ -140,20 +140,14 @@ fun NavGraph(
         ) { backStack ->
             val type = backStack.arguments?.getString("type")
 
-            LaunchedEffect(type) {
-                onAddProduct(type.toString())
-            }
+            productType = type ?: ""
 
             ProductTypeInventory(
                 navController = navController,
-                type = type
+                type = productType
             )
         }
         composable(route = Screen.CoopAddProductInventory.route) {
-            LaunchedEffect(productName, farmerName, addressName, quantityAmount) {
-                onSaveProduct(productName, farmerName, addressName, quantityAmount)
-            }
-
             AddProductForm(
                 productName = productName,
                 farmerName = farmerName,
@@ -164,6 +158,27 @@ fun NavGraph(
                 onAddressChange = { addressName = it },
                 onQuantityChange = { newValue -> quantityAmount = newValue.toIntOrNull() ?: 0 }
             )
+        }
+
+        composable(route = Screen.CoopAddProductInventoryDB.route) {
+            LaunchedEffect(Unit) {
+                if(productName.isNotEmpty() &&
+                    farmerName.isNotEmpty() &&
+                    addressName.isNotEmpty() &&
+                    quantityAmount > 0)
+                {
+                    val product = ProductData(
+                        name = productName,
+                        quantity = quantityAmount,
+                        type = productType
+                    )
+                    productViewModel.addProduct(product)
+                    navController.navigate(Screen.CoopInventory.route)
+                    Toast.makeText(navController.context, "${quantityAmount}kg of $productName added to $productType inventory.", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(navController.context, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
         composable(
             route = Screen.FarmerProductInventory.route,

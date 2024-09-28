@@ -8,7 +8,13 @@
       <SelectionState runConfigName="MainActivity">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="AdminActivity">
+      <SelectionState runConfigName="MainActivity">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="AddOrderActivity">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="PreviewCheckBoxWithNav">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

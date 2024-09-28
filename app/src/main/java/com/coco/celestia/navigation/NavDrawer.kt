@@ -76,8 +76,6 @@ fun GradientTopBar(fullName: String) {
 @Composable
 fun NavDrawerBottomBar(
     role: String,
-    onAddProduct: () -> Unit,
-    onSaveProduct: () -> Unit,
     navController: NavController
 ) {
     var showOrderOptions by remember { mutableStateOf(false) }
@@ -235,7 +233,7 @@ fun NavDrawerBottomBar(
 
         if (role == "Coop" && currentDestination == Screen.CoopProductInventory.route) {
             FloatingActionButton(
-                onClick = onAddProduct,
+                onClick = { navController.navigate(Screen.CoopAddProductInventory.route) },
                 shape = CircleShape,
                 containerColor = DarkGreen,
                 modifier = Modifier
@@ -252,7 +250,7 @@ fun NavDrawerBottomBar(
         }
         if (role == "Coop" && currentDestination == Screen.CoopAddProductInventory.route) {
             FloatingActionButton(
-                onClick = onSaveProduct,
+                onClick = { navController.navigate(Screen.CoopAddProductInventoryDB.route) },
                 shape = CircleShape,
                 containerColor = DarkGreen,
                 modifier = Modifier

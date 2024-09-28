@@ -51,13 +51,7 @@ class MainActivity : ComponentActivity() {
 fun App() {
     val navController = rememberNavController()
     val userViewModel: UserViewModel = viewModel()
-    val productViewModel: ProductViewModel = viewModel()
     val userData by userViewModel.userData.observeAsState()
-    var productType by remember { mutableStateOf("") }
-    var productName by remember { mutableStateOf("") }
-    var farmerName by remember { mutableStateOf("") }
-    var addressName by remember { mutableStateOf("") }
-    var quantityAmount by remember { mutableIntStateOf(0) }
     val role = userData?.role
     val firstName = userData?.firstname
     val lastName = userData?.lastname
@@ -88,52 +82,13 @@ fun App() {
             {
                 NavDrawerBottomBar(
                     role = role.toString(),
-                    onAddProduct = { navController.navigate(Screen.CoopAddProductInventory.route) },
-                    onSaveProduct = {
-                        if(productName.isNotEmpty() &&
-                            farmerName.isNotEmpty() &&
-                            addressName.isNotEmpty() &&
-                            quantityAmount > 0)
-                        {
-                            val product = ProductData(
-                                name = productName,
-                                quantity = quantityAmount,
-                                type = productType
-                            )
-                            productViewModel.addProduct(product)
-                            navController.navigate(Screen.CoopInventory.route)
-                            Toast.makeText(navController.context, "${quantityAmount}kg of $productName added to $productType inventory.", Toast.LENGTH_SHORT).show()
-                        } else {
-                            Toast.makeText(navController.context, "Please fill in all fields", Toast.LENGTH_SHORT).show()
-                        }
-                    },
                     navController = navController
                 )
             }
         }
     ) { // APP CONTENT
-        var exitDialog by remember { mutableStateOf(false) }
-
         NavGraph(
-            navController = navController,
-            onAddProduct = { productType = it },
-            onSaveProduct = { product, farmer, address, quantity ->
-                productName = product
-                farmerName = farmer
-                addressName = address
-                quantityAmount = quantity
-            }
+            navController = navController
         )
-
-//        BackHandler {
-//            exitDialog = true
-//        }
-//
-//        if (exitDialog) {
-//            ExitDialog(
-//                onDismiss = { exitDialog = false },
-//                onExit = { (navController.context as Activity).finish() }
-//            )
-//        }
     }
 }
