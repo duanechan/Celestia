@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.coco.celestia.viewmodel.TransactionData
+import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.util.formatDate
 import com.coco.celestia.viewmodel.TransactionState

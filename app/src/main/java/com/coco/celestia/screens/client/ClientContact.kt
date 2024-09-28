@@ -37,7 +37,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.coco.celestia.viewmodel.ContactData
+import com.coco.celestia.viewmodel.model.ContactData
 import com.coco.celestia.R
 import com.coco.celestia.ui.theme.VeryDarkPurple
 import com.coco.celestia.ui.theme.VeryDarkGreen

@@ -49,8 +49,8 @@ import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.coco.celestia.viewmodel.OrderData
-import com.coco.celestia.viewmodel.UserData
+import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.UserData
 import com.coco.celestia.viewmodel.ProductViewModel
 
 @Composable
@@ -73,7 +73,6 @@ fun FarmerManageOrder(
     LaunchedEffect(selectedCategory) {
         orderViewModel.fetchAllOrders(
             filter = selectedCategory,
-            isPending = true,
             role = "Farmer"
         )
         productViewModel.fetchProducts(

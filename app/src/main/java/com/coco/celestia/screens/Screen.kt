@@ -1,5 +1,7 @@
 package com.coco.celestia.screens
 
+import com.coco.celestia.viewmodel.model.OrderData
+
 sealed class Screen(val route: String) {
     object Splash: Screen(route = "splash")
     object Login: Screen(route = "login")
@@ -30,6 +32,9 @@ sealed class Screen(val route: String) {
         fun createRoute(type: String) = "coop_add_product_inventory/$type"
     }
     object CoopAddProductInventoryDB: Screen("coop_add_product_inventory_db")
+    object CoopProcessOrder: Screen("coop_order/process") {
+        fun createRoute(order: OrderData) = "coop_order/process/${order}"
+    }
     //client
     object Client: Screen( route = "client_dashboard")
     object ClientOrder: Screen( route = "client_order")

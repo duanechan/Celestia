@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.ui.theme.Orange
-import com.coco.celestia.viewmodel.OrderData
+import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
@@ -138,7 +138,7 @@ fun EditOrderDialog(order: OrderData, onDismiss: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        productViewModel.fetchProduct(order.orderData.name)
+        productViewModel.fetchProductByType(order.orderData.name)
     }
 
     AlertDialog(
@@ -208,10 +208,7 @@ fun EditOrderDialog(order: OrderData, onDismiss: () -> Unit) {
                     val quantity = editedQuantity.toIntOrNull() ?: 0
                     val updatedProductData = order.orderData.copy(type = selectedType, quantity = quantity)
                     val updatedOrder = order.copy(orderData = updatedProductData)
-                    orderViewModel.updateOrder(
-                        uid,
-                        updatedOrder
-                    )
+                    orderViewModel.updateOrder(updatedOrder)
                     onDismiss()
                 }
             ) {

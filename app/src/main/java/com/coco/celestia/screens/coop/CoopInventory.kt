@@ -56,7 +56,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.coco.celestia.viewmodel.ProductData
+import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.screens.Screen
 import com.coco.celestia.screens.admin.DropdownMenuItem
 import com.coco.celestia.ui.theme.DarkGreen
@@ -115,9 +115,7 @@ fun ProductTypeCards(navController: NavController, productData: List<ProductData
                 .fillMaxWidth()
                 .height(200.dp)
                 .padding(8.dp)
-                .clickable {
-                    navController.navigate(Screen.CoopProductInventory.createRoute(type))
-                }
+                .clickable { navController.navigate(Screen.CoopProductInventory.createRoute(type)) }
         ) {
             Column(
                 modifier = Modifier
@@ -150,7 +148,7 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
     val productData by productViewModel.productData.observeAsState(emptyList())
 
     LaunchedEffect(Unit) {
-        productViewModel.fetchProduct(type.toString())
+        productViewModel.fetchProductByType(type.toString())
     }
     Column( modifier = Modifier
         .height(795.dp)

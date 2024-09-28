@@ -4,6 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.launch
@@ -24,6 +26,27 @@ class ProductViewModel : ViewModel() {
     val productData: LiveData<List<ProductData>> = _productData
     val productState: LiveData<ProductState> = _productState
 
+    fun fetchProduct(productName: String) {
+        viewModelScope.launch {
+            _productState.value = ProductState.LOADING
+            try {
+                val snapshot = database.child(productName.lowercase()).get().await()
+                if (snapshot.exists()) {
+                    val product = snapshot.getValue(ProductData::class.java)
+                    val products = mutableListOf<ProductData>()
+                    product?.let { products.add(it) }
+                    _productData.value = products
+                    _productState.value = if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
+                } else {
+                    _productData.value = emptyList()
+                    _productState.value = ProductState.EMPTY
+                }
+            } catch(e: Exception) {
+                _productState.value = ProductState.ERROR(e.message ?: "Unknown error")
+            }
+        }
+    }
+
     /**
      * Fetches product data from the database based on the provided type.
      *
@@ -31,7 +54,7 @@ class ProductViewModel : ViewModel() {
      *
      * @param type The type of product to fetch.
      */
-    fun fetchProduct(type: String) {
+    fun fetchProductByType(type: String) {
         viewModelScope.launch {
             _productState.value = ProductState.LOADING
             try {

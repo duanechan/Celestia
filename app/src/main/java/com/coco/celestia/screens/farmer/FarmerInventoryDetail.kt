@@ -20,7 +20,7 @@ import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.style.TextAlign
-import com.coco.celestia.viewmodel.OrderData
+import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 
@@ -44,7 +44,6 @@ fun FarmerInventoryDetail(navController: NavController, productName: String) {
         // Fetch all orders; adjust parameters as needed
         orderViewModel.fetchAllOrders(
             filter = "",       // No filter initially
-            isPending = false, // Fetch all statuses
             role = "Farmer"
         )
     }

@@ -25,7 +25,7 @@ import com.coco.celestia.navigation.NavDrawerTopBar
 import com.coco.celestia.navigation.NavGraph
 import com.coco.celestia.screens.Screen
 import com.coco.celestia.ui.theme.CelestiaTheme
-import com.coco.celestia.viewmodel.ProductData
+import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 

@@ -31,6 +31,7 @@ import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.coop.AddProductForm
 import com.coco.celestia.screens.coop.CoopDashboard
 import com.coco.celestia.screens.coop.CoopInventory
+import com.coco.celestia.screens.coop.ProcessOrderPanel
 import com.coco.celestia.screens.coop.ProductTypeInventory
 import com.coco.celestia.screens.farmer.FarmerDashboard
 import com.coco.celestia.screens.farmer.FarmerInventory
@@ -39,6 +40,7 @@ import com.coco.celestia.screens.farmer.FarmerManageOrder
 import com.coco.celestia.screens.farmer.FarmerProductTypeInventory
 import com.coco.celestia.screens.farmer.ManageOrderRequest
 import com.coco.celestia.viewmodel.*
+import com.coco.celestia.viewmodel.model.ProductData
 
 @Composable
 fun NavGraph(
@@ -125,10 +127,20 @@ fun NavGraph(
             CoopDashboard()
         }
         composable(route = Screen.CoopOrder.route) {
-            OrderRequest()
+            OrderRequest(
+                navController = navController,
+                orderViewModel = orderViewModel,
+                transactionViewModel = transactionViewModel
+            )
         }
         composable(route = Screen.CoopInventory.route) {
             CoopInventory(navController = navController)
+        }
+        composable(route = Screen.CoopProcessOrder.route) {
+            ProcessOrderPanel(
+                orderViewModel = orderViewModel,
+                productViewModel = productViewModel
+            )
         }
         composable(route = Screen.AddOrder.route) {
             AddOrderPanel(navController = navController)
@@ -175,6 +187,11 @@ fun NavGraph(
                     productViewModel.addProduct(product)
                     navController.navigate(Screen.CoopInventory.route)
                     Toast.makeText(navController.context, "${quantityAmount}kg of $productName added to $productType inventory.", Toast.LENGTH_SHORT).show()
+                    productName = ""
+                    farmerName = ""
+                    addressName = ""
+                    quantityAmount = 0
+                    productType = ""
                 } else {
                     Toast.makeText(navController.context, "Please fill in all fields", Toast.LENGTH_SHORT).show()
                 }

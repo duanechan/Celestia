@@ -46,10 +46,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.coco.celestia.viewmodel.OrderData
+import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.R
 import com.coco.celestia.screens.Screen
-import com.coco.celestia.viewmodel.UserData
+import com.coco.celestia.viewmodel.model.UserData
 import com.coco.celestia.ui.theme.VeryDarkGreen
 import com.coco.celestia.ui.theme.VeryDarkPurple
 import com.coco.celestia.viewmodel.OrderState

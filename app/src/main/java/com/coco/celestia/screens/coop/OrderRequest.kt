@@ -17,6 +17,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
@@ -36,9 +37,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.coco.celestia.viewmodel.OrderData
-import com.coco.celestia.viewmodel.TransactionData
+import androidx.navigation.NavController
+import com.coco.celestia.screens.Screen
+import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
@@ -47,9 +49,11 @@ import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OrderRequest() {
-    val orderViewModel: OrderViewModel = viewModel()
-    val transactionViewModel: TransactionViewModel = viewModel()
+fun OrderRequest(
+    navController: NavController,
+    orderViewModel: OrderViewModel,
+    transactionViewModel: TransactionViewModel
+) {
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -59,7 +63,6 @@ fun OrderRequest() {
     LaunchedEffect(keywords) {
         orderViewModel.fetchAllOrders(
             filter = keywords,
-            isPending = true,
             role = "Coop"
         )
     }
@@ -85,7 +88,7 @@ fun OrderRequest() {
 
         when (orderState) {
             is OrderState.LOADING -> {
-                Text("Loading orders...")
+                CircularProgressIndicator()
             }
             is OrderState.ERROR -> {
                 Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}")
@@ -96,34 +99,12 @@ fun OrderRequest() {
             is OrderState.SUCCESS -> {
                 LazyColumn {
                     items(orderData) { order ->
-                        OrderItemDecision(
-                            order,
-                            onAccept = {
-                                orderViewModel.updateOrder(
-                                    auth.currentUser?.uid.toString(),
-                                    order.copy(status = "ACCEPTED"),
-                                )
-                                transactionViewModel.recordTransaction(
-                                    auth.currentUser?.uid.toString(),
-                                    TransactionData(
-                                        "TRNSCTN{${order.orderId}}",
-                                        order.copy(status = "ACCEPTED")
-                                    )
-                                )
-                            },
-                            onReject = {
-                                orderViewModel.updateOrder(
-                                    auth.currentUser?.uid.toString(),
-                                    order.copy(status = "REJECTED"),
-                                )
-                                transactionViewModel.recordTransaction(
-                                    auth.currentUser?.uid.toString(),
-                                    TransactionData(
-                                        "TRNSCTN{${order.orderId}}",
-                                        order.copy(status = "ACCEPTED")
-                                    )
-                                )
-                            }
+                        OrderItem(
+                            order = order,
+                            auth = auth,
+                            navController = navController,
+                            orderViewModel = orderViewModel,
+                            transactionViewModel = transactionViewModel
                         )
                     }
                 }
@@ -133,7 +114,104 @@ fun OrderRequest() {
 }
 
 @Composable
-fun OrderItemDecision(
+fun OrderItem(
+    order: OrderData,
+    auth: FirebaseAuth,
+    navController: NavController,
+    orderViewModel: OrderViewModel,
+    transactionViewModel: TransactionViewModel,
+) {
+    val orderStatus = order.status
+    when(orderStatus) {
+        "PENDING" -> {
+            PendingOrderItem(
+                order,
+                onAccept = {
+                    orderViewModel.updateOrder(order.copy(status = "PREPARING"))
+                    transactionViewModel.recordTransaction(
+                        auth.currentUser?.uid.toString(),
+                        TransactionData(
+                            "TRNSCTN{${order.orderId}}",
+                            order.copy(status = "PREPARING")
+                        )
+                    )
+                },
+                onReject = {
+                    orderViewModel.updateOrder(order.copy(status = "REJECTED"))
+                    transactionViewModel.recordTransaction(
+                        auth.currentUser?.uid.toString(),
+                        TransactionData(
+                            "TRNSCTN{${order.orderId}}",
+                            order.copy(status = "REJECTED")
+                        )
+                    )
+                }
+            )
+        }
+        "PREPARING" -> {
+            PreparingOrderItem(
+                order = order,
+                navController = navController,
+                orderViewModel = orderViewModel
+            )
+        }
+        // TODO: Add other order statuses here
+    }
+}
+
+@Composable
+fun PreparingOrderItem(
+    order: OrderData,
+    navController: NavController,
+    orderViewModel: OrderViewModel
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(16.dp)
+    ) {
+        Card {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .animateContentSize()
+            ) {
+                Text(
+                    text = if (order.orderData.type != "Vegetable") "${order.orderData.name}, ${order.orderData.quantity}kg" else order.orderData.name,
+                    fontSize = 30.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif
+                )
+                Text(
+                    text = "${order.status} ●",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Light,
+                    color = Orange
+                )
+                Text(text = "${order.street}, ${order.barangay}")
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = order.orderDate)
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            orderViewModel.fetchOrder(order.orderId)
+                            navController.navigate(Screen.CoopProcessOrder.route)
+                        },
+                        colors = ButtonDefaults.buttonColors(contentColor = Color.DarkGray, containerColor = Color.Transparent)
+                    ) {
+                        Text("View Order")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PendingOrderItem(
     order: OrderData,
     onAccept: () -> Unit,
     onReject: () -> Unit

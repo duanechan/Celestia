@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.coco.celestia.viewmodel.model.OrderData
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -27,30 +28,35 @@ class OrderViewModel : ViewModel() {
     val orderData: LiveData<List<OrderData>> = _orderData
     val orderState: LiveData<OrderState> = _orderState
     /**
-     * Fetches order data from the database based on the provided UID and order ID.
+     * Fetches order data from the database based on the provided order ID.
      *
-     * This function fetches order data from the database based on the provided UID and order ID.
+     * This function fetches order data from the database based on the provided order ID.
      *
-     * @param uid The UID of the user whose order is to be fetched.
-     * @param orderId The ID of the order to be fetched.
+     * @param targetId The ID of the order to be fetched.
      * @throws DatabaseError If there is an error fetching the order.
      */
-    fun fetchOrder(
-        uid: String,
-        orderId: String
-    ) {
+    fun fetchOrder(targetId: String) {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
             try {
-                val snapshot = database.child(uid).get().await()
+                val snapshot = database.get().await()
                 if (snapshot.exists()) {
-                    for (orderSnapshot in snapshot.children) {
-                        val orderInfo = orderSnapshot.getValue(OrderData::class.java)
-                        if (orderInfo?.orderId == orderId) {
-                            val orderData = mutableListOf<OrderData>()
-                            orderData.add(orderInfo)
-                            _orderData.value = orderData
-                            _orderState.value = OrderState.SUCCESS
+                    for(user in snapshot.children) {
+                        var found = false
+                        val orders = user.children
+                        for(order in orders) {
+                            val orderInfo = order.getValue(OrderData::class.java)
+                            val orderId = order.child("orderId").getValue(String::class.java)
+                            if(orderId == targetId) {
+                                val orderData = mutableListOf<OrderData>()
+                                orderData.add(orderInfo!!)
+                                _orderData.value = orderData
+                                _orderState.value = OrderState.SUCCESS
+                                found = true
+                                break
+                            }
+                        }
+                        if(found) {
                             break
                         }
                     }
@@ -111,13 +117,11 @@ class OrderViewModel : ViewModel() {
      * This function fetches all orders from the database based on the provided filter criteria and role.
      *
      * @param filter The filter criteria to apply to the orders (e.g., "Onion, Lettuce, Carrots").
-     * @param isPending If true, only pending orders will be fetched. If false, all orders will be fetched.
      * @param role The role of the user (e.g., "Coop", "Farmer", "Admin").
      * @throws DatabaseError If there is an error fetching the orders
      */
     fun fetchAllOrders(
         filter: String,
-        isPending: Boolean = false,
         role: String
     ) {
         viewModelScope.launch {
@@ -130,7 +134,6 @@ class OrderViewModel : ViewModel() {
                         userSnapshot.children.mapNotNull { orderSnapshot ->
                             orderSnapshot.getValue(OrderData::class.java)
                         }.filter { orderData ->
-                            val pending = orderData.status.equals("PENDING", ignoreCase = true)
                             val coffeeOrMeat = orderData.orderData.type.equals("Coffee", ignoreCase = true) ||
                                     orderData.orderData.type.equals("Meat", ignoreCase = true)
                             val vegetable = orderData.orderData.type.equals("Vegetable", ignoreCase = true)
@@ -140,9 +143,8 @@ class OrderViewModel : ViewModel() {
                                 }
                             }
                             when (role) {
-                                "Coop" -> if (isPending) pending && coffeeOrMeat && filtered else coffeeOrMeat && filtered
-                                "Farmer" -> if (isPending) pending && vegetable && filtered else vegetable && filtered
-                                "Admin" -> filtered
+                                "Coop", "Admin" -> coffeeOrMeat && filtered
+                                "Farmer" -> vegetable && filtered
                                 else -> false
                             }
 
@@ -187,33 +189,40 @@ class OrderViewModel : ViewModel() {
     }
 
     /**
-     * Updates an order in the database based on the provided UID.
+     * Updates an order in the database based on the order ID.
      *
-     * This function updates an order in the database based on the provided UID and updated order data.
+     * This function updates an order in the database by finding iterating through all users and orders.
      *
-     * @param uid The UID of the user placing the order.
      * @param updatedOrderData The updated order data to be placed.
      * @throws DatabaseError If there is an error updating the order.
      */
-    fun updateOrder(
-        uid: String,
-        updatedOrderData: OrderData
-    ) {
-        val query = database.child(uid).orderByChild("orderId").equalTo(updatedOrderData.orderId)
-
+    fun updateOrder(updatedOrderData: OrderData) {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
-            query.addListenerForSingleValueEvent(object : ValueEventListener {
+            database.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     if (snapshot.exists()) {
-                        val orderSnapshot = snapshot.children.first()
-                        orderSnapshot.ref.setValue(updatedOrderData)
-                            .addOnSuccessListener {
-                                _orderState.value = OrderState.SUCCESS
+                        for(user in snapshot.children) {
+                            var found = false
+                            val orders = user.children
+                            for(order in orders) {
+                                val orderId = order.child("orderId").getValue(String::class.java)
+                                if(orderId == updatedOrderData.orderId) {
+                                    order.ref.setValue(updatedOrderData)
+                                        .addOnSuccessListener {
+                                            _orderState.value = OrderState.SUCCESS
+                                        }
+                                        .addOnFailureListener { exception ->
+                                            _orderState.value = OrderState.ERROR(exception.message ?: "Unknown error")
+                                        }
+                                    found = true
+                                    break
+                                }
                             }
-                            .addOnFailureListener { exception ->
-                                _orderState.value = OrderState.ERROR(exception.message ?: "Unknown error")
+                            if(found) {
+                                break
                             }
+                        }
                     } else {
                         _orderState.value = OrderState.EMPTY
                     }
