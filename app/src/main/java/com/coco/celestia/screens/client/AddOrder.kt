@@ -140,7 +140,6 @@ fun ProductCard(product: String, navController: NavController) {
     Spacer(modifier = Modifier.height(15.dp))
 }
 
-//TODO: Product Type Card gradients
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductTypeCard(product: ProductData, navController: NavController) {
@@ -148,6 +147,21 @@ fun ProductTypeCard(product: ProductData, navController: NavController) {
     val productName = product.name
     val productType = product.type
     val productQuantity = product.quantity
+    val gradientBrush = when (productType.lowercase()) {
+        "coffee" -> Brush.linearGradient(
+            colors = listOf(Color(0xFFB79276), Color(0xFF91684A))
+        )
+        "meat" -> Brush.linearGradient(
+            colors = listOf(Color(0xFFD45C5C), Color(0xFFAA3333))
+        )
+        "vegetable" -> Brush.linearGradient(
+            colors = listOf(Color(0xFF4CB05C), Color(0xFF4F8A45))
+        )
+        else -> Brush.linearGradient(
+            colors = listOf(Color.Gray, Color.LightGray)
+        )
+    }
+
     Card(
         onClick = {
             if (productType == "Vegetable") {
@@ -161,44 +175,59 @@ fun ProductTypeCard(product: ProductData, navController: NavController) {
         modifier = Modifier
             .padding(vertical = 16.dp)
             .animateContentSize()
-            .fillMaxWidth()
-            .clickable {
-                if (product.toString() == "Vegetable") {
-                    navController.navigate(
-                        Screen.OrderConfirmation.createRoute(
-                            productName,
-                            productType,
-                            productQuantity
-                        )
-                    )
-                } else {
-                    expanded = !expanded
-                }
-            }
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.elevatedCardElevation(5.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = productName,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(8.dp)
-            )
-            Text(
-                text = if (productType != "Vegetable") "${productQuantity}kg" else "",
-                fontSize = 20.sp,
-                modifier = Modifier.padding(8.dp)
-            )
 
-            AnimatedVisibility(expanded) {
+        Box(
+            modifier = Modifier
+                .background(brush = gradientBrush)
+                .fillMaxWidth()
+                .clickable {
+                    if (productType == "Vegetable") {
+                        navController.navigate(
+                            Screen.OrderConfirmation.createRoute(
+                                productName,
+                                productType,
+                                productQuantity
+                            )
+                        )
+                    } else {
+                        expanded = !expanded
+                    }
+                }
+                .padding(16.dp) // padding inside the gradient Box
+        ) {
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = productName,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    modifier = Modifier.padding(8.dp)
+                )
                 if (productType != "Vegetable") {
-                    QuantitySelector(
-                        navController = navController,
-                        productType = productType,
-                        productName = productName,
-                        maxQuantity = productQuantity
+                    Text(
+                        text = "${productQuantity}kg",
+                        fontSize = 20.sp,
+                        color = Color.White,
+                        modifier = Modifier.padding(8.dp)
                     )
+                }
+
+                AnimatedVisibility(expanded) {
+                    if (productType != "Vegetable") {
+                        QuantitySelector(
+                            navController = navController,
+                            productType = productType,
+                            productName = productName,
+                            maxQuantity = productQuantity
+                        )
+                    }
                 }
             }
         }
