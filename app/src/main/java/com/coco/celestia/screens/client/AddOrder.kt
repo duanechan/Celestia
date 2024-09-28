@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -41,8 +43,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -136,6 +140,7 @@ fun ProductCard(product: String, navController: NavController) {
     Spacer(modifier = Modifier.height(15.dp))
 }
 
+//TODO: Product Type Card gradients
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductTypeCard(product: ProductData, navController: NavController) {
@@ -257,6 +262,7 @@ fun QuantitySelector(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
                 .padding(vertical = 8.dp)
                 .fillMaxWidth()
@@ -267,45 +273,57 @@ fun QuantitySelector(
                         quantity--
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252)),
-                modifier = Modifier
-                    .size(48.dp)
-                    .fillMaxWidth()
+                shape = CircleShape,
+                modifier = Modifier.size(48.dp),
+                contentPadding = PaddingValues(0.dp)
             ) {
-                Text("-", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "-",
+                    color = Color.Black,
+                    fontSize = 25.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
             }
-
-            TextField(
+            TextField( //align with circle size
                 value = quantity.toString(),
                 onValueChange = { newValue ->
                     quantity = newValue.toIntOrNull() ?: 0
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier
-                    .width(225.dp)
+                    .width(100.dp),
+                textStyle = TextStyle(fontSize = 25.sp, textAlign = TextAlign.Center),
+                singleLine = true
             )
-
             Button(
                 onClick = {
                     if (quantity < maxQuantity)
                         quantity++
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF66BB6A)),
-                modifier = Modifier
-                    .size(48.dp)
-                    .fillMaxWidth()
+                shape = CircleShape,
+                modifier = Modifier.size(48.dp),
+                contentPadding = PaddingValues(0.dp)
             ) {
-                Text("+", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "+",
+                    color = Color.Black,
+                    fontSize = 25.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
             }
         }
 
         Button(
             onClick = {
                 navController.navigate(Screen.OrderConfirmation.createRoute(productType.toString(), productName.toString(), quantity))
-            }
+            },
+            modifier = Modifier.padding(top = 16.dp)
         ) {
             Text("Add Order", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
-
         Text(
             text = "Qty of Order",
             fontSize = 14.sp,
