@@ -8,9 +8,12 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,11 +21,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -36,9 +41,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -79,20 +87,54 @@ fun AddOrderPanel(navController: NavController) {
 
 @Composable
 fun ProductCard(product: String, navController: NavController) {
+    val gradient = when (product) {
+        "Meat" -> Brush.linearGradient(
+            colors = listOf(Color(0xFFFF5151), Color(0xFFB06520))
+        )
+        "Coffee" -> Brush.linearGradient(
+            colors = listOf(Color(0xFFB06520), Color(0xFF5D4037))
+        )
+        "Vegetable" -> Brush.linearGradient(
+            colors = listOf(Color(0xFF42654A), Color(0xFF3B8D46))
+        )
+        else -> Brush.linearGradient(
+            colors = listOf(Color.Gray, Color.LightGray)
+        )
+    }
+
+    // Apply gradient inside the card
     Card(
         modifier = Modifier
             .height(150.dp)
             .clickable {
                 navController.navigate(Screen.OrderDetails.createRoute(product))
-            }
+            },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        ),
+        elevation = CardDefaults.elevatedCardElevation(5.dp) // adjust shadow effect here
     ) {
-        Column(
+
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+                .fillMaxSize()
+                .background(brush = gradient) // gradient background here
         ) {
-            Text(text = product, fontSize = 20.sp, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(20.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = product,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White
+                )
+            }
         }
     }
     Spacer(modifier = Modifier.height(15.dp))
@@ -105,6 +147,21 @@ fun ProductTypeCard(product: ProductData, navController: NavController) {
     val productName = product.name
     val productType = product.type
     val productQuantity = product.quantity
+    val gradientBrush = when (productType.lowercase()) {
+        "coffee" -> Brush.linearGradient(
+            colors = listOf(Color(0xFFB79276), Color(0xFF91684A))
+        )
+        "meat" -> Brush.linearGradient(
+            colors = listOf(Color(0xFFD45C5C), Color(0xFFAA3333))
+        )
+        "vegetable" -> Brush.linearGradient(
+            colors = listOf(Color(0xFF4CB05C), Color(0xFF4F8A45))
+        )
+        else -> Brush.linearGradient(
+            colors = listOf(Color.Gray, Color.LightGray)
+        )
+    }
+
     Card(
         onClick = {
             if (productType == "Vegetable") {
@@ -118,44 +175,59 @@ fun ProductTypeCard(product: ProductData, navController: NavController) {
         modifier = Modifier
             .padding(vertical = 16.dp)
             .animateContentSize()
-            .fillMaxWidth()
-            .clickable {
-                if (product.toString() == "Vegetable") {
-                    navController.navigate(
-                        Screen.OrderConfirmation.createRoute(
-                            productName,
-                            productType,
-                            productQuantity
-                        )
-                    )
-                } else {
-                    expanded = !expanded
-                }
-            }
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.elevatedCardElevation(5.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = productName,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(8.dp)
-            )
-            Text(
-                text = if (productType != "Vegetable") "${productQuantity}kg" else "",
-                fontSize = 20.sp,
-                modifier = Modifier.padding(8.dp)
-            )
 
-            AnimatedVisibility(expanded) {
+        Box(
+            modifier = Modifier
+                .background(brush = gradientBrush)
+                .fillMaxWidth()
+                .clickable {
+                    if (productType == "Vegetable") {
+                        navController.navigate(
+                            Screen.OrderConfirmation.createRoute(
+                                productName,
+                                productType,
+                                productQuantity
+                            )
+                        )
+                    } else {
+                        expanded = !expanded
+                    }
+                }
+                .padding(16.dp) // padding inside the gradient Box
+        ) {
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = productName,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.White,
+                    modifier = Modifier.padding(8.dp)
+                )
                 if (productType != "Vegetable") {
-                    QuantitySelector(
-                        navController = navController,
-                        productType = productType,
-                        productName = productName,
-                        maxQuantity = productQuantity
+                    Text(
+                        text = "${productQuantity}kg",
+                        fontSize = 20.sp,
+                        color = Color.White,
+                        modifier = Modifier.padding(8.dp)
                     )
+                }
+
+                AnimatedVisibility(expanded) {
+                    if (productType != "Vegetable") {
+                        QuantitySelector(
+                            navController = navController,
+                            productType = productType,
+                            productName = productName,
+                            maxQuantity = productQuantity
+                        )
+                    }
                 }
             }
         }
@@ -219,6 +291,7 @@ fun QuantitySelector(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
                 .padding(vertical = 8.dp)
                 .fillMaxWidth()
@@ -229,45 +302,57 @@ fun QuantitySelector(
                         quantity--
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252)),
-                modifier = Modifier
-                    .size(48.dp)
-                    .fillMaxWidth()
+                shape = CircleShape,
+                modifier = Modifier.size(48.dp),
+                contentPadding = PaddingValues(0.dp)
             ) {
-                Text("-", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "-",
+                    color = Color.Black,
+                    fontSize = 25.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
             }
-
-            TextField(
+            TextField( //align with circle size
                 value = quantity.toString(),
                 onValueChange = { newValue ->
                     quantity = newValue.toIntOrNull() ?: 0
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier
-                    .width(225.dp)
+                    .width(100.dp),
+                textStyle = TextStyle(fontSize = 25.sp, textAlign = TextAlign.Center),
+                singleLine = true
             )
-
             Button(
                 onClick = {
                     if (quantity < maxQuantity)
                         quantity++
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF66BB6A)),
-                modifier = Modifier
-                    .size(48.dp)
-                    .fillMaxWidth()
+                shape = CircleShape,
+                modifier = Modifier.size(48.dp),
+                contentPadding = PaddingValues(0.dp)
             ) {
-                Text("+", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "+",
+                    color = Color.Black,
+                    fontSize = 25.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
             }
         }
 
         Button(
             onClick = {
                 navController.navigate(Screen.OrderConfirmation.createRoute(productType.toString(), productName.toString(), quantity))
-            }
+            },
+            modifier = Modifier.padding(top = 16.dp)
         ) {
             Text("Add Order", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
-
         Text(
             text = "Qty of Order",
             fontSize = 14.sp,
