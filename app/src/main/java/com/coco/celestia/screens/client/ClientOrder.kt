@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -49,6 +50,7 @@ import androidx.navigation.NavController
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.R
 import com.coco.celestia.screens.Screen
+import com.coco.celestia.ui.theme.LightOrange
 import com.coco.celestia.viewmodel.model.UserData
 import com.coco.celestia.ui.theme.VeryDarkGreen
 import com.coco.celestia.ui.theme.VeryDarkPurple
@@ -95,7 +97,9 @@ fun ClientOrder(
             ) {
                 Text(text = "Orders", fontSize = 31.sp, fontWeight = FontWeight.Bold, color = Color.White)
                 Spacer(modifier = Modifier.weight(1f))
-                Button(onClick = { /* Handle notification click */ }) {
+                Button(
+                    onClick = { /* Handle notification click */ },
+                ) {
                     Image(
                         painter = painterResource(id = R.drawable.notification_icon),
                         contentDescription = "Notification Icon",
@@ -107,6 +111,8 @@ fun ClientOrder(
             Spacer(modifier = Modifier.height(10.dp))
             var text by remember { mutableStateOf("") }
             var active by remember { mutableStateOf(false) }
+            var selectedStatus by remember { mutableStateOf("All") }
+            var expanded by remember { mutableStateOf(false) }
 
             Row(
                 modifier = Modifier
@@ -127,7 +133,6 @@ fun ClientOrder(
                         .width(225.dp)
                         .height(35.dp)
                 ){
-                    //todo
                 }
             }
 
@@ -139,14 +144,14 @@ fun ClientOrder(
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
-                    modifier = Modifier.padding(top = 0.dp, start = 30.dp)
+                    modifier = Modifier.padding(top = 10.dp, start = 20.dp)
                 )
                 Text(
                     text = "Status",
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
-                    modifier = Modifier.padding(top = 0.dp, start = 231.dp)
+                    modifier = Modifier.padding(top = 10.dp, start = 218.dp)
                 )
 
             }
@@ -183,7 +188,7 @@ fun ClientOrder(
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
                 .padding(bottom = 100.dp),
-            containerColor = VeryDarkGreen
+            containerColor = LightOrange //change color here for add orders
         ) {
             Icon(
                 imageVector = Icons.Default.Add,
@@ -205,10 +210,10 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
     Row {
         Card(
             modifier = Modifier
-                .width(355.dp)
+                .width(335.dp)
                 .height(125.dp)
                 .offset(x = (-16).dp, y = 0.dp)
-                .padding(top = 0.dp, bottom = 5.dp, start = 30.dp, end = 0.dp),
+                .padding(top = 0.dp, bottom = 10.dp, start = 27.dp, end = 0.dp),
             colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
         ) {
             Column(
@@ -257,20 +262,27 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
         Spacer(modifier = Modifier.width(0.dp))
         Box(
             modifier = Modifier
-                .size(width = 75.dp, height = 120.dp)
+                .size(width = 75.dp, height = 114.dp)
+                .padding(start = 0.dp, end = 10.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .background(
                     when (orderStatus) {
+                        //status for orders
                         "PENDING" -> {
-                            Color(0xFFFF8C00)
+                            Color(0xFFE0A83B)
                         }
-
                         "ACCEPTED" -> {
-                            Color(0xFF4CAF50)
+                            Color(0xFF7CC659)
                         }
-
                         "REJECTED" -> {
-                            Color(0xFFF44336)
+                            Color(0xFFDA4040)
+                        }
+                        //status for delivering the orders
+                        "DELIVERED" -> {
+                            Color(0xFF41644A)
+                        }
+                        "DELIVERING" -> {
+                            Color(0xFF3CA8B0)
                         }
                         else -> Color.Gray
                     }
@@ -278,10 +290,10 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
         ){
             Text(
                 text = orderStatus,
-                fontSize = 12.sp,
+                fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
-                modifier = Modifier.padding(top = 15.dp, start = 10.dp)
+                modifier = Modifier.padding(top = 15.dp, start = 11.dp)
             )
         }
 
