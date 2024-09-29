@@ -35,6 +35,10 @@ class UserViewModel : ViewModel() {
     val usersData: LiveData<List<UserData?>> = _usersData
     val userState: LiveData<UserState> = _userState
 
+    fun resetUserState() {
+        _userState.value = UserState.LOADING
+    }
+
     /**
      * Fetches user data from the database based on the provided UID.
      */
@@ -98,6 +102,7 @@ class UserViewModel : ViewModel() {
                     val userData = UserData(email, firstname, lastname, role)
                     database.child(user.uid).setValue(userData).await()
                     _userState.value = UserState.REGISTER_SUCCESS
+                    auth.signOut()
                 } ?: run {
                     _userState.value = UserState.ERROR("Registration failed")
                 }

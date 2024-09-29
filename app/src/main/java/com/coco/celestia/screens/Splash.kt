@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.coco.celestia.R
+import com.coco.celestia.util.routeHandler
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -55,17 +56,10 @@ fun SplashScreen(userViewModel: UserViewModel, navController: NavHostController)
             visible = false
             when (userState) {
                 is UserState.SUCCESS -> {
-                    val firstName = "${userData?.firstname}"
-                    val role = userData?.role
-                    val destination = when (role) {
-                        "Farmer" -> Screen.Farmer.route
-                        "Admin" -> Screen.Admin.route
-                        "Client" -> Screen.Client.route
-                        "Coop" -> Screen.Coop.route
-                        else -> Screen.Login.route
-                    }
+                    val role = userData?.role.toString()
+                    val route = routeHandler(role)
 //                    Toast.makeText(navController.context, "Welcome back, $firstName!", Toast.LENGTH_SHORT).show()
-                    navController.navigate(destination) {
+                    navController.navigate(route.dashboard) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }
                 }

@@ -54,18 +54,16 @@ fun RegisterScreen(navController: NavController, userViewModel: UserViewModel) {
     var selectedRole by remember { mutableStateOf("") }
     var isValidEmail by remember { mutableStateOf(true) }
 
-    LaunchedEffect(userState) {
-        Log.d("RegisterScreen", "User state changed: $userState")
-        when (userState) {
-            is UserState.ERROR -> {
-                Toast.makeText(navController.context, "Error: ${(userState as UserState.ERROR).message}", Toast.LENGTH_SHORT).show()
-            }
-            is UserState.REGISTER_SUCCESS -> {
-                Toast.makeText(navController.context, "Registration Successful", Toast.LENGTH_SHORT).show()
-                navController.navigate(Screen.Login.route)
-            }
-            else -> {}
+    when (userState) {
+        is UserState.ERROR -> {
+            Toast.makeText(navController.context, "Error: ${(userState as UserState.ERROR).message}", Toast.LENGTH_SHORT).show()
         }
+        is UserState.REGISTER_SUCCESS -> {
+            userViewModel.resetUserState()
+            Toast.makeText(navController.context, "Registration Successful", Toast.LENGTH_SHORT).show()
+            navController.navigate(Screen.Login.route)
+        }
+        else -> {}
     }
 
     if (showRoleDialog) {
