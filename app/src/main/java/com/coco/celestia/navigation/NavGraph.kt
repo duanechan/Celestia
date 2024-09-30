@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -31,7 +30,6 @@ import com.coco.celestia.screens.RegisterScreen
 import com.coco.celestia.screens.Screen
 import com.coco.celestia.screens.SplashScreen
 import com.coco.celestia.screens.admin.AdminInventory
-import com.coco.celestia.screens.admin.User
 import com.coco.celestia.screens.admin.UserTable
 import com.coco.celestia.screens.admin.sampleUsers
 import com.coco.celestia.screens.client.ClientContact
@@ -46,7 +44,6 @@ import com.coco.celestia.screens.farmer.FarmerInventory
 import com.coco.celestia.screens.farmer.FarmerInventoryDetail
 import com.coco.celestia.screens.farmer.FarmerManageOrder
 import com.coco.celestia.screens.farmer.FarmerProductTypeInventory
-import com.coco.celestia.screens.farmer.ManageOrderRequest
 import com.coco.celestia.viewmodel.*
 import com.coco.celestia.viewmodel.model.ProductData
 
@@ -106,9 +103,6 @@ fun NavGraph(
         }
         composable(route = Screen.FarmerInventory.route) {
             FarmerInventory(navController = navController)
-        }
-        composable(Screen.FarmerManageOrderRequest.route) {
-            ManageOrderRequest()
         }
         composable(route = Screen.Client.route) {
             ClientDashboard()

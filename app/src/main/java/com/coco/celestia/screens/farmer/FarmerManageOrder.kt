@@ -66,13 +66,18 @@ fun FarmerManageOrder(
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     val productData by productViewModel.productData.observeAsState()
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+
+    // Track which view is active (Order Status or Order Request)
+    var isOrderStatusView by remember { mutableStateOf(true) }
+
+    // Dropdown state
     val categoryOptions = productData?.map { it.name }
     var selectedCategory by remember { mutableStateOf("") }
     var expandedCategory by remember { mutableStateOf(false) }
 
-    LaunchedEffect(selectedCategory) {
+    LaunchedEffect(Unit) {
         orderViewModel.fetchAllOrders(
-            filter = selectedCategory,
+            filter = "",
             role = "Farmer"
         )
         productViewModel.fetchProducts(
@@ -90,30 +95,39 @@ fun FarmerManageOrder(
                 .verticalScroll(rememberScrollState())
                 .background(Color(0xFFF2E3DB))
         ) {
-            // Display order status text
+            // Display the buttons for "Order Status" and "Order Request"
             Row(
-                modifier = Modifier.padding(10.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "Order Status",
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.padding(start = 16.dp)
-                )
-                Text(
-                    text = "Status",
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.padding(start = 205.dp)
-                )
+                Button(
+                    onClick = { isOrderStatusView = true },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isOrderStatusView) Color(0xFF957541) else Color(0xFFBDBDBD)
+                    ),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Order Status", color = Color.White)
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Button(
+                    onClick = { isOrderStatusView = false },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (!isOrderStatusView) Color(0xFF957541) else Color(0xFFBDBDBD)
+                    ),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Order Request", color = Color.White)
+                }
             }
 
-            Spacer(modifier = Modifier.height(5.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // Dropdown Buttons Row
+            // Dropdown for filtering vegetables
             Row(
                 modifier = Modifier.padding(20.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -175,26 +189,75 @@ fun FarmerManageOrder(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            if (isOrderStatusView) {
+                // Show Order Status view
+                when (orderState) {
+                    is OrderState.LOADING -> { Text("Loading orders...") }
+                    is OrderState.ERROR -> { Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}") }
+                    is OrderState.EMPTY -> { Text("No orders available.") }
+                    is OrderState.SUCCESS -> {
+                        val filteredOrders = if (selectedCategory.isNotEmpty()) {
+                            orderData.filter { order ->
+                                // Assuming order has a property like productName to compare with the category
+                                order.orderData.name == selectedCategory
+                            }
+                        } else {
+                            orderData
+                        }
 
-            // Handle different states of order data
-            when (orderState) {
-                is OrderState.LOADING -> { Text("Loading orders...") }
-                is OrderState.ERROR -> { Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}") }
-                is OrderState.EMPTY -> { Text("No orders available.") }
-                is OrderState.SUCCESS -> {
-                    if (orderData.isEmpty()) {
-                        Text("No orders available.")
-                    } else {
-                        var orderCount = 1
-                        orderData.forEach { order ->
-                            if (userData == null) {
-                                CircularProgressIndicator() // Show loading indicator if userData is not yet ready
-                            } else {
-                                ManageOrderCards(orderCount, order, userData!!)
-                                orderCount++
+                        if (filteredOrders.isEmpty()) {
+                            Text("No orders available.")
+                        } else {
+                            var orderCount = 1
+                            filteredOrders.forEach { order ->
+                                if (userData == null) {
+                                    CircularProgressIndicator() // Show loading indicator if userData is not yet ready
+                                } else {
+                                    ManageOrderCards(orderCount, order, userData!!)
+                                    orderCount++
+                                }
                             }
                         }
+                    }
+                }
+            } else {
+                // Show Order Request view
+                FarmerManageRequest(userData, orderData, orderState, selectedCategory)
+            }
+        }
+    }
+}
+
+@Composable
+fun FarmerManageRequest(
+    userData: UserData?,
+    orderData: List<OrderData>,
+    orderState: OrderState,
+    selectedCategory: String
+) {
+    when (orderState) {
+        is OrderState.LOADING -> { Text("Loading pending orders...") }
+        is OrderState.ERROR -> { Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}") }
+        is OrderState.EMPTY -> { Text("No pending orders available.") }
+        is OrderState.SUCCESS -> {
+            val pendingOrders = orderData.filter { it.status == "PENDING" }
+            val filteredOrders = if (selectedCategory.isNotEmpty()) {
+                orderData.filter { order ->
+                    order.orderData.name == selectedCategory
+                }
+            } else {
+                pendingOrders
+            }
+            if (filteredOrders.isEmpty()) {
+                Text("No pending orders available.")
+            } else {
+                var orderCount = 1
+                filteredOrders.forEach { order ->
+                    if (userData == null) {
+                        CircularProgressIndicator() // Show loading indicator if userData is not yet ready
+                    } else {
+                        RequestCards(orderCount, order, userData!!)
+                        orderCount++
                     }
                 }
             }
@@ -289,18 +352,24 @@ fun ManageOrderCards(orderCount: Int, order: OrderData, user: UserData) {
 
 @Composable
 fun OrderStatusCard(orderStatus: String) {
+    val backgroundColor = when (orderStatus) {
+        "ACCEPTED" -> Color(0xFF4CAF50) // Green
+        "PENDING" -> Color(0xFFE0A83B) // Yellow
+        "REJECTED" -> Color(0xFFA2453D) // Red
+        else -> Color.Gray
+    }
+
+    val icon = when (orderStatus) {
+        "ACCEPTED" -> Icons.Default.Check
+        "PENDING" -> Icons.Default.Refresh
+        "REJECTED" -> Icons.Default.Clear
+        else -> Icons.Default.Star
+    }
+
     Card(
-        modifier = Modifier
-            .size(75.dp, 125.dp),
+        modifier = Modifier.size(75.dp, 125.dp),
         shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = when (orderStatus) {
-                "ACCEPTED" -> Color(0xFF4CAF50)  // Green
-                "PENDING" -> Color(0xFFE0A83B)   // Yellow
-                "REJECTED" -> Color(0xFFA2453D)  // Red
-                else -> Color.Gray
-            }
-        )
+        colors = CardDefaults.cardColors(containerColor = backgroundColor)
     ) {
         Column(
             modifier = Modifier
@@ -309,13 +378,6 @@ fun OrderStatusCard(orderStatus: String) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            val icon: ImageVector = when (orderStatus) {
-                "ACCEPTED" -> Icons.Default.Check
-                "PENDING" -> Icons.Default.Refresh
-                "REJECTED" -> Icons.Default.Clear
-                else -> Icons.Default.Star
-            }
-
             Icon(
                 imageVector = icon,
                 contentDescription = orderStatus,
@@ -335,25 +397,85 @@ fun OrderStatusCard(orderStatus: String) {
     }
 }
 
-// this will display and handle order requests
-// can create new class for this
 @Composable
-fun ManageOrderRequest() {
-    Box(
+fun RequestCards(orderCount: Int, order: OrderData, user: UserData) {
+    var expanded by remember { mutableStateOf(false) }
+    val clientName = "${user.firstname} ${user.lastname}"
+    val orderId = order.orderId.substring(5, 9).uppercase()
+
+    Row(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .background(Color(0xFFF2E3DB)),
-        contentAlignment = Alignment.Center
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Text(
-            text = "Order Request",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black
-        )
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .height(125.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.Transparent
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                Color(0xFF957541),  // Start of gradient
+                                Color(0xFF693F27)   // End of gradient
+                            )
+                        )
+                    )
+                    .fillMaxSize()
+                    .clickable { expanded = !expanded }
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxSize()
+                ) {
+                    // Order Number Box
+                    Box(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .background(Color.White, RoundedCornerShape(10.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = orderCount.toString(),
+                            fontSize = 40.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    // Order Info
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxHeight()
+                    ) {
+                        Text(
+                            text = "Order ID: $orderId",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Client Name: $clientName",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
     }
 }
-
 
 

@@ -79,7 +79,6 @@ fun NavDrawerBottomBar(
     role: String,
     navController: NavController
 ) {
-    var showOrderOptions by remember { mutableStateOf(false) }
     val routes = routeHandler(role)
     val bottomBarColors: Pair<Color, Color> = bottomColorConfig(role)
     val currentDestination = navController.currentBackStackEntryAsState().value?.destination?.route
@@ -108,7 +107,10 @@ fun NavDrawerBottomBar(
                     selected = currentDestination == routes.orders,
                     onClick = {
                         if (role == "Farmer") {
-                            showOrderOptions = !showOrderOptions
+                            // Directly navigate to Order Status
+                            navController.navigate(Screen.FarmerManageOrder.route) {
+                                popUpTo(navController.graph.startDestinationId)
+                            }
                         } else {
                             navController.navigate(routes.orders) {
                                 popUpTo(navController.graph.startDestinationId)
@@ -116,49 +118,6 @@ fun NavDrawerBottomBar(
                         }
                     }
                 )
-            }
-
-            if (role == "Farmer") {
-                // Drop down menu for the Farmer role
-                DropdownMenu(
-                    expanded = showOrderOptions,
-                    onDismissRequest = { showOrderOptions = false },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFF957541))
-                ) {
-                    DropdownMenuItem(
-                        onClick = {
-                            showOrderOptions = false
-                            navController.navigate(Screen.FarmerManageOrder.route)
-                        },
-                        text = {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("Order Status", color = Color.White)
-                            }
-                        }
-                    )
-
-                    Divider(color = Color.White, thickness = 1.dp)
-
-                    DropdownMenuItem(
-                        onClick = {
-                            showOrderOptions = false
-                            navController.navigate(Screen.FarmerManageOrderRequest.route)
-                        },
-                        text = {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("Order Request", color = Color.White)
-                            }
-                        }
-                    )
-                }
             }
 
             if (role == "Admin" || role == "Coop" || role == "Farmer") {
