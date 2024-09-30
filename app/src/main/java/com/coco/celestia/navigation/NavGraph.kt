@@ -1,13 +1,18 @@
 package com.coco.celestia.navigation
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -26,6 +31,9 @@ import com.coco.celestia.screens.RegisterScreen
 import com.coco.celestia.screens.Screen
 import com.coco.celestia.screens.SplashScreen
 import com.coco.celestia.screens.admin.AdminInventory
+import com.coco.celestia.screens.admin.User
+import com.coco.celestia.screens.admin.UserTable
+import com.coco.celestia.screens.admin.sampleUsers
 import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.coop.AddProductForm
@@ -58,6 +66,7 @@ fun NavGraph(
     var addressName by remember { mutableStateOf("") }
     var quantityAmount by remember { mutableIntStateOf(0) }
     var productType by remember { mutableStateOf("") }
+    val selectedUsers = userViewModel.selectedUsers
 
     NavHost(
         navController = navController,
@@ -122,6 +131,14 @@ fun NavGraph(
         }
         composable(route = Screen.AdminUserManagement.route) {
             AdminUserManagement(userViewModel = userViewModel)
+            UserTable(
+                users = sampleUsers,
+                selectedUsers = selectedUsers,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 250.dp),
+                userViewModel = userViewModel
+            )
         }
         composable(route = Screen.Coop.route) {
             CoopDashboard()

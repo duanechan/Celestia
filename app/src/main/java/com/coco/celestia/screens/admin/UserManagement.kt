@@ -39,8 +39,10 @@ import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -154,13 +156,6 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
-        UserTable(
-            users = sampleUsers,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 250.dp)
-        )
     }
 }
 
@@ -169,7 +164,7 @@ fun DropdownMenuItem(onClick: () -> Unit, interactionSource: @Composable () -> U
 }
 
 @Composable
-fun UserTable(users: List<User>, modifier: Modifier) {
+fun UserTable(users: List<User>, selectedUsers: List<User>, modifier: Modifier, userViewModel: UserViewModel) {
     LazyColumn(
         modifier = modifier.fillMaxWidth()
     ) {
@@ -215,10 +210,17 @@ fun UserTable(users: List<User>, modifier: Modifier) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Checkbox(
-                    checked = user.isChecked,
+                    checked = user.isChecked.value,
                     onCheckedChange = { checked ->
-                        user.isChecked = checked
-                        user.showActionButtons = checked
+                        user.isChecked.value = checked
+                        if (checked) {
+                            if (!selectedUsers.contains(user)) {
+                                userViewModel.addSelectedUser(user)
+                            }
+                        } else {
+                            userViewModel.removeSelectedUser(user)
+                        }
+
                     }
                 )
                 Text(
@@ -238,10 +240,6 @@ fun UserTable(users: List<User>, modifier: Modifier) {
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-            }
-
-            if (user.showActionButtons) {
-                ActionButtons()
             }
         }
     }
@@ -286,14 +284,14 @@ data class User(
     val username: String,
     val roles: String,
     val status: String,
-    var isChecked: Boolean,
+    var isChecked: MutableState<Boolean>,
     var showActionButtons: Boolean = false
 )
 
 // Sample data for the table
 val sampleUsers = listOf(
-    User("1", "user1", "Admin", "Active", false),
-    User("2", "user2", "User", "Inactive", false),
-    User("3", "user3", "Moderator", "Active", false)
+    User("1", "user1", "Admin", "Active", mutableStateOf(false)),
+    User("2", "user2", "User", "Inactive", mutableStateOf(false)),
+    User("3", "user3", "Moderator", "Active", mutableStateOf(false))
 )
 

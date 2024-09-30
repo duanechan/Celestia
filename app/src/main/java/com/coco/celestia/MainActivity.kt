@@ -24,6 +24,7 @@ import com.coco.celestia.navigation.NavDrawerBottomBar
 import com.coco.celestia.navigation.NavDrawerTopBar
 import com.coco.celestia.navigation.NavGraph
 import com.coco.celestia.screens.Screen
+import com.coco.celestia.screens.admin.ActionButtons
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.ProductViewModel
@@ -56,6 +57,7 @@ fun App() {
     val firstName = userData?.firstname
     val lastName = userData?.lastname
     val currentDestination = navController.currentBackStackEntry?.destination?.route
+    val selectedUsers = userViewModel.selectedUsers
 
     Scaffold(
         topBar = {
@@ -73,17 +75,21 @@ fun App() {
             }
         },
         bottomBar = {
-            if (role != null ||
-                currentDestination != null &&
-                currentDestination != Screen.Login.route &&
-                currentDestination != Screen.Register.route &&
-                currentDestination != Screen.Splash.route &&
-                currentDestination != Screen.ForgotPassword.route)
-            {
-                NavDrawerBottomBar(
-                    role = role.toString(),
-                    navController = navController
-                )
+            if (selectedUsers.isNotEmpty()) {
+                ActionButtons()
+            } else {
+                if (role != null ||
+                    currentDestination != null &&
+                    currentDestination != Screen.Login.route &&
+                    currentDestination != Screen.Register.route &&
+                    currentDestination != Screen.Splash.route &&
+                    currentDestination != Screen.ForgotPassword.route)
+                {
+                    NavDrawerBottomBar(
+                        role = role.toString(),
+                        navController = navController
+                    )
+                }
             }
         }
     ) { // APP CONTENT

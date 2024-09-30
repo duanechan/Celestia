@@ -1,9 +1,11 @@
 package com.coco.celestia.viewmodel
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.coco.celestia.screens.admin.User
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -31,9 +33,19 @@ class UserViewModel : ViewModel() {
     private val _userData = MutableLiveData<UserData?>()
     private val _usersData = MutableLiveData<List<UserData?>>()
     private val _userState = MutableLiveData<UserState>()
+    private val _selectedUsers = mutableStateListOf<User>()
     val userData: LiveData<UserData?> = _userData
     val usersData: LiveData<List<UserData?>> = _usersData
     val userState: LiveData<UserState> = _userState
+    val selectedUsers: List<User> get() = _selectedUsers
+
+    fun addSelectedUser(user: User) {
+        _selectedUsers.add(user)
+    }
+
+    fun removeSelectedUser(user: User) {
+        _selectedUsers.remove(user)
+    }
 
     fun resetUserState() {
         _userState.value = UserState.LOADING
