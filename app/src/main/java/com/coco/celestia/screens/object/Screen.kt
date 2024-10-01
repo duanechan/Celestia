@@ -1,4 +1,4 @@
-package com.coco.celestia.screens
+package com.coco.celestia.screens.`object`
 
 import com.coco.celestia.viewmodel.model.OrderData
 

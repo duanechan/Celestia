@@ -57,7 +57,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.coco.celestia.viewmodel.model.ProductData
-import com.coco.celestia.screens.Screen
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.screens.admin.DropdownMenuItem
 import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.mintsansFontFamily

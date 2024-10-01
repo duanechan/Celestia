@@ -38,12 +38,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.coco.celestia.screens.Screen
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -52,7 +53,7 @@ import com.google.firebase.auth.FirebaseAuth
 fun OrderRequest(
     navController: NavController,
     orderViewModel: OrderViewModel,
-    transactionViewModel: TransactionViewModel
+    transactionViewModel: TransactionViewModel,
 ) {
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
@@ -104,7 +105,7 @@ fun OrderRequest(
                             auth = auth,
                             navController = navController,
                             orderViewModel = orderViewModel,
-                            transactionViewModel = transactionViewModel
+                            transactionViewModel = transactionViewModel,
                         )
                     }
                 }
@@ -152,7 +153,7 @@ fun OrderItem(
             PreparingOrderItem(
                 order = order,
                 navController = navController,
-                orderViewModel = orderViewModel
+                orderViewModel = orderViewModel,
             )
         }
         // TODO: Add other order statuses here
@@ -163,7 +164,7 @@ fun OrderItem(
 fun PreparingOrderItem(
     order: OrderData,
     navController: NavController,
-    orderViewModel: OrderViewModel
+    orderViewModel: OrderViewModel,
 ) {
     Column(
         modifier = Modifier

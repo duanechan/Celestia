@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import com.coco.celestia.dialogs.LogoutDialog
+import com.coco.celestia.components.dialogs.LogoutDialog
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
@@ -20,8 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.coco.celestia.screens.Screen
-import com.coco.celestia.dialogs.ExitDialog
+import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.components.dialogs.ExitDialog
 import com.coco.celestia.viewmodel.UserViewModel
 
 

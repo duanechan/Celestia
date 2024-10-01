@@ -10,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -19,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.coco.celestia.screens.Screen
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.LightOrange

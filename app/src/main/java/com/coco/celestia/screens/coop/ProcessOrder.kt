@@ -23,15 +23,9 @@ fun ProcessOrderPanel(
     productViewModel: ProductViewModel
 ) {
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
-    val productData by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
     val orderedProduct = orderData[0].orderData.name
     val orderedAmount = orderData[0].orderData.quantity
-    var quantityInStore = 0
-
-    LaunchedEffect(Unit) {
-        productViewModel.fetchProduct(orderedProduct)
-    }
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -51,9 +45,7 @@ fun ProcessOrderPanel(
                 Text(text = "Error fetching product: ${(productState as ProductState.ERROR).message}")
             }
             ProductState.SUCCESS -> {
-                quantityInStore = productData[0].quantity
                 Text(text = "Requesting ${orderedAmount}kg of $orderedProduct")
-                Text(text = "$orderedProduct in store: ${quantityInStore}kg")
             }
         }
     }

@@ -48,7 +48,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Brush
-import com.coco.celestia.screens.Screen
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.UserData
 import com.coco.celestia.viewmodel.ProductViewModel

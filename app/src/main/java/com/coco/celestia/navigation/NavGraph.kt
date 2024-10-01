@@ -28,7 +28,7 @@ import com.coco.celestia.screens.LoginScreen
 import com.coco.celestia.screens.coop.OrderRequest
 import com.coco.celestia.screens.Profile
 import com.coco.celestia.screens.RegisterScreen
-import com.coco.celestia.screens.Screen
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.screens.SplashScreen
 import com.coco.celestia.screens.admin.AdminInventory
 import com.coco.celestia.screens.admin.UserTable

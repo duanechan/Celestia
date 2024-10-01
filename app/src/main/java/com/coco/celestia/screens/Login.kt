@@ -35,7 +35,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.R
-import com.coco.celestia.dialogs.ExitDialog
+import com.coco.celestia.components.dialogs.ExitDialog
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.util.routeHandler
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
@@ -45,7 +46,6 @@ fun LoginScreen(mainNavController: NavController, userViewModel: UserViewModel) 
     val navController = rememberNavController()
     val userData by userViewModel.userData.observeAsState()
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
-    val firstName = userData?.firstname
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var exitDialog by remember { mutableStateOf(false) }
@@ -65,7 +65,6 @@ fun LoginScreen(mainNavController: NavController, userViewModel: UserViewModel) 
             Toast.makeText(navController.context, "Error: ${(userState as UserState.ERROR).message}", Toast.LENGTH_SHORT).show()
         }
         is UserState.LOGIN_SUCCESS -> {
-//            Toast.makeText(navController.context, "Welcome, $firstName!", Toast.LENGTH_SHORT).show()
             val role = (userState as UserState.LOGIN_SUCCESS).role
             val route = routeHandler(role)
             mainNavController.navigate(route.dashboard) {

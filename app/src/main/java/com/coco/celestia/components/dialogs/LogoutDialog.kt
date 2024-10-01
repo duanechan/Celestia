@@ -1,4 +1,4 @@
-package com.coco.celestia.dialogs
+package com.coco.celestia.components.dialogs
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button

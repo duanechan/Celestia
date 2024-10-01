@@ -1,7 +1,7 @@
 package com.coco.celestia.util
 
 import com.coco.celestia.navigation.Routes
-import com.coco.celestia.screens.Screen
+import com.coco.celestia.screens.`object`.Screen
 
 fun routeHandler(userRole: String) : Routes {
     val dashboardRoute = when (userRole) {
