@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.admin
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,20 +22,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,7 +40,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -54,19 +51,25 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.Gray
 import com.coco.celestia.ui.theme.PurpleGrey40
+import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.UserData
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminUserManagement(userViewModel: UserViewModel) {
-    val usersData by userViewModel.usersData.observeAsState()
+fun AdminUserManagement(userViewModel: UserViewModel, navController: NavController) {
     var text by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
+    val selectedUsers = userViewModel.selectedUsers
+    val usersData by userViewModel.usersData.observeAsState()
+    val userState by userViewModel.userState.observeAsState(UserState.LOADING)
+    val users: MutableList<UserData?> = mutableListOf()
 
     LaunchedEffect(Unit) {
         userViewModel.fetchUsers()
@@ -154,6 +157,33 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
                 }
             }
         }
+        when (userState) {
+            UserState.LOADING -> {
+                CircularProgressIndicator()
+            }
+            UserState.SUCCESS -> {
+                usersData?.forEach{ user ->
+                    //Add Conditional Statement for Coop Members Only not all Users
+                    users.add(user)
+                }
+            }
+            UserState.EMPTY -> {
+                Text("No Users Found")
+            }
+            is UserState.ERROR -> {
+                Toast.makeText(navController.context, "Error: ${(userState as UserState.ERROR).message}", Toast.LENGTH_SHORT).show()
+            }
+            else -> {}
+        }
+
+        UserTable(
+            users = users,
+            selectedUsers = selectedUsers,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 250.dp),
+            userViewModel = userViewModel
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
     }
@@ -164,7 +194,7 @@ fun DropdownMenuItem(onClick: () -> Unit, interactionSource: @Composable () -> U
 }
 
 @Composable
-fun UserTable(users: List<User>, selectedUsers: List<User>, modifier: Modifier, userViewModel: UserViewModel) {
+fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: Modifier, userViewModel: UserViewModel) {
     LazyColumn(
         modifier = modifier.fillMaxWidth()
     ) {
@@ -178,23 +208,18 @@ fun UserTable(users: List<User>, selectedUsers: List<User>, modifier: Modifier, 
             ) {
                 Spacer(modifier = Modifier.width(24.dp))
                 Text(
-                    text = "ID",
+                    text = "Email",
                     modifier = Modifier.weight(1f),
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Username",
+                    text = "Name",
                     modifier = Modifier.weight(2f),
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Roles",
+                    text = "Role",
                     modifier = Modifier.weight(2f),
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "Status",
-                    modifier = Modifier.weight(1f),
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -209,37 +234,34 @@ fun UserTable(users: List<User>, selectedUsers: List<User>, modifier: Modifier, 
                     .padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Checkbox(
-                    checked = user.isChecked.value,
-                    onCheckedChange = { checked ->
-                        user.isChecked.value = checked
-                        if (checked) {
-                            if (!selectedUsers.contains(user)) {
-                                userViewModel.addSelectedUser(user)
+                if (user != null) {
+                    Checkbox(
+                        checked = user.isChecked.value,
+                        onCheckedChange = { checked ->
+                            user.isChecked.value = checked
+                            if (checked) {
+                                if (!selectedUsers.contains(user)) {
+                                    userViewModel.addSelectedUser(user)
+                                }
+                            } else {
+                                userViewModel.removeSelectedUser(user)
                             }
-                        } else {
-                            userViewModel.removeSelectedUser(user)
                         }
-
-                    }
-                )
-                Text(
-                    text = user.id,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    text = user.username,
-                    modifier = Modifier.weight(2f)
-                )
-                Text(
-                    text = user.roles,
-                    modifier = Modifier.weight(2f)
-                )
-                Text(
-                    text = user.status,
-                    modifier = Modifier.weight(1f)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+                    )
+                    Text(
+                        text = user.email,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = user.firstname + " " + user.lastname,
+                        modifier = Modifier.weight(2f)
+                    )
+                    Text(
+                        text = user.role,
+                        modifier = Modifier.weight(2f)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
             }
         }
     }

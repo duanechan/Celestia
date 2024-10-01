@@ -33,17 +33,17 @@ class UserViewModel : ViewModel() {
     private val _userData = MutableLiveData<UserData?>()
     private val _usersData = MutableLiveData<List<UserData?>>()
     private val _userState = MutableLiveData<UserState>()
-    private val _selectedUsers = mutableStateListOf<User>()
+    private val _selectedUsers = mutableStateListOf<UserData?>()
     val userData: LiveData<UserData?> = _userData
     val usersData: LiveData<List<UserData?>> = _usersData
     val userState: LiveData<UserState> = _userState
-    val selectedUsers: List<User> get() = _selectedUsers
+    val selectedUsers: List<UserData?> get() = _selectedUsers
 
-    fun addSelectedUser(user: User) {
+    fun addSelectedUser(user: UserData?) {
         _selectedUsers.add(user)
     }
 
-    fun removeSelectedUser(user: User) {
+    fun removeSelectedUser(user: UserData?) {
         _selectedUsers.remove(user)
     }
 

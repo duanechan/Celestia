@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -63,7 +64,6 @@ fun NavGraph(
     var addressName by remember { mutableStateOf("") }
     var quantityAmount by remember { mutableIntStateOf(0) }
     var productType by remember { mutableStateOf("") }
-    val selectedUsers = userViewModel.selectedUsers
 
     NavHost(
         navController = navController,
@@ -124,14 +124,9 @@ fun NavGraph(
             AdminInventory(productViewModel = productViewModel)
         }
         composable(route = Screen.AdminUserManagement.route) {
-            AdminUserManagement(userViewModel = userViewModel)
-            UserTable(
-                users = sampleUsers,
-                selectedUsers = selectedUsers,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 250.dp),
-                userViewModel = userViewModel
+            AdminUserManagement(
+                userViewModel = userViewModel,
+                navController = navController
             )
         }
         composable(route = Screen.Coop.route) {

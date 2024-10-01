@@ -1,5 +1,8 @@
 package com.coco.celestia.viewmodel.model
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+
 data class UserData(
     val email: String = "",
     val firstname: String = "",
@@ -7,7 +10,8 @@ data class UserData(
     val role: String = "",
     val phoneNumber: String = "",
     val streetNumber: String = "",
-    val barangay: String = ""
+    val barangay: String = "",
+    val isChecked: MutableState<Boolean> = mutableStateOf(false)
 )
 
 data class OrderData(
