@@ -49,4 +49,7 @@ sealed class Screen(val route: String) {
     object FarmerProductInventory: Screen("farmer_inventory/{type}") {
         fun createRoute(type: String) = "farmer_inventory/$type"
     }
+    object FarmerRequestDetails : Screen(route = "farmer_request_details/{orderId}") {
+        fun createRoute(type: String) = "farmer_request_details/$type"
+    }
 }

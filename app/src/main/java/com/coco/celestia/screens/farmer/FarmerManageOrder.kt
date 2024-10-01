@@ -48,7 +48,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.vector.ImageVector
+import com.coco.celestia.screens.Screen
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.UserData
 import com.coco.celestia.viewmodel.ProductViewModel
@@ -56,7 +56,7 @@ import com.coco.celestia.viewmodel.ProductViewModel
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun FarmerManageOrder(
-    mainNavController: NavController,
+    navController: NavController,
     userViewModel: UserViewModel,
     orderViewModel: OrderViewModel,
     productViewModel: ProductViewModel
@@ -121,13 +121,12 @@ fun FarmerManageOrder(
                     ),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Order Request", color = Color.White)
+                    Text("Order Requests", color = Color.White)
                 }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Dropdown for filtering vegetables
             Row(
                 modifier = Modifier.padding(20.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -192,14 +191,19 @@ fun FarmerManageOrder(
             if (isOrderStatusView) {
                 // Show Order Status view
                 when (orderState) {
-                    is OrderState.LOADING -> { Text("Loading orders...") }
-                    is OrderState.ERROR -> { Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}") }
-                    is OrderState.EMPTY -> { Text("No orders available.") }
+                    is OrderState.LOADING -> {
+                        Text("Loading orders...")
+                    }
+                    is OrderState.ERROR -> {
+                        Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}")
+                    }
+                    is OrderState.EMPTY -> {
+                        Text("No orders available.")
+                    }
                     is OrderState.SUCCESS -> {
                         val filteredOrders = if (selectedCategory.isNotEmpty()) {
                             orderData.filter { order ->
-                                // Assuming order has a property like productName to compare with the category
-                                order.orderData.name == selectedCategory
+                                order.orderData.name.equals(selectedCategory, ignoreCase = true)
                             }
                         } else {
                             orderData
@@ -211,7 +215,7 @@ fun FarmerManageOrder(
                             var orderCount = 1
                             filteredOrders.forEach { order ->
                                 if (userData == null) {
-                                    CircularProgressIndicator() // Show loading indicator if userData is not yet ready
+                                    CircularProgressIndicator()
                                 } else {
                                     ManageOrderCards(orderCount, order, userData!!)
                                     orderCount++
@@ -222,7 +226,13 @@ fun FarmerManageOrder(
                 }
             } else {
                 // Show Order Request view
-                FarmerManageRequest(userData, orderData, orderState, selectedCategory)
+                FarmerManageRequest(
+                    navController = navController,
+                    userData = userData,
+                    orderData = orderData,
+                    orderState = orderState,
+                    selectedCategory = selectedCategory
+                )
             }
         }
     }
@@ -230,6 +240,7 @@ fun FarmerManageOrder(
 
 @Composable
 fun FarmerManageRequest(
+    navController: NavController,
     userData: UserData?,
     orderData: List<OrderData>,
     orderState: OrderState,
@@ -254,9 +265,9 @@ fun FarmerManageRequest(
                 var orderCount = 1
                 filteredOrders.forEach { order ->
                     if (userData == null) {
-                        CircularProgressIndicator() // Show loading indicator if userData is not yet ready
+                        CircularProgressIndicator()
                     } else {
-                        RequestCards(orderCount, order, userData!!)
+                        RequestCards(navController, orderCount, order, userData!!)
                         orderCount++
                     }
                 }
@@ -398,8 +409,12 @@ fun OrderStatusCard(orderStatus: String) {
 }
 
 @Composable
-fun RequestCards(orderCount: Int, order: OrderData, user: UserData) {
-    var expanded by remember { mutableStateOf(false) }
+fun RequestCards(
+    navController: NavController,
+    orderCount: Int,
+    order: OrderData,
+    user: UserData
+) {
     val clientName = "${user.firstname} ${user.lastname}"
     val orderId = order.orderId.substring(5, 9).uppercase()
 
@@ -427,7 +442,9 @@ fun RequestCards(orderCount: Int, order: OrderData, user: UserData) {
                         )
                     )
                     .fillMaxSize()
-                    .clickable { expanded = !expanded }
+                    .clickable {
+                        navController.navigate(Screen.FarmerRequestDetails.createRoute(order.orderId))
+                    }
             ) {
                 Row(
                     modifier = Modifier
@@ -473,9 +490,9 @@ fun RequestCards(orderCount: Int, order: OrderData, user: UserData) {
                 }
             }
         }
-
         Spacer(modifier = Modifier.width(8.dp))
     }
 }
+
 
 
