@@ -273,6 +273,7 @@ fun OrderDetailsPanel(navController: NavController, type: String?, productViewMo
     }
 }
 
+//TODO: color of quantity selector base it on figma
 @Composable
 fun QuantitySelector(
     navController: NavController,
@@ -362,7 +363,7 @@ fun QuantitySelector(
     }
 }
 
-
+//TODO: UI
 @Composable
 fun ConfirmOrderRequestPanel(
     navController: NavController,

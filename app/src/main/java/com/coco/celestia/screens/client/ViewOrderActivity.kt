@@ -38,6 +38,7 @@ import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.google.firebase.auth.FirebaseAuth
 
+//TODO: add ui
 @Composable
 fun OrderPanel() {
     val orderViewModel: OrderViewModel = viewModel()

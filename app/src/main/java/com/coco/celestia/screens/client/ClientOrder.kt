@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -50,6 +51,8 @@ import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.LightOrange
+import com.coco.celestia.ui.theme.RavenBlack
+import com.coco.celestia.ui.theme.CoffeeBean
 import com.coco.celestia.viewmodel.model.UserData
 import com.coco.celestia.ui.theme.VeryDarkGreen
 import com.coco.celestia.ui.theme.VeryDarkPurple
@@ -86,15 +89,28 @@ fun ClientOrder(
                 .padding(top = 75.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Row with "Orders" text and notification button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
-                    .background(VeryDarkGreen)
-                    .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp)
+                    .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Orders", fontSize = 31.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Icon(
+                    imageVector = Icons.Default.ShoppingCart,
+                    contentDescription = "Order Icon",
+                    modifier = Modifier.size(30.dp)
+                        .size(35.dp)
+                        .align(Alignment.CenterVertically),
+                    tint = CoffeeBean
+                )
+                Spacer(modifier = Modifier.width(8.dp)) //space between text and icon
+                Text(
+                    text = "Orders",
+                    fontSize = 35.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = RavenBlack
+                )
                 Spacer(modifier = Modifier.weight(1f))
                 Button(
                     onClick = { /* Handle notification click */ },
@@ -117,10 +133,10 @@ fun ClientOrder(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp)
-                    .background(VeryDarkPurple)
+//                    .background(VeryDarkPurple)
                     .padding(top = 10.dp, bottom = 15.dp, start = 25.dp, end = 16.dp)
             ) {
-                SearchBar(
+                SearchBar( //not functioning
                     query = text,
                     onQueryChange = { /* Handle query change */ },
                     onSearch = { /* Handle search action */ },
@@ -133,6 +149,7 @@ fun ClientOrder(
                         .height(35.dp)
                 ){
                 }
+                //todo: FILTER BY STATUS
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -179,6 +196,7 @@ fun ClientOrder(
             }
         }
 
+        //TODO: make bigger
         FloatingActionButton(
             onClick = {
                 navController.navigate(Screen.AddOrder.route)
@@ -199,6 +217,7 @@ fun ClientOrder(
 
 }
 
+//TODO: add to order status cards to make one card only
 @Composable
 fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
     var expanded by remember { mutableStateOf(false) }

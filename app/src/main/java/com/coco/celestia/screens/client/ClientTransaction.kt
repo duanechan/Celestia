@@ -31,6 +31,7 @@ import com.coco.celestia.viewmodel.TransactionState
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.google.firebase.auth.FirebaseAuth
 
+//TODO: add UI
 class ClientTransaction : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
