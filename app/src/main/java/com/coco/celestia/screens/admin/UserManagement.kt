@@ -1,6 +1,7 @@
 package com.coco.celestia.screens.admin
 
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -25,7 +27,9 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
@@ -49,6 +53,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -80,14 +85,14 @@ fun AdminUserManagement(userViewModel: UserViewModel, navController: NavControll
             modifier = Modifier
                 .fillMaxHeight()
                 .background(DarkBlue)
-                .padding(top = 75.dp)
+                .padding(top = 20.dp)
                 .verticalScroll(rememberScrollState()) // Scrollable column
         ) {
             // Header Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
+                    .height(80.dp)
                     .background(DarkBlue)
                     .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp)
             ) {
@@ -101,12 +106,12 @@ fun AdminUserManagement(userViewModel: UserViewModel, navController: NavControll
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Search Bar and Filter
+            // Search Bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
-                    .background(PurpleGrey40)
+                    .height(60.dp)
+                    .background(DarkBlue)
                     .padding(10.dp)
             ) {
                 SearchBar(
@@ -181,11 +186,10 @@ fun AdminUserManagement(userViewModel: UserViewModel, navController: NavControll
             selectedUsers = selectedUsers,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 250.dp),
+                .padding(top = 200.dp),
             userViewModel = userViewModel
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(100.dp))
     }
 }
 
@@ -193,48 +197,56 @@ fun DropdownMenuItem(onClick: () -> Unit, interactionSource: @Composable () -> U
 
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: Modifier, userViewModel: UserViewModel) {
     LazyColumn(
         modifier = modifier.fillMaxWidth()
     ) {
-        item {
+        stickyHeader {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.Gray)
-                    .padding(8.dp),
+                    .background(Color.White)
+                    .padding(13.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Spacer(modifier = Modifier.width(24.dp))
                 Text(
-                    text = "Email",
-                    modifier = Modifier.weight(1f),
-                    fontWeight = FontWeight.Bold
+                    text = "EMAIL",
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
                 )
                 Text(
-                    text = "Name",
-                    modifier = Modifier.weight(2f),
-                    fontWeight = FontWeight.Bold
+                    text = "NAME",
+                    modifier = Modifier
+                        .weight(2f)
+                        .fillMaxWidth(),
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
                 )
                 Text(
-                    text = "Role",
-                    modifier = Modifier.weight(2f),
-                    fontWeight = FontWeight.Bold
+                    text = "ROLE",
+                    modifier = Modifier
+                        .weight(2f)
+                        .fillMaxWidth(),
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
                 )
             }
         }
-
-        items(users) { user ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-                    .background(Color.LightGray)
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (user != null) {
+        itemsIndexed(users) { index, user ->
+            if (user != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(if (index % 2 == 0) Color.LightGray else Color.White)
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Checkbox(
                         checked = user.isChecked.value,
                         onCheckedChange = { checked ->
@@ -250,35 +262,51 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
                     )
                     Text(
                         text = user.email,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        textAlign = TextAlign.Center
                     )
                     Text(
                         text = user.firstname + " " + user.lastname,
-                        modifier = Modifier.weight(2f)
+                        modifier = Modifier
+                            .weight(2f)
+                            .fillMaxWidth(),
+                        textAlign = TextAlign.Center
                     )
                     Text(
                         text = user.role,
-                        modifier = Modifier.weight(2f)
+                        modifier = Modifier
+                            .weight(2f)
+                            .fillMaxWidth(),
+                        textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                 }
             }
         }
+        item {
+            Spacer(modifier = Modifier.height(95.dp)) // This will add space at the bottom
+        }
     }
 }
+
+
+
 
 @Composable
 fun ActionButtons() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .background(Color.White)
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
 
-        CircleButton(onClick = { /* TODO: Handle notification click */ }, icon = Icons.Default.Create)
+        CircleButton(onClick = { /* TODO: Handle notification click */ }, icon = Icons.Default.Menu)
+        CircleButton(onClick = { /* TODO: Handle notification click */ }, icon = Icons.Default.Edit)
         CircleButton(onClick = { /* TODO: Handle notification click */ }, icon = Icons.Default.Add)
-        CircleButton(onClick = { /* TODO: Handle notification click */ }, icon = Icons.Default.Clear)
         CircleButton(onClick = { /* TODO: Handle notification click */ }, icon = Icons.Default.Delete)
     }
 }
@@ -289,11 +317,11 @@ fun CircleButton(onClick: () -> Unit, icon: ImageVector) {
         modifier = Modifier
             .size(56.dp)
             .clip(CircleShape)
-            .background(Color.White)
+            .background(DarkBlue)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        Icon(imageVector = icon, contentDescription = null, tint = Gray)
+        Icon(imageVector = icon, contentDescription = null, tint = Color.White)
     }
 }
 
