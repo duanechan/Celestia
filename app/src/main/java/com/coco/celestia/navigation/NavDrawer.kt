@@ -217,6 +217,41 @@ fun NavDrawerBottomBar(
                 )
             }
         }
+
+        if (role == "Admin" && currentDestination == Screen.AdminUserManagement.route) {
+            FloatingActionButton(
+                onClick = { navController.navigate(Screen.AdminUserManagement.route) },
+                shape = CircleShape,
+                containerColor = DarkBlue,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = (-30).dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+//        if (role == "Admin" && currentDestination == Screen.CoopAddProductInventory.route) {
+//            FloatingActionButton(
+//                onClick = { navController.navigate(Screen.CoopAddProductInventoryDB.route) },
+//                shape = CircleShape,
+//                containerColor = DarkBlue,
+//                modifier = Modifier
+//                    .align(Alignment.TopCenter)
+//                    .offset(y = (-30).dp)
+//            ) {
+//                Icon(
+//                    imageVector = Icons.Default.CheckCircle,
+//                    contentDescription = "Save",
+//                    tint = Color.White,
+//                    modifier = Modifier.size(24.dp)
+//                )
+//            }
+//        }
     }
 }
 

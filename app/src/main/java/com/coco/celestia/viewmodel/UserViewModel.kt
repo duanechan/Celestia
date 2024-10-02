@@ -47,6 +47,14 @@ class UserViewModel : ViewModel() {
         _selectedUsers.remove(user)
     }
 
+    fun clearSelectedUsers(){
+        _selectedUsers.forEach { user ->
+            user?.isChecked?.value = false
+        }
+
+        _selectedUsers.clear()
+    }
+
     fun resetUserState() {
         _userState.value = UserState.LOADING
     }
