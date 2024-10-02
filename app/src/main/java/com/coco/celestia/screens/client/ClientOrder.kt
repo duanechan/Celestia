@@ -153,25 +153,6 @@ fun ClientOrder(
             }
 
             Spacer(modifier = Modifier.height(10.dp))
-
-            Row() {
-                Text(
-                    text = "Order Status",
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.padding(top = 10.dp, start = 20.dp)
-                )
-                Text(
-                    text = "Status",
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.padding(top = 10.dp, start = 218.dp)
-                )
-
-            }
-            Spacer(modifier = Modifier.height(10.dp))
             when (orderState) {
                 is OrderState.LOADING -> {
                     Text("Loading orders...")
@@ -219,7 +200,6 @@ fun ClientOrder(
 
 }
 
-//TODO: add to order status cards to make one card only
 @Composable
 fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
     var expanded by remember { mutableStateOf(false) }
@@ -230,8 +210,8 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
     Row {
         Card(
             modifier = Modifier
-                .width(335.dp)
-                .height(125.dp)
+                .fillMaxWidth()
+                .height(165.dp)
                 .offset(x = (-16).dp, y = 0.dp)
                 .padding(top = 0.dp, bottom = 10.dp, start = 27.dp, end = 0.dp),
             colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
@@ -246,21 +226,22 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
                         modifier = Modifier
                             .size(width = 50.dp, height = 150.dp)
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color.White)
+                            .background(Color.White),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = orderCount.toString(),
                             fontSize = 50.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black,
-                            modifier = Modifier.padding(top = 5.dp, start = 10.dp)
+                            modifier = Modifier.padding(5.dp)
                         )
                     }
 
                     Column {
                         Text(
                             text = "Order ID: $orderId",
-                            fontSize = 25.sp,
+                            fontSize = 35.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
                             modifier = Modifier.padding(top = 15.dp, start = 10.dp)
@@ -268,9 +249,16 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
 
                         Text(
                             text = "Client Name: $clientName",
-                            fontSize = 10.sp,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Normal,
                             color = Color.White,
+                            modifier = Modifier.padding(top = 0.dp, start = 10.dp)
+                        )
+                        Text(
+                            text = "$orderStatus",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = LightOrange, // will adjust color
                             modifier = Modifier.padding(top = 0.dp, start = 10.dp)
                         )
                     }
@@ -279,43 +267,5 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
 
             }
         }
-        Spacer(modifier = Modifier.width(0.dp))
-        Box(
-            modifier = Modifier
-                .size(width = 75.dp, height = 114.dp)
-                .padding(start = 0.dp, end = 10.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(
-                    when (orderStatus) {
-                        //status for orders
-                        "PENDING" -> {
-                            Color(0xFFE0A83B)
-                        }
-                        "ACCEPTED" -> {
-                            Color(0xFF7CC659)
-                        }
-                        "REJECTED" -> {
-                            Color(0xFFDA4040)
-                        }
-                        //status for delivering the orders
-                        "DELIVERED" -> {
-                            Color(0xFF41644A)
-                        }
-                        "DELIVERING" -> {
-                            Color(0xFF3CA8B0)
-                        }
-                        else -> Color.Gray
-                    }
-                )
-        ){
-            Text(
-                text = orderStatus,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier.padding(top = 15.dp, start = 11.dp)
-            )
-        }
-
     }
 }
