@@ -31,14 +31,19 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -57,6 +62,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.coco.celestia.screens.coop.DropdownField
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.Gray
 import com.coco.celestia.ui.theme.PurpleGrey40
@@ -286,7 +292,7 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
             }
         }
         item {
-            Spacer(modifier = Modifier.height(95.dp)) // This will add space at the bottom
+            Spacer(modifier = Modifier.height(95.dp))
         }
     }
 }
@@ -296,6 +302,12 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
 
 @Composable
 fun ActionButtons() {
+    var showPopUpEdit by remember { mutableStateOf(false) }
+    var showPopUpDelete by remember { mutableStateOf(false) }
+    var firstTextFieldValue by remember { mutableStateOf("") }
+    var secondTextFieldValue by remember { mutableStateOf("") }
+
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -303,11 +315,77 @@ fun ActionButtons() {
             .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-
         CircleButton(onClick = { /* TODO: Handle notification click */ }, icon = Icons.Default.Menu)
-        CircleButton(onClick = { /* TODO: Handle notification click */ }, icon = Icons.Default.Edit)
-        CircleButton(onClick = { /* TODO: Handle notification click */ }, icon = Icons.Default.Add)
-        CircleButton(onClick = { /* TODO: Handle notification click */ }, icon = Icons.Default.Delete)
+        CircleButton(onClick = { showPopUpEdit = true }, icon = Icons.Default.Edit)
+        CircleButton(onClick = { showPopUpDelete = true }, icon = Icons.Default.Delete)
+    }
+
+    if (showPopUpEdit) {
+        AlertDialog(
+            onDismissRequest = { showPopUpEdit = false },
+            title = { Text(text = "Enter your input") },
+            text = {
+                Column {
+                    //to be changed
+                    TextField(
+                        value = firstTextFieldValue,
+                        onValueChange = { firstTextFieldValue = it },
+                        label = { Text("Email") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    //change to dropdown
+                    TextField(
+                        value = secondTextFieldValue,
+                        onValueChange = { secondTextFieldValue = it },
+                        label = { Text("Role") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showPopUpEdit = false
+                    }) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showPopUpEdit = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    if (showPopUpDelete) {
+        AlertDialog(
+            onDismissRequest = { showPopUpDelete = false },
+            title = { Text(text = "Enter...") },
+            text = {
+                Column {
+                    Text(
+                        text = "Are you sure you want to delete this user?",
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showPopUpDelete = false
+                    }) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showPopUpDelete = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
@@ -325,7 +403,35 @@ fun CircleButton(onClick: () -> Unit, icon: ImageVector) {
     }
 }
 
+@Composable
+fun AddUserForm(
+    email: String,
+    role: String,
+    addEmail: (String) -> Unit,
+    addRole: (String) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Add User ✚",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        )
 
+        // Email
+        OutlinedTextField(
+            value = email,
+            onValueChange = addEmail,
+            label = { Text("Email") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+    }
+}
 
 
 // Sample data class for user

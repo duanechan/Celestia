@@ -31,7 +31,6 @@ import com.coco.celestia.screens.RegisterScreen
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.screens.SplashScreen
 import com.coco.celestia.screens.admin.AdminInventory
-import com.coco.celestia.screens.admin.UserTable
 import com.coco.celestia.screens.admin.sampleUsers
 import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientOrder
