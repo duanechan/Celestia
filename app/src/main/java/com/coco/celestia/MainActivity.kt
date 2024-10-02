@@ -3,6 +3,7 @@ package com.coco.celestia
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -136,6 +137,10 @@ fun App() {
         bottomBar = {
             if (selectedUsers.isNotEmpty()) {
                 ActionButtons()
+
+                BackHandler {
+                    userViewModel.clearSelectedUsers()
+                }
             } else {
                 if (role != null ||
                     currentDestination != null &&
