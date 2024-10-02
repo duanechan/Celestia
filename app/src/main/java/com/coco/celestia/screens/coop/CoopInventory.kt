@@ -1,10 +1,13 @@
 package com.coco.celestia.screens.coop
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -50,6 +53,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -122,13 +126,13 @@ fun ProductTypeCards(navController: NavController, productData: List<ProductData
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp)
             ) {
-                Text(text = type, fontSize = 25.sp, fontWeight = FontWeight.Bold)
+                Text(text = type, fontSize = 25.sp, fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily)
                 Spacer(modifier = Modifier.height(10.dp))
                 highestQuantityByType.forEach { product ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(text = product.name, fontSize = 18.sp)
+                        Text(text = product.name, fontSize = 18.sp, fontFamily = mintsansFontFamily)
                         Spacer(modifier = Modifier.weight(0.9f))
                         LinearProgressIndicator(
                             progress = product.quantity.toFloat() / maxQuantity,
@@ -151,11 +155,16 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
         productViewModel.fetchProductByType(type.toString())
     }
     Column( modifier = Modifier
-        .height(795.dp)
-        .verticalScroll(rememberScrollState())
+        .fillMaxSize()
+        .padding(top = 90.dp)
+        .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TopBar("Inventory")
-        Text(text = type.toString(), fontSize = 25.sp, fontWeight = FontWeight.Bold)
+        Text(text = type.toString(),
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = mintsansFontFamily,
+            modifier = Modifier.padding(bottom = 10.dp))
         productData.forEach { product ->
             Card(
                 modifier = Modifier
@@ -167,9 +176,9 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
                     modifier = Modifier
                         .padding(16.dp)
                 ) {
-                    Text(text = product.name, fontSize = 18.sp)
+                    Text(text = product.name, fontSize = 18.sp, fontFamily = mintsansFontFamily, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.weight(1f))
-                    Text(text = "${product.quantity}kg", fontSize = 18.sp)
+                    Text(text = "${product.quantity}kg", fontSize = 35.sp, fontFamily = mintsansFontFamily)
                 }
             }
         }
@@ -204,6 +213,7 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
             }
         }
     }
+    TopBar("Inventory")
 }
 
 @Composable
@@ -373,80 +383,11 @@ fun TopBar(title: String) {
                 containerColor = Color.Transparent,
                 titleContentColor = Color.White
             ),
-            modifier = Modifier.background(Color.Transparent)
+            modifier = Modifier
+                .background(Color.Transparent)
         )
     }
 }
 
-@Composable
-fun BottomNavigationBar(navController: NavHostController) {
-    Box(modifier = Modifier.fillMaxWidth()) {
-        NavigationBar(
-            containerColor = Color.White,
-            contentColor = DarkGreen,
-            modifier = Modifier.padding(horizontal = 0.dp) // Adjust padding to create space for the FAB
-        ) {
-            val currentDestination = navController.currentBackStackEntryAsState().value?.destination?.route
-            NavigationBarItem(
-                icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard") },
-                label = { Text("Dashboard") },
-                selected = currentDestination == Screen.Coop.route,
-                onClick = {
-                    navController.navigate(Screen.Coop.route) {
-                        popUpTo(0)
-                    }
-                }
-            )
-            NavigationBarItem(
-                icon = { Icon(imageVector = Icons.Default.List, contentDescription = "Items") },
-                label = { Text("Items") },
-                selected = currentDestination == Screen.CoopInventory.route,
-                onClick = {
-                    navController.navigate(Screen.CoopInventory.route) {
-                        popUpTo(0)
-                    }
-                }
-            )
-
-            NavigationBarItem(
-                icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Orders") },
-                label = { Text("Orders") },
-                selected = currentDestination == Screen.CoopOrder.route,
-                onClick = {
-                    navController.navigate(Screen.CoopOrder.route) {
-                        popUpTo(0)
-                    }
-                }
-            )
-            NavigationBarItem(
-                icon = { Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile") },
-                label = { Text("Profile") },
-                selected = currentDestination == Screen.Profile.route,
-                onClick = {
-                    navController.navigate(Screen.Profile.route) {
-                        popUpTo(0)
-                    }
-                }
-            )
-        }
-
-        // Floating Action Button (FAB)
-        FloatingActionButton(
-            onClick = { val productType = "coffee" //Temporary
-                navController.navigate(Screen.CoopAddProductInventory.createRoute(type = productType))},
-            shape = CircleShape,
-            containerColor = DarkGreen,
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .offset(y = -30.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add",
-                tint = Color.White,
-                modifier = Modifier.size(24.dp))
-        }
-    }
-}
 
 

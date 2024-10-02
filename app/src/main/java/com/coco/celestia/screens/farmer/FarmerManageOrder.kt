@@ -234,6 +234,7 @@ fun FarmerManageOrder(
                     selectedCategory = selectedCategory
                 )
             }
+            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }

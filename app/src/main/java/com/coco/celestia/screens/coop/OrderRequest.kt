@@ -108,6 +108,7 @@ fun OrderRequest(
                             transactionViewModel = transactionViewModel,
                         )
                     }
+                    item { Spacer(modifier = Modifier.height(100.dp)) }
                 }
             }
         }

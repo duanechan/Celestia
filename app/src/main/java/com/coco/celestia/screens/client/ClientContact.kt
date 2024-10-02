@@ -139,6 +139,7 @@ fun ClientContact(contactViewModel: ContactViewModel) {
                 Text("No contacts found.")
             }
         }
+        Spacer(modifier = Modifier.height(100.dp))
     }
 }
 

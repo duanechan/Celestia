@@ -194,6 +194,8 @@ fun ClientOrder(
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(100.dp))
         }
 
         //TODO: make bigger
