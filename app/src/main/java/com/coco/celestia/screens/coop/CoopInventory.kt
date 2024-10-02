@@ -1,6 +1,7 @@
 package com.coco.celestia.screens.coop
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -52,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -60,6 +63,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.coco.celestia.R
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.screens.admin.DropdownMenuItem
@@ -108,35 +112,72 @@ fun CoopInventory(navController: NavController) {
     }
 }
 
+
 @Composable
 fun ProductTypeCards(navController: NavController, productData: List<ProductData>) {
     val productsByType = productData.groupBy { it.type }
     val maxQuantity = 1000f // TODO: There should be a max qty.
     productsByType.forEach { (type, productsOfType) ->
         val highestQuantityByType = productsOfType.sortedByDescending { it.quantity }.take(3)
+
+        val cardColor = when (type) {
+            "Coffee" -> Color(0xFFDDC8B3)
+            else -> Color(0xFFEDCFC0)
+        }
+
+        val fontColor = when (type) {
+            "Coffee" -> Color(0xFFB06520)
+            else -> Color(0xFFE86A33)
+        }
+
+        val iconRes = when (type) {
+            "Coffee" -> R.drawable.coffeeicon
+            else -> R.drawable.meaticon
+        }
+
+
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(250.dp)
                 .padding(8.dp)
-                .clickable { navController.navigate(Screen.CoopProductInventory.createRoute(type)) }
+                .clickable { navController.navigate(Screen.CoopProductInventory.createRoute(type)) },
+            colors = CardDefaults.cardColors(containerColor = cardColor)
+
         ) {
             Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp)
+                    .padding(35.dp)
             ) {
-                Text(text = type, fontSize = 25.sp, fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily)
-                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = type,
+                        fontSize = 35.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily,
+                        color = fontColor
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Image(
+                        painter = painterResource(id = iconRes),
+                        contentDescription = "$type icon",
+                        modifier = Modifier.size(35.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(35.dp))
                 highestQuantityByType.forEach { product ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(text = product.name, fontSize = 18.sp, fontFamily = mintsansFontFamily)
-                        Spacer(modifier = Modifier.weight(0.9f))
+                        Text(text = product.name, fontSize = 18.sp, fontFamily = mintsansFontFamily, color = fontColor, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.weight(1f))
                         LinearProgressIndicator(
                             progress = product.quantity.toFloat() / maxQuantity,
-                            trackColor = Color.LightGray
+                            color = fontColor,
+                            trackColor = Color.White
                         )
                     }
                     Spacer(modifier = Modifier.height(10.dp))
@@ -151,6 +192,16 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
     val productViewModel: ProductViewModel = viewModel()
     val productData by productViewModel.productData.observeAsState(emptyList())
 
+    val fontColor = when (type) {
+        "Coffee" -> Color(0xFFB06520)
+        else -> Color(0xFFE86A33)
+    }
+
+    val iconRes = when (type) {
+        "Coffee" -> R.drawable.coffeeicon
+        else -> R.drawable.meaticon
+    }
+
     LaunchedEffect(Unit) {
         productViewModel.fetchProductByType(type.toString())
     }
@@ -160,11 +211,21 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
         .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = type.toString(),
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            fontFamily = mintsansFontFamily,
-            modifier = Modifier.padding(bottom = 10.dp))
+        Row (modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)){
+            Text(text = type.toString(),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily,
+                modifier = Modifier.padding(top = 10.dp, bottom = 10.dp),
+                color = fontColor)
+
+            Image(
+                painter = painterResource(id = iconRes),
+                contentDescription = "$type icon",
+                modifier = Modifier.size(35.dp).padding(top = 5.dp)
+            )
+        }
+
         productData.forEach { product ->
             Card(
                 modifier = Modifier
@@ -176,9 +237,12 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
                     modifier = Modifier
                         .padding(16.dp)
                 ) {
-                    Text(text = product.name, fontSize = 18.sp, fontFamily = mintsansFontFamily, fontWeight = FontWeight.Bold)
+                    Text(text = product.name,
+                        fontSize = 18.sp,
+                        fontFamily = mintsansFontFamily,
+                        fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.weight(1f))
-                    Text(text = "${product.quantity}kg", fontSize = 35.sp, fontFamily = mintsansFontFamily)
+                    Text(text = "${product.quantity}kg", fontSize = 35.sp, fontFamily = mintsansFontFamily, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -227,15 +291,19 @@ fun AddProductForm(
     onAddressChange: (String) -> Unit,
     onQuantityChange: (String) -> Unit
 ) {
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(top = 100.dp)
+            .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
             text = "Add Product ✚",
-            style = MaterialTheme.typography.bodyLarge,
+            fontFamily = mintsansFontFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 22.sp,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
 
@@ -308,6 +376,7 @@ fun AddProductForm(
             DropdownField(label = "Kg", items = listOf("Kg"))
         }
     }
+    TopBar("Inventory")
 }
 
 @Composable
@@ -362,7 +431,6 @@ fun TopBar(title: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(75.dp)
             .background(GradientBrush)  // Apply the gradient background
     ) {
         TopAppBar(
