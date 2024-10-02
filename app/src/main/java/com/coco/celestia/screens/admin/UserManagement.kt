@@ -188,6 +188,9 @@ fun AdminUserManagement(userViewModel: UserViewModel, navController: NavControll
     }
 }
 
+fun DropdownMenuItem(onClick: () -> Unit, interactionSource: @Composable () -> Unit) {
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: Modifier, userViewModel: UserViewModel) {

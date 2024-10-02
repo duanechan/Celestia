@@ -141,7 +141,7 @@ fun NavGraph(
             )
         }
         composable(route = Screen.AdminAddUserManagementDB.route) {
-
+            //sendEmail("coolgenrev@gmail.com", "Hello", "Test")
         }
         composable(route = Screen.Coop.route) {
             CoopDashboard()
