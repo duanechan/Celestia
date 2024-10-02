@@ -20,6 +20,8 @@ sealed class Screen(val route: String) {
     object Admin: Screen(route = "admin_dashboard")
     object AdminInventory: Screen( route = "admin_inventory")
     object AdminUserManagement: Screen( route = "admin_user_management")
+    object AdminAddUserManagement: Screen( route = "admin_add_user_management")
+    object AdminAddUserManagementDB: Screen( route = "admin_add_user_management_db")
     object AdminProfile: Screen( route = "admin_profile")
     //coop
     object Coop: Screen( route = "coop_dashboard")

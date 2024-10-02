@@ -220,7 +220,7 @@ fun NavDrawerBottomBar(
 
         if (role == "Admin" && currentDestination == Screen.AdminUserManagement.route) {
             FloatingActionButton(
-                onClick = { navController.navigate(Screen.AdminUserManagement.route) },
+                onClick = { navController.navigate(Screen.AdminAddUserManagement.route) },
                 shape = CircleShape,
                 containerColor = DarkBlue,
                 modifier = Modifier
@@ -235,23 +235,23 @@ fun NavDrawerBottomBar(
                 )
             }
         }
-//        if (role == "Admin" && currentDestination == Screen.CoopAddProductInventory.route) {
-//            FloatingActionButton(
-//                onClick = { navController.navigate(Screen.CoopAddProductInventoryDB.route) },
-//                shape = CircleShape,
-//                containerColor = DarkBlue,
-//                modifier = Modifier
-//                    .align(Alignment.TopCenter)
-//                    .offset(y = (-30).dp)
-//            ) {
-//                Icon(
-//                    imageVector = Icons.Default.CheckCircle,
-//                    contentDescription = "Save",
-//                    tint = Color.White,
-//                    modifier = Modifier.size(24.dp)
-//                )
-//            }
-//        }
+        if (role == "Admin" && currentDestination == Screen.AdminAddUserManagement.route) {
+            FloatingActionButton(
+                onClick = { navController.navigate(Screen.AdminAddUserManagementDB.route) },
+                shape = CircleShape,
+                containerColor = DarkBlue,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = (-30).dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Save",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
     }
 }
 

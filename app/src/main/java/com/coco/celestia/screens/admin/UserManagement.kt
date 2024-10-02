@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -23,9 +22,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
@@ -37,6 +33,8 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,7 +44,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -62,14 +59,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.coco.celestia.screens.coop.DropdownField
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.Gray
-import com.coco.celestia.ui.theme.PurpleGrey40
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.UserData
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -159,12 +153,7 @@ fun AdminUserManagement(userViewModel: UserViewModel, navController: NavControll
                     onDismissRequest = { expanded = false },
                     modifier = Modifier.background(Gray)
                 ) {
-                    DropdownMenuItem(onClick = { /* Handle filter option 1 */ }) {
-                        Text(text = "Filter Option 1")
-                    }
-                    DropdownMenuItem(onClick = { /* Handle filter option 2 */ }) {
-                        Text(text = "Filter Option 2")
-                    }
+
                 }
             }
         }
@@ -197,10 +186,6 @@ fun AdminUserManagement(userViewModel: UserViewModel, navController: NavControll
         )
         Spacer(modifier = Modifier.height(100.dp))
     }
-}
-
-fun DropdownMenuItem(onClick: () -> Unit, interactionSource: @Composable () -> Unit) {
-
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -403,13 +388,17 @@ fun CircleButton(onClick: () -> Unit, icon: ImageVector) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddUserForm(
     email: String,
     role: String,
-    addEmail: (String) -> Unit,
-    addRole: (String) -> Unit,
+    newEmail: (String) -> Unit,
+    newRole: (String) -> Unit,
 ) {
+    var expanded by remember { mutableStateOf(false) }
+    val roles = listOf("Coffee", "Meat")
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -425,29 +414,42 @@ fun AddUserForm(
         // Email
         OutlinedTextField(
             value = email,
-            onValueChange = addEmail,
+            onValueChange = newEmail,
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth()
         )
 
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded },
+        ) {
+            OutlinedTextField(
+                readOnly = true,
+                value = role,
+                onValueChange = {},
+                placeholder = { Text("Select Role") },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
+            )
+
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                roles.forEach { roleItem ->
+                    androidx.compose.material3.DropdownMenuItem(
+                        text = { Text(roleItem) },
+                        onClick = {
+                            newRole(roleItem)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
     }
 }
-
-
-// Sample data class for user
-data class User(
-    val id: String,
-    val username: String,
-    val roles: String,
-    val status: String,
-    var isChecked: MutableState<Boolean>,
-    var showActionButtons: Boolean = false
-)
-
-// Sample data for the table
-val sampleUsers = listOf(
-    User("1", "user1", "Admin", "Active", mutableStateOf(false)),
-    User("2", "user2", "User", "Inactive", mutableStateOf(false)),
-    User("3", "user3", "Moderator", "Active", mutableStateOf(false))
-)
-

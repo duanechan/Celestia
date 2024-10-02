@@ -30,8 +30,8 @@ import com.coco.celestia.screens.Profile
 import com.coco.celestia.screens.RegisterScreen
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.screens.SplashScreen
+import com.coco.celestia.screens.admin.AddUserForm
 import com.coco.celestia.screens.admin.AdminInventory
-import com.coco.celestia.screens.admin.sampleUsers
 import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.coop.AddProductForm
@@ -65,6 +65,8 @@ fun NavGraph(
     var addressName by remember { mutableStateOf("") }
     var quantityAmount by remember { mutableIntStateOf(0) }
     var productType by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var role by remember { mutableStateOf("") }
 
     NavHost(
         navController = navController,
@@ -129,6 +131,17 @@ fun NavGraph(
                 userViewModel = userViewModel,
                 navController = navController
             )
+        }
+        composable(route = Screen.AdminAddUserManagement.route) {
+            AddUserForm(
+                email = email,
+                role = role,
+                newEmail = { email = it},
+                newRole = {role = it}
+            )
+        }
+        composable(route = Screen.AdminAddUserManagementDB.route) {
+
         }
         composable(route = Screen.Coop.route) {
             CoopDashboard()
