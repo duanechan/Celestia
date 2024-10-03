@@ -248,8 +248,8 @@ fun NavGraph(
                 FarmerRequestDetails(
                     navController = navController,
                     orderId = orderId,
-                    onAccept = { }, // TODO:  Handle accept
-                    onReject = { } // TODO: Handle reject
+                    onAccept = { },
+                    onReject = { }
                 )
             }
         }
