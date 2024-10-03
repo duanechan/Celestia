@@ -32,7 +32,7 @@ fun FarmerRequestDetails(
     navController: NavController,
     orderId: String,
     onAccept: () -> Unit,
-    onReject: () -> Unit
+    onReject: (String) -> Unit
 ) {
     val orderViewModel: OrderViewModel = viewModel()
     val allOrders by orderViewModel.orderData.observeAsState(emptyList())
@@ -51,6 +51,13 @@ fun FarmerRequestDetails(
     val orderData: OrderData? = remember(orderId, allOrders) {
         allOrders.find { it.orderId == orderId }
     }
+
+    // Variables for dialogs
+    var showDecisionDialog by remember { mutableStateOf(false) }
+    var decisionType by remember { mutableStateOf<String?>(null) }
+    var showConfirmationDialog by remember { mutableStateOf(false) }
+    var isOrderAccepted by remember { mutableStateOf(false) }
+    var rejectionReason by remember { mutableStateOf<String?>(null) }
 
     when {
         orderState == OrderState.LOADING -> {
@@ -116,7 +123,7 @@ fun FarmerRequestDetails(
                 Card(
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFFFFD279)),
-                    modifier = Modifier.width(cardWidth) // Set card width here
+                    modifier = Modifier.width(cardWidth)
                 ) {
                     Column(
                         modifier = Modifier.padding(40.dp)
@@ -197,10 +204,13 @@ fun FarmerRequestDetails(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally // Center the text under the button
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         IconButton(
-                            onClick = onAccept,
+                            onClick = {
+                                decisionType = "ACCEPT"
+                                showDecisionDialog = true
+                            },
                             modifier = Modifier
                                 .size(60.dp)
                                 .clip(CircleShape)
@@ -216,15 +226,18 @@ fun FarmerRequestDetails(
                             text = "Accept",
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF6D4A26),
-                            fontSize = 14.sp // Adjust the font size as needed
+                            fontSize = 14.sp
                         )
                     }
 
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally // Center the text under the button
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         IconButton(
-                            onClick = onReject,
+                            onClick = {
+                                decisionType = "REJECT"
+                                showDecisionDialog = true
+                            },
                             modifier = Modifier
                                 .size(60.dp)
                                 .clip(CircleShape)
@@ -240,11 +253,52 @@ fun FarmerRequestDetails(
                             text = "Reject",
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF6D4A26),
-                            fontSize = 14.sp // Adjust the font size as needed
+                            fontSize = 14.sp
                         )
                     }
                 }
             }
         }
     }
+
+    // Decision dialog
+    if (showDecisionDialog && decisionType != null) {
+        FarmerDecisionDialog(
+            decisionType = decisionType!!,
+            onConfirm = { reason ->
+                showDecisionDialog = false
+                if (decisionType == "ACCEPT") {
+                    isOrderAccepted = true
+                    // Update order status to accepted
+                    val updatedOrder = orderData!!.copy(status = "ACCEPTED")
+                    orderViewModel.updateOrder(updatedOrder)
+                    onAccept()
+                } else {
+                    isOrderAccepted = false
+                    rejectionReason = reason
+                    // Update order status to rejected with reason
+                    val updatedOrder = orderData!!.copy(status = "REJECTED")
+                    orderViewModel.updateOrder(updatedOrder)
+                    onReject(reason!!)
+                }
+                showConfirmationDialog = true
+            },
+            onDismiss = {
+                showDecisionDialog = false
+            }
+        )
+    }
+
+    // Confirmation dialog
+    if (showConfirmationDialog) {
+        FarmerConfirmationDialog(
+            isAccepted = isOrderAccepted,
+            rejectionReason = rejectionReason,
+            onDismiss = {
+                showConfirmationDialog = false
+            }
+        )
+    }
 }
+
+
