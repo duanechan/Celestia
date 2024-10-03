@@ -134,6 +134,7 @@ fun NavGraph(
         }
         composable(route = Screen.AdminAddUserManagement.route) {
             AddUserForm(
+                navController = navController,
                 email = email,
                 role = role,
                 newEmail = { email = it},

@@ -22,6 +22,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
@@ -42,6 +43,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -59,8 +62,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.Gray
+import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.UserData
@@ -85,34 +90,16 @@ fun AdminUserManagement(userViewModel: UserViewModel, navController: NavControll
             modifier = Modifier
                 .fillMaxHeight()
                 .background(DarkBlue)
-                .padding(top = 20.dp)
                 .verticalScroll(rememberScrollState()) // Scrollable column
         ) {
-            // Header Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp)
-                    .background(DarkBlue)
-                    .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp)
-            ) {
-                Text(
-                    text = "User Account Management",
-                    fontSize = 31.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
             // Search Bar
+            Spacer(modifier = Modifier.height(110.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(60.dp)
+                    .align(Alignment.CenterHorizontally)
+                    .height(70.dp)
                     .background(DarkBlue)
-                    .padding(10.dp)
             ) {
                 SearchBar(
                     query = text,
@@ -124,7 +111,9 @@ fun AdminUserManagement(userViewModel: UserViewModel, navController: NavControll
                         Text(
                             text = "Search...",
                             color = Color.Black,
-                            fontSize = 15.sp
+                            fontSize = 15.sp,
+                            fontFamily = mintsansFontFamily
+
                         )
                     },
                     leadingIcon = {
@@ -139,14 +128,6 @@ fun AdminUserManagement(userViewModel: UserViewModel, navController: NavControll
                 ){}
 
                 Spacer(modifier = Modifier.width(8.dp))
-
-                IconButton(onClick = { expanded = !expanded }) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = "Filter Icon",
-                        tint = Color.White
-                    )
-                }
 
                 DropdownMenu(
                     expanded = expanded,
@@ -186,6 +167,8 @@ fun AdminUserManagement(userViewModel: UserViewModel, navController: NavControll
         )
         Spacer(modifier = Modifier.height(100.dp))
     }
+    TopBar("User Management")
+    Spacer(modifier = Modifier.height(15.dp))
 }
 
 fun DropdownMenuItem(onClick: () -> Unit, interactionSource: @Composable () -> Unit) {
@@ -212,6 +195,7 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
                         .weight(1f)
                         .fillMaxWidth(),
                     fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily,
                     textAlign = TextAlign.Center
                 )
                 Text(
@@ -220,6 +204,7 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
                         .weight(2f)
                         .fillMaxWidth(),
                     fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily,
                     textAlign = TextAlign.Center
                 )
                 Text(
@@ -228,6 +213,7 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
                         .weight(2f)
                         .fillMaxWidth(),
                     fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily,
                     textAlign = TextAlign.Center
                 )
             }
@@ -259,21 +245,24 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth(),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        fontFamily = mintsansFontFamily
                     )
                     Text(
                         text = user.firstname + " " + user.lastname,
                         modifier = Modifier
                             .weight(2f)
                             .fillMaxWidth(),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        fontFamily = mintsansFontFamily
                     )
                     Text(
                         text = user.role,
                         modifier = Modifier
                             .weight(2f)
                             .fillMaxWidth(),
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        fontFamily = mintsansFontFamily
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                 }
@@ -393,7 +382,40 @@ fun CircleButton(onClick: () -> Unit, icon: ImageVector) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+fun TopBar(title: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(DarkBlue)
+    ) {
+        TopAppBar(
+            title = {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = title,
+                        fontFamily = mintsansFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+                titleContentColor = Color.White
+            ),
+            modifier = Modifier
+                .background(Color.Transparent)
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun AddUserForm(
+    navController: NavController,
     email: String,
     role: String,
     newEmail: (String) -> Unit,
@@ -408,17 +430,40 @@ fun AddUserForm(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text = "Add User ✚",
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
+        Spacer(modifier = Modifier.height(50.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Back Button
+            IconButton(
+                onClick = { navController.navigate(Screen.AdminUserManagement.route) },
+                modifier = Modifier.align(Alignment.CenterVertically)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Back"
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text(
+                text = "Add User ✚",
+                fontFamily = mintsansFontFamily,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.align(Alignment.CenterVertically)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Email
         OutlinedTextField(
             value = email,
             onValueChange = newEmail,
-            label = { Text("Email") },
+            label = { Text("Email", fontFamily = mintsansFontFamily) },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -430,7 +475,7 @@ fun AddUserForm(
                 readOnly = true,
                 value = role,
                 onValueChange = {},
-                placeholder = { Text("Select Role") },
+                placeholder = { Text("Select Role", fontFamily = mintsansFontFamily) },
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded)
                 },
