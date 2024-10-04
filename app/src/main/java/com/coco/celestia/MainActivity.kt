@@ -34,6 +34,7 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.components.toast.Toast
+import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.navigation.NavDrawerBottomBar
 import com.coco.celestia.navigation.NavDrawerTopBar
 import com.coco.celestia.navigation.NavGraph
@@ -41,6 +42,7 @@ import com.coco.celestia.screens.admin.ActionButtons
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.util.checkNetworkConnection
+import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import kotlinx.coroutines.delay
@@ -70,17 +72,18 @@ fun App() {
     val context = LocalContext.current
     val userViewModel: UserViewModel = viewModel()
     val userData by userViewModel.userData.observeAsState()
+    val userState by userViewModel.userState.observeAsState(UserState.LOADING)
     val role = userData?.role
     val firstName = userData?.firstname
     val lastName = userData?.lastname
     val currentDestination = navController.currentBackStackEntry?.destination?.route
     val selectedUsers = userViewModel.selectedUsers
-    var toastStatus by remember { mutableStateOf(true) }
+    var toastStatus by remember { mutableStateOf(ToastStatus.INFO) }
     var toastShown by remember { mutableStateOf(true) }
     var showToast by remember { mutableStateOf(false) }
     var toastMessage by remember { mutableStateOf("") }
+    var toastEvent by remember { mutableStateOf(Pair(ToastStatus.INFO, "")) }
     val systemUiController = rememberSystemUiController()
-
 
     DisposableEffect(systemUiController) {
         systemUiController.setStatusBarColor(
@@ -90,25 +93,17 @@ fun App() {
         onDispose {}
     }
 
-
-
     LaunchedEffect(Unit) {
         while(true) {
             val connection = checkNetworkConnection(context)
             if (!connection) {
-                if (!toastShown || !showToast) {
-                    showToast = true
-                    toastMessage = "You're offline. Please check your internet connection."
+                if(!toastShown) {
+                    toastEvent = Pair(ToastStatus.FAILED, "You're offline. Please check your internet connection.")
                 }
-                toastStatus = false
                 toastShown = true
             } else {
-                if(toastShown) {
-                    toastStatus = true
-                    showToast = true
-                    toastMessage = "Online!"
-                    delay(3000)
-                    showToast = false
+                if (toastShown) {
+                    toastEvent = Pair(ToastStatus.SUCCESSFUL, "Online!")
                 }
                 toastShown = false
             }
@@ -116,9 +111,18 @@ fun App() {
         }
     }
 
+    LaunchedEffect(toastEvent) {
+        if (toastEvent.second.isNotEmpty()) {
+            toastStatus = toastEvent.first
+            toastMessage = toastEvent.second
+            showToast = true
+            delay(2000)
+            showToast = false
+        }
+    }
+
     Scaffold(
         topBar = {
-            // Toast notification pops up if user is offline
             Toast(message = toastMessage, status = toastStatus, visibility = showToast)
 
             if (role != null ||
@@ -159,6 +163,8 @@ fun App() {
     ) { // APP CONTENT
         NavGraph(
             navController = navController
-        )
+        ) {
+            toastEvent = it
+        }
     }
 }

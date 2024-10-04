@@ -1,42 +1,39 @@
 package com.coco.celestia.navigation
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.coco.celestia.*
-import com.coco.celestia.screens.admin.AdminDashboard
-import com.coco.celestia.screens.admin.AdminUserManagement
-import com.coco.celestia.screens.client.ClientDashboard
+import com.coco.celestia.AddOrderPanel
+import com.coco.celestia.ConfirmOrderRequestPanel
+import com.coco.celestia.OrderDetailsPanel
+import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.ForgotPasswordScreen
 import com.coco.celestia.screens.LoginScreen
-import com.coco.celestia.screens.coop.OrderRequest
 import com.coco.celestia.screens.Profile
 import com.coco.celestia.screens.RegisterScreen
-import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.screens.SplashScreen
 import com.coco.celestia.screens.admin.AddUserForm
+import com.coco.celestia.screens.admin.AdminDashboard
 import com.coco.celestia.screens.admin.AdminInventory
+import com.coco.celestia.screens.admin.AdminUserManagement
 import com.coco.celestia.screens.client.ClientContact
+import com.coco.celestia.screens.client.ClientDashboard
 import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.coop.AddProductForm
 import com.coco.celestia.screens.coop.CoopDashboard
 import com.coco.celestia.screens.coop.CoopInventory
+import com.coco.celestia.screens.coop.OrderRequest
 import com.coco.celestia.screens.coop.ProcessOrderPanel
 import com.coco.celestia.screens.coop.ProductTypeInventory
 import com.coco.celestia.screens.farmer.FarmerDashboard
@@ -45,8 +42,13 @@ import com.coco.celestia.screens.farmer.FarmerInventoryDetail
 import com.coco.celestia.screens.farmer.FarmerManageOrder
 import com.coco.celestia.screens.farmer.FarmerProductTypeInventory
 import com.coco.celestia.screens.farmer.FarmerRequestDetails
-import com.coco.celestia.viewmodel.*
-import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.viewmodel.ContactViewModel
+import com.coco.celestia.viewmodel.LocationViewModel
+import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.TransactionViewModel
+import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.ProductData
 
 @Composable
@@ -59,6 +61,7 @@ fun NavGraph(
     productViewModel: ProductViewModel = viewModel(),
     transactionViewModel: TransactionViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
+    onEvent: (Pair<ToastStatus, String>) -> Unit
 ) {
     var productName by remember { mutableStateOf("") }
     var farmerName by remember { mutableStateOf("") }
@@ -82,7 +85,9 @@ fun NavGraph(
             LoginScreen(
                 mainNavController = navController,
                 userViewModel = userViewModel
-            )
+            ) {
+                onEvent(it)
+            }
         }
         composable(route = Screen.ForgotPassword.route) {
             ForgotPasswordScreen(navController = navController)
@@ -289,7 +294,9 @@ fun NavGraph(
             Profile(
                 navController = navController,
                 userViewModel = userViewModel,
-                locationViewModel = locationViewModel
+                locationViewModel = locationViewModel,
+                onLogoutEvent = { event -> onEvent(event) },
+                onProfileUpdateEvent = { event -> onEvent(event) }
             )
         }
     }

@@ -30,21 +30,33 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+enum class ToastStatus {
+    SUCCESSFUL,
+    FAILED,
+    WARNING,
+    INFO
+}
+
 @Preview
 @Composable
 fun Toast_Preview() {
     val offlineMessage = "You're offline. Please check your internet connection."
     val onlineMessage = "Online!"
     Column {
-        Toast(message = offlineMessage, status = false, visibility = true)
-        Toast(message = onlineMessage, status = true, visibility = true)
+        Toast(message = offlineMessage, status = ToastStatus.FAILED, visibility = true)
+        Toast(message = onlineMessage, status = ToastStatus.SUCCESSFUL, visibility = true)
     }
 }
 
 @Composable
-fun Toast(message: String, status: Boolean, visibility: Boolean) {
+fun Toast(message: String, status: ToastStatus, visibility: Boolean) {
     val backgroundColor by animateColorAsState(
-        targetValue = if (status) Color(0xFF00bb77) else Color(0xFFe84b3d),
+        targetValue = when (status) {
+            ToastStatus.SUCCESSFUL -> Color(0xFF00bb77)
+            ToastStatus.FAILED -> Color(0xFFe84b3d)
+            ToastStatus.WARNING -> Color(0xFFff9900)
+            ToastStatus.INFO -> Color.White
+        },
         animationSpec = tween(durationMillis = 300, easing = { it }),
         label = "ToastColorAnimation"
     )
