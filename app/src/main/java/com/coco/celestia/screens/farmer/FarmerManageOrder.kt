@@ -203,7 +203,9 @@ fun FarmerManageOrder(
                     is OrderState.SUCCESS -> {
                         val filteredOrders = if (selectedCategory.isNotEmpty()) {
                             orderData.filter { order ->
-                                order.orderData.name.equals(selectedCategory, ignoreCase = true)
+                                order.orderData.any {
+                                    it.name == selectedCategory
+                                }
                             }
                         } else {
                             orderData
@@ -249,13 +251,15 @@ fun FarmerManageRequest(
 ) {
     when (orderState) {
         is OrderState.LOADING -> { Text("Loading pending orders...") }
-        is OrderState.ERROR -> { Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}") }
+        is OrderState.ERROR -> { Text("Failed to load orders: ${orderState.message}") }
         is OrderState.EMPTY -> { Text("No pending orders available.") }
         is OrderState.SUCCESS -> {
             val pendingOrders = orderData.filter { it.status == "PENDING" }
             val filteredOrders = if (selectedCategory.isNotEmpty()) {
                 orderData.filter { order ->
-                    order.orderData.name == selectedCategory
+                    order.orderData.any {
+                        it.name == selectedCategory
+                    }
                 }
             } else {
                 pendingOrders
@@ -268,7 +272,7 @@ fun FarmerManageRequest(
                     if (userData == null) {
                         CircularProgressIndicator()
                     } else {
-                        RequestCards(navController, orderCount, order, userData!!)
+                        RequestCards(navController, orderCount, order, userData)
                         orderCount++
                     }
                 }

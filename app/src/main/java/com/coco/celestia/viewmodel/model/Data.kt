@@ -18,7 +18,7 @@ data class OrderData(
     val orderId: String = "",
     val orderDate: String = "",
     val status: String = "",
-    var orderData: ProductData = ProductData(),
+    var orderData: MutableList<ProductData> = mutableListOf(),
     val barangay: String = "",
     val street: String = "",
 )
@@ -46,3 +46,5 @@ data class LocationData(
     val street: String = "",
     val barangay: String = ""
 )
+
+data class CartData(val items: MutableList<ProductData> = mutableListOf())

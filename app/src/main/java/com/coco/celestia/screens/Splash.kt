@@ -33,7 +33,10 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 @Composable
-fun SplashScreen(userViewModel: UserViewModel, navController: NavHostController) {
+fun SplashScreen(
+    userViewModel: UserViewModel,
+    navController: NavHostController,
+) {
     val scope = rememberCoroutineScope()
     var visible by remember { mutableStateOf(true) }
     val userData by userViewModel.userData.observeAsState()
@@ -59,7 +62,7 @@ fun SplashScreen(userViewModel: UserViewModel, navController: NavHostController)
                 is UserState.SUCCESS -> {
                     val role = userData?.role.toString()
                     val route = routeHandler(role)
-//                    Toast.makeText(navController.context, "Welcome back, $firstName!", Toast.LENGTH_SHORT).show()
+                    // Toast.makeText(navController.context, "Welcome back, $firstName!", Toast.LENGTH_SHORT).show()
                     navController.navigate(route.dashboard) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }

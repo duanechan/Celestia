@@ -88,7 +88,7 @@ fun FarmerRequestDetails(
         }
 
         else -> {
-            val product = orderData.orderData
+            val product = orderData.orderData[0]
 
             Column(
                 modifier = Modifier

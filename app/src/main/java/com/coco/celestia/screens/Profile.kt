@@ -1,6 +1,5 @@
 package com.coco.celestia.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -131,7 +130,7 @@ fun ProfileScreen(
                 navController.navigate(Screen.Login.route) {
                     popUpTo(0)
                 }
-                onLogoutEvent(Pair(ToastStatus.SUCCESSFUL, "Logged out successfully!"))
+                onLogoutEvent(Pair(ToastStatus.INFO, "Logged out."))
                 logoutDialog = false
             }
         )

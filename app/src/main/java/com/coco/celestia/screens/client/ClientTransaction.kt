@@ -90,8 +90,8 @@ fun TransactionPanel(transactionViewModel: TransactionViewModel) {
 @Composable
 fun TransactionItem(transaction: TransactionData) {
     val transactionDate = formatDate(transaction.order.orderDate).toString()
-    val productType = transaction.order.orderData.type
-    val productQuantity = transaction.order.orderData.quantity
+//    val productType = transaction.order.orderData.type
+//    val productQuantity = transaction.order.orderData.quantity
     val orderStatus = transaction.order.status
 
     Card(
@@ -99,7 +99,7 @@ fun TransactionItem(transaction: TransactionData) {
             .padding(20.dp)
             .fillMaxWidth()
     ) {
-        StyledText(transactionDate, productQuantity.toString(), productType, orderStatus)
+//        StyledText(transactionDate, productQuantity.toString(), productType, orderStatus)
     }
 }
 

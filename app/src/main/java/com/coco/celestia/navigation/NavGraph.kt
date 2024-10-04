@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -27,6 +28,7 @@ import com.coco.celestia.screens.admin.AddUserForm
 import com.coco.celestia.screens.admin.AdminDashboard
 import com.coco.celestia.screens.admin.AdminInventory
 import com.coco.celestia.screens.admin.AdminUserManagement
+import com.coco.celestia.screens.client.Cart
 import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientDashboard
 import com.coco.celestia.screens.client.ClientOrder
@@ -43,6 +45,7 @@ import com.coco.celestia.screens.farmer.FarmerManageOrder
 import com.coco.celestia.screens.farmer.FarmerProductTypeInventory
 import com.coco.celestia.screens.farmer.FarmerRequestDetails
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.viewmodel.CartViewModel
 import com.coco.celestia.viewmodel.ContactViewModel
 import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.OrderViewModel
@@ -55,14 +58,17 @@ import com.coco.celestia.viewmodel.model.ProductData
 fun NavGraph(
     navController: NavHostController,
     startDestination: String = Screen.Splash.route,
+    cartViewModel: CartViewModel = viewModel(),
     contactViewModel: ContactViewModel = viewModel(),
     locationViewModel: LocationViewModel = viewModel(),
     orderViewModel: OrderViewModel = viewModel(),
     productViewModel: ProductViewModel = viewModel(),
     transactionViewModel: TransactionViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
+    onNavigate: (String) -> Unit,
     onEvent: (Pair<ToastStatus, String>) -> Unit
 ) {
+    var checkoutItems = remember { mutableStateListOf<ProductData>() }
     var productName by remember { mutableStateOf("") }
     var farmerName by remember { mutableStateOf("") }
     var addressName by remember { mutableStateOf("") }
@@ -99,9 +105,11 @@ fun NavGraph(
             )
         }
         composable(route = Screen.Farmer.route) {
+            onNavigate("Dashboard")
             FarmerDashboard()
         }
         composable(route = Screen.FarmerManageOrder.route) {
+            onNavigate("Orders")
             FarmerManageOrder(
                 navController = navController,
                 userViewModel = userViewModel,
@@ -110,12 +118,15 @@ fun NavGraph(
             )
         }
         composable(route = Screen.FarmerInventory.route) {
+            onNavigate("Inventory")
             FarmerInventory(navController = navController)
         }
         composable(route = Screen.Client.route) {
+            onNavigate("Dashboard")
             ClientDashboard()
         }
         composable(route = Screen.ClientOrder.route) {
+            onNavigate("Orders")
             ClientOrder(
                 navController = navController,
                 orderViewModel = orderViewModel,
@@ -123,15 +134,27 @@ fun NavGraph(
             )
         }
         composable(route = Screen.ClientContact.route) {
+            onNavigate("Contacts")
             ClientContact(contactViewModel = contactViewModel)
         }
+        composable(route = Screen.Cart.route) {
+            Cart(
+                navController = navController,
+                cartViewModel = cartViewModel,
+                onCheckoutEvent = { checkoutItems = it },
+                onTitleChange = { onNavigate(it) }
+            )
+        }
         composable(route = Screen.Admin.route) {
+            onNavigate("Dashboard")
             AdminDashboard()
         }
         composable(route = Screen.AdminInventory.route) {
+            onNavigate("Inventory")
             AdminInventory(productViewModel = productViewModel)
         }
         composable(route = Screen.AdminUserManagement.route) {
+            onNavigate("User Management")
             AdminUserManagement(
                 userViewModel = userViewModel,
                 navController = navController
@@ -150,9 +173,11 @@ fun NavGraph(
             //sendEmail("coolgenrev@gmail.com", "Hello", "Test")
         }
         composable(route = Screen.Coop.route) {
+            onNavigate("Dashboard")
             CoopDashboard()
         }
         composable(route = Screen.CoopOrder.route) {
+            onNavigate("Orders")
             OrderRequest(
                 navController = navController,
                 orderViewModel = orderViewModel,
@@ -160,6 +185,7 @@ fun NavGraph(
             )
         }
         composable(route = Screen.CoopInventory.route) {
+            onNavigate("Inventory")
             CoopInventory(navController = navController)
         }
         composable(route = Screen.CoopProcessOrder.route) {
@@ -169,6 +195,7 @@ fun NavGraph(
             )
         }
         composable(route = Screen.AddOrder.route) {
+            onNavigate("Add Order")
             AddOrderPanel(navController = navController)
         }
         composable(
@@ -266,31 +293,26 @@ fun NavGraph(
             OrderDetailsPanel(
                 navController = navController,
                 type = type,
-                productViewModel = productViewModel
-            )
+                productViewModel = productViewModel,
+                cartViewModel = cartViewModel
+            ) {
+                onEvent(it)
+            }
         }
-        composable(
-            route = Screen.OrderConfirmation.route,
-            arguments = listOf(
-                navArgument("type") { type = NavType.StringType },
-                navArgument("name") { type = NavType.StringType },
-                navArgument("quantity") { type = NavType.IntType }
-            )
-        ) { backStack ->
-            val type = backStack.arguments?.getString("type")
-            val name = backStack.arguments?.getString("name")
-            val quantity = backStack.arguments?.getInt("quantity")
+        composable(route = Screen.OrderConfirmation.route) {
+            onNavigate("Order Confirmation")
             ConfirmOrderRequestPanel(
                 navController = navController,
-                type = type,
-                name = name,
-                quantity = quantity,
+                checkoutItems = checkoutItems,
                 orderViewModel = orderViewModel,
                 userViewModel = userViewModel,
                 transactionViewModel = transactionViewModel
-            )
+            ) {
+                onEvent(it)
+            }
         }
         composable(route = Screen.Profile.route) {
+            onNavigate("Profile")
             Profile(
                 navController = navController,
                 userViewModel = userViewModel,

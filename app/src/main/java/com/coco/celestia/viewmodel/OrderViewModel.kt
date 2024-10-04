@@ -12,7 +12,6 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import kotlin.reflect.full.memberProperties
 
 sealed class OrderState {
     object LOADING : OrderState()
@@ -87,17 +86,15 @@ class OrderViewModel : ViewModel() {
             database.child(uid).addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val filterKeywords = filter.split(",").map { it.trim() }
-
                     val orders = snapshot.children
                         .mapNotNull { it.getValue(OrderData::class.java) }
                         .filter { order ->
-                            val matches = filterKeywords.any { keyword ->
-                                OrderData::class.memberProperties.any { prop ->
-                                    val value = prop.get(order)
-                                    value?.toString()?.contains(keyword, ignoreCase = true) == true
+                            order.orderData.any { product ->
+                                filterKeywords.any { keyword ->
+                                    product.name.contains(keyword, ignoreCase = true) ||
+                                    product.type.contains(keyword, ignoreCase = true)
                                 }
                             }
-                            matches
                         }
 
                     _orderData.value = orders
@@ -133,21 +130,21 @@ class OrderViewModel : ViewModel() {
                     val orders = snapshot.children.flatMap { userSnapshot ->
                         userSnapshot.children.mapNotNull { orderSnapshot ->
                             orderSnapshot.getValue(OrderData::class.java)
-                        }.filter { orderData ->
-                            val coffeeOrMeat = orderData.orderData.type.equals("Coffee", ignoreCase = true) ||
-                                    orderData.orderData.type.equals("Meat", ignoreCase = true)
-                            val vegetable = orderData.orderData.type.equals("Vegetable", ignoreCase = true)
-                            val filtered = filterKeywords.any { keyword ->
-                                OrderData::class.memberProperties.any { prop ->
-                                    prop.get(orderData)?.toString()?.contains(keyword, ignoreCase = true) == true
+                        }.filter { order ->
+                            order.orderData.any { product ->
+                                val isCoffeeOrMeat = product.type.equals("Coffee", ignoreCase = true) ||
+                                        product.type.equals("Meat", ignoreCase = true)
+                                val isVegetable = product.type.equals("Vegetable", ignoreCase = true)
+                                val matchesFilter = filterKeywords.any { keyword ->
+                                    product.name.contains(keyword, ignoreCase = true) ||
+                                            product.type.contains(keyword, ignoreCase = true)
+                                }
+                                when (role) {
+                                    "Coop", "Admin" -> isCoffeeOrMeat && matchesFilter
+                                    "Farmer" -> isVegetable && matchesFilter
+                                    else -> false
                                 }
                             }
-                            when (role) {
-                                "Coop", "Admin" -> coffeeOrMeat && filtered
-                                "Farmer" -> vegetable && filtered
-                                else -> false
-                            }
-
                         }
                     }
 
@@ -173,7 +170,7 @@ class OrderViewModel : ViewModel() {
      */
     fun placeOrder(
         uid: String,
-        order: OrderData
+        order: OrderData,
     ) {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
