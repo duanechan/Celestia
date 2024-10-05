@@ -61,6 +61,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.DarkBlue
@@ -76,7 +77,7 @@ fun AdminUserManagement(userViewModel: UserViewModel, navController: NavControll
     var text by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
-    val selectedUsers = userViewModel.selectedUsers
+    val selectedUsers by userViewModel.selectedUsers.observeAsState(emptyList())
     val usersData by userViewModel.usersData.observeAsState()
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
     val users: MutableList<UserData?> = mutableListOf()
@@ -228,9 +229,9 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Checkbox(
-                        checked = user.isChecked.value,
+                        checked = user.isChecked,
                         onCheckedChange = { checked ->
-                            user.isChecked.value = checked
+                            user.isChecked = checked
                             if (checked) {
                                 if (!selectedUsers.contains(user)) {
                                     userViewModel.addSelectedUser(user)
@@ -278,7 +279,7 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
 
 
 @Composable
-fun ActionButtons() {
+fun ActionButtons(onClearSelect: () -> Unit) {
     var showPopUpEdit by remember { mutableStateOf(false) }
     var showPopUpDelete by remember { mutableStateOf(false) }
     var firstTextFieldValue by remember { mutableStateOf("") }
@@ -324,6 +325,8 @@ fun ActionButtons() {
             confirmButton = {
                 Button(
                     onClick = {
+                        onClearSelect() // Callback to clear selected users
+                        // TODO: Edit selected users
                         showPopUpEdit = false
                     }) {
                     Text("Save")
@@ -352,6 +355,8 @@ fun ActionButtons() {
             confirmButton = {
                 Button(
                     onClick = {
+                        onClearSelect() // Callback to clear selected users
+                        // TODO: Delete selected users
                         showPopUpDelete = false
                     }) {
                     Text("Yes")

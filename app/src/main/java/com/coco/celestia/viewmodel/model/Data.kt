@@ -11,7 +11,7 @@ data class UserData(
     val phoneNumber: String = "",
     val streetNumber: String = "",
     val barangay: String = "",
-    val isChecked: MutableState<Boolean> = mutableStateOf(false)
+    var isChecked: Boolean = false
 )
 
 data class OrderData(

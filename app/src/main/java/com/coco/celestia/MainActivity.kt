@@ -64,7 +64,7 @@ fun App() {
     val userData by userViewModel.userData.observeAsState()
     val role = userData?.role
     val currentDestination = navController.currentBackStackEntry?.destination?.route
-    val selectedUsers = userViewModel.selectedUsers
+    val selectedUsers by userViewModel.selectedUsers.observeAsState(emptyList())
     var topBarTitle by remember { mutableStateOf("") }
     var toastStatus by remember { mutableStateOf(ToastStatus.INFO) }
     var toastShown by remember { mutableStateOf(true) }
@@ -126,7 +126,9 @@ fun App() {
         },
         bottomBar = {
             if (selectedUsers.isNotEmpty()) {
-                ActionButtons()
+                ActionButtons() {
+                    userViewModel.clearSelectedUsers()
+                }
 
                 BackHandler {
                     userViewModel.clearSelectedUsers()
