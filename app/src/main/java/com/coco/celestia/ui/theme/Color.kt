@@ -25,3 +25,9 @@ val VeryDarkGreen = Color (0xFF52614E) //client elements
 val VeryDarkPurple = Color (0xFF5D4E61) //client notification and searchbar
 val RavenBlack = Color (0xFF3e3e3e) //TEXT IN CLIENT
 val CoffeeBean = Color (0xFF362e26) //ICON COLORS
+
+// Toast Palette
+val JadeGreen = Color(0xFF00bb77)
+val Cinnabar = Color(0xFFe84b3d)
+val MustardYellow = Color(0xFFff9900)
+val RoyalBlue = Color(0xFF4169e1)

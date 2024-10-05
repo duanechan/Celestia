@@ -81,7 +81,7 @@ fun AdminInventory(productViewModel: ProductViewModel) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(PurpleGrey40)
+                .background(DarkBlue)
                 .padding(5.dp, 0.dp, 5.dp, 10.dp)
          ) {
             SearchBar(

@@ -44,7 +44,6 @@ import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.ui.theme.Orange
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
-import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -180,7 +179,7 @@ fun PreparingOrderItem(
                     .animateContentSize()
             ) {
                 Text(
-                    text = if (order.orderData.type != "Vegetable") "${order.orderData.name}, ${order.orderData.quantity}kg" else order.orderData.name,
+                    text = if (order.orderData[0].type != "Vegetable") "${order.orderData[0].name}, ${order.orderData[0].quantity}kg" else order.orderData[0].name,
                     fontSize = 30.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif
                 )
                 Text(
@@ -233,7 +232,7 @@ fun PendingOrderItem(
                     .padding(16.dp)
                     .animateContentSize()
             ) {
-                Text(text = if (order.orderData.type != "Vegetable") "${order.orderData.name}, ${order.orderData.quantity}kg" else order.orderData.name,
+                Text(text = if (order.orderData[0].type != "Vegetable") "${order.orderData[0].name}, ${order.orderData[0].quantity}kg" else order.orderData[0].name,
                     fontSize = 30.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif)
                 Text(text = "${order.status} ●", fontSize = 20.sp, fontWeight = FontWeight.Light, color = Orange)
                 Text(text = "${order.street}, ${order.barangay}")
@@ -244,7 +243,7 @@ fun PendingOrderItem(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (order.orderData.type != "Vegetable") {
+                    if (order.orderData[0].type != "Vegetable") {
                         OutlinedButton(
                             onClick = {
                                 action = "Reject"

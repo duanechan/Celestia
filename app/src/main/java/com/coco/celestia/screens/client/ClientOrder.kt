@@ -47,18 +47,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.ui.theme.CoffeeBean
 import com.coco.celestia.ui.theme.LightOrange
 import com.coco.celestia.ui.theme.RavenBlack
-import com.coco.celestia.ui.theme.CoffeeBean
-import com.coco.celestia.viewmodel.model.UserData
 import com.coco.celestia.ui.theme.VeryDarkGreen
-import com.coco.celestia.ui.theme.VeryDarkPurple
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -255,7 +254,7 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
                             modifier = Modifier.padding(top = 0.dp, start = 10.dp)
                         )
                         Text(
-                            text = "$orderStatus",
+                            text = orderStatus,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = LightOrange, // will adjust color

@@ -1,6 +1,5 @@
 package com.coco.celestia.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -42,6 +41,7 @@ import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.R
 import com.coco.celestia.components.dialogs.LogoutDialog
 import com.coco.celestia.components.dialogs.SaveInfoDialog
+import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.util.isValidEmail
@@ -79,7 +79,9 @@ fun ProfilePagePreview() {
                     email,
                     phoneNumber,
                     streetNumber,
-                    barangay
+                    barangay,
+                    onLogoutEvent = {},
+                    onProfileUpdateEvent = {}
                 )
             }
         }
@@ -98,7 +100,9 @@ fun ProfileScreen(
     email: String,
     phoneNumber: String,
     streetNumber: String,
-    barangay: String
+    barangay: String,
+    onLogoutEvent: (Triple<ToastStatus, String, Long>) -> Unit,
+    onProfileUpdateEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     val userData by userViewModel.userData.observeAsState()
@@ -126,7 +130,7 @@ fun ProfileScreen(
                 navController.navigate(Screen.Login.route) {
                     popUpTo(0)
                 }
-                Toast.makeText(navController.context, "Logout", Toast.LENGTH_SHORT).show()
+                onLogoutEvent(Triple(ToastStatus.INFO, "Logged out.", System.currentTimeMillis()))
                 logoutDialog = false
             }
         )
@@ -156,7 +160,7 @@ fun ProfileScreen(
                         )
                     )
                 }
-                Toast.makeText(navController.context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
+                onProfileUpdateEvent(Triple(ToastStatus.SUCCESSFUL, "Profile updated successfully!", System.currentTimeMillis()))
                 saveInfoDialog = false
             },
             onDismiss = { saveInfoDialog = false }
@@ -173,7 +177,7 @@ fun ProfileScreen(
             modifier = Modifier.size(100.dp)
         )
         Text(text = "$firstName $lastName", fontWeight = FontWeight.Bold, fontSize = 25.sp)
-
+        Text(text = "ID: $uid", fontSize = 15.sp)
         OutlinedTextField(
             value = updatedEmail,
             onValueChange = {
@@ -198,7 +202,7 @@ fun ProfileScreen(
             label = { Text(text = "Street No.") },
             singleLine = true,
             maxLines = 1,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
         )
         ExposedDropdownMenuBox(
             expanded = expanded,
@@ -255,7 +259,9 @@ fun ProfileScreen(
 fun Profile(
     navController: NavController,
     userViewModel: UserViewModel,
-    locationViewModel: LocationViewModel
+    locationViewModel: LocationViewModel,
+    onLogoutEvent: (Triple<ToastStatus, String, Long>) -> Unit,
+    onProfileUpdateEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val userData by userViewModel.userData.observeAsState()
 
@@ -276,7 +282,9 @@ fun Profile(
             email,
             phoneNumber,
             streetNumber,
-            barangay
+            barangay,
+            onLogoutEvent = { event -> onLogoutEvent(event) },
+            onProfileUpdateEvent = { event -> onProfileUpdateEvent(event) }
         )
     }
 }

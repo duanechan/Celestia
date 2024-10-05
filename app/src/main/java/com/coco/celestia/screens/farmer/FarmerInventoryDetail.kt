@@ -110,7 +110,9 @@ fun FarmerInventoryDetail(navController: NavController, productName: String) {
                             OrderState.SUCCESS -> {
                                 // Filter orders for the specific product
                                 val filteredOrders = allOrders.filter {
-                                    it.orderData.name.equals(productName, ignoreCase = true)
+                                    it.orderData.any { product ->
+                                        product.name.equals(productName, ignoreCase = true)
+                                    }
                                 }
 
                                 if (filteredOrders.isEmpty()) {
@@ -242,7 +244,7 @@ fun OrderTable(orders: List<OrderData>) {
                                 textAlign = TextAlign.Center
                             )
                             Text(
-                                text = order.orderData.quantity.toString(),
+                                text = order.orderData[0].quantity.toString(),
                                 modifier = Modifier.weight(1f),
                                 textAlign = TextAlign.Right
                             )

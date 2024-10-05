@@ -46,7 +46,7 @@ fun FarmerInventory(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF2E3DB))
-            .padding(top = 40.dp)
+            .padding(top = 60.dp)
     ) {
         when (farmerProductState) {
             is ProductState.LOADING -> {

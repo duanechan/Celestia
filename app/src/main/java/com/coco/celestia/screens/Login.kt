@@ -2,7 +2,6 @@ package com.coco.celestia.screens
 
 import android.app.Activity
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -36,13 +35,18 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.R
 import com.coco.celestia.components.dialogs.ExitDialog
+import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.util.routeHandler
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 
 @Composable
-fun LoginScreen(mainNavController: NavController, userViewModel: UserViewModel) {
+fun LoginScreen(
+    mainNavController: NavController,
+    userViewModel: UserViewModel,
+    onLoginEvent: (Triple<ToastStatus, String, Long>) -> Unit
+) {
     val navController = rememberNavController()
     val userData by userViewModel.userData.observeAsState()
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
@@ -62,9 +66,10 @@ fun LoginScreen(mainNavController: NavController, userViewModel: UserViewModel) 
     }
     when (userState) {
         is UserState.ERROR -> {
-            Toast.makeText(navController.context, "Error: ${(userState as UserState.ERROR).message}", Toast.LENGTH_SHORT).show()
+            onLoginEvent(Triple(ToastStatus.FAILED, "Error: ${(userState as UserState.ERROR).message}", System.currentTimeMillis()))
         }
         is UserState.LOGIN_SUCCESS -> {
+            onLoginEvent(Triple(ToastStatus.SUCCESSFUL, "Login successful!", System.currentTimeMillis()))
             val role = (userState as UserState.LOGIN_SUCCESS).role
             val route = routeHandler(role)
             mainNavController.navigate(route.dashboard) {
@@ -72,7 +77,7 @@ fun LoginScreen(mainNavController: NavController, userViewModel: UserViewModel) 
             }
         }
         is UserState.REGISTER_SUCCESS -> {
-            Toast.makeText(navController.context, "You can now log in!", Toast.LENGTH_SHORT).show()
+            onLoginEvent(Triple(ToastStatus.SUCCESSFUL, "Registration successful! You can now log in.", System.currentTimeMillis()))
         }
         else -> {}
     }

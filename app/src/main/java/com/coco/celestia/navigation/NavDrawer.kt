@@ -7,13 +7,31 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -23,16 +41,46 @@ import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.LightOrange
 import com.coco.celestia.ui.theme.VeryDarkPurple
+import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.util.routeHandler
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NavDrawerTopBar(role: String, firstName: String, lastName: String) {
-    val fullName = "$firstName $lastName"
+fun NavDrawerTopBar(
+    navController: NavController,
+    title: String,
+    role: String,
+) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination?.route
     when (role) {
         "Client" -> {
             TopAppBar(
-                title = { Text(text = fullName) },
+                title = {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if(currentDestination != "${role.lowercase()}_dashboard") {
+                            IconButton(
+                                onClick = { navController.navigateUp() },
+                                modifier = Modifier.align(Alignment.CenterStart)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowLeft,
+                                    contentDescription = "Back button",
+                                )
+                            }
+                        }
+                        Text(
+                            text = title,
+                            color = Color.White,
+                            fontFamily = mintsansFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = LightOrange,
                     titleContentColor = Color.White,
@@ -41,14 +89,14 @@ fun NavDrawerTopBar(role: String, firstName: String, lastName: String) {
             )
         }
         "Farmer" -> {
-            GradientTopBar(fullName = fullName)
+            GradientTopBar(title = title)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GradientTopBar(fullName: String) {
+fun GradientTopBar(title: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -62,7 +110,29 @@ fun GradientTopBar(fullName: String) {
             )
     ) {
         TopAppBar(
-            title = { Text(text = fullName) },
+            title = {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    IconButton(
+                        onClick = {},
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowLeft,
+                            contentDescription = "Back button",
+                        )
+                    }
+                    Text(
+                        text = title,
+                        fontFamily = mintsansFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.Transparent,
                 titleContentColor = Color.White,
@@ -76,7 +146,7 @@ fun GradientTopBar(fullName: String) {
 @Composable
 fun NavDrawerBottomBar(
     role: String,
-    navController: NavController
+    navController: NavController,
 ) {
     val routes = routeHandler(role)
     val bottomBarColors: Pair<Color, Color> = bottomColorConfig(role)
@@ -159,6 +229,16 @@ fun NavDrawerBottomBar(
             }
 
             if (role == "Client") {
+                NavigationBarItem(
+                    icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Contact", tint = VeryDarkPurple) },
+                    label = { Text("Cart", color = Color.White) },
+                    selected = currentDestination == Screen.Cart.route,
+                    onClick = {
+                        navController.navigate(Screen.Cart.route) {
+                            popUpTo(navController.graph.startDestinationId)
+                        }
+                    }
+                )
                 NavigationBarItem(
                     icon = { Icon(imageVector = Icons.Default.Call, contentDescription = "Contact", tint = VeryDarkPurple) },
                     label = { Text("Contact", color = Color.White) },

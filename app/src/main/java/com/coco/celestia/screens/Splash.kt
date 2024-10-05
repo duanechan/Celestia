@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.coco.celestia.R
+import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.util.routeHandler
 import com.coco.celestia.viewmodel.UserState
@@ -33,7 +34,11 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 @Composable
-fun SplashScreen(userViewModel: UserViewModel, navController: NavHostController) {
+fun SplashScreen(
+    userViewModel: UserViewModel,
+    navController: NavHostController,
+    onReaccessEvent: (Triple<ToastStatus, String, Long>) -> Unit
+) {
     val scope = rememberCoroutineScope()
     var visible by remember { mutableStateOf(true) }
     val userData by userViewModel.userData.observeAsState()
@@ -59,7 +64,7 @@ fun SplashScreen(userViewModel: UserViewModel, navController: NavHostController)
                 is UserState.SUCCESS -> {
                     val role = userData?.role.toString()
                     val route = routeHandler(role)
-//                    Toast.makeText(navController.context, "Welcome back, $firstName!", Toast.LENGTH_SHORT).show()
+                    onReaccessEvent(Triple(ToastStatus.SUCCESSFUL, "Welcome back, ${userData?.firstname}!", System.currentTimeMillis()))
                     navController.navigate(route.dashboard) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }

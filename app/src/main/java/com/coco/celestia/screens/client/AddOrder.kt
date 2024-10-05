@@ -39,6 +39,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -50,7 +51,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.viewmodel.CartViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
@@ -86,7 +89,10 @@ fun AddOrderPanel(navController: NavController) {
 }
 
 @Composable
-fun ProductCard(product: String, navController: NavController) {
+fun ProductCard(
+    product: String,
+    navController: NavController,
+) {
     val gradient = when (product) {
         "Meat" -> Brush.linearGradient(
             colors = listOf(Color(0xFFFF5151), Color(0xFFB06520))
@@ -142,7 +148,13 @@ fun ProductCard(product: String, navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductTypeCard(product: ProductData, navController: NavController) {
+fun ProductTypeCard(
+    product: ProductData,
+    navController: NavController,
+    cartViewModel: CartViewModel,
+    onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit
+) {
+    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var expanded by remember { mutableStateOf(false) }
     val productName = product.name
     val productType = product.type
@@ -186,13 +198,12 @@ fun ProductTypeCard(product: ProductData, navController: NavController) {
                 .fillMaxWidth()
                 .clickable {
                     if (productType == "Vegetable") {
-                        navController.navigate(
-                            Screen.OrderConfirmation.createRoute(
-                                productName,
-                                productType,
-                                productQuantity
-                            )
+                        cartViewModel.addToCart(
+                            uid = uid,
+                            product = product.copy(quantity = 0)
                         )
+                        onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added to cart.", System.currentTimeMillis()))
+                        navController.navigate(Screen.Cart.route)
                     } else {
                         expanded = !expanded
                     }
@@ -223,10 +234,13 @@ fun ProductTypeCard(product: ProductData, navController: NavController) {
                     if (productType != "Vegetable") {
                         QuantitySelector(
                             navController = navController,
+                            cartViewModel = cartViewModel,
                             productType = productType,
                             productName = productName,
                             maxQuantity = productQuantity
-                        )
+                        ) {
+                            onAddToCartEvent(it)
+                        }
                     }
                 }
             }
@@ -236,7 +250,13 @@ fun ProductTypeCard(product: ProductData, navController: NavController) {
 }
 
 @Composable
-fun OrderDetailsPanel(navController: NavController, type: String?, productViewModel: ProductViewModel) {
+fun OrderDetailsPanel(
+    navController: NavController,
+    type: String?,
+    cartViewModel: CartViewModel,
+    productViewModel: ProductViewModel,
+    onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit
+) {
     val productData by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState()
 
@@ -263,7 +283,9 @@ fun OrderDetailsPanel(navController: NavController, type: String?, productViewMo
                 is ProductState.SUCCESS -> {
                     LazyColumn {
                         items(productData) { product ->
-                            ProductTypeCard(product, navController)
+                            ProductTypeCard(product, navController, cartViewModel) {
+                                onAddToCartEvent(it)
+                            }
                         }
                     }
                 }
@@ -277,10 +299,13 @@ fun OrderDetailsPanel(navController: NavController, type: String?, productViewMo
 @Composable
 fun QuantitySelector(
     navController: NavController,
+    cartViewModel: CartViewModel,
     productType: String?,
     productName: String?,
-    maxQuantity: Int
+    maxQuantity: Int,
+    onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
+    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var quantity by remember { mutableIntStateOf(0) }
 
     Column(
@@ -348,11 +373,24 @@ fun QuantitySelector(
 
         Button(
             onClick = {
-                navController.navigate(Screen.OrderConfirmation.createRoute(productType.toString(), productName.toString(), quantity))
+                if (quantity != 0) {
+                    cartViewModel.addToCart(
+                        uid,
+                        ProductData(
+                            productName.toString(),
+                            quantity,
+                            productType.toString()
+                        )
+                    )
+                    onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added to cart.", System.currentTimeMillis()))
+                    navController.navigate(Screen.Cart.route)
+                } else {
+                    onAddToCartEvent(Triple(ToastStatus.WARNING, "Enter quantity amount first.", System.currentTimeMillis()))
+                }
             },
             modifier = Modifier.padding(top = 16.dp)
         ) {
-            Text("Add Order", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("Add to Cart", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
         Text(
             text = "Qty of Order",
@@ -367,12 +405,11 @@ fun QuantitySelector(
 @Composable
 fun ConfirmOrderRequestPanel(
     navController: NavController,
-    type: String?,
-    name: String?,
-    quantity: Int?,
+    checkoutItems: SnapshotStateList<ProductData>,
     userViewModel: UserViewModel,
     orderViewModel: OrderViewModel,
-    transactionViewModel: TransactionViewModel
+    transactionViewModel: TransactionViewModel,
+    onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val userData by userViewModel.userData.observeAsState()
     val orderState by orderViewModel.orderState.observeAsState()
@@ -382,22 +419,18 @@ fun ConfirmOrderRequestPanel(
 
     LaunchedEffect(barangay, streetNumber) {
         if (barangay.isEmpty() && streetNumber.isEmpty()) {
-            Toast.makeText(navController.context, "Please complete your address details.", Toast.LENGTH_SHORT).show()
+            onAddToCartEvent(Triple(ToastStatus.WARNING, "Please complete your address details.", System.currentTimeMillis()))
             navController.navigate(Screen.Profile.route) {
                 popUpTo(Screen.OrderConfirmation.route) { inclusive = true }
             }
         } else {
             val order = OrderData(
-                "ORDR{${UUID.randomUUID()}}",
-                Date.from(Instant.now()).toString(),
-                "PENDING",
-                ProductData(
-                    name.toString(),
-                    quantity!!,
-                    type.toString()
-                ),
-                barangay,
-                streetNumber
+                orderId = "ORDR{${UUID.randomUUID()}}",
+                orderDate = Date.from(Instant.now()).toString(),
+                status = "PENDING",
+                orderData = checkoutItems,
+                barangay = barangay,
+                street = streetNumber
             )
             val transaction = TransactionData(
                 "TRNSCTN{${UUID.randomUUID()}}",
@@ -409,13 +442,13 @@ fun ConfirmOrderRequestPanel(
     }
     when (orderState) {
         is OrderState.LOADING -> {
-            Toast.makeText(navController.context, "Placing order...", Toast.LENGTH_SHORT).show()
+            onAddToCartEvent(Triple(ToastStatus.INFO, "Loading...", System.currentTimeMillis()))
         }
         is OrderState.ERROR -> {
-            Toast.makeText(navController.context, "Error: ${(orderState as OrderState.ERROR).message}", Toast.LENGTH_SHORT).show()
+            onAddToCartEvent(Triple(ToastStatus.FAILED, "Error: ${(orderState as OrderState.ERROR).message}", System.currentTimeMillis()))
         }
         is OrderState.SUCCESS -> {
-            Toast.makeText(navController.context, "Order placed.", Toast.LENGTH_SHORT).show()
+            onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Order placed.", System.currentTimeMillis()))
             userData?.let {
                 navController.navigate(Screen.Client.route) {
                     popUpTo(Screen.Splash.route)

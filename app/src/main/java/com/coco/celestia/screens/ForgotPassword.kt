@@ -23,11 +23,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 
 @Composable
-fun ForgotPasswordScreen(navController: NavController) {
+fun ForgotPasswordScreen(
+    navController: NavController,
+    onEvent: (Triple<ToastStatus, String, Long>) -> Unit
+) {
     val userViewModel: UserViewModel = viewModel()
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
     var email by remember { mutableStateOf("") }
@@ -53,7 +57,7 @@ fun ForgotPasswordScreen(navController: NavController) {
         Button(
             onClick = {
                 if (email.isEmpty()) {
-                    Toast.makeText(navController.context, "Email field cannot be empty", Toast.LENGTH_SHORT).show()
+                    onEvent(Triple(ToastStatus.WARNING, "Email field cannot be empty", System.currentTimeMillis()))
                 } else {
                     userViewModel.sendPasswordResetEmail(email)
                 }
@@ -68,11 +72,11 @@ fun ForgotPasswordScreen(navController: NavController) {
         LaunchedEffect (userState){
             when (userState) {
                 is UserState.EMAIL_SENT_SUCCESS -> {
-                    Toast.makeText(navController.context, "Reset email sent successfully.", Toast.LENGTH_SHORT).show()
+                    onEvent(Triple(ToastStatus.SUCCESSFUL, "Reset email sent successfully!", System.currentTimeMillis()))
                 }
 
                 is UserState.ERROR -> {
-                    Toast.makeText(navController.context, "Error: ${(userState as UserState.ERROR).message}", Toast.LENGTH_SHORT).show()
+                    onEvent(Triple(ToastStatus.FAILED, "Error: ${(userState as UserState.ERROR).message}", System.currentTimeMillis()))
                 }
                 else -> {}
             }
