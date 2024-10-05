@@ -20,6 +20,8 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        buildConfigField("String", "SMTP_USERNAME", "\"${project.findProperty("SMTP_USERNAME") ?: "default_username"}\"")
+        buildConfigField("String", "SMTP_PASSWORD", "\"${project.findProperty("SMTP_PASSWORD") ?: "default_password"}\"")
     }
 
     buildTypes {
@@ -40,6 +42,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"

@@ -1,4 +1,4 @@
-package com.coco.celestia
+package com.coco.celestia.util
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -11,8 +11,8 @@ import javax.mail.internet.MimeMessage
 
 fun sendEmail(to: String, subject: String, body: String) {
     CoroutineScope(Dispatchers.IO).launch {
-        val username = ""
-        val password = ""
+        val username = com.coco.celestia.BuildConfig.SMTP_USERNAME
+        val password = com.coco.celestia.BuildConfig.SMTP_PASSWORD
 
         val props = Properties().apply {
             put("mail.smtp.auth", "true")
