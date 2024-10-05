@@ -2,7 +2,6 @@ package com.coco.celestia.screens
 
 import android.app.Activity
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -46,7 +45,7 @@ import com.coco.celestia.viewmodel.UserViewModel
 fun LoginScreen(
     mainNavController: NavController,
     userViewModel: UserViewModel,
-    onLoginEvent: (Pair<ToastStatus, String>) -> Unit
+    onLoginEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val navController = rememberNavController()
     val userData by userViewModel.userData.observeAsState()
@@ -67,10 +66,10 @@ fun LoginScreen(
     }
     when (userState) {
         is UserState.ERROR -> {
-            onLoginEvent(Pair(ToastStatus.FAILED, "Error: ${(userState as UserState.ERROR).message}"))
+            onLoginEvent(Triple(ToastStatus.FAILED, "Error: ${(userState as UserState.ERROR).message}", System.currentTimeMillis()))
         }
         is UserState.LOGIN_SUCCESS -> {
-            onLoginEvent(Pair(ToastStatus.SUCCESSFUL, "Login successful!"))
+            onLoginEvent(Triple(ToastStatus.SUCCESSFUL, "Login successful!", System.currentTimeMillis()))
             val role = (userState as UserState.LOGIN_SUCCESS).role
             val route = routeHandler(role)
             mainNavController.navigate(route.dashboard) {
@@ -78,7 +77,7 @@ fun LoginScreen(
             }
         }
         is UserState.REGISTER_SUCCESS -> {
-            onLoginEvent(Pair(ToastStatus.SUCCESSFUL, "Registration successful! You can now log in."))
+            onLoginEvent(Triple(ToastStatus.SUCCESSFUL, "Registration successful! You can now log in.", System.currentTimeMillis()))
         }
         else -> {}
     }

@@ -152,7 +152,7 @@ fun ProductTypeCard(
     product: ProductData,
     navController: NavController,
     cartViewModel: CartViewModel,
-    onAddToCartEvent: (Pair<ToastStatus, String>) -> Unit
+    onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var expanded by remember { mutableStateOf(false) }
@@ -202,7 +202,7 @@ fun ProductTypeCard(
                             uid = uid,
                             product = product.copy(quantity = 0)
                         )
-                        onAddToCartEvent(Pair(ToastStatus.SUCCESSFUL, "Added to cart."))
+                        onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added to cart.", System.currentTimeMillis()))
                         navController.navigate(Screen.Cart.route)
                     } else {
                         expanded = !expanded
@@ -255,7 +255,7 @@ fun OrderDetailsPanel(
     type: String?,
     cartViewModel: CartViewModel,
     productViewModel: ProductViewModel,
-    onAddToCartEvent: (Pair<ToastStatus, String>) -> Unit
+    onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val productData by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState()
@@ -303,7 +303,7 @@ fun QuantitySelector(
     productType: String?,
     productName: String?,
     maxQuantity: Int,
-    onAddToCartEvent: (Pair<ToastStatus, String>) -> Unit
+    onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var quantity by remember { mutableIntStateOf(0) }
@@ -373,17 +373,20 @@ fun QuantitySelector(
 
         Button(
             onClick = {
-                cartViewModel.addToCart(
-                    uid,
-                    ProductData(
-                        productName.toString(),
-                        quantity,
-                        productType.toString()
+                if (quantity != 0) {
+                    cartViewModel.addToCart(
+                        uid,
+                        ProductData(
+                            productName.toString(),
+                            quantity,
+                            productType.toString()
+                        )
                     )
-                )
-                onAddToCartEvent(Pair(ToastStatus.SUCCESSFUL, "Added to cart."))
-                navController.navigate(Screen.Cart.route)
-//                navController.navigate(Screen.OrderConfirmation.createRoute(productType.toString(), productName.toString(), quantity))
+                    onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added to cart.", System.currentTimeMillis()))
+                    navController.navigate(Screen.Cart.route)
+                } else {
+                    onAddToCartEvent(Triple(ToastStatus.WARNING, "Enter quantity amount first.", System.currentTimeMillis()))
+                }
             },
             modifier = Modifier.padding(top = 16.dp)
         ) {
@@ -406,7 +409,7 @@ fun ConfirmOrderRequestPanel(
     userViewModel: UserViewModel,
     orderViewModel: OrderViewModel,
     transactionViewModel: TransactionViewModel,
-    onAddToCartEvent: (Pair<ToastStatus, String>) -> Unit
+    onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val userData by userViewModel.userData.observeAsState()
     val orderState by orderViewModel.orderState.observeAsState()
@@ -416,7 +419,7 @@ fun ConfirmOrderRequestPanel(
 
     LaunchedEffect(barangay, streetNumber) {
         if (barangay.isEmpty() && streetNumber.isEmpty()) {
-            Toast.makeText(navController.context, "Please complete your address details.", Toast.LENGTH_SHORT).show()
+            onAddToCartEvent(Triple(ToastStatus.WARNING, "Please complete your address details.", System.currentTimeMillis()))
             navController.navigate(Screen.Profile.route) {
                 popUpTo(Screen.OrderConfirmation.route) { inclusive = true }
             }
@@ -439,13 +442,13 @@ fun ConfirmOrderRequestPanel(
     }
     when (orderState) {
         is OrderState.LOADING -> {
-            onAddToCartEvent(Pair(ToastStatus.INFO, "Loading..."))
+            onAddToCartEvent(Triple(ToastStatus.INFO, "Loading...", System.currentTimeMillis()))
         }
         is OrderState.ERROR -> {
-            onAddToCartEvent(Pair(ToastStatus.FAILED, "Error: ${(orderState as OrderState.ERROR).message}"))
+            onAddToCartEvent(Triple(ToastStatus.FAILED, "Error: ${(orderState as OrderState.ERROR).message}", System.currentTimeMillis()))
         }
         is OrderState.SUCCESS -> {
-            onAddToCartEvent(Pair(ToastStatus.SUCCESSFUL, "Order placed."))
+            onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Order placed.", System.currentTimeMillis()))
             userData?.let {
                 navController.navigate(Screen.Client.route) {
                     popUpTo(Screen.Splash.route)

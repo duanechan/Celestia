@@ -48,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.JadeGreen
 import com.coco.celestia.ui.theme.LightOrange
@@ -62,7 +63,8 @@ fun Cart(
     navController: NavController,
     cartViewModel: CartViewModel,
     onTitleChange: (String) -> Unit,
-    onCheckoutEvent: (SnapshotStateList<ProductData>) -> Unit
+    onCheckoutEvent: (SnapshotStateList<ProductData>) -> Unit,
+    onCheckoutErrorEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     val context = LocalContext.current
@@ -94,7 +96,7 @@ fun Cart(
                         onCheckoutEvent(checkoutItems)
                         navController.navigate(Screen.OrderConfirmation.route)
                     } else {
-                        Toast.makeText(context, "Check the products you want to order.", Toast.LENGTH_SHORT).show()
+                        onCheckoutErrorEvent(Triple(ToastStatus.WARNING, "Select items to checkout.", System.currentTimeMillis()))
                     }
                 },
                 colors = IconButtonDefaults.iconButtonColors(

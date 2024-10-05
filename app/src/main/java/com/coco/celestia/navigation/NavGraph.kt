@@ -1,6 +1,5 @@
 package com.coco.celestia.navigation
 
-import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -66,7 +65,7 @@ fun NavGraph(
     transactionViewModel: TransactionViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
     onNavigate: (String) -> Unit,
-    onEvent: (Pair<ToastStatus, String>) -> Unit
+    onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     var checkoutItems = remember { mutableStateListOf<ProductData>() }
     var productName by remember { mutableStateOf("") }
@@ -85,7 +84,9 @@ fun NavGraph(
             SplashScreen(
                 navController = navController,
                 userViewModel = userViewModel
-            )
+            ) {
+                onEvent(it)
+            }
         }
         composable(route = Screen.Login.route) {
             LoginScreen(
@@ -96,13 +97,17 @@ fun NavGraph(
             }
         }
         composable(route = Screen.ForgotPassword.route) {
-            ForgotPasswordScreen(navController = navController)
+            ForgotPasswordScreen(navController = navController) {
+                onEvent(it)
+            }
         }
         composable(route = Screen.Register.route) {
             RegisterScreen(
                 navController = navController,
                 userViewModel = userViewModel
-            )
+            ) {
+                onEvent(it)
+            }
         }
         composable(route = Screen.Farmer.route) {
             onNavigate("Dashboard")
@@ -141,8 +146,9 @@ fun NavGraph(
             Cart(
                 navController = navController,
                 cartViewModel = cartViewModel,
+                onTitleChange = { onNavigate(it) },
                 onCheckoutEvent = { checkoutItems = it },
-                onTitleChange = { onNavigate(it) }
+                onCheckoutErrorEvent = { onEvent(it) }
             )
         }
         composable(route = Screen.Admin.route) {
@@ -239,14 +245,14 @@ fun NavGraph(
                     )
                     productViewModel.addProduct(product)
                     navController.navigate(Screen.CoopInventory.route)
-                    Toast.makeText(navController.context, "${quantityAmount}kg of $productName added to $productType inventory.", Toast.LENGTH_SHORT).show()
+                    onEvent(Triple(ToastStatus.SUCCESSFUL, "${quantityAmount}kg of $productName added to $productType inventory.", System.currentTimeMillis()))
                     productName = ""
                     farmerName = ""
                     addressName = ""
                     quantityAmount = 0
                     productType = ""
                 } else {
-                    Toast.makeText(navController.context, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                    onEvent(Triple(ToastStatus.WARNING, "Please fill in all fields", System.currentTimeMillis()))
                 }
             }
         }

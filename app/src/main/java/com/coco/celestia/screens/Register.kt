@@ -35,13 +35,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.R
+import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.util.isValidEmail
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 
 @Composable
-fun RegisterScreen(navController: NavController, userViewModel: UserViewModel) {
+fun RegisterScreen(
+    navController: NavController,
+    userViewModel: UserViewModel,
+    onRegisterEvent: (Triple<ToastStatus, String, Long>) -> Unit
+) {
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
     val maxChar = 25
     var email by remember { mutableStateOf("") }
@@ -55,11 +60,11 @@ fun RegisterScreen(navController: NavController, userViewModel: UserViewModel) {
 
     when (userState) {
         is UserState.ERROR -> {
-            Toast.makeText(navController.context, "Error: ${(userState as UserState.ERROR).message}", Toast.LENGTH_SHORT).show()
+            onRegisterEvent(Triple(ToastStatus.FAILED, "Error: ${(userState as UserState.ERROR).message}", System.currentTimeMillis()))
         }
         is UserState.REGISTER_SUCCESS -> {
+            onRegisterEvent(Triple(ToastStatus.SUCCESSFUL, "Registration Successful", System.currentTimeMillis()))
             userViewModel.resetUserState()
-            Toast.makeText(navController.context, "Registration Successful", Toast.LENGTH_SHORT).show()
             navController.navigate(Screen.Login.route)
         }
         else -> {}
@@ -225,7 +230,7 @@ fun RegisterScreen(navController: NavController, userViewModel: UserViewModel) {
                     if (email.isNotEmpty() && firstName.isNotEmpty() && lastName.isNotEmpty() && password.isNotEmpty()) {
                         userViewModel.register(email, firstName, lastName, password, selectedRole)
                     } else {
-                        Toast.makeText(navController.context, "All text must be filled", Toast.LENGTH_SHORT).show()
+                        onRegisterEvent(Triple(ToastStatus.WARNING, "All text must be filled", System.currentTimeMillis()))
                     }
                 },
                 modifier = Modifier

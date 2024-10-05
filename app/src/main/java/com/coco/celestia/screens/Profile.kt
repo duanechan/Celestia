@@ -101,8 +101,8 @@ fun ProfileScreen(
     phoneNumber: String,
     streetNumber: String,
     barangay: String,
-    onLogoutEvent: (Pair<ToastStatus, String>) -> Unit,
-    onProfileUpdateEvent: (Pair<ToastStatus, String>) -> Unit
+    onLogoutEvent: (Triple<ToastStatus, String, Long>) -> Unit,
+    onProfileUpdateEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     val userData by userViewModel.userData.observeAsState()
@@ -130,7 +130,7 @@ fun ProfileScreen(
                 navController.navigate(Screen.Login.route) {
                     popUpTo(0)
                 }
-                onLogoutEvent(Pair(ToastStatus.INFO, "Logged out."))
+                onLogoutEvent(Triple(ToastStatus.INFO, "Logged out.", System.currentTimeMillis()))
                 logoutDialog = false
             }
         )
@@ -160,7 +160,7 @@ fun ProfileScreen(
                         )
                     )
                 }
-                onProfileUpdateEvent(Pair(ToastStatus.SUCCESSFUL, "Profile updated successfully!"))
+                onProfileUpdateEvent(Triple(ToastStatus.SUCCESSFUL, "Profile updated successfully!", System.currentTimeMillis()))
                 saveInfoDialog = false
             },
             onDismiss = { saveInfoDialog = false }
@@ -260,8 +260,8 @@ fun Profile(
     navController: NavController,
     userViewModel: UserViewModel,
     locationViewModel: LocationViewModel,
-    onLogoutEvent: (Pair<ToastStatus, String>) -> Unit,
-    onProfileUpdateEvent: (Pair<ToastStatus, String>) -> Unit
+    onLogoutEvent: (Triple<ToastStatus, String, Long>) -> Unit,
+    onProfileUpdateEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val userData by userViewModel.userData.observeAsState()
 

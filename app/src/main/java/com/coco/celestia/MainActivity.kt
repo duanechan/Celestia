@@ -70,7 +70,7 @@ fun App() {
     var toastShown by remember { mutableStateOf(true) }
     var showToast by remember { mutableStateOf(false) }
     var toastMessage by remember { mutableStateOf("") }
-    var toastEvent by remember { mutableStateOf(Pair(ToastStatus.INFO, "")) }
+    var toastEvent by remember { mutableStateOf(Triple(ToastStatus.INFO, "", 0L)) }
     val systemUiController = rememberSystemUiController()
 
     DisposableEffect(systemUiController) {
@@ -86,12 +86,12 @@ fun App() {
             val connection = checkNetworkConnection(context)
             if (!connection) {
                 if(!toastShown) {
-                    toastEvent = Pair(ToastStatus.FAILED, "You're offline. Please check your internet connection.")
+                    toastEvent = Triple(ToastStatus.FAILED, "You're offline. Please check your internet connection.", System.currentTimeMillis())
                 }
                 toastShown = true
             } else {
                 if (toastShown) {
-                    toastEvent = Pair(ToastStatus.SUCCESSFUL, "Online!")
+                    toastEvent = Triple(ToastStatus.SUCCESSFUL, "Online!", System.currentTimeMillis())
                 }
                 toastShown = false
             }
@@ -108,7 +108,6 @@ fun App() {
             showToast = false
         }
     }
-
     Scaffold(
         topBar = {
             if (role != null ||
@@ -152,7 +151,7 @@ fun App() {
             navController = navController,
             onNavigate = { topBarTitle = it },
         ) {
-            toastEvent = it
+            toastEvent = Triple(it.first, it.second, System.currentTimeMillis())
         }
     }
 }
