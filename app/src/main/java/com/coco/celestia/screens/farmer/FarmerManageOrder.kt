@@ -95,7 +95,6 @@ fun FarmerManageOrder(
                 .verticalScroll(rememberScrollState())
                 .background(Color(0xFFF2E3DB))
         ) {
-            // Display the buttons for "Order Status" and "Order Request"
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -219,7 +218,14 @@ fun FarmerManageOrder(
                                 if (userData == null) {
                                     CircularProgressIndicator()
                                 } else {
-                                    ManageOrderCards(orderCount, order, userData!!)
+                                    // Make the card clickable
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(8.dp)
+                                    ) {
+                                        ManageOrderCards(navController, orderCount, order, userData!!)
+                                    }
                                     orderCount++
                                 }
                             }
@@ -282,8 +288,7 @@ fun FarmerManageRequest(
 }
 
 @Composable
-fun ManageOrderCards(orderCount: Int, order: OrderData, user: UserData) {
-    var expanded by remember { mutableStateOf(false) }
+fun ManageOrderCards(navController: NavController, orderCount: Int, order: OrderData, user: UserData) {
     val clientName = "${user.firstname} ${user.lastname}"
     val orderId = order.orderId.substring(5, 9).uppercase()
     val orderStatus = order.status
@@ -312,7 +317,9 @@ fun ManageOrderCards(orderCount: Int, order: OrderData, user: UserData) {
                         )
                     )
                     .fillMaxSize()
-                    .clickable { expanded = !expanded }
+                    .clickable {
+                        navController.navigate(Screen.FarmerOrderDetails.createRoute(order.orderId))
+                    }
             ) {
                 Row(
                     modifier = Modifier
@@ -369,14 +376,14 @@ fun ManageOrderCards(orderCount: Int, order: OrderData, user: UserData) {
 @Composable
 fun OrderStatusCard(orderStatus: String) {
     val backgroundColor = when (orderStatus) {
-        "ACCEPTED" -> Color(0xFF4CAF50) // Green
+        "PREPARING" -> Color(0xFF4CAF50) // Green
         "PENDING" -> Color(0xFFE0A83B) // Yellow
         "REJECTED" -> Color(0xFFA2453D) // Red
         else -> Color.Gray
     }
 
     val icon = when (orderStatus) {
-        "ACCEPTED" -> Icons.Default.Check
+        "PREPARING" -> Icons.Default.Check
         "PENDING" -> Icons.Default.Refresh
         "REJECTED" -> Icons.Default.Clear
         else -> Icons.Default.Star
@@ -405,7 +412,7 @@ fun OrderStatusCard(orderStatus: String) {
 
             Text(
                 text = orderStatus,
-                fontSize = 7.5.sp,
+                fontSize = 7.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
@@ -498,6 +505,3 @@ fun RequestCards(
         Spacer(modifier = Modifier.width(8.dp))
     }
 }
-
-
-

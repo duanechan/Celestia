@@ -269,8 +269,8 @@ fun FarmerRequestDetails(
                 showDecisionDialog = false
                 if (decisionType == "ACCEPT") {
                     isOrderAccepted = true
-                    // Update order status to accepted
-                    val updatedOrder = orderData!!.copy(status = "ACCEPTED")
+                    // Update order status to preparing
+                    val updatedOrder = orderData!!.copy(status = "PREPARING")
                     orderViewModel.updateOrder(updatedOrder)
                     onAccept()
                 } else {

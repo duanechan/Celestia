@@ -115,15 +115,15 @@ fun GradientTopBar(title: String) {
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-                    IconButton(
-                        onClick = {},
-                        modifier = Modifier.align(Alignment.CenterStart)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.KeyboardArrowLeft,
-                            contentDescription = "Back button",
-                        )
-                    }
+//                    IconButton(
+//                        onClick = {},
+//                        modifier = Modifier.align(Alignment.CenterStart)
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.KeyboardArrowLeft,
+//                            contentDescription = "Back button",
+//                        )
+//                    }
                     Text(
                         text = title,
                         fontFamily = mintsansFontFamily,

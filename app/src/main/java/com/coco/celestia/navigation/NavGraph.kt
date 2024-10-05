@@ -43,6 +43,7 @@ import com.coco.celestia.screens.farmer.FarmerInventoryDetail
 import com.coco.celestia.screens.farmer.FarmerManageOrder
 import com.coco.celestia.screens.farmer.FarmerProductTypeInventory
 import com.coco.celestia.screens.farmer.FarmerRequestDetails
+import com.coco.celestia.screens.farmer.FarmerOrderDetails
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.CartViewModel
 import com.coco.celestia.viewmodel.ContactViewModel
@@ -288,6 +289,19 @@ fun NavGraph(
                     orderId = orderId,
                     onAccept = { },
                     onReject = { }
+                )
+            }
+        }
+        composable(
+            route = Screen.FarmerOrderDetails.route,
+            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getString("orderId")
+
+            if (orderId != null) {
+                FarmerOrderDetails(
+                    navController = navController,
+                    orderId = orderId
                 )
             }
         }
