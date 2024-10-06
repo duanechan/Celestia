@@ -135,4 +135,22 @@ class ProductViewModel : ViewModel() {
                 }
         }
     }
+
+    fun updateProductQuantity(productName: String, newQuantity: Int) {
+        viewModelScope.launch {
+            try {
+                val productRef = database.child(productName.lowercase())
+                val snapshot = productRef.get().await()
+
+                if (snapshot.exists()) {
+                    productRef.child("quantity").setValue(newQuantity).await()
+                    fetchProduct(productName)
+                } else {
+                    _productState.value = ProductState.ERROR("Product not found")
+                }
+            } catch (e: Exception) {
+                _productState.value = ProductState.ERROR(e.message ?: "Error updating product quantity")
+            }
+        }
+    }
 }
