@@ -4,6 +4,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
@@ -78,7 +80,7 @@ fun FarmerOrderDetails(
         }
 
         else -> {
-            val product = orderData.orderData[0]
+            val products = orderData.orderData.filter { it.type == "Vegetable" }
 
             Column(
                 modifier = Modifier
@@ -159,13 +161,16 @@ fun FarmerOrderDetails(
                                         .clip(RoundedCornerShape(8.dp))
                                 )
                                 Spacer(modifier = Modifier.width(50.dp))
-                                Column(
+                                LazyColumn(
                                     verticalArrangement = Arrangement.Center,
                                     horizontalAlignment = Alignment.Start,
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text(text = product.name, fontWeight = FontWeight.Bold, fontSize = 30.sp, color = Color.White)
-                                    Text(text = "${product.quantity} kg", fontWeight = FontWeight.Bold, fontSize = 40.sp, color = Color.White)
+                                    items(products) { product ->
+                                        Text(text = product.name, fontWeight = FontWeight.Bold, fontSize = 30.sp, color = Color.White)
+                                        Text(text = "${product.quantity} kg", fontWeight = FontWeight.Bold, fontSize = 40.sp, color = Color.White)
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                    }
                                 }
                             }
                         }

@@ -4,6 +4,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -90,7 +92,7 @@ fun FarmerRequestDetails(
         }
 
         else -> {
-            val product = orderData.orderData[0]
+            val products = orderData.orderData.filter { it.type == "Vegetable" }
 
             Column(
                 modifier = Modifier
@@ -156,13 +158,16 @@ fun FarmerRequestDetails(
                                     .clip(RoundedCornerShape(8.dp))
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Column(
+                            LazyColumn(
                                 verticalArrangement = Arrangement.Center,
                                 horizontalAlignment = Alignment.Start,
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text(text = product.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                Text(text = "${product.quantity} kg", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                                items(products) { product ->
+                                    Text(text = product.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                    Text(text = "${product.quantity} kg", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                }
                             }
                         }
                     }
@@ -176,24 +181,30 @@ fun FarmerRequestDetails(
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     modifier = Modifier.width(cardWidth)
                 ) {
-                    Column(
+                    LazyColumn(
                         modifier = Modifier.padding(30.dp),
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text(text = "Inventory Check", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "${product.quantity} kg",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 24.sp,
-                            color = Color(0xFF6D4A26)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Check the inventory for more details",
-                            color = Color(0xFF9A5F32),
-                            modifier = Modifier.padding(8.dp)
-                        )
+                        item {
+                            Text(text = "Inventory Check", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        items(products) { product ->
+                            Text(
+                                text = "${product.quantity} kg",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 24.sp,
+                                color = Color(0xFF6D4A26)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        item {
+                            Text(
+                                text = "Check the inventory for more details",
+                                color = Color(0xFF9A5F32),
+                                modifier = Modifier.padding(8.dp)
+                            )
+                        }
                     }
                 }
 
