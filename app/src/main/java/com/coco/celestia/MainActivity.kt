@@ -83,25 +83,26 @@ fun App() {
     }
 
     LaunchedEffect(Unit) {
-        while(true) {
-            val connection = checkNetworkConnection(context)
-            if (!connection) {
-                if(!toastShown) {
-                    toastEvent = Triple(ToastStatus.FAILED, "You're offline. Please check your internet connection.", System.currentTimeMillis())
+        var lastConnectionState = checkNetworkConnection(context)
+        var firstLaunch = true
+        while (true) {
+            val currentConnectionState = checkNetworkConnection(context)
+            if (firstLaunch || currentConnectionState != lastConnectionState) {
+                toastEvent = if (!currentConnectionState) {
+                    Triple(ToastStatus.FAILED, "You're offline. Please check your internet connection.", System.currentTimeMillis())
+                } else {
+                    Triple(ToastStatus.SUCCESSFUL, "Online!", System.currentTimeMillis())
                 }
-                toastShown = true
-            } else {
-                if (toastShown) {
-                    toastEvent = Triple(ToastStatus.SUCCESSFUL, "Online!", System.currentTimeMillis())
-                }
-                toastShown = false
+                lastConnectionState = currentConnectionState
+                firstLaunch = false
             }
             delay(2000)
         }
     }
 
+
     LaunchedEffect(toastEvent) {
-        if (toastEvent.first != ToastStatus.INFO && toastEvent.second.isNotEmpty() && toastEvent.third != 0L) {
+        if (toastEvent.second.isNotEmpty()) {
             toastStatus = toastEvent.first
             toastMessage = toastEvent.second
             showToast = true
