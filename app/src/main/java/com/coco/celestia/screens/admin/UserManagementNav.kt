@@ -44,8 +44,7 @@ import com.coco.celestia.viewmodel.UserViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActionButtons(
-    userViewModel: UserViewModel,
-    onClearSelect: () -> Unit
+    userViewModel: UserViewModel
 ) {
     var showPopUpEdit by remember { mutableStateOf(false) }
     var showPopUpDelete by remember { mutableStateOf(false) }
@@ -179,8 +178,18 @@ fun ActionButtons(
             confirmButton = {
                 Button(
                     onClick = {
-                        onClearSelect() // Callback to clear selected users
-                        // TODO: Delete selected users
+                        selectedUsers.forEach { user ->
+                            if (user != null) {
+                                userViewModel.getUserUidByEmail(user.email) { uid ->
+                                    if (uid != null) {
+                                        userViewModel.deleteUser(uid)
+                                    } else {
+                                        Toast.makeText(content, "User not found", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                        }
+                        userViewModel.clearSelectedUsers()
                         showPopUpDelete = false
                     }) {
                     Text("Yes")

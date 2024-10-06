@@ -1,6 +1,5 @@
 package com.coco.celestia.viewmodel
 
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -17,12 +16,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 sealed class UserState {
-    object LOADING : UserState()
-    object SUCCESS : UserState()
-    object EMAIL_SENT_SUCCESS: UserState()
+    data object LOADING : UserState()
+    data object SUCCESS : UserState()
+    data object EMAIL_SENT_SUCCESS: UserState()
     data object REGISTER_SUCCESS: UserState()
     data class LOGIN_SUCCESS (val role: String): UserState()
-    object EMPTY : UserState()
+    data object EMPTY : UserState()
     data class ERROR (val message: String) : UserState()
 }
 
@@ -109,25 +108,27 @@ class UserViewModel : ViewModel() {
     }
 
     fun getUserUidByEmail(email: String, onResult: (String?) -> Unit) {
-        val query = database.orderByChild("email").equalTo(email)
+        viewModelScope.launch {
+            val query = database.orderByChild("email").equalTo(email)
 
-        query.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.exists()) {
-                    for (userSnapshot in snapshot.children) {
-                        val uid = userSnapshot.key
-                        onResult(uid)
-                        return
+            query.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        for (userSnapshot in snapshot.children) {
+                            val uid = userSnapshot.key
+                            onResult(uid)
+                            return
+                        }
+                    } else {
+                        onResult(null)
                     }
-                } else {
+                }
+
+                override fun onCancelled(error: DatabaseError) {
                     onResult(null)
                 }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                onResult(null)
-            }
-        })
+            })
+        }
     }
 
     /**
@@ -244,6 +245,18 @@ class UserViewModel : ViewModel() {
         }
     }
 
+    fun deleteUser(uid: String) {
+        viewModelScope.launch {
+            _userState.value = UserState.LOADING
+            database.child(uid).removeValue().addOnCompleteListener{ task ->
+                if (!task.isSuccessful) {
+                    _userState.value = UserState.ERROR("Error")
+                } else {
+                    _userState.value = UserState.SUCCESS
+                }
+            }
+        }
+    }
     /**
      * Logs out the current user.
      */
