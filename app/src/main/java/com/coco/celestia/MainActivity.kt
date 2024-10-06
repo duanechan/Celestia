@@ -126,7 +126,7 @@ fun App() {
         },
         bottomBar = {
             if (selectedUsers.isNotEmpty()) {
-                ActionButtons() {
+                ActionButtons(userViewModel) {
                     userViewModel.clearSelectedUsers()
                 }
 

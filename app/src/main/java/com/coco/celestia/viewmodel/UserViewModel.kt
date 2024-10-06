@@ -108,6 +108,28 @@ class UserViewModel : ViewModel() {
         }
     }
 
+    fun getUserUidByEmail(email: String, onResult: (String?) -> Unit) {
+        val query = database.orderByChild("email").equalTo(email)
+
+        query.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    for (userSnapshot in snapshot.children) {
+                        val uid = userSnapshot.key
+                        onResult(uid)
+                        return
+                    }
+                } else {
+                    onResult(null)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                onResult(null)
+            }
+        })
+    }
+
     /**
      * Registers a new user with the provided email, first name, last name, and password.
      */

@@ -163,8 +163,7 @@ fun NavGraph(
         composable(route = Screen.AdminUserManagement.route) {
             onNavigate("User Management")
             AdminUserManagement(
-                userViewModel = userViewModel,
-                navController = navController
+                userViewModel = userViewModel
             )
         }
         composable(route = Screen.AdminAddUserManagement.route) {
