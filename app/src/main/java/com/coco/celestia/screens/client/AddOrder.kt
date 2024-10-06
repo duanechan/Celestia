@@ -29,12 +29,16 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.CartViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.OrderState
@@ -202,7 +207,13 @@ fun ProductTypeCard(
                             uid = uid,
                             product = product.copy(quantity = 0)
                         )
-                        onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added to cart.", System.currentTimeMillis()))
+                        onAddToCartEvent(
+                            Triple(
+                                ToastStatus.SUCCESSFUL,
+                                "Added to cart.",
+                                System.currentTimeMillis()
+                            )
+                        )
                         navController.navigate(Screen.Cart.route)
                     } else {
                         expanded = !expanded
@@ -269,6 +280,7 @@ fun OrderDetailsPanel(
     ) {
         Text(
             text = type ?: "Unknown Product",
+            fontFamily = mintsansFontFamily,
             fontSize = 25.sp
         )
         Spacer(modifier = Modifier.height(150.dp))
@@ -306,7 +318,7 @@ fun QuantitySelector(
     onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-    var quantity by remember { mutableIntStateOf(0) }
+    var quantity by remember { mutableIntStateOf(1) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -315,78 +327,39 @@ fun QuantitySelector(
             .background(Color(0xFFFFF3E0), shape = RoundedCornerShape(24.dp))
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier
-                .padding(vertical = 8.dp)
-                .fillMaxWidth()
-        ) {
-            Button(
-                onClick = {
-                    if (quantity > 0)
-                        quantity--
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF5252)),
-                shape = CircleShape,
-                modifier = Modifier.size(48.dp),
-                contentPadding = PaddingValues(0.dp)
-            ) {
-                Text(
-                    text = "-",
-                    color = Color.Black,
-                    fontSize = 25.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                )
-            }
-            TextField( //align with circle size
-                value = quantity.toString(),
-                onValueChange = { newValue ->
-                    quantity = newValue.toIntOrNull() ?: 0
-                },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier
-                    .width(100.dp),
-                textStyle = TextStyle(fontSize = 25.sp, textAlign = TextAlign.Center),
-                singleLine = true
-            )
-            Button(
-                onClick = {
-                    if (quantity < maxQuantity)
-                        quantity++
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF66BB6A)),
-                shape = CircleShape,
-                modifier = Modifier.size(48.dp),
-                contentPadding = PaddingValues(0.dp)
-            ) {
-                Text(
-                    text = "+",
-                    color = Color.Black,
-                    fontSize = 25.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                )
-            }
-        }
+        Slider(
+            value = quantity.toFloat(),
+            onValueChange = { quantity = it.toInt().coerceIn(1, maxQuantity) },
+            valueRange = 1f..maxQuantity.toFloat(),
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        OutlinedTextField( //align with circle size
+            value = quantity.toString(),
+            onValueChange = { quantity = it.toIntOrNull()?.coerceIn(1, maxQuantity) ?: quantity },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            textStyle = TextStyle(
+                textAlign = TextAlign.Center,
+                fontFamily = mintsansFontFamily,
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 20.sp
+            ),
+            suffix = { Text("kg", fontFamily = mintsansFontFamily, fontSize = 15.sp) },
+            modifier = Modifier.width(100.dp),
+            singleLine = true
+        )
 
         Button(
             onClick = {
-                if (quantity != 0) {
-                    cartViewModel.addToCart(
-                        uid,
-                        ProductData(
-                            productName.toString(),
-                            quantity,
-                            productType.toString()
-                        )
+                cartViewModel.addToCart(
+                    uid,
+                    ProductData(
+                        productName.toString(),
+                        quantity,
+                        productType.toString()
                     )
-                    onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added to cart.", System.currentTimeMillis()))
-                    navController.navigate(Screen.Cart.route)
-                } else {
-                    onAddToCartEvent(Triple(ToastStatus.WARNING, "Enter quantity amount first.", System.currentTimeMillis()))
-                }
+                )
+                onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added to cart.", System.currentTimeMillis()))
+                navController.navigate(Screen.Cart.route)
             },
             modifier = Modifier.padding(top = 16.dp)
         ) {

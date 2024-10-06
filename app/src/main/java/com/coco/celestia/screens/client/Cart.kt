@@ -250,7 +250,7 @@ fun CartItem(
     var selected by remember { mutableStateOf(false) }
     val name = item.name
     val quantity = item.quantity
-    val type = item.type // TODO: Handle type card colors. (green = vegetables, etc.)
+    val type = item.type
     val gradient = when (type) {
         "Meat" -> Brush.linearGradient(
             colors = listOf(Color(0xFFFF5151), Color(0xFFB06520))
