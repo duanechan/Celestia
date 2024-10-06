@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -213,10 +214,14 @@ fun NavDrawerBottomBar(
                     icon = {
                         Icon(
                             imageVector = Icons.Default.Person,
-                            contentDescription = "User Management"
+                            contentDescription = "User Management",
                         )
                     },
-                    label = { Text("User Management", fontSize = 10.sp, fontFamily = mintsansFontFamily) },
+                    label = { Text("User Management",
+                        fontSize = (9.9).sp,
+                        fontFamily = mintsansFontFamily,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis) },
                     selected = currentDestination == Screen.AdminUserManagement.route,
                     onClick = {
                         navController.navigate(Screen.AdminUserManagement.route) {

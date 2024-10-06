@@ -2,7 +2,9 @@ package com.coco.celestia.screens.admin
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -61,47 +64,38 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
         userViewModel.fetchUsers()
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val screenWidth = maxWidth
         Column(
             modifier = Modifier
                 .fillMaxHeight()
                 .background(DarkBlue)
                 .verticalScroll(rememberScrollState()) // Scrollable column
         ) {
+            TopBarAdmin("User Management")
+
             // Search Bar
-            Spacer(modifier = Modifier.height(110.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally)
-                    .height(70.dp)
                     .background(DarkBlue)
+                    .padding(5.dp, 0.dp, 5.dp, 0.dp),
+                        horizontalArrangement = Arrangement.Center
             ) {
                 SearchBar(
                     query = text,
                     onQueryChange = { text = it },
-                    onSearch = {},
-                    active = active,
-                    onActiveChange = { active = it },
-                    placeholder = {
-                        Text(
-                            text = "Search...",
-                            color = Color.Black,
-                            fontSize = 15.sp,
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search Icon"
-                        )
-                    },
+                    onSearch = { text = it },
+                    active = false,
+                    onActiveChange = {},
+                    placeholder = { Text(text = "Search", color = DarkBlue) },
+                    leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon") },
                     modifier = Modifier
-                        .weight(1f)
-                        .height(35.dp)
-                ){}
-
-                Spacer(modifier = Modifier.width(8.dp))
+                        .width(screenWidth * 0.9f) // will make the searchbar 90% of the screen width
+                        .offset(y=(-50.dp))
+                ) {}
+            }
+            Spacer(modifier = Modifier.height(8.dp))
 
                 DropdownMenu(
                     expanded = expanded,
@@ -128,9 +122,6 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
         )
         Spacer(modifier = Modifier.height(100.dp))
     }
-    TopBar("User Management")
-    Spacer(modifier = Modifier.height(15.dp))
-}
 
 fun DropdownMenuItem(onClick: () -> Unit, interactionSource: @Composable () -> Unit) {
 }
@@ -231,7 +222,7 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(title: String) {
+fun TopBarAdmin(title: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
