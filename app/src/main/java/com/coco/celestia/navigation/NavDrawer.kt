@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.coco.celestia.screens.coop.TopBar
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.DarkGreen
@@ -88,9 +89,8 @@ fun NavDrawerTopBar(
                 )
             )
         }
-        "Farmer" -> {
-            GradientTopBar(title = title)
-        }
+        "Farmer" -> { GradientTopBar(title = title) }
+//        "Coop" -> { TopBar(title = title) }
     }
 }
 
