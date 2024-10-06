@@ -38,12 +38,12 @@ import com.coco.celestia.screens.coop.OrderRequest
 import com.coco.celestia.screens.coop.ProcessOrderPanel
 import com.coco.celestia.screens.coop.ProductTypeInventory
 import com.coco.celestia.screens.farmer.FarmerDashboard
-import com.coco.celestia.screens.farmer.FarmerInventory
-import com.coco.celestia.screens.farmer.FarmerInventoryDetail
+import com.coco.celestia.screens.farmer.FarmerItems
+import com.coco.celestia.screens.farmer.details.FarmerItemDetails
 import com.coco.celestia.screens.farmer.FarmerManageOrder
 import com.coco.celestia.screens.farmer.FarmerProductTypeInventory
-import com.coco.celestia.screens.farmer.FarmerRequestDetails
-import com.coco.celestia.screens.farmer.FarmerOrderDetails
+import com.coco.celestia.screens.farmer.details.FarmerRequestDetails
+import com.coco.celestia.screens.farmer.details.FarmerOrderDetails
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.CartViewModel
 import com.coco.celestia.viewmodel.ContactViewModel
@@ -123,9 +123,9 @@ fun NavGraph(
                 productViewModel = productViewModel
             )
         }
-        composable(route = Screen.FarmerInventory.route) {
-            onNavigate("Inventory")
-            FarmerInventory(navController = navController)
+        composable(route = Screen.FarmerItems.route) {
+            onNavigate("Items")
+            FarmerItems(navController = navController)
         }
         composable(route = Screen.Client.route) {
             onNavigate("Dashboard")
@@ -271,11 +271,11 @@ fun NavGraph(
             FarmerProductTypeInventory(product = product, navController = navController)
         }
         composable(
-            route = Screen.FarmerInventoryDetail.route,
+            route = Screen.FarmerItemDetails.route,
             arguments = listOf(navArgument("productName") { type = NavType.StringType })
         ) { backStackEntry ->
             val productNameDetail = backStackEntry.arguments?.getString("productName")
-            FarmerInventoryDetail(navController = navController, productName = productNameDetail ?: "")
+            FarmerItemDetails(navController = navController, productName = productNameDetail ?: "")
         }
         composable(
             route = Screen.FarmerRequestDetails.route,

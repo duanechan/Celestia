@@ -20,7 +20,7 @@ fun routeHandler(userRole: String) : Routes {
     val inventoryRoute = when (userRole) {
         "Admin" -> Screen.AdminInventory.route
         "Coop" -> Screen.CoopInventory.route
-        "Farmer" -> Screen.FarmerInventory.route
+        "Farmer" -> Screen.FarmerItems.route
         else -> ""
     }
     return Routes(

@@ -28,7 +28,7 @@ import com.coco.celestia.screens.`object`.Screen
 
 
 @Composable
-fun FarmerInventory(navController: NavController) {
+fun FarmerItems(navController: NavController) {
     val farmerProductViewModel: ProductViewModel = viewModel()
     val farmerProductData by farmerProductViewModel.productData.observeAsState(emptyList())
     val farmerProductState by farmerProductViewModel.productState.observeAsState(ProductState.LOADING)
@@ -97,7 +97,7 @@ fun FarmerProductTypeInventory(product: ProductData, navController: NavControlle
             .height(170.dp)
             .padding(horizontal = 20.dp, vertical = 10.dp)
             .clickable {
-                navController.navigate(Screen.FarmerInventoryDetail.createRoute(product.name))
+                navController.navigate(Screen.FarmerItemDetails.createRoute(product.name))
             },
     ) {
         Box(

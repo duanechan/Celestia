@@ -1,4 +1,4 @@
-package com.coco.celestia.screens.farmer
+package com.coco.celestia.screens.farmer.details
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -39,15 +39,15 @@ import androidx.compose.material3.SnackbarHostState
 import com.coco.celestia.screens.farmer.dialogs.EditQuantityDialog
 
 @Composable
-fun FarmerInventoryDetail(navController: NavController, productName: String) {
+fun FarmerItemDetails(navController: NavController, productName: String) {
     val farmerProductViewModel: ProductViewModel = viewModel()
     val productData by farmerProductViewModel.productData.observeAsState(emptyList())
     val productState by farmerProductViewModel.productState.observeAsState(ProductState.LOADING)
     val orderViewModel: OrderViewModel = viewModel()
     val allOrders by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
-    var showEditDialog by remember { mutableStateOf(false) } // State to show/hide dialog
-    var productQuantity by remember { mutableStateOf(0) } // State to store the product's current quantity
+    var showEditDialog by remember { mutableStateOf(false) }
+    var productQuantity by remember { mutableStateOf(0) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -72,14 +72,14 @@ fun FarmerInventoryDetail(navController: NavController, productName: String) {
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) } // Pass the snackbarHostState here
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFFF2E3DB))
                 .verticalScroll(rememberScrollState())
-                .padding(paddingValues) // Padding to avoid overlap
+                .padding(paddingValues)
         ) {
             when (productState) {
                 ProductState.LOADING -> {
@@ -88,7 +88,7 @@ fun FarmerInventoryDetail(navController: NavController, productName: String) {
                 ProductState.SUCCESS -> {
                     val product = productData.find { it.name.equals(productName, ignoreCase = true) }
                     if (product != null) {
-                        productQuantity = product.quantity // Set the initial quantity here
+                        productQuantity = product.quantity
                         Column(
                             modifier = Modifier
                                 .fillMaxHeight()
