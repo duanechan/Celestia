@@ -18,6 +18,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -64,22 +65,25 @@ fun LoginScreen(
             onExit = { (mainNavController.context as Activity).finish() }
         )
     }
-    when (userState) {
-        is UserState.ERROR -> {
-            onLoginEvent(Triple(ToastStatus.FAILED, "Error: ${(userState as UserState.ERROR).message}", System.currentTimeMillis()))
-        }
-        is UserState.LOGIN_SUCCESS -> {
-            onLoginEvent(Triple(ToastStatus.SUCCESSFUL, "Login successful!", System.currentTimeMillis()))
-            val role = (userState as UserState.LOGIN_SUCCESS).role
-            val route = routeHandler(role)
-            mainNavController.navigate(route.dashboard) {
-                popUpTo(Screen.Splash.route)
+
+    LaunchedEffect(userState) {
+        when (userState) {
+            is UserState.ERROR -> {
+                onLoginEvent(Triple(ToastStatus.FAILED, (userState as UserState.ERROR).message, System.currentTimeMillis()))
             }
+            is UserState.LOGIN_SUCCESS -> {
+                onLoginEvent(Triple(ToastStatus.SUCCESSFUL, "Login successful!", System.currentTimeMillis()))
+                val role = (userState as UserState.LOGIN_SUCCESS).role
+                val route = routeHandler(role)
+                mainNavController.navigate(route.dashboard) {
+                    popUpTo(Screen.Splash.route)
+                }
+            }
+            is UserState.REGISTER_SUCCESS -> {
+                onLoginEvent(Triple(ToastStatus.SUCCESSFUL, "Registration successful! You can now log in.", System.currentTimeMillis()))
+            }
+            else -> {}
         }
-        is UserState.REGISTER_SUCCESS -> {
-            onLoginEvent(Triple(ToastStatus.SUCCESSFUL, "Registration successful! You can now log in.", System.currentTimeMillis()))
-        }
-        else -> {}
     }
 
 
@@ -125,8 +129,11 @@ fun LoginScreen(
 
         Button(
             onClick = {
-                userViewModel.login(email, password)
-                Log.d("LoginScreen", "$userState")
+                if (email.isNotEmpty() && password.isNotEmpty()) {
+                    userViewModel.login(email, password)
+                } else {
+                    onLoginEvent(Triple(ToastStatus.FAILED, "Fields cannot be empty", System.currentTimeMillis()))
+                }
             },
             modifier = Modifier
                 .width(285.dp)

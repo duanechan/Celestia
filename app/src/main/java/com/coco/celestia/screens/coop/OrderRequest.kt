@@ -3,9 +3,11 @@ package com.coco.celestia.screens.coop
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -87,15 +89,9 @@ fun OrderRequest(
         }
 
         when (orderState) {
-            is OrderState.LOADING -> {
-                CircularProgressIndicator()
-            }
-            is OrderState.ERROR -> {
-                Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}")
-            }
-            is OrderState.EMPTY -> {
-                Text("Awit man! No pending orders.")
-            }
+            is OrderState.LOADING -> LoadingOrders()
+            is OrderState.ERROR -> OrdersError(errorMessage = (orderState as OrderState.ERROR).message)
+            is OrderState.EMPTY -> EmptyOrders()
             is OrderState.SUCCESS -> {
                 LazyColumn {
                     items(orderData) { order ->
@@ -110,6 +106,39 @@ fun OrderRequest(
                     item { Spacer(modifier = Modifier.height(100.dp)) }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun LoadingOrders() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator()
+        }
+    }
+}
+
+@Composable
+fun OrdersError(errorMessage: String) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "Error: $errorMessage",
+                fontSize = 20.sp
+            )
+        }
+    }
+}
+
+@Composable
+fun EmptyOrders() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "No pending orders.",
+                fontSize = 20.sp
+            )
         }
     }
 }

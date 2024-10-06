@@ -50,9 +50,7 @@ fun SplashScreen(
             if (currentUser != null) {
                 currentUser.uid.let { userViewModel.fetchUser(it) }
             } else {
-                navController.navigate(Screen.Login.route) {
-                    popUpTo(Screen.Splash.route) { inclusive = true }
-                }
+                navController.navigate(Screen.Login.route)
             }
         }
     }
@@ -70,9 +68,7 @@ fun SplashScreen(
                     }
                 }
                 is UserState.ERROR -> {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Splash.route) { inclusive = true }
-                    }
+                    navController.navigate(Screen.Login.route)
                 }
                 else -> {}
             }

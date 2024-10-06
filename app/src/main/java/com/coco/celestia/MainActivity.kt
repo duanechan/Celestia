@@ -2,6 +2,7 @@ package com.coco.celestia
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -100,13 +101,16 @@ fun App() {
     }
 
     LaunchedEffect(toastEvent) {
-        if (toastEvent.second.isNotEmpty()) {
+        if (toastEvent.first != ToastStatus.INFO && toastEvent.second.isNotEmpty() && toastEvent.third != 0L) {
             toastStatus = toastEvent.first
             toastMessage = toastEvent.second
             showToast = true
+            Log.d("ToastVisibility", "Showing toast: $toastMessage")
             delay(2000)
             showToast = false
+            Log.d("ToastVisibility", "Hiding toast: $toastMessage")
         }
+
     }
     Scaffold(
         topBar = {
@@ -126,9 +130,7 @@ fun App() {
         },
         bottomBar = {
             if (selectedUsers.isNotEmpty()) {
-                ActionButtons(userViewModel) {
-                    userViewModel.clearSelectedUsers()
-                }
+                ActionButtons(userViewModel)
 
                 BackHandler {
                     userViewModel.clearSelectedUsers()
@@ -153,7 +155,7 @@ fun App() {
             navController = navController,
             onNavigate = { topBarTitle = it },
         ) {
-            toastEvent = Triple(it.first, it.second, System.currentTimeMillis())
+            toastEvent = Triple(it.first, it.second, it.third)
         }
     }
 }

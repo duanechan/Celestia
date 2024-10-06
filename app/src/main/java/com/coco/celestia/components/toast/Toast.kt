@@ -72,42 +72,34 @@ fun Toast(message: String, status: ToastStatus, visibility: Boolean) {
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .padding(top = 30.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
+            verticalArrangement = Arrangement.Center
         ) {
-            Column(
+            Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(15.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                    .width(350.dp)
+                    .height(40.dp),
+                elevation = CardDefaults.cardElevation(8.dp)
             ) {
-                Card(
+                Box(
+                    contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .width(350.dp)
-                        .height(40.dp),
-                    elevation = CardDefaults.cardElevation(8.dp)
+                        .fillMaxSize()
+                        .background(backgroundColor),
                 ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
+                    Text(
+                        text = message,
+                        textAlign = TextAlign.Center,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = White,
                         modifier = Modifier
-                            .fillMaxSize()
-                            .background(backgroundColor),
-                    ) {
-                        Text(
-                            text = message,
-                            textAlign = TextAlign.Center,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = White,
-                            modifier = Modifier
-                                .padding(10.dp, 0.dp, 10.dp, 0.dp)
-                        )
-                    }
+                            .padding(10.dp, 0.dp, 10.dp, 0.dp)
+                    )
                 }
             }
         }
     }
-
 }

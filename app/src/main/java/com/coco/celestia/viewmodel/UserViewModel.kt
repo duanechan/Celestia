@@ -6,12 +6,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -163,30 +165,26 @@ class UserViewModel : ViewModel() {
     fun login(email: String, password: String) {
         viewModelScope.launch {
             _userState.value = UserState.LOADING
-            if (email.isEmpty() || password.isEmpty()) {
-                _userState.value = UserState.ERROR("Fields cannot be empty")
-            } else {
-                try {
-                    val result = auth.signInWithEmailAndPassword(email, password).await()
-                    val user = result.user
-                    user?.let {
-                        database.child(user.uid).get().addOnSuccessListener { snapshot ->
-                            val userRole = snapshot.child("role").getValue(String::class.java)
-                            if (userRole != null) {
-                                _userData.value = snapshot.getValue(UserData::class.java)
-                                _userState.value = UserState.LOGIN_SUCCESS(userRole)
-                            } else {
-                                _userState.value = UserState.ERROR("Role not found")
-                            }
-                        }.addOnFailureListener {
-                            _userState.value = UserState.ERROR("Login failed")
+            try {
+                val result = auth.signInWithEmailAndPassword(email, password).await()
+                val user = result.user
+                user?.let {
+                    database.child(user.uid).get().addOnSuccessListener { snapshot ->
+                        val userRole = snapshot.child("role").getValue(String::class.java)
+                        if (userRole != null) {
+                            _userData.value = snapshot.getValue(UserData::class.java)
+                            _userState.value = UserState.LOGIN_SUCCESS(userRole)
+                        } else {
+                            _userState.value = UserState.ERROR("Role not found")
                         }
-                    } ?: run {
+                    }.addOnFailureListener {
                         _userState.value = UserState.ERROR("Login failed")
                     }
-                } catch (e: Exception) {
-                    _userState.value = UserState.ERROR(e.message ?: "Unknown error")
+                } ?: run {
+                    _userState.value = UserState.ERROR("Login failed")
                 }
+            } catch (e: FirebaseAuthInvalidCredentialsException) {
+                _userState.value = UserState.ERROR("Invalid email or password.")
             }
         }
     }

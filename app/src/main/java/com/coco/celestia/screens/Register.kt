@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -19,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -58,16 +60,18 @@ fun RegisterScreen(
     var selectedRole by remember { mutableStateOf("") }
     var isValidEmail by remember { mutableStateOf(true) }
 
-    when (userState) {
-        is UserState.ERROR -> {
-            onRegisterEvent(Triple(ToastStatus.FAILED, "Error: ${(userState as UserState.ERROR).message}", System.currentTimeMillis()))
+    LaunchedEffect(userState) {
+        when (userState) {
+            is UserState.ERROR -> {
+                onRegisterEvent(Triple(ToastStatus.FAILED, (userState as UserState.ERROR).message, System.currentTimeMillis()))
+            }
+            is UserState.REGISTER_SUCCESS -> {
+                onRegisterEvent(Triple(ToastStatus.SUCCESSFUL, "Registration Successful", System.currentTimeMillis()))
+                userViewModel.resetUserState()
+                navController.navigate(Screen.Login.route)
+            }
+            else -> {}
         }
-        is UserState.REGISTER_SUCCESS -> {
-            onRegisterEvent(Triple(ToastStatus.SUCCESSFUL, "Registration Successful", System.currentTimeMillis()))
-            userViewModel.resetUserState()
-            navController.navigate(Screen.Login.route)
-        }
-        else -> {}
     }
 
     if (showRoleDialog) {
@@ -131,6 +135,7 @@ fun RegisterScreen(
         )
     } else {
         Column(
+            modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
