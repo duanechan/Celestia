@@ -137,7 +137,6 @@ fun FarmerOrderDetails(
                             // Order details
                             Text(
                                 text = "Order ID #${orderData.orderId}",
-                                fontFamily = mintsansFontFamily,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 20.sp,
                                 color = Color.White,

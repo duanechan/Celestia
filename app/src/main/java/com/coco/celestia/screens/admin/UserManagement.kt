@@ -88,8 +88,6 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
                             text = "Search...",
                             color = Color.Black,
                             fontSize = 15.sp,
-                            fontFamily = mintsansFontFamily
-
                         )
                     },
                     leadingIcon = {
@@ -158,7 +156,6 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
                         .weight(1f)
                         .fillMaxWidth(),
                     fontWeight = FontWeight.Bold,
-                    fontFamily = mintsansFontFamily,
                     textAlign = TextAlign.Center
                 )
                 Text(
@@ -167,7 +164,6 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
                         .weight(2f)
                         .fillMaxWidth(),
                     fontWeight = FontWeight.Bold,
-                    fontFamily = mintsansFontFamily,
                     textAlign = TextAlign.Center
                 )
                 Text(
@@ -176,7 +172,6 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
                         .weight(2f)
                         .fillMaxWidth(),
                     fontWeight = FontWeight.Bold,
-                    fontFamily = mintsansFontFamily,
                     textAlign = TextAlign.Center
                 )
             }
@@ -209,7 +204,6 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
                             .weight(1f)
                             .fillMaxWidth(),
                         textAlign = TextAlign.Center,
-                        fontFamily = mintsansFontFamily
                     )
                     Text(
                         text = user.firstname + " " + user.lastname,
@@ -217,7 +211,6 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
                             .weight(2f)
                             .fillMaxWidth(),
                         textAlign = TextAlign.Center,
-                        fontFamily = mintsansFontFamily
                     )
                     Text(
                         text = user.role,
@@ -225,7 +218,6 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
                             .weight(2f)
                             .fillMaxWidth(),
                         textAlign = TextAlign.Center,
-                        fontFamily = mintsansFontFamily
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                 }
@@ -253,7 +245,6 @@ fun TopBar(title: String) {
                 ) {
                     Text(
                         text = title,
-                        fontFamily = mintsansFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )

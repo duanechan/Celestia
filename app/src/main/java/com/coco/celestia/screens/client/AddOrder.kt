@@ -280,7 +280,6 @@ fun OrderDetailsPanel(
     ) {
         Text(
             text = type ?: "Unknown Product",
-            fontFamily = mintsansFontFamily,
             fontSize = 25.sp
         )
         Spacer(modifier = Modifier.height(150.dp))
@@ -339,11 +338,10 @@ fun QuantitySelector(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             textStyle = TextStyle(
                 textAlign = TextAlign.Center,
-                fontFamily = mintsansFontFamily,
                 fontWeight = FontWeight.ExtraBold,
                 fontSize = 20.sp
             ),
-            suffix = { Text("kg", fontFamily = mintsansFontFamily, fontSize = 15.sp) },
+            suffix = { Text("kg", fontSize = 15.sp) },
             modifier = Modifier.width(100.dp),
             singleLine = true
         )

@@ -70,7 +70,6 @@ fun AddUserForm(
 
             Text(
                 text = "Add User ✚",
-                fontFamily = mintsansFontFamily,
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.align(Alignment.CenterVertically)
             )
@@ -82,7 +81,7 @@ fun AddUserForm(
         OutlinedTextField(
             value = email,
             onValueChange = newEmail,
-            label = { Text("Email", fontFamily = mintsansFontFamily) },
+            label = { Text("Email") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -94,7 +93,7 @@ fun AddUserForm(
                 readOnly = true,
                 value = role,
                 onValueChange = {},
-                placeholder = { Text("Select Role", fontFamily = mintsansFontFamily) },
+                placeholder = { Text("Select Role") },
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded)
                 },

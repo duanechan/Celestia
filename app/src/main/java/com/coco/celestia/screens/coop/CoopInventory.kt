@@ -157,7 +157,6 @@ fun ProductTypeCards(navController: NavController, productData: List<ProductData
                         text = type,
                         fontSize = 35.sp,
                         fontWeight = FontWeight.Bold,
-                        fontFamily = mintsansFontFamily,
                         color = fontColor
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -172,7 +171,7 @@ fun ProductTypeCards(navController: NavController, productData: List<ProductData
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(text = product.name, fontSize = 18.sp, fontFamily = mintsansFontFamily, color = fontColor, fontWeight = FontWeight.Bold)
+                        Text(text = product.name, fontSize = 18.sp, color = fontColor, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.weight(1f))
                         LinearProgressIndicator(
                             progress = product.quantity.toFloat() / maxQuantity,
@@ -215,7 +214,6 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
             Text(text = type.toString(),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
-                fontFamily = mintsansFontFamily,
                 modifier = Modifier.padding(top = 10.dp, bottom = 10.dp),
                 color = fontColor)
 
@@ -239,10 +237,9 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
                 ) {
                     Text(text = product.name,
                         fontSize = 18.sp,
-                        fontFamily = mintsansFontFamily,
                         fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.weight(1f))
-                    Text(text = "${product.quantity}kg", fontSize = 35.sp, fontFamily = mintsansFontFamily, fontWeight = FontWeight.Bold)
+                    Text(text = "${product.quantity}kg", fontSize = 35.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -301,7 +298,6 @@ fun AddProductForm(
     ) {
         Text(
             text = "Add Product ✚",
-            fontFamily = mintsansFontFamily,
             fontWeight = FontWeight.Bold,
             fontSize = 22.sp,
             modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -441,7 +437,6 @@ fun TopBar(title: String) {
                 ) {
                     Text(
                         text = title,
-                        fontFamily = mintsansFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )

@@ -122,7 +122,7 @@ fun Cart(
                     modifier = Modifier.size(30.dp)
                 )
             }
-            Text(text = "Check Order", fontFamily = mintsansFontFamily)
+            Text(text = "Check Order")
         }
     }
 
@@ -191,7 +191,6 @@ fun CartError(errorMessage: String) {
                 text = "Error:\n$errorMessage",
                 textAlign = TextAlign.Center,
                 color = Color.White,
-                fontFamily = mintsansFontFamily,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -233,7 +232,6 @@ fun EmptyCart() {
             Text(
                 text = "Cart is empty.",
                 color = Color.White,
-                fontFamily = mintsansFontFamily,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -297,14 +295,12 @@ fun CartItem(
                     Text(
                         text = name,
                         color = Color.White,
-                        fontFamily = mintsansFontFamily,
                         fontSize = 20.sp,
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
                         text = "${quantity}kg",
                         color = Color.White,
-                        fontFamily = mintsansFontFamily,
                         fontSize = 25.sp,
                         fontWeight = FontWeight.ExtraBold
                     )

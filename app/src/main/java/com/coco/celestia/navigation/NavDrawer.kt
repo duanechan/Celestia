@@ -20,6 +20,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
@@ -62,7 +63,7 @@ fun NavDrawerTopBar(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        if(currentDestination != "${role.lowercase()}_dashboard") {
+                        if (currentDestination != "${role.lowercase()}_dashboard") {
                             IconButton(
                                 onClick = { navController.navigateUp() },
                                 modifier = Modifier.align(Alignment.CenterStart)
@@ -76,8 +77,6 @@ fun NavDrawerTopBar(
                         Text(
                             text = title,
                             color = Color.White,
-                            fontFamily = mintsansFontFamily,
-                            fontWeight = FontWeight.Bold,
                             modifier = Modifier.align(Alignment.Center)
                         )
                     }
@@ -126,7 +125,6 @@ fun GradientTopBar(title: String) {
 //                    }
                     Text(
                         text = title,
-                        fontFamily = mintsansFontFamily,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
                         modifier = Modifier.align(Alignment.Center)
@@ -160,7 +158,7 @@ fun NavDrawerBottomBar(
             // Dashboard - Default to all roles except Client
             NavigationBarItem(
                 icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard", tint = if (role == "Client") VeryDarkPurple else bottomBarColors.second) },
-                label = { Text("Dashboard", color = if (role == "Client") Color.White else bottomBarColors.second) },
+                label = { Text("Dashboard", color = if (role == "Client") Color.White else bottomBarColors.second, fontFamily = mintsansFontFamily) },
                 selected = currentDestination == routes.dashboard,
                 onClick = {
                     navController.navigate(routes.dashboard) {
@@ -172,7 +170,7 @@ fun NavDrawerBottomBar(
             if(role == "Coop" || role == "Client" || role == "Farmer") {
                 NavigationBarItem(
                     icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Orders", tint = if (role == "Client") VeryDarkPurple else bottomBarColors.second) },
-                    label = { Text("Orders", color = if (role == "Client") Color.White else bottomBarColors.second) },
+                    label = { Text("Orders", color = if (role == "Client") Color.White else bottomBarColors.second, fontFamily = mintsansFontFamily) },
                     selected = currentDestination == routes.orders,
                     onClick = {
                         if (role == "Farmer") {
@@ -200,7 +198,7 @@ fun NavDrawerBottomBar(
                             tint = contentColor
                         )
                     },
-                    label = { Text("Items", color = contentColor) },
+                    label = { Text("Items", color = contentColor, fontFamily = mintsansFontFamily) },
                     selected = currentDestination == routes.inventory,
                     onClick = {
                         navController.navigate(routes.inventory) {
@@ -218,7 +216,7 @@ fun NavDrawerBottomBar(
                             contentDescription = "User Management"
                         )
                     },
-                    label = { Text("User Management", fontSize = 10.sp) },
+                    label = { Text("User Management", fontSize = 10.sp, fontFamily = mintsansFontFamily) },
                     selected = currentDestination == Screen.AdminUserManagement.route,
                     onClick = {
                         navController.navigate(Screen.AdminUserManagement.route) {
@@ -231,7 +229,7 @@ fun NavDrawerBottomBar(
             if (role == "Client") {
                 NavigationBarItem(
                     icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Contact", tint = VeryDarkPurple) },
-                    label = { Text("Cart", color = Color.White) },
+                    label = { Text("Cart", color = Color.White, fontFamily = mintsansFontFamily) },
                     selected = currentDestination == Screen.Cart.route,
                     onClick = {
                         navController.navigate(Screen.Cart.route) {
@@ -241,7 +239,7 @@ fun NavDrawerBottomBar(
                 )
                 NavigationBarItem(
                     icon = { Icon(imageVector = Icons.Default.Call, contentDescription = "Contact", tint = VeryDarkPurple) },
-                    label = { Text("Contact", color = Color.White) },
+                    label = { Text("Contact", color = Color.White, fontFamily = mintsansFontFamily) },
                     selected = currentDestination == Screen.ClientContact.route,
                     onClick = {
                         navController.navigate(Screen.ClientContact.route) {
@@ -253,7 +251,7 @@ fun NavDrawerBottomBar(
 
             NavigationBarItem(
                 icon = { Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile", tint = if (role == "Client") VeryDarkPurple else bottomBarColors.second) },
-                label = { Text("Profile", color = if (role == "Client") Color.White else bottomBarColors.second) },
+                label = { Text("Profile", color = if (role == "Client") Color.White else bottomBarColors.second, fontFamily = mintsansFontFamily) },
                 selected = currentDestination == Screen.Profile.route,
                 onClick = {
                     navController.navigate(Screen.Profile.route) {
