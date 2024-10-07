@@ -2,7 +2,6 @@ package com.coco.celestia
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -26,6 +25,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.components.toast.Toast
 import com.coco.celestia.components.toast.ToastStatus
+import com.coco.celestia.components.toast.toastDelay
 import com.coco.celestia.navigation.NavDrawerBottomBar
 import com.coco.celestia.navigation.NavDrawerTopBar
 import com.coco.celestia.navigation.NavGraph
@@ -33,7 +33,6 @@ import com.coco.celestia.screens.admin.ActionButtons
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.util.checkNetworkConnection
-import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import kotlinx.coroutines.delay
@@ -41,6 +40,7 @@ import kotlinx.coroutines.delay
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             CelestiaTheme {
@@ -63,12 +63,11 @@ fun App() {
     val context = LocalContext.current
     val userViewModel: UserViewModel = viewModel()
     val userData by userViewModel.userData.observeAsState()
-    val role = userData?.role
+    var lastConnectionState = checkNetworkConnection(context)
     val currentDestination = navController.currentBackStackEntry?.destination?.route
     val selectedUsers by userViewModel.selectedUsers.observeAsState(emptyList())
     var topBarTitle by remember { mutableStateOf("") }
     var toastStatus by remember { mutableStateOf(ToastStatus.INFO) }
-    var toastShown by remember { mutableStateOf(true) }
     var showToast by remember { mutableStateOf(false) }
     var toastMessage by remember { mutableStateOf("") }
     var toastEvent by remember { mutableStateOf(Triple(ToastStatus.INFO, "", 0L)) }
@@ -83,7 +82,6 @@ fun App() {
     }
 
     LaunchedEffect(Unit) {
-        var lastConnectionState = checkNetworkConnection(context)
         var firstLaunch = true
         while (true) {
             val currentConnectionState = checkNetworkConnection(context)
@@ -96,7 +94,7 @@ fun App() {
                 lastConnectionState = currentConnectionState
                 firstLaunch = false
             }
-            delay(2000)
+            delay(toastDelay)
         }
     }
 
@@ -105,18 +103,18 @@ fun App() {
         if (toastEvent.second.isNotEmpty()) {
             toastStatus = toastEvent.first
             toastMessage = toastEvent.second
-            showToast = true
-            Log.d("ToastVisibility", "Showing toast: $toastMessage")
-            delay(2000)
-            showToast = false
-            Log.d("ToastVisibility", "Hiding toast: $toastMessage")
+            if(toastEvent.second == "Logging in...") {
+                showToast = true
+            } else {
+                showToast = true
+                delay(toastDelay)
+                showToast = false
+            }
         }
-
     }
     Scaffold(
         topBar = {
-            if (role != null ||
-                currentDestination != null &&
+            if (currentDestination != null &&
                 currentDestination != Screen.Login.route &&
                 currentDestination != Screen.Register.route &&
                 currentDestination != Screen.Splash.route)
@@ -124,7 +122,7 @@ fun App() {
                 NavDrawerTopBar(
                     navController = navController,
                     title = topBarTitle,
-                    role = role.toString()
+                    role = userData?.role.toString()
                 )
             }
             Toast(message = toastMessage, status = toastStatus, visibility = showToast)
@@ -137,15 +135,14 @@ fun App() {
                     userViewModel.clearSelectedUsers()
                 }
             } else {
-                if (role != null ||
-                    currentDestination != null &&
+                if (currentDestination != null &&
                     currentDestination != Screen.Login.route &&
                     currentDestination != Screen.Register.route &&
                     currentDestination != Screen.Splash.route &&
                     currentDestination != Screen.ForgotPassword.route)
                 {
                     NavDrawerBottomBar(
-                        role = role.toString(),
+                        role = userData?.role.toString(),
                         navController = navController
                     )
                 }
@@ -155,8 +152,7 @@ fun App() {
         NavGraph(
             navController = navController,
             onNavigate = { topBarTitle = it },
-        ) {
-            toastEvent = Triple(it.first, it.second, it.third)
-        }
+            onEvent = { toastEvent = Triple(it.first, it.second, it.third) }
+        )
     }
 }

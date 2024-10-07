@@ -2,6 +2,10 @@ package com.coco.celestia.components.toast
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -18,6 +22,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,6 +36,9 @@ import com.coco.celestia.ui.theme.Cinnabar
 import com.coco.celestia.ui.theme.JadeGreen
 import com.coco.celestia.ui.theme.MustardYellow
 import com.coco.celestia.ui.theme.Purple40
+import kotlinx.coroutines.delay
+
+const val toastDelay = 2000L
 
 enum class ToastStatus {
     SUCCESSFUL,
@@ -59,15 +67,17 @@ fun Toast(message: String, status: ToastStatus, visibility: Boolean) {
             ToastStatus.WARNING -> MustardYellow
             ToastStatus.INFO -> Purple40
         },
-        animationSpec = tween(durationMillis = 300, easing = { it }),
+        animationSpec = tween(durationMillis = 300),
         label = "ToastColorAnimation"
     )
     AnimatedVisibility(
         visible = visibility,
-        enter = slideInVertically(
-            initialOffsetY = { -it },
-            animationSpec = tween(durationMillis = 300)
-        ),
+        enter =
+            slideInVertically(
+                initialOffsetY = { -it },
+                animationSpec = tween(durationMillis = 300)
+            )
+        ,
         exit = fadeOut(animationSpec = tween(durationMillis = 300))
     ) {
         Column(

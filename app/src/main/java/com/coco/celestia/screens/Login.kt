@@ -1,7 +1,6 @@
 package com.coco.celestia.screens
 
 import android.app.Activity
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -129,10 +128,15 @@ fun LoginScreen(
 
         Button(
             onClick = {
-                if (email.isNotEmpty() && password.isNotEmpty()) {
-                    userViewModel.login(email, password)
-                } else {
-                    onLoginEvent(Triple(ToastStatus.FAILED, "Fields cannot be empty", System.currentTimeMillis()))
+                try {
+                    if (email.isNotEmpty() && password.isNotEmpty()) {
+                        onLoginEvent(Triple(ToastStatus.INFO, "Logging in...", System.currentTimeMillis()))
+                        userViewModel.login(email, password)
+                    } else {
+                        onLoginEvent(Triple(ToastStatus.FAILED, "Fields cannot be empty", System.currentTimeMillis()))
+                    }
+                } catch(e: Exception) {
+                    onLoginEvent(Triple(ToastStatus.FAILED, e.message ?: "An unknown error has occurred.", System.currentTimeMillis()))
                 }
             },
             modifier = Modifier

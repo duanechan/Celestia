@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.viewmodel.model.UserData
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -13,7 +14,6 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -154,6 +154,8 @@ class UserViewModel : ViewModel() {
                 _userState.value = UserState.ERROR(e.message ?: "Unknown error")
             } catch (e: FirebaseAuthUserCollisionException) {
                 _userState.value = UserState.ERROR("Account already exists")
+            } catch (e: FirebaseNetworkException) {
+                _userState.value = UserState.ERROR("No internet connection.")
             }
         }
     }
@@ -169,22 +171,25 @@ class UserViewModel : ViewModel() {
                 val result = auth.signInWithEmailAndPassword(email, password).await()
                 val user = result.user
                 user?.let {
-                    database.child(user.uid).get().addOnSuccessListener { snapshot ->
-                        val userRole = snapshot.child("role").getValue(String::class.java)
-                        if (userRole != null) {
-                            _userData.value = snapshot.getValue(UserData::class.java)
-                            _userState.value = UserState.LOGIN_SUCCESS(userRole)
-                        } else {
-                            _userState.value = UserState.ERROR("Role not found")
+                    database.child(user.uid).get()
+                        .addOnSuccessListener { snapshot ->
+                            val userRole = snapshot.child("role").getValue(String::class.java)
+                            if (userRole != null) {
+                                _userData.value = snapshot.getValue(UserData::class.java)
+                                _userState.value = UserState.LOGIN_SUCCESS(userRole)
+                            } else {
+                                _userState.value = UserState.ERROR("Role not found")
+                            }
+                        }.addOnFailureListener {
+                            _userState.value = UserState.ERROR("Login failed")
                         }
-                    }.addOnFailureListener {
-                        _userState.value = UserState.ERROR("Login failed")
-                    }
                 } ?: run {
                     _userState.value = UserState.ERROR("Login failed")
                 }
             } catch (e: FirebaseAuthInvalidCredentialsException) {
                 _userState.value = UserState.ERROR("Invalid email or password.")
+            } catch (e: FirebaseNetworkException) {
+                _userState.value = UserState.ERROR("No internet connection.")
             }
         }
     }
@@ -206,6 +211,8 @@ class UserViewModel : ViewModel() {
                     }
             } catch (e: Exception) {
                 _userState.value = UserState.ERROR(e.message ?: "Unknown Error")
+            } catch (e: FirebaseNetworkException) {
+                _userState.value = UserState.ERROR("No internet connection.")
             }
         }
     }
@@ -267,6 +274,8 @@ class UserViewModel : ViewModel() {
                 _userState.value = UserState.SUCCESS
             } catch (e: Exception) {
                 _userState.value = UserState.ERROR(e.message ?: "Unknown error")
+            } catch (e: FirebaseNetworkException) {
+                _userState.value = UserState.ERROR("No internet connection.")
             }
         }
     }
