@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -26,9 +27,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextFieldDefaults.contentPadding
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -98,12 +102,15 @@ fun ClientOrder(
                 Icon(
                     imageVector = Icons.Default.ShoppingCart,
                     contentDescription = "Order Icon",
-                    modifier = Modifier.size(30.dp)
+                    modifier = Modifier
+                        .size(30.dp)
                         .size(35.dp)
                         .align(Alignment.CenterVertically),
                     tint = CoffeeBean
                 )
-                Spacer(modifier = Modifier.width(8.dp)) //space between text and icon
+
+                Spacer(modifier = Modifier.width(8.dp))
+
                 Text(
                     text = "Orders",
                     fontSize = 35.sp,
@@ -124,31 +131,60 @@ fun ClientOrder(
 
             Spacer(modifier = Modifier.height(10.dp))
             var text by remember { mutableStateOf("") }
-            var active by remember { mutableStateOf(false) }
-            var selectedStatus by remember { mutableStateOf("All") }
-            var expanded by remember { mutableStateOf(false) }
+            var selectedStatus by remember { mutableStateOf("All") } // status filter state
+            var expanded by remember { mutableStateOf(false) } // dropdown
+            val statuses = listOf("All", "Pending", "Accepted", "Rejected") //statuses
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
-//                    .background(VeryDarkPurple)
-                    .padding(top = 10.dp, bottom = 15.dp, start = 25.dp, end = 16.dp)
+                    .padding(top = 10.dp, bottom = 15.dp, start = 25.dp, end = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                SearchBar( //not functioning
+
+                SearchBar(
                     query = text,
-                    onQueryChange = { /* Handle query change */ },
-                    onSearch = { /* Handle search action */ },
+                    onQueryChange = { newText -> text = newText },
+                    onSearch = {},
                     active = false,
                     onActiveChange = { },
                     placeholder = { Text(text = "Search...", color = Color.Black, fontSize = 15.sp) },
                     leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon") },
                     modifier = Modifier
-                        .width(225.dp)
-                        .height(35.dp)
+                        .weight(1f)
+                        .height(50.dp)
+                        .offset(y = -13.dp)
                 ){
                 }
-                //todo: FILTER BY STATUS
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                // dropdown button
+                Button(
+                    onClick = { expanded = true },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(50.dp),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text(text = "Filter: $selectedStatus", fontSize = 15.sp, maxLines = 1)
+                }
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    statuses.forEach { status ->
+                        DropdownMenuItem(
+                            text = { Text(text = status) },
+                            onClick = {
+                                selectedStatus = status
+                                expanded = false
+                                orderViewModel.fetchOrders(uid, filter = selectedStatus)
+                            }
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -156,21 +192,44 @@ fun ClientOrder(
                 is OrderState.LOADING -> {
                     Text("Loading orders...")
                 }
+
                 is OrderState.ERROR -> {
                     Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}")
                 }
+
                 is OrderState.EMPTY -> {
                     Text("Empty orders.")
                 }
+
                 is OrderState.SUCCESS -> {
-                    var orderCount = 1
-                    orderData.forEach { order ->
-                        userData?.let { user ->
-                            OrderCards(orderCount, order, user)
-                        } ?: run {
-                            CircularProgressIndicator() // TODO: Improve UI (Navigate to orders and logout to view)
+                    // filter by stat
+                    val filteredOrders = orderData
+                        .filter { order ->
+                            (selectedStatus == "All" || order.status == selectedStatus) &&
+                                    (order.orderId.contains(text, ignoreCase = true) ||
+                                            userData?.let { "${it.firstname} ${it.lastname}" }
+                                                ?.contains(text, ignoreCase = true) == true)
                         }
-                        orderCount++
+
+                    if (filteredOrders.isEmpty()) {
+                        Text(
+                            text = "No results.",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    } else {
+                        // Show filtered orders
+                        var orderCount = 1
+                        filteredOrders.forEach { order ->
+                            userData?.let { user ->
+                                OrderCards(orderCount, order, user)
+                            } ?: run {
+                                CircularProgressIndicator()
+                            }
+                            orderCount++
+                        }
                     }
                 }
             }
@@ -178,23 +237,23 @@ fun ClientOrder(
             Spacer(modifier = Modifier.height(100.dp))
         }
 
-        //TODO: make bigger
-        FloatingActionButton(
-            onClick = {
-                navController.navigate(Screen.AddOrder.route)
-            },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-                .padding(bottom = 100.dp),
-            containerColor = LightOrange //change color here for add orders
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add Order",
-                tint = Color.White
-            )
-        }
+     //remove add button
+//        FloatingActionButton(
+//            onClick = {
+//                navController.navigate(Screen.AddOrder.route)
+//            },
+//            modifier = Modifier
+//                .align(Alignment.BottomEnd)
+//                .padding(16.dp)
+//                .padding(bottom = 100.dp),
+//            containerColor = LightOrange //change color here for add orders
+//        ) {
+//            Icon(
+//                imageVector = Icons.Default.Add,
+//                contentDescription = "Add Order",
+//                tint = Color.White
+//            )
+//        }
     }
 
 }
