@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -61,7 +62,9 @@ fun NavDrawerTopBar(
             TopAppBar(
                 title = {
                     Box(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 20.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         if (currentDestination != "${role.lowercase()}_dashboard") {
@@ -78,15 +81,25 @@ fun NavDrawerTopBar(
                         Text(
                             text = title,
                             color = Color.White,
+                            fontWeight = FontWeight.Bold,
                             modifier = Modifier.align(Alignment.Center)
                         )
+                        IconButton(
+                            onClick = { navController.navigate(Screen.Cart.route) },
+                            modifier = Modifier.align(Alignment.CenterEnd)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ShoppingCart,
+                                contentDescription = "Your cart"
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = LightOrange,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
-                )
+                ),
             )
         }
         "Farmer" -> { GradientTopBar(title = title) }
@@ -232,16 +245,6 @@ fun NavDrawerBottomBar(
             }
 
             if (role == "Client") {
-                NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Contact", tint = VeryDarkPurple) },
-                    label = { Text("Cart", color = Color.White, fontFamily = mintsansFontFamily) },
-                    selected = currentDestination == Screen.Cart.route,
-                    onClick = {
-                        navController.navigate(Screen.Cart.route) {
-                            popUpTo(navController.graph.startDestinationId)
-                        }
-                    }
-                )
                 NavigationBarItem(
                     icon = { Icon(imageVector = Icons.Default.Call, contentDescription = "Contact", tint = VeryDarkPurple) },
                     label = { Text("Contact", color = Color.White, fontFamily = mintsansFontFamily) },

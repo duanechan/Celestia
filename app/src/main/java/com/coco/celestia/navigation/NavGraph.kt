@@ -39,11 +39,11 @@ import com.coco.celestia.screens.coop.ProcessOrderPanel
 import com.coco.celestia.screens.coop.ProductTypeInventory
 import com.coco.celestia.screens.farmer.FarmerDashboard
 import com.coco.celestia.screens.farmer.FarmerItems
-import com.coco.celestia.screens.farmer.details.FarmerItemDetails
 import com.coco.celestia.screens.farmer.FarmerManageOrder
 import com.coco.celestia.screens.farmer.FarmerProductTypeInventory
-import com.coco.celestia.screens.farmer.details.FarmerRequestDetails
+import com.coco.celestia.screens.farmer.details.FarmerItemDetails
 import com.coco.celestia.screens.farmer.details.FarmerOrderDetails
+import com.coco.celestia.screens.farmer.details.FarmerRequestDetails
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.CartViewModel
 import com.coco.celestia.viewmodel.ContactViewModel
@@ -57,7 +57,6 @@ import com.coco.celestia.viewmodel.model.ProductData
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: String = Screen.Splash.route,
     cartViewModel: CartViewModel = viewModel(),
     contactViewModel: ContactViewModel = viewModel(),
     locationViewModel: LocationViewModel = viewModel(),
@@ -79,36 +78,34 @@ fun NavGraph(
 
     NavHost(
         navController = navController,
-        startDestination = startDestination,
+        startDestination = Screen.Splash.route,
     ) {
         composable(route = Screen.Splash.route) {
             SplashScreen(
                 navController = navController,
-                userViewModel = userViewModel
-            ) {
-                onEvent(it)
-            }
+                userViewModel = userViewModel,
+                onAccessEvent = { onEvent(it) }
+            )
         }
         composable(route = Screen.Login.route) {
             LoginScreen(
                 mainNavController = navController,
-                userViewModel = userViewModel
-            ) {
-                onEvent(it)
-            }
+                userViewModel = userViewModel,
+                onLoginEvent =  { onEvent(it) }
+            )
         }
         composable(route = Screen.ForgotPassword.route) {
-            ForgotPasswordScreen(navController = navController) {
-                onEvent(it)
-            }
+            ForgotPasswordScreen(
+                navController = navController,
+                onEvent = { onEvent(it) }
+            )
         }
         composable(route = Screen.Register.route) {
             RegisterScreen(
                 navController = navController,
-                userViewModel = userViewModel
-            ) {
-                onEvent(it)
-            }
+                userViewModel = userViewModel,
+                onRegisterEvent = { onEvent(it) }
+            )
         }
         composable(route = Screen.Farmer.route) {
             onNavigate("Dashboard")
@@ -313,10 +310,9 @@ fun NavGraph(
                 navController = navController,
                 type = type,
                 productViewModel = productViewModel,
-                cartViewModel = cartViewModel
-            ) {
-                onEvent(it)
-            }
+                cartViewModel = cartViewModel,
+                onAddToCartEvent = { onEvent(it) }
+            )
         }
         composable(route = Screen.OrderConfirmation.route) {
             onNavigate("Order Confirmation")
@@ -325,10 +321,9 @@ fun NavGraph(
                 checkoutItems = checkoutItems,
                 orderViewModel = orderViewModel,
                 userViewModel = userViewModel,
-                transactionViewModel = transactionViewModel
-            ) {
-                onEvent(it)
-            }
+                transactionViewModel = transactionViewModel,
+                onAddToCartEvent = { onEvent(it) }
+            )
         }
         composable(route = Screen.Profile.route) {
             onNavigate("Profile")

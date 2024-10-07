@@ -63,4 +63,20 @@ class CartViewModel : ViewModel() {
                 }
         }
     }
+
+    fun removeCartItems(uid: String, products: List<ProductData>) {
+        viewModelScope.launch {
+            _cartState.value = CartState.LOADING
+            val currentCart = _cartData.value ?: CartData()
+            currentCart.items.removeAll(products)
+            _cartData.value = currentCart
+            database.child(uid).setValue(currentCart.items)
+                .addOnSuccessListener {
+                    _cartState.value = CartState.SUCCESS
+                }
+                .addOnFailureListener { error ->
+                    _cartState.value = CartState.ERROR("Error: ${error.message}")
+                }
+        }
+    }
 }

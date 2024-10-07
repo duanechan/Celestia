@@ -103,6 +103,7 @@ fun Cart(
                 onClick = {
                     if(checkoutItems.size != 0) {
                         onCheckoutEvent(checkoutItems)
+                        cartViewModel.removeCartItems(uid, checkoutItems)
                         navController.navigate(Screen.OrderConfirmation.route)
                     } else {
                         onCheckoutErrorEvent(Triple(ToastStatus.WARNING, "Select items to checkout.", System.currentTimeMillis()))
