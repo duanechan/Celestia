@@ -289,7 +289,7 @@ fun FarmerManageRequest(
 
 @Composable
 fun ManageOrderCards(navController: NavController, orderCount: Int, order: OrderData, user: UserData) {
-    val clientName = "${user.firstname} ${user.lastname}"
+    val clientName = order.client
     val orderId = order.orderId.substring(5, 9).uppercase()
     val orderStatus = order.status
 

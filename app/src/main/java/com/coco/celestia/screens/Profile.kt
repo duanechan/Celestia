@@ -177,7 +177,6 @@ fun ProfileScreen(
             modifier = Modifier.size(100.dp)
         )
         Text(text = "$firstName $lastName", fontWeight = FontWeight.Bold, fontSize = 25.sp)
-        Text(text = "ID: $uid", fontSize = 15.sp)
         OutlinedTextField(
             value = updatedEmail,
             onValueChange = {

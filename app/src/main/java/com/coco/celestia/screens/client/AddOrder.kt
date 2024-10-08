@@ -371,6 +371,7 @@ fun ConfirmOrderRequestPanel(
                 orderDate = Date.from(Instant.now()).toString(),
                 status = "PENDING",
                 orderData = checkoutItems,
+                client = "${userData?.firstname} ${userData?.lastname}",
                 barangay = barangay,
                 street = streetNumber
             )
