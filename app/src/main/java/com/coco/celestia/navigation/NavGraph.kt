@@ -35,6 +35,7 @@ import com.coco.celestia.screens.coop.AddProductForm
 import com.coco.celestia.screens.coop.CoopDashboard
 import com.coco.celestia.screens.coop.CoopInventory
 import com.coco.celestia.screens.coop.OrderRequest
+import com.coco.celestia.screens.coop.ProcessOrder
 import com.coco.celestia.screens.coop.ProcessOrderPanel
 import com.coco.celestia.screens.coop.ProductTypeInventory
 import com.coco.celestia.screens.farmer.FarmerDashboard
@@ -192,10 +193,14 @@ fun NavGraph(
             onNavigate("Inventory")
             CoopInventory(navController = navController)
         }
-        composable(route = Screen.CoopProcessOrder.route) {
+        composable(
+            route = Screen.CoopProcessOrder.route,
+            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+        ) { backStack ->
+            val orderId = backStack.arguments?.getString("orderId")
             ProcessOrderPanel(
+                orderId = orderId.toString(),
                 orderViewModel = orderViewModel,
-                productViewModel = productViewModel
             )
         }
         composable(route = Screen.AddOrder.route) {

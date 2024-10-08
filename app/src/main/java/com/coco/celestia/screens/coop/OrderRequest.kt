@@ -252,8 +252,7 @@ fun PreparingOrderItem(
                 ) {
                     OutlinedButton(
                         onClick = {
-                            orderViewModel.fetchOrder(order.orderId)
-                            navController.navigate(Screen.CoopProcessOrder.route)
+                            navController.navigate(Screen.CoopProcessOrder.createRoute(order.orderId))
                         },
                         colors = ButtonDefaults.buttonColors(contentColor = Color.DarkGray, containerColor = Color.Transparent)
                     ) {
@@ -286,7 +285,7 @@ fun PendingOrderItem(
                     .padding(16.dp)
                     .animateContentSize()
             ) {
-                Text(text = if (order.orderData[0].type != "Vegetable") "${order.orderData[0].name}, ${order.orderData[0].quantity}kg" else order.orderData[0].name,
+                Text(text = "${order.orderData[0].name}, ${order.orderData[0].quantity}kg",
                     fontSize = 30.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif)
                 Text(text = "${order.status} ●", fontSize = 20.sp, fontWeight = FontWeight.Light, color = Orange)
                 Text(text = "${order.street}, ${order.barangay}")
@@ -294,21 +293,9 @@ fun PendingOrderItem(
                 Text(text = order.orderDate)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.Center,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (order.orderData[0].type != "Vegetable") {
-                        OutlinedButton(
-                            onClick = {
-                                action = "Reject"
-                                showDialog = true
-                            },
-                            colors = ButtonDefaults.buttonColors(contentColor = Color.Red, containerColor = Color.White)
-                        ) {
-                            Text("Reject")
-                        }
-                    }
-
                     Button(
                         onClick = {
                             action = "Accept"

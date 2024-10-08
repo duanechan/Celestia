@@ -34,8 +34,8 @@ sealed class Screen(val route: String) {
         fun createRoute(type: String) = "coop_add_product_inventory/$type"
     }
     object CoopAddProductInventoryDB: Screen("coop_add_product_inventory_db")
-    object CoopProcessOrder: Screen("coop_order/process") {
-        fun createRoute(order: OrderData) = "coop_order/process/${order}"
+    object CoopProcessOrder: Screen("coop_order/process/{orderId}") {
+        fun createRoute(orderId: String) = "coop_order/process/${orderId}"
     }
     //client
     object Client: Screen( route = "client_dashboard")
