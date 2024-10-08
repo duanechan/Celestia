@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
@@ -73,7 +74,10 @@ fun OrderRequest(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row {
+        TopBar(title = "Orders")
+        Row (modifier = Modifier
+            .height(75.dp)
+            .padding(top = 5.dp)) {
             SearchBar(
                 query = query,
                 onQueryChange = { query = it },
@@ -81,12 +85,16 @@ fun OrderRequest(
                 active = false,
                 onActiveChange = {},
                 leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search") },
-                placeholder = { Text("Search") }
+                placeholder = { Text("Search") },
+                modifier = Modifier.height(50.dp)
+
             ) {
 
             }
             // TODO: Implement filter button here.
         }
+
+        var orderCount = 1
 
         when (orderState) {
             is OrderState.LOADING -> LoadingOrders()
@@ -94,13 +102,14 @@ fun OrderRequest(
             is OrderState.EMPTY -> EmptyOrders()
             is OrderState.SUCCESS -> {
                 LazyColumn {
-                    items(orderData) { order ->
+                    itemsIndexed(orderData) { index, order ->
                         OrderItem(
                             order = order,
                             auth = auth,
                             navController = navController,
                             orderViewModel = orderViewModel,
                             transactionViewModel = transactionViewModel,
+                            orderCount = index + 1
                         )
                     }
                     item { Spacer(modifier = Modifier.height(100.dp)) }
@@ -146,6 +155,7 @@ fun EmptyOrders() {
 @Composable
 fun OrderItem(
     order: OrderData,
+    orderCount: Int,
     auth: FirebaseAuth,
     navController: NavController,
     orderViewModel: OrderViewModel,
@@ -183,6 +193,7 @@ fun OrderItem(
                 order = order,
                 navController = navController,
                 orderViewModel = orderViewModel,
+                orderCount = orderCount
             )
         }
         // TODO: Add other order statuses here
@@ -192,9 +203,12 @@ fun OrderItem(
 @Composable
 fun PreparingOrderItem(
     order: OrderData,
+    orderCount: Int,
     navController: NavController,
     orderViewModel: OrderViewModel,
 ) {
+    val orderId = order.orderId.substring(5,9).uppercase()
+    
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -208,8 +222,19 @@ fun PreparingOrderItem(
                     .animateContentSize()
             ) {
                 Text(
+                    text = orderCount.toString(),
+                    fontSize = 50.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black,
+                    modifier = Modifier.padding(5.dp)
+                )
+
+                Text(text = "Order ID: $orderId",
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold)
+                Text(
                     text = if (order.orderData[0].type != "Vegetable") "${order.orderData[0].name}, ${order.orderData[0].quantity}kg" else order.orderData[0].name,
-                    fontSize = 30.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif
+                    fontSize = 30.sp, fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = "${order.status} ●",
