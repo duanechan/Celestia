@@ -106,21 +106,7 @@ fun FarmerRequestDetails(
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Spacer(modifier = Modifier.height(200.dp))
-                    Text(
-                        text = "«",
-                        fontSize = 50.sp,
-                        color = Color(0xFF9A5F32),
-                        modifier = Modifier
-                            .padding(end = 8.dp)
-                            .clickable { navController.popBackStack() }
-                    )
-                    Text(
-                        text = "Order Request",
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF9A5F32)
-                    )
+
                 }
 
                 // Order details card
@@ -130,8 +116,16 @@ fun FarmerRequestDetails(
                     modifier = Modifier.width(cardWidth)
                 ) {
                     Column(
-                        modifier = Modifier.padding(40.dp)
+                        modifier = Modifier.padding(100.dp)
                     ) {
+                        Text(
+                            text = "«",
+                            fontSize = 50.sp,
+                            color = Color(0xFF9A5F32),
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .clickable { navController.popBackStack() }
+                        )
                         Text(
                             text = "Order ID #${orderData.orderId}",
                             fontWeight = FontWeight.Bold,

@@ -48,6 +48,8 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.painterResource
+import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.UserData
@@ -61,20 +63,25 @@ fun FarmerManageOrder(
     orderViewModel: OrderViewModel,
     productViewModel: ProductViewModel
 ) {
+    // Observing LiveData from ViewModels
     val userData by userViewModel.userData.observeAsState()
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     val productData by productViewModel.productData.observeAsState()
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
 
-    // Track which view is active (Order Status or Order Request)
+    // State to track the active view (Order Status or Order Requests)
     var isOrderStatusView by remember { mutableStateOf(true) }
 
-    // Dropdown state
-    val categoryOptions = productData?.map { it.name }
+    // Filter states
+    val categoryOptions = productData?.map { it.name } ?: emptyList()
     var selectedCategory by remember { mutableStateOf("") }
-    var expandedCategory by remember { mutableStateOf(false) }
+    var filterMenuExpanded by remember { mutableStateOf(false) }
 
+    // Search bar state
+    var searchQuery by remember { mutableStateOf("") }
+
+    // Fetch data when the composable is first launched
     LaunchedEffect(Unit) {
         orderViewModel.fetchAllOrders(
             filter = "",
@@ -95,10 +102,91 @@ fun FarmerManageOrder(
                 .verticalScroll(rememberScrollState())
                 .background(Color(0xFFF2E3DB))
         ) {
+            // Search and Filter Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Search TextField
+                TextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Search orders...") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(
+                            color = Color(0xFFEAE7DC),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .border(
+                            BorderStroke(1.dp, Color(0xFF4A2B0E)),
+                            shape = RoundedCornerShape(16.dp)
+                        ),
+                    singleLine = true,
+                    colors = TextFieldDefaults.textFieldColors(
+                        containerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        errorIndicatorColor = Color.Transparent
+                    )
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+                Box {
+                    IconButton(
+                        onClick = { filterMenuExpanded = true },
+                        modifier = Modifier
+                            .background(
+                                color = Color(0xFFEAE7DC),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            .border(
+                                BorderStroke(1.dp, Color(0xFF4A2B0E)),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.filter),
+                            contentDescription = "Filter",
+                            tint = Color(0xFF4A2B0E)
+                        )
+                    }
+
+                    // Dropdown Menu for Category Filtering
+                    DropdownMenu(
+                        expanded = filterMenuExpanded,
+                        onDismissRequest = { filterMenuExpanded = false },
+                        modifier = Modifier
+                            .background(Color(0xFFEAE7DC), shape = RoundedCornerShape(8.dp))
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("All Categories") },
+                            onClick = {
+                                selectedCategory = ""
+                                filterMenuExpanded = false
+                            }
+                        )
+                        categoryOptions.forEach { category ->
+                            DropdownMenuItem(
+                                text = { Text(category) },
+                                onClick = {
+                                    selectedCategory = category
+                                    filterMenuExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Order Status and Order Requests
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Button(
@@ -124,122 +212,75 @@ fun FarmerManageOrder(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Row(
-                modifier = Modifier.padding(20.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Category Dropdown (Lettuce, Onion, Carrot)
-                ExposedDropdownMenuBox(
-                    expanded = expandedCategory,
-                    onExpandedChange = { expandedCategory = !expandedCategory }
-                ) {
-                    TextField(
-                        readOnly = true,
-                        value = selectedCategory,
-                        onValueChange = {},
-                        placeholder = { Text("All") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expandedCategory)
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .menuAnchor()
-                            .background(
-                                color = Color(0xFFEAE7DC),
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                            .border(
-                                BorderStroke(1.dp, Color(0xFF4A2B0E)),
-                                shape = RoundedCornerShape(16.dp)
-                            ),
-                        colors = TextFieldDefaults.textFieldColors(
-                            containerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent,
-                            errorIndicatorColor = Color.Transparent
-                        )
-                    )
-
-                    ExposedDropdownMenu(
-                        expanded = expandedCategory,
-                        onDismissRequest = { expandedCategory = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("All") },
-                            onClick = {
-                                selectedCategory = ""
-                                expandedCategory = false
-                            }
-                        )
-                        categoryOptions?.forEach { option ->
-                            DropdownMenuItem(
-                                text = { Text(option) },
-                                onClick = {
-                                    selectedCategory = option
-                                    expandedCategory = false
-                                }
-                            )
-                        }
-                    }
-                }
-            }
+            Spacer(modifier = Modifier.height(15.dp))
 
             if (isOrderStatusView) {
-                // Show Order Status view
+                // Show Order Status View
                 when (orderState) {
                     is OrderState.LOADING -> {
-                        Text("Loading orders...")
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
                     is OrderState.ERROR -> {
-                        Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}")
+                        Text(
+                            "Failed to load orders: ${(orderState as OrderState.ERROR).message}",
+                            color = Color.Red,
+                            modifier = Modifier.padding(16.dp)
+                        )
                     }
                     is OrderState.EMPTY -> {
-                        Text("No orders available.")
+                        Text(
+                            "No orders available.",
+                            modifier = Modifier.padding(16.dp)
+                        )
                     }
                     is OrderState.SUCCESS -> {
-                        val filteredOrders = if (selectedCategory.isNotEmpty()) {
-                            orderData.filter { order ->
-                                order.orderData.any {
-                                    it.name == selectedCategory
-                                }
-                            }
-                        } else {
-                            orderData
+                        val filteredOrders = orderData.filter { order ->
+                            (selectedCategory.isEmpty() || order.orderData.any { it.name == selectedCategory }) &&
+                                    order.orderId.contains(searchQuery, ignoreCase = true)
                         }
 
                         if (filteredOrders.isEmpty()) {
-                            Text("No orders available.")
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("No orders match your search and filter criteria.")
+                            }
                         } else {
-                            var orderCount = 1
                             filteredOrders.forEach { order ->
                                 if (userData == null) {
                                     CircularProgressIndicator()
                                 } else {
-                                    // Make the card clickable
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(8.dp)
                                     ) {
-                                        ManageOrderCards(navController, orderCount, order, userData!!)
+                                        ManageOrderCards(navController, order)
                                     }
-                                    orderCount++
                                 }
                             }
                         }
                     }
                 }
             } else {
-                // Show Order Request view
+                // Show Order Requests View
                 FarmerManageRequest(
                     navController = navController,
                     userData = userData,
                     orderData = orderData,
                     orderState = orderState,
-                    selectedCategory = selectedCategory
+                    selectedCategory = selectedCategory,
+                    searchQuery = searchQuery
                 )
             }
             Spacer(modifier = Modifier.height(100.dp))
@@ -253,33 +294,35 @@ fun FarmerManageRequest(
     userData: UserData?,
     orderData: List<OrderData>,
     orderState: OrderState,
-    selectedCategory: String
+    selectedCategory: String,
+    searchQuery: String
 ) {
     when (orderState) {
-        is OrderState.LOADING -> { Text("Loading pending orders...") }
-        is OrderState.ERROR -> { Text("Failed to load orders: ${orderState.message}") }
-        is OrderState.EMPTY -> { Text("No pending orders available.") }
+        is OrderState.LOADING -> {
+            Text("Loading pending orders...")
+        }
+        is OrderState.ERROR -> {
+            Text("Failed to load orders: ${orderState.message}")
+        }
+        is OrderState.EMPTY -> {
+            Text("No pending orders available.")
+        }
         is OrderState.SUCCESS -> {
+            // Filter orders by pending status
             val pendingOrders = orderData.filter { it.status == "PENDING" }
-            val filteredOrders = if (selectedCategory.isNotEmpty()) {
-                orderData.filter { order ->
-                    order.orderData.any {
-                        it.name == selectedCategory
-                    }
-                }
-            } else {
-                pendingOrders
+            val filteredOrders = pendingOrders.filter { order ->
+                (selectedCategory.isEmpty() || order.orderData.any { it.name == selectedCategory }) &&
+                        order.orderId.contains(searchQuery, ignoreCase = true)
             }
+
             if (filteredOrders.isEmpty()) {
                 Text("No pending orders available.")
             } else {
-                var orderCount = 1
                 filteredOrders.forEach { order ->
                     if (userData == null) {
                         CircularProgressIndicator()
                     } else {
-                        RequestCards(navController, orderCount, order, userData)
-                        orderCount++
+                        RequestCards(navController, order)
                     }
                 }
             }
@@ -288,7 +331,7 @@ fun FarmerManageRequest(
 }
 
 @Composable
-fun ManageOrderCards(navController: NavController, orderCount: Int, order: OrderData, user: UserData) {
+fun ManageOrderCards(navController: NavController, order: OrderData) {
     val clientName = order.client
     val orderId = order.orderId.substring(5, 9).uppercase()
     val orderStatus = order.status
@@ -326,21 +369,6 @@ fun ManageOrderCards(navController: NavController, orderCount: Int, order: Order
                         .padding(16.dp)
                         .fillMaxSize()
                 ) {
-                    // Order Number Box
-                    Box(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .background(Color.White, RoundedCornerShape(10.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = orderCount.toString(),
-                            fontSize = 40.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                    }
-
                     Spacer(modifier = Modifier.width(16.dp))
 
                     // Order Info
@@ -367,7 +395,6 @@ fun ManageOrderCards(navController: NavController, orderCount: Int, order: Order
         }
 
         Spacer(modifier = Modifier.width(8.dp))
-
         // Status
         OrderStatusCard(orderStatus)
     }
@@ -390,7 +417,7 @@ fun OrderStatusCard(orderStatus: String) {
     }
 
     Card(
-        modifier = Modifier.size(75.dp, 125.dp),
+        modifier = Modifier.size(80.dp, 125.dp),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor)
     ) {
@@ -423,11 +450,9 @@ fun OrderStatusCard(orderStatus: String) {
 @Composable
 fun RequestCards(
     navController: NavController,
-    orderCount: Int,
     order: OrderData,
-    user: UserData
 ) {
-    val clientName = "${user.firstname} ${user.lastname}"
+    val clientName = order.client
     val orderId = order.orderId.substring(5, 9).uppercase()
 
     Row(
@@ -463,21 +488,6 @@ fun RequestCards(
                         .padding(16.dp)
                         .fillMaxSize()
                 ) {
-                    // Order Number Box
-                    Box(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .background(Color.White, RoundedCornerShape(10.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = orderCount.toString(),
-                            fontSize = 40.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                    }
-
                     Spacer(modifier = Modifier.width(16.dp))
 
                     // Order Info

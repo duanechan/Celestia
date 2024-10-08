@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.model.OrderData
@@ -123,12 +122,6 @@ fun FarmerOrderDetails(
                                     modifier = Modifier
                                         .padding(end = 8.dp)
                                         .clickable { navController.popBackStack() }
-                                )
-                                Text(
-                                    text = "Order Details",
-                                    fontSize = 30.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
                                 )
                             }
 

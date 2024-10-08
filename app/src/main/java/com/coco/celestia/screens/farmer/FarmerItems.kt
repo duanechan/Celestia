@@ -70,16 +70,8 @@ fun FarmerItems(navController: NavController) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "Vegetables",
-                                fontSize = 25.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.align(Alignment.Center)
-                            )
-                        }
+                        )
                     }
-
                     items(farmerProductData) { product ->
                         FarmerProductTypeInventory(product = product, navController = navController)
                     }

@@ -121,7 +121,7 @@ fun NavGraph(
             )
         }
         composable(route = Screen.FarmerItems.route) {
-            onNavigate("Items")
+            onNavigate("Vegetables")
             FarmerItems(navController = navController)
         }
         composable(route = Screen.Client.route) {
@@ -280,6 +280,7 @@ fun NavGraph(
             val orderId = backStackEntry.arguments?.getString("orderId")
 
             if (orderId != null) {
+                onNavigate("Order Requests")
                 FarmerRequestDetails(
                     navController = navController,
                     orderId = orderId,
@@ -295,6 +296,7 @@ fun NavGraph(
             val orderId = backStackEntry.arguments?.getString("orderId")
 
             if (orderId != null) {
+                onNavigate("Order Details")
                 FarmerOrderDetails(
                     navController = navController,
                     orderId = orderId
