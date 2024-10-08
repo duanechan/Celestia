@@ -88,8 +88,9 @@ fun CoopInventory(navController: NavController) {
 
     Column(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .height(860.dp)
+            .background(Color(0xFFEFF0EF))
             .verticalScroll(rememberScrollState())
     ){
         TopBar("Inventory")
@@ -135,6 +136,10 @@ fun ProductTypeCards(navController: NavController, productData: List<ProductData
             else -> R.drawable.meaticon
         }
 
+        val arrownIconRes = when (type){
+            "Coffee" -> R.drawable.arrowsicon
+            else -> R.drawable.orangearrowsicon
+        }
 
         Card(
             modifier = Modifier
@@ -164,6 +169,12 @@ fun ProductTypeCards(navController: NavController, productData: List<ProductData
                         painter = painterResource(id = iconRes),
                         contentDescription = "$type icon",
                         modifier = Modifier.size(35.dp)
+                    )
+                    Spacer(modifier = Modifier.width(170.dp))
+                    Image(
+                        painter = painterResource(id = arrownIconRes),
+                        contentDescription = "$type icon",
+                        modifier = Modifier.size(20.dp)
                     )
                 }
                 Spacer(modifier = Modifier.height(35.dp))
