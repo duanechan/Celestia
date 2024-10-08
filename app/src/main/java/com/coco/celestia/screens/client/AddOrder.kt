@@ -180,15 +180,7 @@ fun ProductTypeCard(
     }
 
     Card(
-        onClick = {
-            if (productType == "Vegetable") {
-                navController.navigate(
-                    Screen.OrderConfirmation.createRoute(productType, productName, productQuantity)
-                )
-            } else {
-                expanded = !expanded
-            }
-        },
+        onClick = { expanded = !expanded },
         modifier = Modifier
             .padding(vertical = 16.dp)
             .animateContentSize()
@@ -201,24 +193,7 @@ fun ProductTypeCard(
             modifier = Modifier
                 .background(brush = gradientBrush)
                 .fillMaxWidth()
-                .clickable {
-                    if (productType == "Vegetable") {
-                        cartViewModel.addToCart(
-                            uid = uid,
-                            product = product.copy(quantity = 0)
-                        )
-                        onAddToCartEvent(
-                            Triple(
-                                ToastStatus.SUCCESSFUL,
-                                "Added to cart.",
-                                System.currentTimeMillis()
-                            )
-                        )
-                        navController.navigate(Screen.Cart.route)
-                    } else {
-                        expanded = !expanded
-                    }
-                }
+                .clickable { expanded = !expanded }
                 .padding(16.dp) // padding inside the gradient Box
         ) {
             Column(
@@ -232,26 +207,22 @@ fun ProductTypeCard(
                     color = Color.White,
                     modifier = Modifier.padding(8.dp)
                 )
-                if (productType != "Vegetable") {
-                    Text(
-                        text = "${productQuantity}kg",
-                        fontSize = 20.sp,
-                        color = Color.White,
-                        modifier = Modifier.padding(8.dp)
-                    )
-                }
+                Text(
+                    text = "${productQuantity}kg",
+                    fontSize = 20.sp,
+                    color = Color.White,
+                    modifier = Modifier.padding(8.dp)
+                )
 
                 AnimatedVisibility(expanded) {
-                    if (productType != "Vegetable") {
-                        QuantitySelector(
-                            navController = navController,
-                            cartViewModel = cartViewModel,
-                            productType = productType,
-                            productName = productName,
-                            maxQuantity = productQuantity
-                        ) {
-                            onAddToCartEvent(it)
-                        }
+                    QuantitySelector(
+                        navController = navController,
+                        cartViewModel = cartViewModel,
+                        productType = productType,
+                        productName = productName,
+                        maxQuantity = productQuantity
+                    ) {
+                        onAddToCartEvent(it)
                     }
                 }
             }
