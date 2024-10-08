@@ -251,6 +251,7 @@ fun NavGraph(
                     productType = ""
                 } else {
                     onEvent(Triple(ToastStatus.WARNING, "Please fill in all fields", System.currentTimeMillis()))
+                    navController.navigate(Screen.CoopAddProductInventory.route)
                 }
             }
         }
