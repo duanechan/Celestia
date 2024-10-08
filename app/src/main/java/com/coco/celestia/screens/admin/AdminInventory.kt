@@ -194,6 +194,7 @@ fun AdminItemList(itemList: List<ProductData>) {
             AdminItemCard(productType, quantity)
             Spacer(modifier = Modifier.height(10.dp))
         }
+        Spacer(modifier = Modifier.height(50.dp))
     }
 }
 

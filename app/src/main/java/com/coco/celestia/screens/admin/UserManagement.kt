@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.admin
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,11 +21,18 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -39,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -51,7 +60,7 @@ import com.coco.celestia.viewmodel.model.UserData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminUserManagement(userViewModel: UserViewModel) {
+fun AdminUserManagement(userViewModel: UserViewModel, onEditUserClick: () -> Unit) {
     var text by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
@@ -118,7 +127,7 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 200.dp),
-            userViewModel = userViewModel
+            userViewModel = userViewModel, onEditUserClick = {onEditUserClick()}
         )
         Spacer(modifier = Modifier.height(100.dp))
     }
@@ -126,9 +135,9 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
 fun DropdownMenuItem(onClick: () -> Unit, interactionSource: @Composable () -> Unit) {
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: Modifier, userViewModel: UserViewModel) {
+fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: Modifier, userViewModel: UserViewModel, onEditUserClick: () -> Unit) {
     LazyColumn(
         modifier = modifier.fillMaxWidth()
     ) {
@@ -176,19 +185,18 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
                         .padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Checkbox(
-                        checked = user.isChecked,
-                        onCheckedChange = { checked ->
-                            user.isChecked = checked
-                            if (checked) {
-                                if (!selectedUsers.contains(user)) {
-                                    userViewModel.addSelectedUser(user)
-                                }
-                            } else {
-                                userViewModel.removeSelectedUser(user)
-                            }
+                    IconButton(
+                        onClick = {
+                            // Set the user as the selected user and trigger the edit popup
+                            onEditUserClick()
+                            userViewModel.addSelectedUser(user)
                         }
-                    )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit User"
+                        )
+                    }
                     Text(
                         text = user.email,
                         modifier = Modifier

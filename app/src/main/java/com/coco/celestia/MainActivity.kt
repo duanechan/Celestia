@@ -72,6 +72,7 @@ fun App() {
     var toastMessage by remember { mutableStateOf("") }
     var toastEvent by remember { mutableStateOf(Triple(ToastStatus.INFO, "", 0L)) }
     val systemUiController = rememberSystemUiController()
+    var showEditUserDialog by remember { mutableStateOf(false) }
 
     DisposableEffect(systemUiController) {
         systemUiController.setStatusBarColor(
@@ -128,13 +129,18 @@ fun App() {
             Toast(message = toastMessage, status = toastStatus, visibility = showToast)
         },
         bottomBar = {
-            if (selectedUsers.isNotEmpty()) {
-                ActionButtons(userViewModel)
-
+            if(showEditUserDialog){
+                ActionButtons(
+                    userViewModel,
+                    showEditUserDialog,
+                    onDismiss = {
+                        showEditUserDialog = false
+                        userViewModel.clearSelectedUsers()}
+                    )
                 BackHandler {
                     userViewModel.clearSelectedUsers()
-                }
-            } else {
+                }}
+
                 if (currentDestination != null &&
                     currentDestination != Screen.Login.route &&
                     currentDestination != Screen.Register.route &&
@@ -146,13 +152,14 @@ fun App() {
                         navController = navController
                     )
                 }
-            }
+
         }
     ) { // APP CONTENT
         NavGraph(
             navController = navController,
             onNavigate = { topBarTitle = it },
-            onEvent = { toastEvent = Triple(it.first, it.second, it.third) }
+            onEvent = { toastEvent = Triple(it.first, it.second, it.third) },
+            onEditUserClick = {showEditUserDialog= !showEditUserDialog}
         )
     }
 }

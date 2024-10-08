@@ -65,7 +65,8 @@ fun NavGraph(
     transactionViewModel: TransactionViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
     onNavigate: (String) -> Unit,
-    onEvent: (Triple<ToastStatus, String, Long>) -> Unit
+    onEvent: (Triple<ToastStatus, String, Long>) -> Unit,
+    onEditUserClick: () -> Unit
 ) {
     var checkoutItems = remember { mutableStateListOf<ProductData>() }
     var productName by remember { mutableStateOf("") }
@@ -160,7 +161,7 @@ fun NavGraph(
         composable(route = Screen.AdminUserManagement.route) {
             onNavigate("User Management")
             AdminUserManagement(
-                userViewModel = userViewModel
+                userViewModel = userViewModel, onEditUserClick = {onEditUserClick()}
             )
         }
         composable(route = Screen.AdminAddUserManagement.route) {
