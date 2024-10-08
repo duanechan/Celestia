@@ -1,3 +1,4 @@
+@file:Suppress("IMPLICIT_CAST_TO_ANY")
 package com.coco.celestia.screens.farmer
 
 import androidx.compose.foundation.BorderStroke
@@ -41,19 +42,23 @@ import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.UserData
 import com.coco.celestia.viewmodel.ProductViewModel
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.ui.graphics.painter.Painter
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -367,10 +372,9 @@ fun ManageOrderCards(navController: NavController, order: OrderData) {
                 Row(
                     modifier = Modifier
                         .padding(16.dp)
-                        .fillMaxSize()
+                        .fillMaxSize(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Spacer(modifier = Modifier.width(16.dp))
-
                     // Order Info
                     Column(
                         verticalArrangement = Arrangement.Center,
@@ -385,11 +389,19 @@ fun ManageOrderCards(navController: NavController, order: OrderData) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Client Name: $clientName",
-                            fontSize = 14.sp,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Normal,
                             color = Color.White
                         )
                     }
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowRight,
+                        contentDescription = "Arrow Forward",
+                        tint = Color.White,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .align(Alignment.CenterVertically)
+                    )
                 }
             }
         }
@@ -403,17 +415,17 @@ fun ManageOrderCards(navController: NavController, order: OrderData) {
 @Composable
 fun OrderStatusCard(orderStatus: String) {
     val backgroundColor = when (orderStatus) {
-        "PREPARING" -> Color(0xFF4CAF50) // Green
-        "PENDING" -> Color(0xFFE0A83B) // Yellow
-        "REJECTED" -> Color(0xFFA2453D) // Red
+        "PREPARING" -> Color(0xFFB06520)
+        "PENDING" -> Color(0xFFE0A83B)
+        "REJECTED" -> Color(0xFFA2453D)
         else -> Color.Gray
     }
 
-    val icon = when (orderStatus) {
-        "PREPARING" -> Icons.Default.Check
+    val iconPainter = when (orderStatus) {
+        "PREPARING" -> painterResource(id = R.drawable.preparing) // Use preparing.png
         "PENDING" -> Icons.Default.Refresh
         "REJECTED" -> Icons.Default.Clear
-        else -> Icons.Default.Star
+        else -> Icons.Default.Warning
     }
 
     Card(
@@ -428,12 +440,21 @@ fun OrderStatusCard(orderStatus: String) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = orderStatus,
-                tint = Color.White,
-                modifier = Modifier.size(32.dp)
-            )
+            if (orderStatus == "PREPARING") {
+                Icon(
+                    painter = iconPainter as Painter,
+                    contentDescription = orderStatus,
+                    modifier = Modifier.size(40.dp),
+                    tint = Color.White
+                )
+            } else {
+                Icon(
+                    imageVector = iconPainter as ImageVector,
+                    contentDescription = orderStatus,
+                    tint = Color.White,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -486,10 +507,9 @@ fun RequestCards(
                 Row(
                     modifier = Modifier
                         .padding(16.dp)
-                        .fillMaxSize()
+                        .fillMaxSize(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Spacer(modifier = Modifier.width(16.dp))
-
                     // Order Info
                     Column(
                         verticalArrangement = Arrangement.Center,
@@ -509,6 +529,14 @@ fun RequestCards(
                             color = Color.White
                         )
                     }
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowRight,
+                        contentDescription = "Arrow Forward",
+                        tint = Color.White,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .align(Alignment.CenterVertically)
+                    )
                 }
             }
         }
