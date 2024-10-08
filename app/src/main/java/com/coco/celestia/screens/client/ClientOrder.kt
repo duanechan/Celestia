@@ -102,10 +102,7 @@ fun ClientOrder(
                 Icon(
                     imageVector = Icons.Default.ShoppingCart,
                     contentDescription = "Order Icon",
-                    modifier = Modifier
-                        .size(30.dp)
-                        .size(35.dp)
-                        .align(Alignment.CenterVertically),
+                    modifier = Modifier.size(35.dp),
                     tint = CoffeeBean
                 )
 
@@ -118,9 +115,7 @@ fun ClientOrder(
                     color = RavenBlack
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                Button(
-                    onClick = { /* Handle notification click */ },
-                ) {
+                Button(onClick = { /* Handle notification click */ }) {
                     Image(
                         painter = painterResource(id = R.drawable.notification_icon),
                         contentDescription = "Notification Icon",
@@ -130,10 +125,11 @@ fun ClientOrder(
             }
 
             Spacer(modifier = Modifier.height(10.dp))
+
             var text by remember { mutableStateOf("") }
-            var selectedStatus by remember { mutableStateOf("All") } // status filter state
-            var expanded by remember { mutableStateOf(false) } // dropdown
-            val statuses = listOf("All", "Pending", "Accepted", "Rejected") //statuses
+            var selectedStatus by remember { mutableStateOf("All") }
+            var expanded by remember { mutableStateOf(false) }
+            val statuses = listOf("All", "Pending", "Preparing", "Rejected") //removed 'accept' since status changed to preparing
 
             Row(
                 modifier = Modifier
@@ -141,13 +137,12 @@ fun ClientOrder(
                     .padding(top = 10.dp, bottom = 15.dp, start = 25.dp, end = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-
                 SearchBar(
                     query = text,
                     onQueryChange = { newText -> text = newText },
                     onSearch = {},
                     active = false,
-                    onActiveChange = { },
+                    onActiveChange = {},
                     placeholder = { Text(text = "Search...", color = Color.Black, fontSize = 15.sp) },
                     leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon") },
                     modifier = Modifier
@@ -155,11 +150,11 @@ fun ClientOrder(
                         .height(50.dp)
                         .offset(y = -13.dp)
                 ){
+
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // dropdown button
                 Button(
                     onClick = { expanded = true },
                     modifier = Modifier
@@ -180,7 +175,6 @@ fun ClientOrder(
                             onClick = {
                                 selectedStatus = status
                                 expanded = false
-                                orderViewModel.fetchOrders(uid, filter = selectedStatus)
                             }
                         )
                     }
@@ -198,18 +192,16 @@ fun ClientOrder(
                 }
 
                 is OrderState.EMPTY -> {
-                    Text("Empty orders.")
+                    Text("No orders available.")
                 }
 
                 is OrderState.SUCCESS -> {
-                    // filter by stat
-                    val filteredOrders = orderData
-                        .filter { order ->
-                            (selectedStatus == "All" || order.status == selectedStatus) &&
-                                    (order.orderId.contains(text, ignoreCase = true) ||
-                                            userData?.let { "${it.firstname} ${it.lastname}" }
-                                                ?.contains(text, ignoreCase = true) == true)
-                        }
+                    val filteredOrders = orderData.filter { order ->
+                        (selectedStatus == "All" || order.status.equals(selectedStatus, ignoreCase = true)) &&
+                                (order.orderId.contains(text, ignoreCase = true) ||
+                                        userData?.let { "${it.firstname} ${it.lastname}" }
+                                            ?.contains(text, ignoreCase = true) == true)
+                    }
 
                     if (filteredOrders.isEmpty()) {
                         Text(
@@ -220,7 +212,6 @@ fun ClientOrder(
                             modifier = Modifier.padding(16.dp)
                         )
                     } else {
-                        // Show filtered orders
                         var orderCount = 1
                         filteredOrders.forEach { order ->
                             userData?.let { user ->
@@ -236,33 +227,14 @@ fun ClientOrder(
 
             Spacer(modifier = Modifier.height(100.dp))
         }
-
-     //remove add button
-//        FloatingActionButton(
-//            onClick = {
-//                navController.navigate(Screen.AddOrder.route)
-//            },
-//            modifier = Modifier
-//                .align(Alignment.BottomEnd)
-//                .padding(16.dp)
-//                .padding(bottom = 100.dp),
-//            containerColor = LightOrange //change color here for add orders
-//        ) {
-//            Icon(
-//                imageVector = Icons.Default.Add,
-//                contentDescription = "Add Order",
-//                tint = Color.White
-//            )
-//        }
     }
-
 }
 
 @Composable
 fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
     var expanded by remember { mutableStateOf(false) }
     val clientName = "${user.firstname} ${user.lastname}"
-    val orderId = order.orderId.substring(5,9).uppercase()
+    val orderId = order.orderId.substring(5, 9).uppercase()
     val orderStatus = order.status
 
     Row {
@@ -270,7 +242,6 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(165.dp)
-                .offset(x = (-16).dp, y = 0.dp)
                 .padding(top = 0.dp, bottom = 10.dp, start = 27.dp, end = 0.dp),
             colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
         ) {
@@ -279,7 +250,7 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
                     .clickable { expanded = !expanded }
                     .padding(16.dp)
             ) {
-                Row(){
+                Row {
                     Box(
                         modifier = Modifier
                             .size(width = 50.dp, height = 150.dp)
@@ -316,13 +287,11 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
                             text = orderStatus,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = LightOrange, // will adjust color
+                            color = LightOrange,
                             modifier = Modifier.padding(top = 0.dp, start = 10.dp)
                         )
                     }
-
                 }
-
             }
         }
     }
