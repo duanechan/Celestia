@@ -79,7 +79,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(color = LightApricot)
+                .background(color = BgColor)
                 .verticalScroll(rememberScrollState())
                 .padding(paddingValues)
         ) {

@@ -44,7 +44,7 @@ fun FarmerItems(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = LightApricot)
+            .background(color = BgColor)
             .padding(top = 60.dp)
     ) {
         when (farmerProductState) {

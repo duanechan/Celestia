@@ -72,7 +72,7 @@ fun FarmerRequestDetails(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = LightApricot),
+                    .background(color = BgColor),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(color = Copper)
@@ -82,7 +82,7 @@ fun FarmerRequestDetails(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = LightApricot),
+                    .background(color = BgColor),
                 contentAlignment = Alignment.Center
             ) {
                 Text(

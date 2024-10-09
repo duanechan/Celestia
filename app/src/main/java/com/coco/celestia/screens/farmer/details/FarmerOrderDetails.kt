@@ -1,31 +1,24 @@
 package com.coco.celestia.screens.farmer.details
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.ui.theme.Cocoa
-import com.coco.celestia.ui.theme.LightApricot
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.model.OrderData
@@ -58,7 +51,7 @@ fun FarmerOrderDetails(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = LightApricot),
+                    .background(color = BgColor),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(color = Cocoa)
@@ -69,7 +62,7 @@ fun FarmerOrderDetails(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = LightApricot),
+                    .background(color = BgColor),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -87,7 +80,7 @@ fun FarmerOrderDetails(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = LightApricot)
+                    .background(color = BgColor)
                     .padding(top = 80.dp)
             ) {
                 // Order details card

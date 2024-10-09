@@ -104,7 +104,7 @@ fun FarmerManageOrder(
                 .fillMaxHeight()
                 .padding(top = 80.dp)
                 .verticalScroll(rememberScrollState())
-                .background(color = LightApricot)
+                .background(color = BgColor)
         ) {
             // Search and Filter Row
             Row(
