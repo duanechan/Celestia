@@ -24,11 +24,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -180,41 +183,52 @@ fun ProductTypeCard(
     }
 
     Card(
-        onClick = { expanded = !expanded },
         modifier = Modifier
             .padding(vertical = 16.dp)
             .animateContentSize()
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable { expanded = !expanded },
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.elevatedCardElevation(5.dp)
     ) {
-
         Box(
             modifier = Modifier
                 .background(brush = gradientBrush)
                 .fillMaxWidth()
-                .clickable { expanded = !expanded }
-                .padding(16.dp) // padding inside the gradient Box
+                .padding(16.dp)
         ) {
-            Column(
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = productName,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White,
-                    modifier = Modifier.padding(8.dp)
-                )
-                Text(
-                    text = "${productQuantity}kg",
-                    fontSize = 20.sp,
-                    color = Color.White,
-                    modifier = Modifier.padding(8.dp)
-                )
-
-                AnimatedVisibility(expanded) {
+            Column {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = productName,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                        Text(
+                            text = "${productQuantity}kg",
+                            fontSize = 20.sp,
+                            color = Color.White,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.Filled.ShoppingCart,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .padding(start = 8.dp)
+                    )
+                }
+                AnimatedVisibility(visible = expanded) {
                     QuantitySelector(
                         navController = navController,
                         cartViewModel = cartViewModel,
