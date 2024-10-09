@@ -41,11 +41,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.coco.celestia.screens.coop.TopBar
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.ui.theme.DarkBlue
-import com.coco.celestia.ui.theme.DarkGreen
-import com.coco.celestia.ui.theme.LightOrange
-import com.coco.celestia.ui.theme.VeryDarkPurple
-import com.coco.celestia.ui.theme.mintsansFontFamily
+import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.routeHandler
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -114,11 +110,8 @@ fun GradientTopBar(title: String) {
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                Brush.horizontalGradient(
-                    colors = listOf(
-                        Color(0xFFE0A83B),  // First color (#41644A)0xFFA36361
-                        Color(0xFF7A5C20)   // Second color (#83CA95)0xFFC3B0AD
-                    )
+                Brush.verticalGradient(
+                    colors = listOf(Sand, Yellow4)
                 )
             )
     ) {
@@ -140,7 +133,7 @@ fun GradientTopBar(title: String) {
                     Text(
                         text = title,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = Cocoa,
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
@@ -346,7 +339,7 @@ fun bottomColorConfig(role: String): Pair<Color, Color> {
         "Admin" -> Pair(Color.White, DarkBlue)
         "Client" -> Pair(LightOrange, Color.White)
         "Coop" -> Pair(Color.White, DarkGreen)
-        "Farmer" -> Pair(Color(0xFFE0A83B), Color(0xFF693F27))
+        "Farmer" -> Pair(Yellow4, Cocoa)
         else -> Pair(Color.White, Color.Black) // Default
     }
 }

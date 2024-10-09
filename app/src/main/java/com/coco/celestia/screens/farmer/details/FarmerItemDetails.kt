@@ -36,7 +36,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import com.coco.celestia.screens.farmer.dialogs.EditQuantityDialog
+import com.coco.celestia.ui.theme.*
 
 @Composable
 fun FarmerItemDetails(navController: NavController, productName: String) {
@@ -77,7 +79,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF2E3DB))
+                .background(color = LightApricot)
                 .verticalScroll(rememberScrollState())
                 .padding(paddingValues)
         ) {
@@ -107,11 +109,8 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .background(
-                                            Brush.horizontalGradient(
-                                                colors = listOf(
-                                                    Color(0xFFE0A83B),
-                                                    Color(0xFF7A5C20)
-                                                )
+                                            Brush.verticalGradient(
+                                                colors = listOf(Yellow4, Sand)
                                             )
                                         )
                                 ) {
@@ -128,14 +127,14 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                                 fontSize = 60.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 textAlign = TextAlign.Center,
-                                                color = Color.White
+                                                color = Cocoa
                                             )
                                             Spacer(modifier = Modifier.height(10.dp))
                                             Text(
                                                 text = "Quantity: $productQuantity kg",
                                                 fontSize = 20.sp,
                                                 textAlign = TextAlign.Center,
-                                                color = Color.White
+                                                color = Cocoa
                                             )
                                         }
 
@@ -144,7 +143,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                             modifier = Modifier
                                                 .padding(top = 95.dp)
                                         ) {
-                                            Icon(Icons.Filled.Edit, contentDescription = "Edit Quantity", tint = Color.White)
+                                            Icon(Icons.Filled.Edit, contentDescription = "Edit Quantity", tint = Cocoa)
                                         }
                                     }
                                 }
@@ -249,7 +248,7 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFF957541))
+                .background(color = Sand)
                 .padding(20.dp)
         ) {
             Text(
@@ -258,7 +257,8 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                 fontWeight = FontWeight.Bold,
                 fontFamily = mintsansFontFamily,
                 textAlign = TextAlign.Center,
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                color = Cocoa
             )
             Text(
                 text = "Status",
@@ -266,7 +266,8 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                 fontWeight = FontWeight.Bold,
                 fontFamily = mintsansFontFamily,
                 textAlign = TextAlign.Center,
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                color = Cocoa
             )
             Text(
                 text = "Qty",
@@ -274,7 +275,8 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                 fontWeight = FontWeight.Bold,
                 fontFamily = mintsansFontFamily,
                 textAlign = TextAlign.Center,
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                color = Cocoa
             )
         }
 
@@ -301,26 +303,32 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFFDAAC63))
+                                .background(color = SoftOrange)
                                 .padding(50.dp)
                         ) {
                             Text(
                                 text = order.orderId.substring(5, 9),
                                 modifier = Modifier.weight(1f),
                                 fontFamily = mintsansFontFamily,
-                                textAlign = TextAlign.Left
+                                textAlign = TextAlign.Left,
+                                fontWeight = Bold,
+                                color = Cocoa
                             )
                             Text(
                                 text = order.status,
                                 modifier = Modifier.weight(1f),
                                 fontFamily = mintsansFontFamily,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
+                                fontWeight = Bold,
+                                color = Cocoa
                             )
                             Text(
                                 text = order.orderData[0].quantity.toString(),
                                 modifier = Modifier.weight(1f),
                                 fontFamily = mintsansFontFamily,
-                                textAlign = TextAlign.Right
+                                textAlign = TextAlign.Right,
+                                fontWeight = Bold,
+                                color = Cocoa
                             )
                         }
                         Divider(
@@ -337,7 +345,7 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFFDAAC63))
+                                .background(color = SoftOrange)
                                 .padding(50.dp)
                         ) {
                             Text(

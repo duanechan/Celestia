@@ -24,9 +24,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.coco.celestia.ui.theme.Cocoa
+import com.coco.celestia.ui.theme.LightApricot
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.ui.theme.*
 
 @Composable
 fun FarmerOrderDetails(
@@ -55,10 +58,10 @@ fun FarmerOrderDetails(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFFF5E1CF)),
+                    .background(color = LightApricot),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color(0xFF9A5F32))
+                CircularProgressIndicator(color = Cocoa)
             }
         }
 
@@ -66,7 +69,7 @@ fun FarmerOrderDetails(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFFF5E1CF)),
+                    .background(color = LightApricot),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -84,10 +87,10 @@ fun FarmerOrderDetails(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFFF5E1CF))
+                    .background(color = LightApricot)
                     .padding(top = 80.dp)
             ) {
-                // Order details card with "<< Order Details" inside
+                // Order details card
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -98,11 +101,8 @@ fun FarmerOrderDetails(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(
-                                Brush.horizontalGradient(
-                                    colors = listOf(
-                                        Color(0xFFE0A83B),  // First color
-                                        Color(0xFF7A5C20)  // Second color
-                                    )
+                                Brush.verticalGradient(
+                                    colors = listOf(Yellow4, Sand)
                                 )
                             )
                     ) {
@@ -118,7 +118,7 @@ fun FarmerOrderDetails(
                                 Text(
                                     text = "«",
                                     fontSize = 50.sp,
-                                    color = Color.White,
+                                    color = Cocoa,
                                     modifier = Modifier
                                         .padding(end = 8.dp)
                                         .clickable { navController.popBackStack() }
@@ -132,10 +132,10 @@ fun FarmerOrderDetails(
                                 text = "Order ID #${orderData.orderId}",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 20.sp,
-                                color = Color.White,
+                                color = Cocoa,
                             )
                             Spacer(modifier = Modifier.height(20.dp))
-                            Text(text = "Delivery Address: ${orderData.street}, ${orderData.barangay}", color = Color.White)
+                            Text(text = "Delivery Address: ${orderData.street}, ${orderData.barangay}", color = Cocoa)
 
                             Spacer(modifier = Modifier.height(50.dp))
 
@@ -144,14 +144,6 @@ fun FarmerOrderDetails(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Image(
-                                    imageVector = Icons.Filled.Info,
-                                    contentDescription = "Product Image",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(60.dp)
-                                        .clip(RoundedCornerShape(8.dp))
-                                )
                                 Spacer(modifier = Modifier.width(50.dp))
                                 LazyColumn(
                                     verticalArrangement = Arrangement.Center,
@@ -159,8 +151,8 @@ fun FarmerOrderDetails(
                                     modifier = Modifier.weight(1f)
                                 ) {
                                     items(products) { product ->
-                                        Text(text = product.name, fontWeight = FontWeight.Bold, fontSize = 30.sp, color = Color.White)
-                                        Text(text = "${product.quantity} kg", fontWeight = FontWeight.Bold, fontSize = 40.sp, color = Color.White)
+                                        Text(text = product.name, fontWeight = FontWeight.Bold, fontSize = 30.sp, color = Cocoa)
+                                        Text(text = "${product.quantity} kg", fontWeight = FontWeight.Bold, fontSize = 40.sp, color = Cocoa)
                                         Spacer(modifier = Modifier.height(16.dp))
                                     }
                                 }
@@ -168,7 +160,6 @@ fun FarmerOrderDetails(
                         }
                     }
                 }
-
                 Spacer(modifier = Modifier.height(20.dp))
             }
         }
