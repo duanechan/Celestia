@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -161,8 +162,9 @@ fun FarmerRequestDetails(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = "Delivery Address: ",
+                                    text = "Delivery Address",
                                     fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp,
                                     color = Color.White,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier.fillMaxWidth()
@@ -175,30 +177,50 @@ fun FarmerRequestDetails(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = "Date of Order Request: ",
+                                    text = "Date of Order Request",
                                     fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp,
                                     color = Color.White,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 Text(
                                     text = "${orderData.orderDate.take(10)}${
-                                        orderData.orderDate.takeLast(
-                                            4
-                                        )
-                                    }",
+                                        orderData.orderDate.takeLast(5)}",
                                     color = Color.White,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier.fillMaxWidth()
                                 )
+                                Spacer(modifier = Modifier.height(30.dp))
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 70.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ShoppingCart,
+                                        contentDescription = "Ordered Products Icon",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(24.dp)
+                                    )
 
-                                Spacer(modifier = Modifier.height(16.dp))
+                                    Spacer(modifier = Modifier.width(5.dp))
+
+                                    Text(
+                                        text = "Ordered Products",
+                                        color = Color.White,
+                                        textAlign = TextAlign.Start,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
 
                                 // Products and quantity
                                 Card(
                                     shape = RoundedCornerShape(10.dp),
                                     modifier = Modifier
-                                        .padding(top = 35.dp, bottom = 8.dp)
+                                        .padding(top = 10.dp, bottom = 8.dp)
                                         .fillMaxHeight(0.2f),
                                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                                 ) {
@@ -302,7 +324,7 @@ fun FarmerRequestDetails(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Inventory Check",
+                                text = "Items Check",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 30.sp,
                                 color = Color.White
@@ -400,7 +422,7 @@ fun FarmerRequestDetails(
 
                             Text(
                                 text = "Check the inventory for more details",
-                                color = Color(0xFF9A5F32),
+                                color = Color.White,
                                 fontSize = 14.sp,
                                 modifier = Modifier
                                     .padding(bottom = 5.dp)
