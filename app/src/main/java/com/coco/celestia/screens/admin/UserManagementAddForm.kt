@@ -20,7 +20,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -29,22 +31,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.util.isValidEmail
+import com.coco.celestia.util.sendEmail
+import com.coco.celestia.viewmodel.UserState
+import com.coco.celestia.viewmodel.UserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddUserForm(
     navController: NavController,
     email: String,
-    onEmailChanged: (String) -> Unit
+    firstname: String,
+    lastname: String,
+    role: String,
+    onEmailChanged: (String) -> Unit,
+    onFirstNameChanged: (String) -> Unit,
+    onLastNameChanged: (String) -> Unit,
+    onRoleChanged: (String) -> Unit
 ) {
     val maxChar = 25
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
     var isValidEmail by remember { mutableStateOf(true) }
-    var selectedRole by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     val roles = listOf("Coffee", "Meat")
 
@@ -108,10 +116,10 @@ fun AddUserForm(
 
         // First Name
         OutlinedTextField(
-            value = firstName,
+            value = firstname,
             onValueChange = {
                 if (it.length <= maxChar) {
-                    firstName = it
+                    onFirstNameChanged(it)
                 }
             },
             label = { Text(text = "First Name") },
@@ -123,10 +131,10 @@ fun AddUserForm(
 
         // Last Name
         OutlinedTextField(
-            value = lastName,
+            value = lastname,
             onValueChange = {
                 if (it.length <= maxChar) {
-                    lastName = it
+                    onLastNameChanged(it)
                 }
             },
             label = { Text(text = "Last Name") },
@@ -143,7 +151,7 @@ fun AddUserForm(
         ) {
             OutlinedTextField(
                 readOnly = true,
-                value = selectedRole,
+                value = role,
                 onValueChange = {},
                 placeholder = { Text("Select Role") },
                 trailingIcon = {
@@ -162,12 +170,70 @@ fun AddUserForm(
                     androidx.compose.material3.DropdownMenuItem(
                         text = { Text(roleItem) },
                         onClick = {
-                            selectedRole = roleItem
+                            onRoleChanged(roleItem)
                             expanded = false
                         }
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+fun CheckAddUser(
+    userViewModel: UserViewModel,
+    navController: NavController,
+    email: (String),
+    firstname: (String),
+    lastname: (String),
+    role: (String),
+    onRegisterEvent: (Triple<ToastStatus, String, Long>) -> Unit
+) {
+    val userState by userViewModel.userState.observeAsState(UserState.LOADING)
+    val subject = "Welcome to Coco: Coop Connects"
+    val placeholderPass = "Coco123"
+    val body = """
+                Dear ${("$firstname $lastname")},
+
+                Welcome to Coco: Coop Connects!
+
+                We are thrilled to have you join our community. Below are your account details:
+
+                **Email:** $email  
+                **Password:** $placeholderPass
+
+                Please make sure to change your password after your first login for security purposes. Keep this information secure and do not share your password with anyone.
+
+                Thank you for being a part of our community! We look forward to serving you.
+
+                Best regards,  
+                The Coco Team
+
+                ---
+
+                If you did not create an account, please ignore this email.
+
+            """.trimIndent()
+
+    LaunchedEffect(userState) {
+        when (userState) {
+            is UserState.ERROR -> {
+                onRegisterEvent(Triple(ToastStatus.FAILED, (userState as UserState.ERROR).message, System.currentTimeMillis()))
+            }
+            is UserState.REGISTER_SUCCESS -> {
+                sendEmail(email, subject, body)
+                onRegisterEvent(Triple(ToastStatus.SUCCESSFUL, "Registration Successful", System.currentTimeMillis()))
+                userViewModel.resetUserState()
+                navController.navigate(Screen.AdminUserManagement.route)
+            }
+            else -> {}
+        }
+    }
+
+    if (email.isNotEmpty() && firstname.isNotEmpty() && lastname.isNotEmpty()) {
+        userViewModel.register(email, firstname, lastname, placeholderPass, role)
+    } else {
+        onRegisterEvent(Triple(ToastStatus.WARNING, "All text must be filled", System.currentTimeMillis()))
     }
 }

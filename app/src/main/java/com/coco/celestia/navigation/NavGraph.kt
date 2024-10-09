@@ -27,6 +27,7 @@ import com.coco.celestia.screens.admin.AddUserForm
 import com.coco.celestia.screens.admin.AdminDashboard
 import com.coco.celestia.screens.admin.AdminInventory
 import com.coco.celestia.screens.admin.AdminUserManagement
+import com.coco.celestia.screens.admin.CheckAddUser
 import com.coco.celestia.screens.client.Cart
 import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientDashboard
@@ -45,7 +46,6 @@ import com.coco.celestia.screens.farmer.details.FarmerItemDetails
 import com.coco.celestia.screens.farmer.details.FarmerOrderDetails
 import com.coco.celestia.screens.farmer.details.FarmerRequestDetails
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.util.sendEmail
 import com.coco.celestia.viewmodel.CartViewModel
 import com.coco.celestia.viewmodel.ContactViewModel
 import com.coco.celestia.viewmodel.LocationViewModel
@@ -75,6 +75,9 @@ fun NavGraph(
     var quantityAmount by remember { mutableIntStateOf(0) }
     var productType by remember { mutableStateOf("") }
     var emailSend by remember { mutableStateOf("") }
+    var firstname by remember { mutableStateOf("") }
+    var lastname by remember { mutableStateOf("") }
+    var role by remember { mutableStateOf("") }
 
     NavHost(
         navController = navController,
@@ -167,19 +170,25 @@ fun NavGraph(
             AddUserForm(
                 navController = navController,
                 email = emailSend,
-                onEmailChanged = { emailSend = it }
+                firstname = firstname,
+                lastname = lastname,
+                role = role,
+                onEmailChanged = { emailSend = it },
+                onFirstNameChanged = { firstname = it},
+                onLastNameChanged = { lastname = it },
+                onRoleChanged = { role = it }
             )
         }
         composable(route = Screen.AdminAddUserManagementDB.route) {
-            val subject = "Welcome to Coco: Coop Connects"
-            val body = """
-                
-            """.trimIndent()
-
-            LaunchedEffect(Unit) {
-                sendEmail(emailSend, subject, body)
-            }
-            TODO("Register User and Add Body Content")
+            CheckAddUser(
+                userViewModel = userViewModel,
+                navController = navController,
+                email = emailSend,
+                firstname = firstname,
+                lastname = lastname,
+                role = role,
+                onRegisterEvent = { onEvent(it) }
+            )
         }
         composable(route = Screen.Coop.route) {
             onNavigate("Dashboard")
