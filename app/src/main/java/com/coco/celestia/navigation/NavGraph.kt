@@ -45,6 +45,7 @@ import com.coco.celestia.screens.farmer.details.FarmerItemDetails
 import com.coco.celestia.screens.farmer.details.FarmerOrderDetails
 import com.coco.celestia.screens.farmer.details.FarmerRequestDetails
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.util.sendEmail
 import com.coco.celestia.viewmodel.CartViewModel
 import com.coco.celestia.viewmodel.ContactViewModel
 import com.coco.celestia.viewmodel.LocationViewModel
@@ -73,8 +74,7 @@ fun NavGraph(
     var addressName by remember { mutableStateOf("") }
     var quantityAmount by remember { mutableIntStateOf(0) }
     var productType by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var role by remember { mutableStateOf("") }
+    var emailSend by remember { mutableStateOf("") }
 
     NavHost(
         navController = navController,
@@ -166,14 +166,20 @@ fun NavGraph(
         composable(route = Screen.AdminAddUserManagement.route) {
             AddUserForm(
                 navController = navController,
-                email = email,
-                role = role,
-                newEmail = { email = it},
-                newRole = {role = it}
+                email = emailSend,
+                onEmailChanged = { emailSend = it }
             )
         }
         composable(route = Screen.AdminAddUserManagementDB.route) {
-            //sendEmail("coolgenrev@gmail.com", "Hello", "Test")
+            val subject = "Welcome to Coco: Coop Connects"
+            val body = """
+                
+            """.trimIndent()
+
+            LaunchedEffect(Unit) {
+                sendEmail(emailSend, subject, body)
+            }
+            TODO("Register User and Add Body Content")
         }
         composable(route = Screen.Coop.route) {
             onNavigate("Dashboard")

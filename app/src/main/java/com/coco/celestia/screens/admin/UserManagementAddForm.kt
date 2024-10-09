@@ -26,20 +26,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.mintsansFontFamily
+import com.coco.celestia.util.isValidEmail
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddUserForm(
     navController: NavController,
     email: String,
-    role: String,
-    newEmail: (String) -> Unit,
-    newRole: (String) -> Unit,
+    onEmailChanged: (String) -> Unit
 ) {
+    val maxChar = 25
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
+    var isValidEmail by remember { mutableStateOf(true) }
+    var selectedRole by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     val roles = listOf("Coffee", "Meat")
 
@@ -69,29 +74,76 @@ fun AddUserForm(
             Spacer(modifier = Modifier.width(8.dp))
 
             Text(
-                text = "Add User ✚",
+                text = "Add User",
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.align(Alignment.CenterVertically)
             )
         }
-
         Spacer(modifier = Modifier.height(16.dp))
 
         // Email
         OutlinedTextField(
             value = email,
-            onValueChange = newEmail,
-            label = { Text("Email") },
+            onValueChange = {
+                if (it.length <= maxChar) {
+                    onEmailChanged(it)
+                    isValidEmail = isValidEmail(it)
+                }
+            },
+            label = { Text(text = "Email") },
+            isError = !isValidEmail,
+            singleLine = true,
+            maxLines = 1,
             modifier = Modifier.fillMaxWidth()
         )
+        Spacer(modifier = Modifier.height(2.dp))
 
+        if (!isValidEmail) {
+            Text(
+                text = "Invalid email format",
+                color = Color.Red,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
+        // First Name
+        OutlinedTextField(
+            value = firstName,
+            onValueChange = {
+                if (it.length <= maxChar) {
+                    firstName = it
+                }
+            },
+            label = { Text(text = "First Name") },
+            singleLine = true,
+            maxLines = 1,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+
+        // Last Name
+        OutlinedTextField(
+            value = lastName,
+            onValueChange = {
+                if (it.length <= maxChar) {
+                    lastName = it
+                }
+            },
+            label = { Text(text = "Last Name") },
+            singleLine = true,
+            maxLines = 1,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+
+        // Role
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded },
         ) {
             OutlinedTextField(
                 readOnly = true,
-                value = role,
+                value = selectedRole,
                 onValueChange = {},
                 placeholder = { Text("Select Role") },
                 trailingIcon = {
@@ -110,7 +162,7 @@ fun AddUserForm(
                     androidx.compose.material3.DropdownMenuItem(
                         text = { Text(roleItem) },
                         onClick = {
-                            newRole(roleItem)
+                            selectedRole = roleItem
                             expanded = false
                         }
                     )
