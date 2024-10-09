@@ -35,7 +35,6 @@ import com.coco.celestia.screens.coop.AddProductForm
 import com.coco.celestia.screens.coop.CoopDashboard
 import com.coco.celestia.screens.coop.CoopInventory
 import com.coco.celestia.screens.coop.OrderRequest
-import com.coco.celestia.screens.coop.ProcessOrder
 import com.coco.celestia.screens.coop.ProcessOrderPanel
 import com.coco.celestia.screens.coop.ProductTypeInventory
 import com.coco.celestia.screens.farmer.FarmerDashboard
@@ -53,7 +52,6 @@ import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
-import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 
 @Composable
@@ -67,8 +65,7 @@ fun NavGraph(
     transactionViewModel: TransactionViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
     onNavigate: (String) -> Unit,
-    onEvent: (Triple<ToastStatus, String, Long>) -> Unit,
-    onEditUserClick: () -> Unit
+    onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     var checkoutItems = remember { mutableStateListOf<ProductData>() }
     var productName by remember { mutableStateOf("") }
@@ -163,7 +160,7 @@ fun NavGraph(
         composable(route = Screen.AdminUserManagement.route) {
             onNavigate("User Management")
             AdminUserManagement(
-                userViewModel = userViewModel, onEditUserClick = {onEditUserClick()}
+                userViewModel = userViewModel
             )
         }
         composable(route = Screen.AdminAddUserManagement.route) {

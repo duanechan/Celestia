@@ -3,7 +3,6 @@ package com.coco.celestia
 import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,7 +28,6 @@ import com.coco.celestia.components.toast.toastDelay
 import com.coco.celestia.navigation.NavDrawerBottomBar
 import com.coco.celestia.navigation.NavDrawerTopBar
 import com.coco.celestia.navigation.NavGraph
-import com.coco.celestia.screens.admin.ActionButtons
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.util.checkNetworkConnection
@@ -65,14 +63,12 @@ fun App() {
     val userData by userViewModel.userData.observeAsState()
     var lastConnectionState = checkNetworkConnection(context)
     val currentDestination = navController.currentBackStackEntry?.destination?.route
-    val selectedUsers by userViewModel.selectedUsers.observeAsState(emptyList())
     var topBarTitle by remember { mutableStateOf("") }
     var toastStatus by remember { mutableStateOf(ToastStatus.INFO) }
     var showToast by remember { mutableStateOf(false) }
     var toastMessage by remember { mutableStateOf("") }
     var toastEvent by remember { mutableStateOf(Triple(ToastStatus.INFO, "", 0L)) }
     val systemUiController = rememberSystemUiController()
-    var showEditUserDialog by remember { mutableStateOf(false) }
 
     DisposableEffect(systemUiController) {
         systemUiController.setStatusBarColor(
@@ -129,37 +125,23 @@ fun App() {
             Toast(message = toastMessage, status = toastStatus, visibility = showToast)
         },
         bottomBar = {
-            if(showEditUserDialog){
-                ActionButtons(
-                    userViewModel,
-                    showEditUserDialog,
-                    onDismiss = {
-                        showEditUserDialog = false
-                        userViewModel.clearSelectedUsers()}
-                    )
-                BackHandler {
-                    userViewModel.clearSelectedUsers()
-                }}
-
-                if (currentDestination != null &&
-                    currentDestination != Screen.Login.route &&
-                    currentDestination != Screen.Register.route &&
-                    currentDestination != Screen.Splash.route &&
-                    currentDestination != Screen.ForgotPassword.route)
-                {
-                    NavDrawerBottomBar(
-                        role = userData?.role.toString(),
-                        navController = navController
-                    )
-                }
-
+            if (currentDestination != null &&
+                currentDestination != Screen.Login.route &&
+                currentDestination != Screen.Register.route &&
+                currentDestination != Screen.Splash.route &&
+                currentDestination != Screen.ForgotPassword.route)
+            {
+                NavDrawerBottomBar(
+                    role = userData?.role.toString(),
+                    navController = navController
+                )
+            }
         }
     ) { // APP CONTENT
         NavGraph(
             navController = navController,
             onNavigate = { topBarTitle = it },
-            onEvent = { toastEvent = Triple(it.first, it.second, it.third) },
-            onEditUserClick = {showEditUserDialog= !showEditUserDialog}
+            onEvent = { toastEvent = Triple(it.first, it.second, it.third) }
         )
     }
 }

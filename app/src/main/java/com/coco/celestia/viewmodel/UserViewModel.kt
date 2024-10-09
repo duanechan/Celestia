@@ -33,27 +33,9 @@ class UserViewModel : ViewModel() {
     private val _userData = MutableLiveData<UserData?>()
     private val _usersData = MutableLiveData<List<UserData?>>()
     private val _userState = MutableLiveData<UserState>()
-    private val _selectedUsers = MutableLiveData<List<UserData?>>()
     val userData: LiveData<UserData?> = _userData
     val usersData: LiveData<List<UserData?>> = _usersData
     val userState: LiveData<UserState> = _userState
-    val selectedUsers: LiveData<List<UserData?>> = _selectedUsers
-
-    fun addSelectedUser(user: UserData?) {
-        _selectedUsers.value = _selectedUsers.value?.plus(user) ?: listOf(user)
-    }
-
-    fun removeSelectedUser(user: UserData?) {
-        _selectedUsers.value = _selectedUsers.value?.minus(user) ?: emptyList()
-    }
-
-    fun clearSelectedUsers(){
-        _selectedUsers.value?.forEach { user ->
-            user?.isChecked = false
-        }
-
-        _selectedUsers.value = emptyList()
-    }
 
     fun resetUserState() {
         _userState.value = UserState.LOADING
@@ -250,18 +232,6 @@ class UserViewModel : ViewModel() {
         }
     }
 
-    fun deleteUser(uid: String) {
-        viewModelScope.launch {
-            _userState.value = UserState.LOADING
-            database.child(uid).removeValue().addOnCompleteListener{ task ->
-                if (!task.isSuccessful) {
-                    _userState.value = UserState.ERROR("Error")
-                } else {
-                    _userState.value = UserState.SUCCESS
-                }
-            }
-        }
-    }
     /**
      * Logs out the current user.
      */

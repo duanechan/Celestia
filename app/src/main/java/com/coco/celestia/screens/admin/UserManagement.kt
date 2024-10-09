@@ -1,6 +1,5 @@
 package com.coco.celestia.screens.admin
 
-import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,16 +22,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -47,24 +40,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.Gray
-import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.UserData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminUserManagement(userViewModel: UserViewModel, onEditUserClick: () -> Unit) {
+fun AdminUserManagement(userViewModel: UserViewModel) {
     var text by remember { mutableStateOf("") }
-    var active by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
-    val selectedUsers by userViewModel.selectedUsers.observeAsState(emptyList())
+    var selectedUser by remember { mutableStateOf<UserData?>(null) }
     val usersData by userViewModel.usersData.observeAsState()
     val userState by userViewModel.userState.observeAsState()
     val users: MutableList<UserData?> = mutableListOf()
@@ -101,7 +90,7 @@ fun AdminUserManagement(userViewModel: UserViewModel, onEditUserClick: () -> Uni
                     leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon") },
                     modifier = Modifier
                         .width(screenWidth * 0.9f) // will make the searchbar 90% of the screen width
-                        .offset(y=(-50.dp))
+                        .offset(y = ((-50).dp))
                 ) {}
             }
             Spacer(modifier = Modifier.height(8.dp))
@@ -123,21 +112,32 @@ fun AdminUserManagement(userViewModel: UserViewModel, onEditUserClick: () -> Uni
 
         UserTable(
             users = users,
-            selectedUsers = selectedUsers,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 200.dp),
-            userViewModel = userViewModel, onEditUserClick = {onEditUserClick()}
+            onEditUserClick = { user ->
+                selectedUser = user
+            }
         )
         Spacer(modifier = Modifier.height(100.dp))
+
+        selectedUser?.let { user ->
+            EditUser(
+                userViewModel = userViewModel,
+                userData = user,
+                onDismiss = {
+                    selectedUser = null
+                }
+            )
+        }
     }
 
 fun DropdownMenuItem(onClick: () -> Unit, interactionSource: @Composable () -> Unit) {
 }
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: Modifier, userViewModel: UserViewModel, onEditUserClick: () -> Unit) {
+fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (UserData) -> Unit) {
     LazyColumn(
         modifier = modifier.fillMaxWidth()
     ) {
@@ -185,18 +185,6 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
                         .padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = {
-                            // Set the user as the selected user and trigger the edit popup
-                            onEditUserClick()
-                            userViewModel.addSelectedUser(user)
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit User"
-                        )
-                    }
                     Text(
                         text = user.email,
                         modifier = Modifier
@@ -218,6 +206,16 @@ fun UserTable(users: List<UserData?>, selectedUsers: List<UserData?>, modifier: 
                             .fillMaxWidth(),
                         textAlign = TextAlign.Center,
                     )
+                    IconButton(
+                        onClick = {
+                            onEditUserClick(user)
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit User"
+                        )
+                    }
                     Spacer(modifier = Modifier.width(8.dp))
                 }
             }
