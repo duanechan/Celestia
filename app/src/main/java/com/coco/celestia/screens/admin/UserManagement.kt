@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -21,11 +22,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -43,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.Gray
 import com.coco.celestia.viewmodel.UserViewModel
@@ -77,7 +84,7 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(DarkBlue)
-                    .padding(5.dp, 0.dp, 5.dp, 0.dp),
+                    .padding(5.dp, 0.dp, 0.dp, 0.dp),
                         horizontalArrangement = Arrangement.Center
             ) {
                 SearchBar(
@@ -89,9 +96,27 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
                     placeholder = { Text(text = "Search", color = DarkBlue) },
                     leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon") },
                     modifier = Modifier
-                        .width(screenWidth * 0.9f) // will make the searchbar 90% of the screen width
+                        .width(screenWidth * 0.75f) // will make the searchbar 90% of the screen width
                         .offset(y = ((-50).dp))
                 ) {}
+                Spacer(modifier = Modifier.width(5.dp))
+                Button(
+                    onClick = {
+
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.LightGray
+                    ),
+                    modifier = Modifier.padding(top = 9.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        tint = Color.Black,
+                        contentDescription = "Audit Logs",
+                        modifier = Modifier
+                            .size(35.dp)
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -156,7 +181,7 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                         .weight(1f)
                         .fillMaxWidth(),
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Start
                 )
                 Text(
                     text = "NAME",
@@ -164,15 +189,26 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                         .weight(2f)
                         .fillMaxWidth(),
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.End
                 )
                 Text(
                     text = "ROLE",
                     modifier = Modifier
                         .weight(2f)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .padding(start = 20.dp),
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.End
+                )
+                Text(
+                    text = "EDIT",
+                    modifier = Modifier
+                        .weight(2f)
+                        .fillMaxWidth()
+                        .padding(end = 10.dp),
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.End
+
                 )
             }
         }
@@ -190,14 +226,14 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxWidth(),
-                        textAlign = TextAlign.Center,
+                        textAlign = TextAlign.End,
                     )
                     Text(
                         text = user.firstname + " " + user.lastname,
                         modifier = Modifier
                             .weight(2f)
                             .fillMaxWidth(),
-                        textAlign = TextAlign.Center,
+                        textAlign = TextAlign.End,
                     )
                     Text(
                         text = user.role,
