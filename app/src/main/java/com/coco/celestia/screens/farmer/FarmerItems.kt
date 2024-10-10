@@ -17,15 +17,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.screens.`object`.Screen
-
+import com.coco.celestia.ui.theme.*
 
 @Composable
 fun FarmerItems(navController: NavController) {
@@ -45,7 +45,7 @@ fun FarmerItems(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF2E3DB))
+            .background(color = BgColor)
             .padding(top = 60.dp)
     ) {
         when (farmerProductState) {
@@ -91,16 +91,14 @@ fun FarmerProductTypeInventory(product: ProductData, navController: NavControlle
             .clickable {
                 navController.navigate(Screen.FarmerItemDetails.createRoute(product.name))
             },
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     brush = Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF693F27), // Start of gradient
-                            Color(0xFF957541)  // End of gradient
-                        )
+                        colors = listOf(PaleGold, GoldenYellow)
                     )
                 )
         ) {
@@ -114,20 +112,20 @@ fun FarmerProductTypeInventory(product: ProductData, navController: NavControlle
                     Text(
                         text = product.name,
                         fontSize = 25.sp,
-                        color = Color.White,
+                        color = Cocoa,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "${product.quantity}kg",
                         fontSize = 25.sp,
-                        color = Color.White
+                        color = Cocoa
                     )
                 }
 
                 Icon(
                     imageVector = Icons.Filled.KeyboardArrowRight,
                     contentDescription = "Navigate",
-                    tint = Color.White,
+                    tint = Cocoa,
                     modifier = Modifier
                         .size(24.dp)
                         .align(Alignment.Bottom)

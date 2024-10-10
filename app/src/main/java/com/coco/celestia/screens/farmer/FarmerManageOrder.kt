@@ -42,8 +42,6 @@ import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Refresh
@@ -59,6 +57,7 @@ import com.coco.celestia.viewmodel.model.UserData
 import com.coco.celestia.viewmodel.ProductViewModel
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.ui.graphics.painter.Painter
+import com.coco.celestia.ui.theme.*
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -103,9 +102,9 @@ fun FarmerManageOrder(
         Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(top = 80.dp)
+                .padding(top = 80.dp, bottom = 25.dp)
                 .verticalScroll(rememberScrollState())
-                .background(Color(0xFFF2E3DB))
+                .background(color = BgColor)
         ) {
             // Search and Filter Row
             Row(
@@ -118,15 +117,15 @@ fun FarmerManageOrder(
                 TextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search orders...") },
+                    placeholder = { Text("Search orders...", color = Cocoa) },
                     modifier = Modifier
                         .weight(1f)
                         .background(
-                            color = Color(0xFFEAE7DC),
+                            color = Apricot,
                             shape = RoundedCornerShape(16.dp)
                         )
                         .border(
-                            BorderStroke(1.dp, Color(0xFF4A2B0E)),
+                            BorderStroke(1.dp, color = Cocoa),
                             shape = RoundedCornerShape(16.dp)
                         ),
                     singleLine = true,
@@ -145,18 +144,18 @@ fun FarmerManageOrder(
                         onClick = { filterMenuExpanded = true },
                         modifier = Modifier
                             .background(
-                                color = Color(0xFFEAE7DC),
+                                color = Apricot,
                                 shape = RoundedCornerShape(16.dp)
                             )
                             .border(
-                                BorderStroke(1.dp, Color(0xFF4A2B0E)),
+                                BorderStroke(1.dp, color = Cocoa),
                                 shape = RoundedCornerShape(16.dp)
                             )
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.filter),
                             contentDescription = "Filter",
-                            tint = Color(0xFF4A2B0E)
+                            tint = Cocoa
                         )
                     }
 
@@ -165,10 +164,10 @@ fun FarmerManageOrder(
                         expanded = filterMenuExpanded,
                         onDismissRequest = { filterMenuExpanded = false },
                         modifier = Modifier
-                            .background(Color(0xFFEAE7DC), shape = RoundedCornerShape(8.dp))
+                            .background(color = LightApricot, shape = RoundedCornerShape(8.dp))
                     ) {
                         DropdownMenuItem(
-                            text = { Text("All Categories") },
+                            text = { Text("All Categories", color = Cocoa) },
                             onClick = {
                                 selectedCategory = ""
                                 filterMenuExpanded = false
@@ -176,7 +175,7 @@ fun FarmerManageOrder(
                         )
                         categoryOptions.forEach { category ->
                             DropdownMenuItem(
-                                text = { Text(category) },
+                                text = { Text(category, color = Cocoa) },
                                 onClick = {
                                     selectedCategory = category
                                     filterMenuExpanded = false
@@ -197,11 +196,11 @@ fun FarmerManageOrder(
                 Button(
                     onClick = { isOrderStatusView = true },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isOrderStatusView) Color(0xFF957541) else Color(0xFFBDBDBD)
+                        containerColor = if (isOrderStatusView) GoldenYellow else Brown1
                     ),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Order Status", color = Color.White)
+                    Text("Order Status", color = Cocoa)
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
@@ -209,11 +208,11 @@ fun FarmerManageOrder(
                 Button(
                     onClick = { isOrderStatusView = false },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (!isOrderStatusView) Color(0xFF957541) else Color(0xFFBDBDBD)
+                        containerColor = if (!isOrderStatusView) GoldenYellow else Brown1
                     ),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Order Requests", color = Color.White)
+                    Text("Order Requests", color = Cocoa)
                 }
             }
 
@@ -248,7 +247,8 @@ fun FarmerManageOrder(
                     is OrderState.SUCCESS -> {
                         val filteredOrders = orderData.filter { order ->
                             (selectedCategory.isEmpty() || order.orderData.any { it.name == selectedCategory }) &&
-                                    order.orderId.contains(searchQuery, ignoreCase = true)
+                                    order.orderId.contains(searchQuery, ignoreCase = true) &&
+                                    order.status.lowercase() != "pending"
                         }
 
                         if (filteredOrders.isEmpty()) {
@@ -288,7 +288,7 @@ fun FarmerManageOrder(
                     searchQuery = searchQuery
                 )
             }
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(90.dp))
         }
     }
 }
@@ -343,25 +343,23 @@ fun ManageOrderCards(navController: NavController, order: OrderData) {
 
     Row(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 2.dp)
     ) {
         Card(
             modifier = Modifier
                 .weight(1f)
-                .height(125.dp),
+                .height(180.dp),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.Transparent
-            )
+            ),
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
         ) {
             Box(
                 modifier = Modifier
                     .background(
                         Brush.horizontalGradient(
-                            colors = listOf(
-                                Color(0xFF957541),  // Start of gradient
-                                Color(0xFF693F27)   // End of gradient
-                            )
+                            colors = listOf(PaleGold, GoldenYellow)
                         )
                     )
                     .fillMaxSize()
@@ -371,7 +369,7 @@ fun ManageOrderCards(navController: NavController, order: OrderData) {
             ) {
                 Row(
                     modifier = Modifier
-                        .padding(16.dp)
+                        .padding(20.dp)
                         .fillMaxSize(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -384,20 +382,20 @@ fun ManageOrderCards(navController: NavController, order: OrderData) {
                             text = "Order ID: $orderId",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = Cocoa
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Client Name: $clientName",
-                            fontSize = 11.sp,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Normal,
-                            color = Color.White
+                            color = Cocoa
                         )
                     }
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowRight,
                         contentDescription = "Arrow Forward",
-                        tint = Color.White,
+                        tint = Cocoa,
                         modifier = Modifier
                             .size(24.dp)
                             .align(Alignment.CenterVertically)
@@ -415,23 +413,25 @@ fun ManageOrderCards(navController: NavController, order: OrderData) {
 @Composable
 fun OrderStatusCard(orderStatus: String) {
     val backgroundColor = when (orderStatus) {
-        "PREPARING" -> Color(0xFFB06520)
-        "PENDING" -> Color(0xFFE0A83B)
-        "REJECTED" -> Color(0xFFA2453D)
+        "PREPARING" -> Brown1
+        "PENDING" -> GoldenYellow
+        "REJECTED" -> Copper3
         else -> Color.Gray
+        // To add delivering and finished/completed
     }
 
     val iconPainter = when (orderStatus) {
-        "PREPARING" -> painterResource(id = R.drawable.preparing) // Use preparing.png
+        "PREPARING" -> painterResource(id = R.drawable.preparing)
         "PENDING" -> Icons.Default.Refresh
         "REJECTED" -> Icons.Default.Clear
         else -> Icons.Default.Warning
     }
 
     Card(
-        modifier = Modifier.size(80.dp, 125.dp),
+        modifier = Modifier.size(100.dp, 180.dp),
         shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor)
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier
@@ -445,13 +445,13 @@ fun OrderStatusCard(orderStatus: String) {
                     painter = iconPainter as Painter,
                     contentDescription = orderStatus,
                     modifier = Modifier.size(40.dp),
-                    tint = Color.White
+                    tint = Cocoa
                 )
             } else {
                 Icon(
                     imageVector = iconPainter as ImageVector,
                     contentDescription = orderStatus,
-                    tint = Color.White,
+                    tint = Cocoa,
                     modifier = Modifier.size(32.dp)
                 )
             }
@@ -462,7 +462,7 @@ fun OrderStatusCard(orderStatus: String) {
                 text = orderStatus,
                 fontSize = 7.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = Cocoa
             )
         }
     }
@@ -483,20 +483,18 @@ fun RequestCards(
         Card(
             modifier = Modifier
                 .weight(1f)
-                .height(125.dp),
+                .height(175.dp),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.Transparent
-            )
+            ),
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
         ) {
             Box(
                 modifier = Modifier
                     .background(
                         Brush.horizontalGradient(
-                            colors = listOf(
-                                Color(0xFF957541),  // Start of gradient
-                                Color(0xFF693F27)   // End of gradient
-                            )
+                            colors = listOf(PaleGold, GoldenYellow)
                         )
                     )
                     .fillMaxSize()
@@ -519,20 +517,20 @@ fun RequestCards(
                             text = "Order ID: $orderId",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = Cocoa
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Client Name: $clientName",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Normal,
-                            color = Color.White
+                            color = Cocoa
                         )
                     }
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowRight,
                         contentDescription = "Arrow Forward",
-                        tint = Color.White,
+                        tint = Cocoa,
                         modifier = Modifier
                             .size(24.dp)
                             .align(Alignment.CenterVertically)

@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -32,6 +31,7 @@ import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.ui.theme.*
 
 @Composable
 fun FarmerRequestDetails(
@@ -57,8 +57,6 @@ fun FarmerRequestDetails(
         productViewModel.fetchProductByType("Vegetable")
     }
 
-    val cardWidth = 500.dp
-
     val orderData: OrderData? = remember(orderId, allOrders) {
         allOrders.find { it.orderId == orderId }
     }
@@ -74,17 +72,17 @@ fun FarmerRequestDetails(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFFF5E1CF)),
+                    .background(color = BgColor),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color(0xFF9A5F32))
+                CircularProgressIndicator(color = Copper)
             }
         }
         orderData == null -> {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFFF5E1CF)),
+                    .background(color = BgColor),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -98,201 +96,192 @@ fun FarmerRequestDetails(
         else -> {
             val products = orderData.orderData.filter { it.type == "Vegetable" }
 
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFFF5E1CF))
-                    .padding(top = 30.dp)
+                    .background(color = BgColor)
+                    .padding(top = 10.dp)
             ) {
-                // Order details card
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.width(cardWidth),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Box(
+                item {
+                    // Order details card
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
                         modifier = Modifier
-                            .background(
-                                brush = Brush.horizontalGradient(
-                                    colors = listOf(
-                                        Color(0xFFE0A83B),
-                                        Color(0xFF7A5C20)
-                                    )
-                                )
-                            )
+                            .fillMaxWidth(),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.padding(
-                                top = 60.dp,
-                                start = 40.dp,
-                                end = 40.dp,
-                                bottom = 20.dp
-                            )
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "«",
-                                    fontSize = 50.sp,
-                                    color = Color.White,
-                                    modifier = Modifier
-                                        .padding(end = 8.dp)
-                                        .clickable { navController.popBackStack() }
-                                )
-                            }
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = "Order ID",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp,
-                                    color = Color.White,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Text(
-                                    text = orderData.orderId.substring(5, 38),
-                                    color = Color.White,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Delivery Address",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp,
-                                    color = Color.White,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Text(
-                                    text = "${orderData.street}, ${orderData.barangay}",
-                                    color = Color.White,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Date of Order Request",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp,
-                                    color = Color.White,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Text(
-                                    text = "${orderData.orderDate.take(10)}${
-                                        orderData.orderDate.takeLast(5)}",
-                                    color = Color.White,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Spacer(modifier = Modifier.height(30.dp))
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(start = 70.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.ShoppingCart,
-                                        contentDescription = "Ordered Products Icon",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(24.dp)
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    brush = Brush.verticalGradient(
+                                        colors = listOf(Yellow4, Sand)
                                     )
-
-                                    Spacer(modifier = Modifier.width(5.dp))
-
+                                )
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .padding(
+                                        top = 60.dp,
+                                        start = 40.dp,
+                                        end = 40.dp,
+                                        bottom = 20.dp
+                                    )
+                            ) {
+                                // Back Button
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Text(
-                                        text = "Ordered Products",
-                                        color = Color.White,
-                                        textAlign = TextAlign.Start,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 20.sp,
-                                        modifier = Modifier.fillMaxWidth()
+                                        text = "«",
+                                        fontSize = 50.sp,
+                                        color = Cocoa,
+                                        modifier = Modifier
+                                            .padding(end = 8.dp)
+                                            .clickable { navController.popBackStack() }
                                     )
                                 }
 
-                                // Products and quantity
-                                Card(
-                                    shape = RoundedCornerShape(10.dp),
-                                    modifier = Modifier
-                                        .padding(top = 10.dp, bottom = 8.dp)
-                                        .fillMaxHeight(0.2f),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                                // Order Details
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Box(
+                                    // Order ID
+                                    Text(
+                                        text = "Order ID",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        color = Cocoa,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                    Text(
+                                        text = orderData.orderId.substring(5, 38),
+                                        color = Cocoa,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    // Delivery Address
+                                    Text(
+                                        text = "Address",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        color = Cocoa,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                    Text(
+                                        text = "${orderData.street}, ${orderData.barangay}",
+                                        color = Cocoa,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    // Date of Order Request
+                                    Text(
+                                        text = "Date of Order Request",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        color = Cocoa,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                    Text(
+                                        text = "${orderData.orderDate.take(10)}${
+                                            orderData.orderDate.takeLast(5)
+                                        }",
+                                        color = Cocoa,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                    Spacer(modifier = Modifier.height(20.dp))
+
+                                    // Ordered Products
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier
-                                            .fillMaxSize()
-                                            .background(Color(0xFFB06520)),
-                                        contentAlignment = if (products.size == 1) Alignment.Center else Alignment.TopStart
+                                            .fillMaxWidth()
+                                            .padding(start = 60.dp)
                                     ) {
-                                        if (products.isNotEmpty()) {
-                                            if (products.size == 1) {
+                                        Icon(
+                                            imageVector = Icons.Default.ShoppingCart,
+                                            contentDescription = "Ordered Products Icon",
+                                            tint = Cocoa,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+
+                                        Spacer(modifier = Modifier.width(5.dp))
+
+                                        Text(
+                                            text = "Ordered Product",
+                                            color = Cocoa,
+                                            textAlign = TextAlign.Start,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp,
+                                            modifier = Modifier.padding(start = 10.dp)
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(5.dp))
+
+                                    // Ordered Product Card
+                                    Card(
+                                        shape = RoundedCornerShape(16.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 10.dp),
+                                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .background(
+                                                    brush = Brush.verticalGradient(
+                                                        colors = listOf(Apricot2, Copper)
+                                                    )
+                                                )
+                                                .padding(16.dp)
+                                        ) {
+                                            if (products.isNotEmpty()) {
                                                 Column(
                                                     modifier = Modifier
-                                                        .fillMaxSize(),
-                                                    verticalArrangement = Arrangement.Center,
-                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                        .fillMaxWidth()
+                                                        .padding(top = 15.dp, bottom = 15.dp)
                                                 ) {
-                                                    val product = products[0]
-                                                    Text(
-                                                        text = product.name,
-                                                        fontWeight = FontWeight.Bold,
-                                                        fontSize = 30.sp,
-                                                        color = Color.White,
-                                                        modifier = Modifier.fillMaxWidth(),
-                                                        textAlign = TextAlign.Center
-                                                    )
-                                                    Spacer(modifier = Modifier.height(16.dp))
-                                                    Text(
-                                                        text = "${product.quantity} kg",
-                                                        fontWeight = FontWeight.Bold,
-                                                        fontSize = 30.sp,
-                                                        color = Color.White,
-                                                        modifier = Modifier.fillMaxWidth(),
-                                                        textAlign = TextAlign.Center
-                                                    )
-                                                }
-                                            } else {
-                                                LazyColumn(
-                                                    modifier = Modifier.fillMaxSize()
-                                                ) {
-                                                    items(products.size) { index ->
-                                                        val product = products[index]
+                                                    products.forEach { product ->
                                                         Row(
                                                             modifier = Modifier
                                                                 .fillMaxWidth()
-                                                                .padding(8.dp),
-                                                            horizontalArrangement = Arrangement.SpaceBetween
+                                                                .padding(vertical = 8.dp),
+                                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                                            verticalAlignment = Alignment.CenterVertically
                                                         ) {
                                                             Text(
                                                                 text = product.name,
                                                                 fontWeight = FontWeight.Bold,
-                                                                fontSize = 30.sp,
-                                                                color = Color.White,
-                                                                modifier = Modifier.weight(1f)
+                                                                fontSize = 25.sp,
+                                                                color = Cocoa
                                                             )
-                                                            Spacer(modifier = Modifier.width(20.dp))
                                                             Text(
                                                                 text = "${product.quantity} kg",
                                                                 fontWeight = FontWeight.Bold,
-                                                                fontSize = 30.sp,
-                                                                color = Color.White,
-                                                                modifier = Modifier.weight(1f),
+                                                                fontSize = 25.sp,
+                                                                color = Cocoa,
                                                                 textAlign = TextAlign.End
                                                             )
                                                         }
-                                                        Divider(
-                                                            color = Color(0x808B4513),
-                                                            thickness = 6.dp,
-                                                            modifier = Modifier.padding(6.dp)
-                                                        )
                                                     }
                                                 }
+                                            } else {
+                                                Text(
+                                                    text = "No products ordered.",
+                                                    color = Cocoa,
+                                                    fontSize = 16.sp,
+                                                    modifier = Modifier.align(Alignment.Center)
+                                                )
                                             }
                                         }
                                     }
@@ -302,191 +291,172 @@ fun FarmerRequestDetails(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                // Inventory Check Card
+                item {
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                // Inventory check card
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier
-                        .padding(top = 10.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Box(
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
                         modifier = Modifier
-                            .background(Color(0xFFE0A83B))
+                            .fillMaxWidth(),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                     ) {
-                        Column(
+                        Box(
                             modifier = Modifier
-                                .padding(
-                                    top = 10.dp,
-                                    bottom = 140.dp
-                                ),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                                .background(color = Yellow4)
                         ) {
-                            Text(
-                                text = "Items Check",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 30.sp,
-                                color = Color.White
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Card(
-                                shape = RoundedCornerShape(10.dp),
+                            Column(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(120.dp)
-                                    .padding(start = 40.dp, end = 40.dp),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                                    .padding(
+                                        top = 20.dp,
+                                        bottom = 160.dp
+                                    ),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Box(
+                                Text(
+                                    text = "Inventory Check",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 30.sp,
+                                    color = Cocoa
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Card(
+                                    shape = RoundedCornerShape(16.dp),
                                     modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(Color(0xFF8B4513))
+                                        .fillMaxWidth()
+                                        .heightIn(min = 60.dp, max = 130.dp)
+                                        .padding(start = 40.dp, end = 40.dp),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                                 ) {
-                                    if (products.isNotEmpty()) {
-                                        if (products.size == 1) {
-                                            val requestedProduct = products[0]
-                                            val availableProduct = productData.find {
-                                                it.name.equals(
-                                                    requestedProduct.name,
-                                                    ignoreCase = true
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(
+                                                brush = Brush.verticalGradient(
+                                                    colors = listOf(Apricot2, Sand)
                                                 )
-                                            }
-                                            Column(
-                                                modifier = Modifier.fillMaxSize(),
-                                                verticalArrangement = Arrangement.Center,
-                                                horizontalAlignment = Alignment.CenterHorizontally
-                                            ) {
-                                                Text(
-                                                    text = requestedProduct.name,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 20.sp,
-                                                    color = Color.White
-                                                )
-                                                Spacer(modifier = Modifier.height(8.dp))
-                                                Text(
-                                                    text = "${availableProduct?.quantity ?: "N/A"} kg Avail",
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 20.sp,
-                                                    color = Color.White
-                                                )
-                                            }
-                                        } else {
+                                            )
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        if (products.isNotEmpty()) {
                                             LazyColumn(
                                                 modifier = Modifier.fillMaxSize()
                                             ) {
-                                                items(products) { requestedProduct ->
+                                                items(products.size) { index ->
+                                                    val requestedProduct = products[index]
                                                     val availableProduct = productData.find {
                                                         it.name.equals(
                                                             requestedProduct.name,
                                                             ignoreCase = true
                                                         )
                                                     }
-                                                    Row(
+                                                    Column(
+                                                        horizontalAlignment = Alignment.CenterHorizontally,
                                                         modifier = Modifier
                                                             .fillMaxWidth()
-                                                            .padding(14.dp),
-                                                        horizontalArrangement = Arrangement.SpaceBetween
+                                                            .padding(vertical = 8.dp)
                                                     ) {
                                                         Text(
                                                             text = requestedProduct.name,
                                                             fontWeight = FontWeight.Bold,
-                                                            fontSize = 20.sp,
-                                                            color = Color.White,
-                                                            modifier = Modifier.weight(1f)
+                                                            fontSize = 30.sp,
+                                                            color = Cocoa,
+                                                            textAlign = TextAlign.Center
                                                         )
-                                                        Spacer(modifier = Modifier.width(16.dp))
+                                                        Spacer(modifier = Modifier.height(20.dp))
                                                         Text(
-                                                            text = "${availableProduct?.quantity ?: "N/A"} kg Avail",
+                                                            text = "${availableProduct?.quantity ?: "N/A"} kg",
                                                             fontWeight = FontWeight.Bold,
-                                                            fontSize = 20.sp,
-                                                            color = Color.White,
-                                                            modifier = Modifier.weight(1f),
-                                                            textAlign = TextAlign.End
+                                                            fontSize = 30.sp,
+                                                            color = Cocoa,
+                                                            textAlign = TextAlign.Center
                                                         )
                                                     }
-                                                    Divider(
-                                                        color = Color(0xFF9A5F32),
-                                                        thickness = 6.dp,
-                                                        modifier = Modifier.padding(6.dp)
-                                                    )
                                                 }
                                             }
+                                        } else {
+                                            Text(
+                                                text = "No inventory details available.",
+                                                color = Cocoa,
+                                                fontSize = 16.sp,
+                                                modifier = Modifier.align(Alignment.Center)
+                                            )
                                         }
                                     }
                                 }
-                            }
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
 
-                            Text(
-                                text = "Check the inventory for more details",
-                                color = Color.White,
-                                fontSize = 14.sp,
-                                modifier = Modifier
-                                    .padding(bottom = 5.dp)
-                            )
+                                Text(
+                                    text = "Check the inventory for more details",
+                                    color = Cocoa,
+                                    fontSize = 14.sp,
+                                    modifier = Modifier
+                                        .padding(bottom = 5.dp)
+                                )
 
-                            Spacer(modifier = Modifier.height(10.dp))
+                                Spacer(modifier = Modifier.height(15.dp))
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceEvenly
-                            ) {
-                                // Accept button
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
                                 ) {
-                                    IconButton(
-                                        onClick = {
-                                            decisionType = "ACCEPT"
-                                            showDecisionDialog = true
-                                        },
-                                        modifier = Modifier
-                                            .size(80.dp)
-                                            .clip(CircleShape)
-                                            .background(Color(0xFF7CC659))
+                                    // Accept button
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = "Accept Order",
-                                            tint = Color.White
+                                        IconButton(
+                                            onClick = {
+                                                decisionType = "ACCEPT"
+                                                showDecisionDialog = true
+                                            },
+                                            modifier = Modifier
+                                                .size(80.dp)
+                                                .clip(CircleShape)
+                                                .background(color = SageGreen)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Check,
+                                                contentDescription = "Accept Order",
+                                                tint = Cocoa
+                                            )
+                                        }
+                                        Text(
+                                            text = "Accept",
+                                            fontWeight = FontWeight.Bold,
+                                            color = Cocoa,
+                                            fontSize = 14.sp
                                         )
                                     }
-                                    Text(
-                                        text = "Accept",
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF6D4A26),
-                                        fontSize = 14.sp
-                                    )
-                                }
-                                // Reject button
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    IconButton(
-                                        onClick = {
-                                            decisionType = "REJECT"
-                                            showDecisionDialog = true
-                                        },
-                                        modifier = Modifier
-                                            .size(80.dp)
-                                            .clip(CircleShape)
-                                            .background(Color(0xFFE83333))
+                                    // Reject button
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Close,
-                                            contentDescription = "Reject Order",
-                                            tint = Color.White
+                                        IconButton(
+                                            onClick = {
+                                                decisionType = "REJECT"
+                                                showDecisionDialog = true
+                                            },
+                                            modifier = Modifier
+                                                .size(80.dp)
+                                                .clip(CircleShape)
+                                                .background(color = Copper)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Reject Order",
+                                                tint = Cocoa
+                                            )
+                                        }
+                                        Text(
+                                            text = "Reject",
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF6D4A26),
+                                            fontSize = 14.sp
                                         )
                                     }
-                                    Text(
-                                        text = "Reject",
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF6D4A26),
-                                        fontSize = 14.sp
-                                    )
                                 }
                             }
                         }
