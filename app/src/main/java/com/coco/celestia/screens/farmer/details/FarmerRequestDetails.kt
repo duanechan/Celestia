@@ -96,20 +96,19 @@ fun FarmerRequestDetails(
         else -> {
             val products = orderData.orderData.filter { it.type == "Vegetable" }
 
-            // Use a LazyColumn to enable scrolling if content overflows
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFFF5E1CF))
+                    .background(color = BgColor)
                     .padding(top = 10.dp)
             ) {
                 item {
                     // Order details card
                     Card(
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(20.dp),
                         modifier = Modifier
                             .fillMaxWidth(),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                     ) {
                         Box(
                             modifier = Modifier
@@ -297,10 +296,10 @@ fun FarmerRequestDetails(
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Card(
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(20.dp),
                         modifier = Modifier
                             .fillMaxWidth(),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                     ) {
                         Box(
                             modifier = Modifier
@@ -326,7 +325,7 @@ fun FarmerRequestDetails(
                                     shape = RoundedCornerShape(16.dp),
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .heightIn(min = 60.dp, max = 130.dp) // Constrain height
+                                        .heightIn(min = 60.dp, max = 130.dp)
                                         .padding(start = 40.dp, end = 40.dp),
                                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                                 ) {

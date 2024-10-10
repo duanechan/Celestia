@@ -126,6 +126,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                                 text = product.name,
                                                 fontSize = 60.sp,
                                                 fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.fillMaxWidth(),
                                                 textAlign = TextAlign.Center,
                                                 color = Cocoa
                                             )
@@ -134,6 +135,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                                 text = "Quantity: $productQuantity kg",
                                                 fontSize = 20.sp,
                                                 textAlign = TextAlign.Center,
+                                                modifier = Modifier.fillMaxWidth(),
                                                 color = Cocoa
                                             )
                                         }

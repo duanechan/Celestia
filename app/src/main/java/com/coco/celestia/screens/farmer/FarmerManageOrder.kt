@@ -102,7 +102,7 @@ fun FarmerManageOrder(
         Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(top = 80.dp)
+                .padding(top = 80.dp, bottom = 25.dp)
                 .verticalScroll(rememberScrollState())
                 .background(color = BgColor)
         ) {
@@ -196,7 +196,7 @@ fun FarmerManageOrder(
                 Button(
                     onClick = { isOrderStatusView = true },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isOrderStatusView) Sand else Apricot2
+                        containerColor = if (isOrderStatusView) GoldenYellow else Brown1
                     ),
                     modifier = Modifier.weight(1f)
                 ) {
@@ -208,7 +208,7 @@ fun FarmerManageOrder(
                 Button(
                     onClick = { isOrderStatusView = false },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (!isOrderStatusView) Sand else Apricot2
+                        containerColor = if (!isOrderStatusView) GoldenYellow else Brown1
                     ),
                     modifier = Modifier.weight(1f)
                 ) {
@@ -247,7 +247,8 @@ fun FarmerManageOrder(
                     is OrderState.SUCCESS -> {
                         val filteredOrders = orderData.filter { order ->
                             (selectedCategory.isEmpty() || order.orderData.any { it.name == selectedCategory }) &&
-                                    order.orderId.contains(searchQuery, ignoreCase = true)
+                                    order.orderId.contains(searchQuery, ignoreCase = true) &&
+                                    order.status.lowercase() != "pending"
                         }
 
                         if (filteredOrders.isEmpty()) {
@@ -287,7 +288,7 @@ fun FarmerManageOrder(
                     searchQuery = searchQuery
                 )
             }
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(90.dp))
         }
     }
 }
@@ -342,22 +343,23 @@ fun ManageOrderCards(navController: NavController, order: OrderData) {
 
     Row(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 2.dp)
     ) {
         Card(
             modifier = Modifier
                 .weight(1f)
-                .height(125.dp),
+                .height(180.dp),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.Transparent
-            )
+            ),
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
         ) {
             Box(
                 modifier = Modifier
                     .background(
                         Brush.horizontalGradient(
-                            colors = listOf(PaleGold, Sand)
+                            colors = listOf(PaleGold, GoldenYellow)
                         )
                     )
                     .fillMaxSize()
@@ -367,7 +369,7 @@ fun ManageOrderCards(navController: NavController, order: OrderData) {
             ) {
                 Row(
                     modifier = Modifier
-                        .padding(16.dp)
+                        .padding(20.dp)
                         .fillMaxSize(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -385,7 +387,7 @@ fun ManageOrderCards(navController: NavController, order: OrderData) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Client Name: $clientName",
-                            fontSize = 11.sp,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Normal,
                             color = Cocoa
                         )
@@ -419,16 +421,17 @@ fun OrderStatusCard(orderStatus: String) {
     }
 
     val iconPainter = when (orderStatus) {
-        "PREPARING" -> painterResource(id = R.drawable.preparing) // Use preparing.png
+        "PREPARING" -> painterResource(id = R.drawable.preparing)
         "PENDING" -> Icons.Default.Refresh
         "REJECTED" -> Icons.Default.Clear
         else -> Icons.Default.Warning
     }
 
     Card(
-        modifier = Modifier.size(80.dp, 125.dp),
+        modifier = Modifier.size(100.dp, 180.dp),
         shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor)
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier
@@ -480,17 +483,18 @@ fun RequestCards(
         Card(
             modifier = Modifier
                 .weight(1f)
-                .height(125.dp),
+                .height(175.dp),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.Transparent
-            )
+            ),
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
         ) {
             Box(
                 modifier = Modifier
                     .background(
                         Brush.horizontalGradient(
-                            colors = listOf(PaleGold, Sand)
+                            colors = listOf(PaleGold, GoldenYellow)
                         )
                     )
                     .fillMaxSize()

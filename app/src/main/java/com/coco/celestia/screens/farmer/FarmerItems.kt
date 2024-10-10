@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.screens.`object`.Screen
@@ -90,13 +91,14 @@ fun FarmerProductTypeInventory(product: ProductData, navController: NavControlle
             .clickable {
                 navController.navigate(Screen.FarmerItemDetails.createRoute(product.name))
             },
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     brush = Brush.verticalGradient(
-                        colors = listOf(Yellow4,Copper2)
+                        colors = listOf(PaleGold, GoldenYellow)
                     )
                 )
         ) {
