@@ -20,14 +20,19 @@ fun EditQuantityDialog(
     onConfirm: (newQuantity: Int) -> Unit
 ) {
     var quantityToEdit by remember { mutableStateOf(currentQuantity.toString()) }
+    var quantityError by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = {
-                val newQuantity = quantityToEdit.toIntOrNull() ?: currentQuantity
-                onConfirm(newQuantity)
-                onDismiss()
+                val newQuantity = quantityToEdit.toIntOrNull()
+                if (newQuantity != null && newQuantity >= 0) {
+                    onConfirm(newQuantity)
+                    onDismiss()
+                } else {
+                    quantityError = true
+                }
             }) {
                 Text("Confirm")
             }
@@ -44,10 +49,21 @@ fun EditQuantityDialog(
                 Spacer(modifier = Modifier.height(10.dp))
                 TextField(
                     value = quantityToEdit,
-                    onValueChange = { quantityToEdit = it },
+                    onValueChange = {
+                        quantityToEdit = it
+                        quantityError = false
+                    },
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                    placeholder = { Text(text = "Enter quantity") }
+                    placeholder = { Text(text = "Enter quantity") },
+                    isError = quantityError
                 )
+                if (quantityError) {
+                    Text(
+                        text = "Please enter a valid non-negative number.",
+                        color = Color.Red,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         },
         properties = DialogProperties(dismissOnClickOutside = true),

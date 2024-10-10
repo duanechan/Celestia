@@ -238,8 +238,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                 currentQuantity = productQuantity,
                 onDismiss = { showEditDialog = false },
                 onConfirm = { newQuantity ->
-                    // Update the product quantity in the ViewModel
-                    farmerProductViewModel.updateProductQuantity(productName, newQuantity)
+                    farmerProductViewModel.updateProductQuantity(productName, newQuantity - productQuantity)
                     productQuantity = newQuantity
                     showEditDialog = false
                 }

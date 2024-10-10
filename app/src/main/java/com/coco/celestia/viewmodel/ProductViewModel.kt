@@ -162,19 +162,21 @@ class ProductViewModel : ViewModel() {
                 var productFound = false
                 for (product in snapshot.children) {
                     val name = product.child("name").getValue(String::class.java)
-                    val currentQuantity = product.child("quantity").getValue(Int::class.java) ?: 0
 
                     if (name == productName) {
-                        val newQuantity =  currentQuantity + quantity
+                        val currentQuantity = product.child("quantity").getValue(Int::class.java) ?: 0
+                        val newQuantity = currentQuantity + quantity
+
                         product.child("quantity").ref.setValue(newQuantity).await()
-                        fetchProduct(productName)
+
                         productFound = true
                         break
                     }
                 }
-
                 if (!productFound) {
                     _productState.value = ProductState.ERROR("Product not found")
+                } else {
+                    fetchProducts(filter = "", role = "Farmer")
                 }
             } catch (e: Exception) {
                 _productState.value = ProductState.ERROR(e.message ?: "Error updating product quantity")
