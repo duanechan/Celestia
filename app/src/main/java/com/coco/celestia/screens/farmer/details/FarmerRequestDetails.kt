@@ -413,7 +413,7 @@ fun FarmerRequestDetails(
                                                 showDecisionDialog = true
                                             },
                                             modifier = Modifier
-                                                .size(80.dp)
+                                                .size(60.dp)
                                                 .clip(CircleShape)
                                                 .background(color = SageGreen)
                                         ) {
@@ -440,7 +440,7 @@ fun FarmerRequestDetails(
                                                 showDecisionDialog = true
                                             },
                                             modifier = Modifier
-                                                .size(80.dp)
+                                                .size(60.dp)
                                                 .clip(CircleShape)
                                                 .background(color = Copper)
                                         ) {
@@ -493,10 +493,12 @@ fun FarmerRequestDetails(
             // Confirmation dialog
             if (showConfirmationDialog) {
                 FarmerConfirmationDialog(
+                    navController = navController,
                     isAccepted = isOrderAccepted,
                     rejectionReason = rejectionReason,
                     onDismiss = {
                         showConfirmationDialog = false
+                        navController.popBackStack()
                     }
                 )
             }

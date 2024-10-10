@@ -10,11 +10,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 
 @Composable
 fun FarmerConfirmationDialog(
+    navController: NavController,
     isAccepted: Boolean,
     rejectionReason: String?,
     onDismiss: () -> Unit
@@ -38,7 +41,7 @@ fun FarmerConfirmationDialog(
                     text = if (isAccepted) "Order Accepted" else "Order Rejected",
                     fontSize = 20.sp,
                     color = Color(0xFF6D4A26),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    textAlign = TextAlign.Center
                 )
             }
         },
@@ -48,7 +51,7 @@ fun FarmerConfirmationDialog(
                     text = "The order has been rejected.\n\nReason: \n$rejectionReason",
                     fontSize = 16.sp,
                     color = Color.Black,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -59,7 +62,9 @@ fun FarmerConfirmationDialog(
                 contentAlignment = Alignment.Center
             ) {
                 TextButton(
-                    onClick = onDismiss
+                    onClick = {
+                        navController.popBackStack()
+                    }
                 ) {
                     Text(
                         text = "OK",

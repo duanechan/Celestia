@@ -131,21 +131,31 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                                 color = Cocoa
                                             )
                                             Spacer(modifier = Modifier.height(10.dp))
-                                            Text(
-                                                text = "Quantity: $productQuantity kg",
-                                                fontSize = 20.sp,
-                                                textAlign = TextAlign.Center,
-                                                modifier = Modifier.fillMaxWidth(),
-                                                color = Cocoa
-                                            )
-                                        }
 
-                                        IconButton(
-                                            onClick = { showEditDialog = true },
-                                            modifier = Modifier
-                                                .padding(top = 95.dp)
-                                        ) {
-                                            Icon(Icons.Filled.Edit, contentDescription = "Edit Quantity", tint = Cocoa)
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.Center
+                                            ) {
+                                                Text(
+                                                    text = "Quantity: $productQuantity kg",
+                                                    fontSize = 20.sp,
+                                                    textAlign = TextAlign.Center,
+                                                    color = Cocoa
+                                                )
+
+                                                Spacer(modifier = Modifier.width(8.dp))
+
+                                                IconButton(
+                                                    onClick = { showEditDialog = true },
+                                                    modifier = Modifier.size(24.dp)
+                                                ) {
+                                                    Icon(
+                                                        Icons.Filled.Edit,
+                                                        contentDescription = "Edit Quantity",
+                                                        tint = Cocoa
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
                                 }
