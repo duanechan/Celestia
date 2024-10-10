@@ -1,24 +1,18 @@
 package com.coco.celestia.screens.admin
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,26 +23,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coco.celestia.viewmodel.model.ProductData
-import com.coco.celestia.R
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.Gray
-import com.coco.celestia.ui.theme.PurpleGrey40
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
-import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminInventory(productViewModel: ProductViewModel) {
     val productData by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
-    var query by remember { mutableStateOf("") }
-    var selectedButton by remember { mutableStateOf<String?>(null) } // Row for aligned buttons
+    var query by remember { mutableStateOf("Coffee") }
+    var selectedButton by remember { mutableStateOf<String?>("Coffee") } // Row for aligned buttons
 
     LaunchedEffect(query) {
         productViewModel.fetchProducts(
@@ -57,7 +46,6 @@ fun AdminInventory(productViewModel: ProductViewModel) {
         )
     }
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-        val screenWidth = maxWidth
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -66,42 +54,13 @@ fun AdminInventory(productViewModel: ProductViewModel) {
                 .verticalScroll(rememberScrollState())
         ) {
             TopBarInventory("Inventory")
-            Spacer(modifier = Modifier.height(0.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(DarkBlue)
-                    .padding(5.dp, 0.dp, 5.dp, 10.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                SearchBar(
-                    query = query,
-                    onQueryChange = { query = it },
-                    onSearch = { query = it },
-                    active = false,
-                    onActiveChange = {},
-                    placeholder = { Text(text = "Search", color = DarkBlue) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search Icon"
-                        )
-                    },
-                    modifier = Modifier
-                        .width(screenWidth * 0.9f)
-                        .offset(y = (-55.dp))
-                ) {
-                    //TO DO
-                }
-            }
-
+            Spacer(modifier = Modifier.height(40.dp))
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 5.dp)
-                    .offset(y = (-50.dp)),
+                    .offset(y = ((-50).dp)),
                 horizontalArrangement = Arrangement.Center
             ) {
                 // Coffee Button
@@ -139,25 +98,6 @@ fun AdminInventory(productViewModel: ProductViewModel) {
                         color = if (selectedButton == "Meat") Color.White else Gray
                     )
                 }
-
-                // Vegetable Button
-//            Button(
-//                onClick = {
-//                    query = "Vegetable"
-//                    selectedButton = if (selectedButton == "Vegetable") null else "Vegetable"
-//                },
-//                colors = ButtonDefaults.buttonColors(
-//                    containerColor = if (selectedButton == "Vegetable") Color(0xFF4CAF50) else Color.White
-//                ),
-//                modifier = Modifier.padding(horizontal = 10.dp)
-//            ) {
-//                Text(
-//                    text = "Vegetable",
-//                    fontSize = 20.sp,
-//                    fontWeight = FontWeight.Bold,
-//                    color = if (selectedButton == "Vegetable") Color.White else Gray
-//                )
-//            }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -188,10 +128,8 @@ fun AdminInventory(productViewModel: ProductViewModel) {
 @Composable
 fun AdminItemList(itemList: List<ProductData>) {
     if (itemList.isNotEmpty()) {
-        itemList.forEach { (type, quantity) ->
-            val productType = type.replace("_", " ")
-                .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
-            AdminItemCard(productType, quantity)
+        itemList.forEach { (name, quantity) ->
+            AdminItemCard(name, quantity)
             Spacer(modifier = Modifier.height(10.dp))
         }
         Spacer(modifier = Modifier.height(50.dp))
@@ -199,7 +137,7 @@ fun AdminItemList(itemList: List<ProductData>) {
 }
 
 @Composable
-fun AdminItemCard(productType: String, quantity: Int) {
+fun AdminItemCard(productName: String, quantity: Int) {
     Card(modifier = Modifier
         .width(500.dp)
         .height(200.dp)
@@ -215,7 +153,7 @@ fun AdminItemCard(productType: String, quantity: Int) {
                 .padding(16.dp)
         ) {
             Text(
-                text = productType,
+                text = productName,
                 fontSize = 35.sp,
                 fontWeight = FontWeight.Bold,
                 color = Gray,
