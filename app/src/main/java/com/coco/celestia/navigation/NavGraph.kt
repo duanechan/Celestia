@@ -3,6 +3,7 @@ package com.coco.celestia.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -69,7 +70,7 @@ fun NavGraph(
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     var checkoutItems = remember { mutableStateListOf<ProductData>() }
-    var productName by remember { mutableStateOf("") }
+    val productName by productViewModel.productName.observeAsState("")
     var farmerName by remember { mutableStateOf("") }
     var addressName by remember { mutableStateOf("") }
     var quantityAmount by remember { mutableIntStateOf(0) }
@@ -235,14 +236,15 @@ fun NavGraph(
             )
         }
         composable(route = Screen.CoopAddProductInventory.route) {
+            LaunchedEffect(Unit) {
+                productViewModel.updateProductName("")
+                quantityAmount = 0
+            }
+
             AddProductForm(
-                productName = productName,
-                farmerName = farmerName,
-                address = addressName,
+                productViewModel = productViewModel,
                 quantity = quantityAmount,
-                onProductNameChange = { productName = it },
-                onFarmerNameChange = { farmerName = it },
-                onAddressChange = { addressName = it },
+                onProductNameChange = { productViewModel.onProductNameChange(it) },
                 onQuantityChange = { newValue -> quantityAmount = newValue.toIntOrNull() ?: 0 }
             )
         }
@@ -250,8 +252,6 @@ fun NavGraph(
         composable(route = Screen.CoopAddProductInventoryDB.route) {
             LaunchedEffect(Unit) {
                 if(productName.isNotEmpty() &&
-                    farmerName.isNotEmpty() &&
-                    addressName.isNotEmpty() &&
                     quantityAmount > 0)
                 {
                     val product = ProductData(
@@ -259,12 +259,10 @@ fun NavGraph(
                         quantity = quantityAmount,
                         type = productType
                     )
-                    productViewModel.addProduct(product)
+                    productViewModel.updateProductQuantity(product.name, product.quantity)
                     navController.navigate(Screen.CoopInventory.route)
                     onEvent(Triple(ToastStatus.SUCCESSFUL, "${quantityAmount}kg of $productName added to $productType inventory.", System.currentTimeMillis()))
-                    productName = ""
-                    farmerName = ""
-                    addressName = ""
+                    productViewModel.updateProductName("")
                     quantityAmount = 0
                     productType = ""
                 } else {

@@ -1,43 +1,30 @@
 package com.coco.celestia.screens.coop
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -56,19 +43,15 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.coco.celestia.R
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.screens.admin.DropdownMenuItem
-import com.coco.celestia.ui.theme.DarkGreen
-import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 
@@ -136,7 +119,7 @@ fun ProductTypeCards(navController: NavController, productData: List<ProductData
             else -> R.drawable.meaticon
         }
 
-        val arrownIconRes = when (type){
+        val arrowIconRes = when (type){
             "Coffee" -> R.drawable.arrowsicon
             else -> R.drawable.orangearrowsicon
         }
@@ -172,7 +155,7 @@ fun ProductTypeCards(navController: NavController, productData: List<ProductData
                     )
                     Spacer(modifier = Modifier.width(170.dp))
                     Image(
-                        painter = painterResource(id = arrownIconRes),
+                        painter = painterResource(id = arrowIconRes),
                         contentDescription = "$type icon",
                         modifier = Modifier.size(20.dp)
                     )
@@ -231,7 +214,9 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
             Image(
                 painter = painterResource(id = iconRes),
                 contentDescription = "$type icon",
-                modifier = Modifier.size(35.dp).padding(top = 5.dp)
+                modifier = Modifier
+                    .size(35.dp)
+                    .padding(top = 5.dp)
             )
         }
 
@@ -288,17 +273,22 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
     TopBar("Inventory")
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddProductForm(
-    productName: String,
-    farmerName: String,
-    address: String,
+    productViewModel: ProductViewModel,
     quantity: Int,
     onProductNameChange: (String) -> Unit,
-    onFarmerNameChange: (String) -> Unit,
-    onAddressChange: (String) -> Unit,
     onQuantityChange: (String) -> Unit
 ) {
+    var expanded by remember { mutableStateOf(false) }
+    val productData by productViewModel.productData.observeAsState()
+    val productName by productViewModel.productName.observeAsState("")
+    val from by productViewModel.from.observeAsState("")
+
+    LaunchedEffect(Unit) {
+        productViewModel.fetchProducts("", "Coop")
+    }
 
     Column(
         modifier = Modifier
@@ -308,80 +298,63 @@ fun AddProductForm(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "Add Product ✚",
+            text = "Add Product",
             fontWeight = FontWeight.Bold,
             fontSize = 22.sp,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
+        // From
+        OutlinedTextField(
+            value = from,
+            onValueChange = {},
+            label = { Text("From") },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = false
+        )
 
         // Product Name
-        OutlinedTextField(
-            value = productName,
-            onValueChange = onProductNameChange,
-            label = { Text("Product Name") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        // Farmer's Name
-        OutlinedTextField(
-            value = farmerName,
-            onValueChange = onFarmerNameChange,
-            label = { Text("Farmer's Name") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        // Address
-        OutlinedTextField(
-            value = address,
-            onValueChange = onAddressChange,
-            label = { Text("Address") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        // Date of Delivery
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded },
         ) {
-            DropdownField(label = "Month", items = listOf("Month"))
-            DropdownField(label = "Day", items = listOf("Day"))
-            DropdownField(label = "Year", items = listOf("Year"))
-        }
+            OutlinedTextField(
+                readOnly = true,
+                value = productName,
+                onValueChange = {},
+                placeholder = { Text("Select Product") },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
+            )
 
-        // Harvest Date
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            DropdownField(label = "Month", items = listOf("Month"))
-            DropdownField(label = "Day", items = listOf("Day"))
-            DropdownField(label = "Year", items = listOf("Year"))
-        }
-
-        // Shelf Life
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            DropdownField(label = "Years", items = listOf("Years"))
-            DropdownField(label = "Months", items = listOf("Months"))
-            DropdownField(label = "Days", items = listOf("Days"))
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                productData?.forEach { productItem ->
+                    androidx.compose.material3.DropdownMenuItem(
+                        text = { Text(productItem.name) },
+                        onClick = {
+                            onProductNameChange(productItem.name)
+                            expanded = false
+                        }
+                    )
+                }
+            }
         }
 
         // Quantity
-        Row(
+        OutlinedTextField(
+            value = if (quantity == 0) "" else quantity.toString(),
+            onValueChange = onQuantityChange,
+            label = { Text("Quantity (kg)") },
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            OutlinedTextField(
-                value = quantity.toString(),
-                onValueChange = onQuantityChange,
-                label = { Text("Qty.") },
-                modifier = Modifier.weight(1f)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            DropdownField(label = "Kg", items = listOf("Kg"))
-        }
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
     }
     TopBar("Inventory")
 }

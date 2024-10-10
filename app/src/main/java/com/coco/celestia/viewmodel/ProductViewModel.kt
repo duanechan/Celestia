@@ -23,24 +23,43 @@ class ProductViewModel : ViewModel() {
     private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("products")
     private val _productData = MutableLiveData<List<ProductData>>()
     private val _productState = MutableLiveData<ProductState>()
+    private val _productName = MutableLiveData<String>()
+    private val _from = MutableLiveData<String>()
     val productData: LiveData<List<ProductData>> = _productData
     val productState: LiveData<ProductState> = _productState
+    val productName: LiveData<String> = _productName
+    val from: LiveData<String> = _from
+
+    fun onProductNameChange(newProductName: String) {
+        _productName.value = newProductName
+        _from.value = when (newProductName) {
+            "Green Beans" -> "--"
+            "Sorted Beans" -> "Green Beans"
+            "Roasted Beans" -> "Sorted Beans"
+            "Packaged Beans" -> "Roasted Beans"
+            else -> ""
+        }
+    }
+
+    fun updateProductName(newName: String) {
+        _productName.value = newName
+    }
 
     fun fetchProduct(productName: String) {
         viewModelScope.launch {
             _productState.value = ProductState.LOADING
             try {
-                val snapshot = database.child(productName.lowercase()).get().await()
-                if (snapshot.exists()) {
-                    val product = snapshot.getValue(ProductData::class.java)
-                    val products = mutableListOf<ProductData>()
-                    product?.let { products.add(it) }
-                    _productData.value = products
-                    _productState.value = if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
-                } else {
-                    _productData.value = emptyList()
-                    _productState.value = ProductState.EMPTY
+                val snapshot = database.get().await()
+                val products = mutableListOf<ProductData>()
+                for (product in snapshot.children) {
+                    val productData = snapshot.getValue(ProductData::class.java)
+                    if (productData?.name == productName) {
+                        products.add(productData)
+                        break
+                    }
                 }
+                _productData.value = products
+                _productState.value = if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
             } catch(e: Exception) {
                 _productState.value = ProductState.ERROR(e.message ?: "Unknown error")
             }
@@ -136,16 +155,25 @@ class ProductViewModel : ViewModel() {
         }
     }
 
-    fun updateProductQuantity(productName: String, newQuantity: Int) {
+    fun updateProductQuantity(productName: String, quantity: Int) {
         viewModelScope.launch {
             try {
-                val productRef = database.child(productName.lowercase())
-                val snapshot = productRef.get().await()
+                val snapshot = database.get().await()
+                var productFound = false
+                for (product in snapshot.children) {
+                    val name = product.child("name").getValue(String::class.java)
+                    val currentQuantity = product.child("quantity").getValue(Int::class.java) ?: 0
 
-                if (snapshot.exists()) {
-                    productRef.child("quantity").setValue(newQuantity).await()
-                    fetchProduct(productName)
-                } else {
+                    if (name == productName) {
+                        val newQuantity =  currentQuantity + quantity
+                        product.child("quantity").ref.setValue(newQuantity).await()
+                        fetchProduct(productName)
+                        productFound = true
+                        break
+                    }
+                }
+
+                if (!productFound) {
                     _productState.value = ProductState.ERROR("Product not found")
                 }
             } catch (e: Exception) {
