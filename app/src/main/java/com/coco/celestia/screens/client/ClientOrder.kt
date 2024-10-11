@@ -3,6 +3,7 @@ package com.coco.celestia.screens.client
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
@@ -70,7 +72,7 @@ import com.google.firebase.auth.FirebaseAuth
 fun ClientOrder(
     navController: NavController,
     orderViewModel: OrderViewModel,
-    userViewModel: UserViewModel
+    userViewModel: UserViewModel,
 ) {
     val userData by userViewModel.userData.observeAsState()
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
@@ -85,7 +87,10 @@ fun ClientOrder(
         userViewModel.fetchUser(uid)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxHeight()
@@ -215,7 +220,7 @@ fun ClientOrder(
                         var orderCount = 1
                         filteredOrders.forEach { order ->
                             userData?.let { user ->
-                                OrderCards(orderCount, order, user)
+                                OrderCards(orderCount, order, user, navController)
                             } ?: run {
                                 CircularProgressIndicator()
                             }
@@ -231,7 +236,7 @@ fun ClientOrder(
 }
 
 @Composable
-fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
+fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController: NavController) {
     var expanded by remember { mutableStateOf(false) }
     val clientName = "${user.firstname} ${user.lastname}"
     val orderId = order.orderId.substring(5, 9).uppercase()
@@ -242,7 +247,10 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(165.dp)
-                .padding(top = 0.dp, bottom = 10.dp, start = 27.dp, end = 0.dp),
+                .padding(top = 0.dp, bottom = 10.dp, start = 27.dp, end = 0.dp)
+                .clickable {
+                    navController.navigate("ClientOrderDetails/${order.orderId}")
+                },
             colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
         ) {
             Column(
@@ -290,9 +298,9 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData) {
                             color = LightOrange,
                             modifier = Modifier.padding(top = 0.dp, start = 10.dp)
                         )
+                        }
                     }
                 }
             }
         }
     }
-}

@@ -33,6 +33,7 @@ import com.coco.celestia.screens.client.Cart
 import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientDashboard
 import com.coco.celestia.screens.client.ClientOrder
+import com.coco.celestia.screens.client.ClientOrderDetails
 import com.coco.celestia.screens.coop.AddProductForm
 import com.coco.celestia.screens.coop.CoopDashboard
 import com.coco.celestia.screens.coop.CoopInventory
@@ -354,6 +355,15 @@ fun NavGraph(
                 onLogoutEvent = { event -> onEvent(event) },
                 onProfileUpdateEvent = { event -> onEvent(event) }
             )
+        }
+        composable(
+            route = "ClientOrderDetails/{orderId}",
+            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getString("orderId")
+            orderId?.let {
+                ClientOrderDetails(navController, it)
+            }
         }
     }
 }

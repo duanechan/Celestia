@@ -142,6 +142,7 @@ class OrderViewModel : ViewModel() {
                                 when (role) {
                                     "Coop", "Admin" -> isCoffeeOrMeat && matchesFilter
                                     "Farmer" -> isVegetable && matchesFilter
+                                    "Client" -> matchesFilter
                                     else -> false
                                 }
                             }

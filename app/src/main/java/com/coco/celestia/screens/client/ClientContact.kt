@@ -101,24 +101,24 @@ fun ClientContact(contactViewModel: ContactViewModel) {
         }
 
         Spacer(modifier = Modifier.height(10.dp))
-        //TODO: modify search bar design
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
-                .padding(top = 10.dp, bottom = 15.dp, start = 25.dp, end = 16.dp)
+                .padding(top = 10.dp, bottom = 15.dp, start = 25.dp, end = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             SearchBar(
                 query = text,
                 onQueryChange = { newText -> text = newText },
-                onSearch = { /* Handle search action */ },
+                onSearch = {},
                 active = active,
-                onActiveChange = { active = it },
-                placeholder = { Text(text = text, color = Color.Black, fontSize = 15.sp) },
+                onActiveChange = { active = false },
+                placeholder = { Text(text = "Search...", color = Color.Black, fontSize = 15.sp) },
                 leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon") },
                 modifier = Modifier
-                    .fillMaxWidth() //since contactinq doesnt have filter
-                    .height(55.dp)
+                    .height(50.dp)
+                    .offset(y = -13.dp)
+                    .fillMaxWidth()
             ) {
             }
         }
@@ -182,7 +182,7 @@ fun ItemCards(contact: ContactData) {
             Text(
                 text = role,
                 fontSize = 25.sp,
-                fontWeight = FontWeight.Light,
+                fontWeight = FontWeight.Bold,
                 color = Color.White,
                 modifier = Modifier.padding(top = 15.dp, start = 10.dp)
             )
