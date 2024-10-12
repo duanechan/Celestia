@@ -28,8 +28,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -186,6 +189,7 @@ fun ProfileScreen(
             singleLine = true,
             maxLines = 1,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            modifier = Modifier.semantics { testTag = "android:id/updateEmailField" }
         )
         OutlinedTextField(
             value = updatedPhoneNumber,
@@ -194,6 +198,7 @@ fun ProfileScreen(
             singleLine = true,
             maxLines = 1,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            modifier = Modifier.semantics { testTag = "android:id/updatePhoneNumber" }
         )
         OutlinedTextField(
             value = updatedStreetNumber,
@@ -202,6 +207,7 @@ fun ProfileScreen(
             singleLine = true,
             maxLines = 1,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+            modifier = Modifier.semantics { testTag = "android:id/updateStreetNumber" }
         )
         ExposedDropdownMenuBox(
             expanded = expanded,
@@ -212,7 +218,9 @@ fun ProfileScreen(
                 onValueChange = { updatedBarangay = it },
                 label = { Text("Barangay") },
                 readOnly = true,
-                modifier = Modifier.menuAnchor()
+                modifier = Modifier
+                    .menuAnchor()
+                    .semantics { testTag = "android:id/updateBarangay" }
             )
             ExposedDropdownMenu(
                 expanded = expanded,
@@ -224,7 +232,8 @@ fun ProfileScreen(
                         onClick = {
                             updatedBarangay = location.barangay
                             expanded = false
-                        }
+                        },
+                        modifier = Modifier.semantics { testTag = "android:id/barangayDropdownItem_${location.barangay}" }
                     )
                 }
             }
@@ -232,6 +241,7 @@ fun ProfileScreen(
         Button(
             onClick = { saveInfoDialog = true },
             enabled = saveButtonEnabled,
+            modifier = Modifier.semantics { testTag = "android:id/saveButton" }
         ) {
             Text(text = "Save")
         }
@@ -241,7 +251,9 @@ fun ProfileScreen(
                 containerColor = Color.White,
                 contentColor = Color.DarkGray
             ),
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier
+                .padding(8.dp)
+                .semantics { testTag = "android:id/logoutButton" }
         ) {
             Icon(
                 imageVector = Icons.Default.ExitToApp,
