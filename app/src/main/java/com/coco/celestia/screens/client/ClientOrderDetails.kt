@@ -17,8 +17,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -27,11 +30,13 @@ import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.viewmodel.UserViewModel
 
 @Composable
 fun ClientOrderDetails(
     navController: NavController,
-    orderId: String
+    orderId: String,
+    orderCount: Int
 ) {
     val orderViewModel: OrderViewModel = viewModel()
     val allOrders by orderViewModel.orderData.observeAsState(emptyList())
@@ -54,13 +59,14 @@ fun ClientOrderDetails(
         orderState == OrderState.LOADING -> {
             Box(
                 modifier = Modifier
-                    .fillMaxSize(),
-//                    .background(color = BgColor),
+                    .fillMaxSize()
+                    .background(color = LightGray),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Cocoa)
+                CircularProgressIndicator()
             }
         }
+
 
         orderData == null -> {
             Box(
@@ -80,18 +86,14 @@ fun ClientOrderDetails(
 
         // Display the order details when data is available
         else -> {
-                val products = orderData.orderData.filter { it.type == "Vegetable" }
+            val products = orderData.orderData.filter { it.type == "Vegetable" }
 
             Column(
-                modifier = Modifier
-//                    .fillMaxSize()
-//                    .padding(top = 80.dp)
             ) {
-                // order details header
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(430.dp),
+                        .height(520.dp), //adjust size of orange box here
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = Color.Transparent
@@ -104,141 +106,169 @@ fun ClientOrderDetails(
                             .height(650.dp)
                             .clip(RoundedCornerShape(20.dp))
                             .background(LightOrange),
-                        contentAlignment = Alignment.BottomCenter,
-                    )
-                     {
+                        contentAlignment = Alignment.TopStart,
+                    ) {
                         Column(
-                            modifier = Modifier.padding(16.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    top = 90.dp,
+                                    start = 16.dp,
+                                    end = 16.dp
+                                )
                         ) {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.TopStart
-                            ) {
-                            }
-
-                            Spacer(modifier = Modifier.height(5.dp))
-
-                            Text(
-                                text = "Order ID",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
-                                color = (White),
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Text(
-                                text = orderData.orderId.substring(5, 38),
-                                fontSize = 15.sp,
-                                color = (White),
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-
-                            Spacer(modifier = Modifier.height(20.dp))
-
-                            Text(
-                                text = "Delivery Address",
-                                fontSize = 20.sp,
-                                color = (White),
-                                textAlign = TextAlign.Center,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Text(
-                                text = "${orderData.street}, ${orderData.barangay}",
-                                fontSize = 15.sp,
-                                color = (White),
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-
-                            Spacer(modifier = Modifier.height(20.dp))
-
-                            // display ordered products
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 90.dp)
+                                modifier = Modifier.padding(bottom = 8.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.ShoppingCart,
-                                    contentDescription = "Ordered Products Icon",
-                                    tint = White,
-                                    modifier = Modifier.size(24.dp)
-                                )
-
-                                Spacer(modifier = Modifier.width(1.dp))
-
-                                Text(
-                                    text = "Ordered Product",
-                                    color = (White),
-                                    textAlign = TextAlign.Start,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp,
-                                    modifier = Modifier.padding(start = 15.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(15.dp))
-
-                            // products list display
-                            Row(
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Spacer(modifier = Modifier.width(50.dp))
-                                LazyColumn(
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.Start,
-                                    modifier = Modifier.weight(1f)
+                                // white box order count
+                                Box(
+                                    modifier = Modifier
+                                        .size(width = 50.dp, height = 117.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Color.White),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    items(products) { product ->
-                                        Card(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(start = 20.dp, end = 50.dp),
-                                            shape = RoundedCornerShape(16.dp),
-                                            elevation = CardDefaults.elevatedCardElevation(
-                                                defaultElevation = 4.dp
-                                            )
-                                        ) {
-                                            Box(
+                                    Text(
+                                        text = orderCount.toString(),
+                                        fontSize = 50.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black,
+                                        modifier = Modifier.padding(5.dp)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = buildAnnotatedString {
+                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                                append("Order ID")
+                                            }
+                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
+                                                append("#" + orderData.orderId.substring(5, 38))
+                                            }
+                                        },
+                                        fontSize = 20.sp,
+                                        color = White,
+                                    )
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    Text(
+                                        text = buildAnnotatedString {
+                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                                append("Delivery Address: ")
+                                            }
+                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
+                                                append("${orderData.street}, ${orderData.barangay}")
+                                            }
+                                        },
+                                        fontSize = 20.sp,
+                                        color = White,
+                                    )
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    Text(
+                                        text = buildAnnotatedString {
+                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                                append("Estimated Date of Arrival: ")
+                                            }
+                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
+                                                append("DATE HERE")
+                                            }
+                                        },
+                                        fontSize = 15.sp,
+                                        color = White,
+                                    )
+                                }
+                            }
+
+                                // display ordered products
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 16.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ShoppingCart,
+                                        contentDescription = "Ordered Products Icon",
+                                        tint = White,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Text(
+                                        text = "Ordered Products",
+                                        color = (White),
+                                        textAlign = TextAlign.Start,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        modifier = Modifier.padding(start = 15.dp)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(15.dp))
+
+                                // products list display
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Spacer(modifier = Modifier.width(50.dp))
+                                    LazyColumn(
+                                        verticalArrangement = Arrangement.Center,
+                                        horizontalAlignment = Alignment.Start,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        items(products) { product ->
+                                            Card(
                                                 modifier = Modifier
-                                                    .fillMaxSize()
-                                                    .background(TreeBark)
+                                                    .fillMaxWidth()
+                                                    .padding(start = 20.dp, end = 50.dp),
+                                                shape = RoundedCornerShape(16.dp),
+                                                elevation = CardDefaults.elevatedCardElevation(
+                                                    defaultElevation = 4.dp
+                                                )
                                             ) {
-                                                Column(
+                                                Box(
                                                     modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(30.dp),
-                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                        .fillMaxSize()
+                                                        .background(TreeBark)
                                                 ) {
-                                                    Text(
-                                                        text = product.name,
-                                                        fontWeight = FontWeight.Bold,
-                                                        fontSize = 30.sp,
-                                                        color = (White),
-                                                    )
-                                                    Spacer(modifier = Modifier.height(8.dp))
-                                                    Text(
-                                                        text = "${product.quantity} kg",
-                                                        fontWeight = FontWeight.Bold,
-                                                        fontSize = 40.sp,
-                                                        color = (White),
-                                                    )
+                                                    Column(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .padding(30.dp),
+                                                        horizontalAlignment = Alignment.CenterHorizontally
+                                                    ) {
+                                                        Text(
+                                                            text = product.name,
+                                                            fontWeight = FontWeight.Bold,
+                                                            fontSize = 30.sp,
+                                                            color = (White),
+                                                        )
+                                                        Spacer(modifier = Modifier.height(8.dp))
+                                                        Text(
+                                                            text = "${product.quantity} kg",
+                                                            fontWeight = FontWeight.Bold,
+                                                            fontSize = 40.sp,
+                                                            color = (White),
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            }
+                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(20.dp))
                 }
             }
         }
     }
-}

@@ -249,7 +249,7 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                 .height(165.dp)
                 .padding(top = 0.dp, bottom = 10.dp, start = 27.dp, end = 0.dp)
                 .clickable {
-                    navController.navigate("ClientOrderDetails/${order.orderId}")
+                    navController.navigate("ClientOrderDetails/${order.orderId}/$orderCount")
                 },
             colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
         ) {
