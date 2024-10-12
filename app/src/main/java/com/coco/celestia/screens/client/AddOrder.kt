@@ -1,7 +1,5 @@
-package com.coco.celestia
+package com.coco.celestia.screens.client
 
-
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -10,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,10 +18,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -35,14 +35,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableDoubleStateOf
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -60,17 +58,16 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.CartViewModel
-import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
-import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
-import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.ProductData
+import com.coco.celestia.viewmodel.model.TransactionData
 import com.google.firebase.auth.FirebaseAuth
 import java.time.Instant
 import java.util.Date
@@ -160,7 +157,9 @@ fun ProductTypeCard(
     product: ProductData,
     navController: NavController,
     cartViewModel: CartViewModel,
-    onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit
+    orderViewModel: OrderViewModel,
+    onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit,
+    onOrderVegetable: (SnapshotStateList<ProductData>) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var expanded by remember { mutableStateOf(false) }
@@ -234,10 +233,10 @@ fun ProductTypeCard(
                         cartViewModel = cartViewModel,
                         productType = productType,
                         productName = productName,
-                        maxQuantity = productQuantity
-                    ) {
-                        onAddToCartEvent(it)
-                    }
+                        maxQuantity = productQuantity,
+                        onAddToCartEvent = { onAddToCartEvent(it) },
+                        onOrderVegetable = { onOrderVegetable(it) }
+                    )
                 }
             }
         }
@@ -250,8 +249,10 @@ fun OrderDetailsPanel(
     navController: NavController,
     type: String?,
     cartViewModel: CartViewModel,
+    orderViewModel: OrderViewModel,
     productViewModel: ProductViewModel,
-    onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit
+    onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit,
+    onOrderVegetable: (SnapshotStateList<ProductData>) -> Unit
 ) {
     val productData by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState()
@@ -279,12 +280,17 @@ fun OrderDetailsPanel(
                 is ProductState.SUCCESS -> {
                     LazyColumn {
                         items(productData) { product ->
-                            ProductTypeCard(product, navController, cartViewModel) {
-                                onAddToCartEvent(it)
+                                ProductTypeCard(
+                                    product,
+                                    navController,
+                                    cartViewModel,
+                                    orderViewModel,
+                                    onAddToCartEvent = { onAddToCartEvent(it) },
+                                    onOrderVegetable = { onOrderVegetable(it) }
+                                )
                             }
                         }
                     }
-                }
                 null -> Text("Unknown state")
             }
         }
@@ -298,10 +304,12 @@ fun QuantitySelector(
     productType: String?,
     productName: String?,
     maxQuantity: Int,
-    onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit
+    onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit,
+    onOrderVegetable: (SnapshotStateList<ProductData>) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var quantity by remember { mutableIntStateOf(1) }
+    val vegetableProduct = remember { mutableStateListOf<ProductData>() }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -316,36 +324,61 @@ fun QuantitySelector(
             valueRange = 1f..maxQuantity.toFloat(),
             modifier = Modifier.padding(bottom = 16.dp)
         )
-        OutlinedTextField( //align with circle size
-            value = quantity.toString(),
-            onValueChange = { quantity = it.toIntOrNull()?.coerceIn(1, maxQuantity) ?: quantity },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            textStyle = TextStyle(
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.ExtraBold,
-                fontSize = 20.sp
-            ),
-            suffix = { Text("kg", fontSize = 15.sp) },
-            modifier = Modifier.width(100.dp),
-            singleLine = true
-        )
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(
+                onClick = { quantity -= 1 },
+                enabled = quantity > 1,
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                Icon(imageVector = Icons.Filled.KeyboardArrowLeft, contentDescription = "Decrement")
+            }
+            OutlinedTextField( //align with circle size
+                value = quantity.toString(),
+                onValueChange = { quantity = it.toIntOrNull()?.coerceIn(1, maxQuantity) ?: quantity },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                textStyle = TextStyle(
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 20.sp
+                ),
+//                suffix = { Text("kg", fontSize = 15.sp) },
+                modifier = Modifier.width(150.dp).padding(8.dp),
+                singleLine = true
+            )
+            Button(
+                onClick = { quantity += 1 },
+                enabled = quantity < maxQuantity,
+                shape = RoundedCornerShape(16.dp),
+            ) {
+                Icon(imageVector = Icons.Filled.KeyboardArrowRight, contentDescription = "Increment")
+            }
+        }
 
         Button(
             onClick = {
-                cartViewModel.addToCart(
-                    uid,
-                    ProductData(
-                        productName.toString(),
-                        quantity,
-                        productType.toString()
+                if(productType.toString() == "Vegetable") {
+                    onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added order.", System.currentTimeMillis()))
+                    onOrderVegetable(vegetableProduct)
+                    navController.navigate(Screen.Cart.route)
+                } else {
+                    cartViewModel.addToCart(
+                        uid,
+                        ProductData(
+                            productName.toString(),
+                            quantity,
+                            productType.toString()
+                        )
                     )
-                )
-                onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added to cart.", System.currentTimeMillis()))
-                navController.navigate(Screen.Cart.route)
+                    onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added to cart.", System.currentTimeMillis()))
+                    navController.navigate(Screen.Cart.route)
+                }
             },
             modifier = Modifier.padding(top = 16.dp)
         ) {
-            Text("Add to Cart", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(if (productType.toString() == "Vegetable") "Add Order" else "Add to Cart", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
         Text(
             text = "Qty of Order",

@@ -15,9 +15,9 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.coco.celestia.AddOrderPanel
-import com.coco.celestia.ConfirmOrderRequestPanel
-import com.coco.celestia.OrderDetailsPanel
+import com.coco.celestia.screens.client.AddOrderPanel
+import com.coco.celestia.screens.client.ConfirmOrderRequestPanel
+import com.coco.celestia.screens.client.OrderDetailsPanel
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.ForgotPasswordScreen
 import com.coco.celestia.screens.LoginScreen
@@ -331,8 +331,10 @@ fun NavGraph(
                 navController = navController,
                 type = type,
                 productViewModel = productViewModel,
+                orderViewModel = orderViewModel,
                 cartViewModel = cartViewModel,
-                onAddToCartEvent = { onEvent(it) }
+                onAddToCartEvent = { onEvent(it) },
+                onOrderVegetable = { checkoutItems = it },
             )
         }
         composable(route = Screen.OrderConfirmation.route) {

@@ -28,9 +28,11 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material.icons.outlined.ShoppingCart
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -58,6 +60,7 @@ import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.JadeGreen
+import com.coco.celestia.ui.theme.LightGray
 import com.coco.celestia.ui.theme.LightOrange
 import com.coco.celestia.ui.theme.MustardYellow
 import com.coco.celestia.ui.theme.VeryDarkPurple
@@ -80,9 +83,19 @@ fun Cart(
     val cartState by cartViewModel.cartState.observeAsState(CartState.LOADING)
     val cartData by cartViewModel.cartData.observeAsState()
     val checkoutItems = remember { mutableStateListOf<ProductData>() }
+    var coffeeButtonEnabled by remember { mutableStateOf(false) }
+    var meatButtonEnabled by remember { mutableStateOf(false) }
+    var filter by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
-        cartViewModel.getCart(uid = uid)
+    LaunchedEffect(filter) {
+        cartViewModel.getCart(
+            uid = uid,
+            filter = if(coffeeButtonEnabled || meatButtonEnabled) {
+                filter
+            } else {
+                ""
+            }
+        )
     }
 
     if(checkoutItems.size != 0) {
@@ -92,48 +105,45 @@ fun Cart(
     }
 
     // Checkout panel
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(bottom = 150.dp),
-        contentAlignment = Alignment.BottomCenter,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            IconButton(
-                onClick = {
-                    if(checkoutItems.size != 0) {
-                        onCheckoutEvent(checkoutItems)
-                        cartViewModel.removeCartItems(uid, checkoutItems)
-                        navController.navigate(Screen.OrderConfirmation.route)
-                    } else {
-                        onCheckoutErrorEvent(Triple(ToastStatus.WARNING, "Select items to checkout.", System.currentTimeMillis()))
-                    }
-                },
-                colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = if (checkoutItems.size == 0) LightOrange else JadeGreen,
-                    contentColor = Color.White
-                ),
-                modifier = Modifier
-                    .size(70.dp)
-                    .padding(10.dp)
-            ) {
-                Icon(
-                    imageVector = if(checkoutItems.size == 0) Icons.Default.ShoppingCart else Icons.Default.CheckCircle,
-                    contentDescription = "Cart Icon",
-                    modifier = Modifier.size(30.dp)
-                )
-            }
-            Text(text = "Check Order")
-        }
-    }
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(bottom = 150.dp),
+//        contentAlignment = Alignment.BottomCenter,
+//    ) {
+//        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//            IconButton(
+//                onClick = {
+//                    if(checkoutItems.size != 0) {
+//                        onCheckoutEvent(checkoutItems)
+//                        cartViewModel.removeCartItems(uid, checkoutItems)
+//                        navController.navigate(Screen.OrderConfirmation.route)
+//                    } else {
+//                        onCheckoutErrorEvent(Triple(ToastStatus.WARNING, "Select items to checkout.", System.currentTimeMillis()))
+//                    }
+//                },
+//                colors = IconButtonDefaults.iconButtonColors(
+//                    containerColor = if (checkoutItems.size == 0) LightOrange else JadeGreen,
+//                    contentColor = Color.White
+//                ),
+//                modifier = Modifier
+//                    .size(70.dp)
+//                    .padding(10.dp)
+//            ) {
+//                Icon(
+//                    imageVector = if(checkoutItems.size == 0) Icons.Default.ShoppingCart else Icons.Default.CheckCircle,
+//                    contentDescription = "Cart Icon",
+//                    modifier = Modifier.size(30.dp)
+//                )
+//            }
+//            Text(text = "Check Order")
+//        }
+//    }
 
     // Orange background with the clipped corners
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(650.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(LightOrange),
+            .fillMaxSize(),
         contentAlignment = Alignment.BottomCenter,
     ) {
         Column(
@@ -149,31 +159,83 @@ fun Cart(
                 is CartState.SUCCESS -> {
                     cartData?.let {
                         LazyColumn {
+                            item {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceAround
+                                ) {
+                                    ElevatedButton(
+                                        onClick = {
+                                            coffeeButtonEnabled = !coffeeButtonEnabled
+                                            filter = if (coffeeButtonEnabled) {
+                                                "Coffee"
+                                            } else {
+                                                ""
+                                            }
+                                        },
+                                        border = if (coffeeButtonEnabled) ButtonDefaults.outlinedButtonBorder else null,
+                                        elevation = ButtonDefaults.elevatedButtonElevation(if (!coffeeButtonEnabled) 10.dp else 0.dp),
+                                    ) {
+                                        Text(text = "Coffee")
+                                    }
+                                    ElevatedButton(
+                                        onClick = {
+                                            meatButtonEnabled = !meatButtonEnabled
+                                            filter = if (meatButtonEnabled) {
+                                                "Meat"
+                                            } else {
+                                                ""
+                                            }
+                                        },
+                                        border = if (meatButtonEnabled) ButtonDefaults.outlinedButtonBorder else null,
+                                        elevation = ButtonDefaults.elevatedButtonElevation(if (!meatButtonEnabled) 10.dp else 0.dp)
+                                    ) {
+                                        Text(text = "Meat")
+                                    }
+                                }
+                            }
                             items(it.items) { item ->
                                 CartItem(
                                     item = item,
-                                    onSelect = { checkoutItems.add(it) },
-                                    onUnselect = { checkoutItems.remove(it) }
+                                    onSelect = {
+                                        checkoutItems.add(it)
+                                        onCheckoutEvent(checkoutItems)
+                                    },
+                                    onUnselect = {
+                                        checkoutItems.remove(it)
+                                        onCheckoutEvent(checkoutItems)
+                                    }
                                 )
                             }
                         }
                     }
                 }
             }
-        }
-        IconButton(
-            onClick = { navController.navigate(Screen.AddOrder.route) },
-            modifier = Modifier
-                .size(70.dp)
-                .padding(bottom = 15.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.AddCircle,
-                contentDescription = "Add more items to the cart",
-                tint = Color.White,
+            IconButton(
+                onClick = {
+                    if (checkoutItems.isEmpty()) {
+                        navController.navigate(Screen.AddOrder.route)
+                    } else {
+                        onCheckoutEvent(checkoutItems)
+                        cartViewModel.removeCartItems(uid, checkoutItems)
+                        navController.navigate(Screen.OrderConfirmation.route)
+                    }
+                },
                 modifier = Modifier
-                    .size(70.dp)
-            )
+                    .size(80.dp)
+                    .padding(bottom = 15.dp)
+            ) {
+                Icon(
+                    imageVector = if (checkoutItems.isEmpty()) Icons.Default.AddCircle else Icons.Default.CheckCircle,
+                    contentDescription = "Add more items to the cart",
+                    tint = JadeGreen,
+                    modifier = Modifier
+                        .size(80.dp)
+                )
+            }
         }
     }
 }
@@ -218,7 +280,7 @@ fun LoadingCart() {
 fun EmptyCart() {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxWidth().height(600.dp)
     ) {
         Column(
             verticalArrangement = Arrangement.Center,
@@ -232,7 +294,7 @@ fun EmptyCart() {
             )
             Text(
                 text = "Cart is empty.",
-                color = Color.White,
+                color = VeryDarkPurple,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )

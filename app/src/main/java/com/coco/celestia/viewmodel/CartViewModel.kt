@@ -27,14 +27,22 @@ class CartViewModel : ViewModel() {
     val cartData: LiveData<CartData> = _cartData
     val cartState: LiveData<CartState> = _cartState
 
-    fun getCart(uid: String) {
+    fun getCart(uid: String, filter: String = "") {
         viewModelScope.launch {
             _cartState.value = CartState.LOADING
             val query = database.child(uid)
             query.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
+                    val filterKeywords = filter.split(",").map { it.trim() }
                     val products = snapshot.children.mapNotNull {
                         it.getValue(ProductData::class.java)
+                    }.filter{
+                        val matches = filterKeywords.any { keyword ->
+                            it.name.contains(keyword, ignoreCase = true) ||
+                            it.type.contains(keyword, ignoreCase = true) ||
+                            it.quantity.toString().contains(keyword, ignoreCase = true)
+                        }
+                        matches
                     }.toMutableList()
                     val cart = CartData(products)
                     _cartData.value = cart

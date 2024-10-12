@@ -57,11 +57,11 @@ fun CelestiaTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = if (darkTheme) Color.Black.toArgb() else Color.Transparent.toArgb()
-            window.navigationBarColor = if (darkTheme) Color.Black.toArgb() else Color.Transparent.toArgb()
+            window.statusBarColor = Color.Transparent.toArgb()
+            window.navigationBarColor = Color.Transparent.toArgb()
             WindowCompat.getInsetsController(window, view).apply {
-                isAppearanceLightStatusBars = !darkTheme
-                isAppearanceLightNavigationBars = !darkTheme
+                isAppearanceLightStatusBars = true
+                isAppearanceLightNavigationBars = true
             }
         }
     }
