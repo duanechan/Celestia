@@ -33,6 +33,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -66,7 +68,9 @@ fun NavDrawerTopBar(
                         if (currentDestination != "${role.lowercase()}_dashboard") {
                             IconButton(
                                 onClick = { navController.navigateUp() },
-                                modifier = Modifier.align(Alignment.CenterStart)
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                                    .semantics { testTag = "android:id/backButton" }
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.KeyboardArrowLeft,
@@ -82,7 +86,9 @@ fun NavDrawerTopBar(
                         )
                         IconButton(
                             onClick = { navController.navigate(Screen.Cart.route) },
-                            modifier = Modifier.align(Alignment.CenterEnd)
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .semantics { testTag = "android:id/cartButton" }
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ShoppingCart,
@@ -171,7 +177,8 @@ fun NavDrawerBottomBar(
                     navController.navigate(routes.dashboard) {
                         popUpTo(navController.graph.startDestinationId)
                     }
-                }
+                },
+                modifier = Modifier.semantics { testTag = "android:id/dashboardPage" }
             )
 
             if(role == "Coop" || role == "Client" || role == "Farmer") {
@@ -190,7 +197,8 @@ fun NavDrawerBottomBar(
                                 popUpTo(navController.graph.startDestinationId)
                             }
                         }
-                    }
+                    },
+                    modifier = Modifier.semantics { testTag = "android:id/ordersPage" }
                 )
             }
 
@@ -211,7 +219,8 @@ fun NavDrawerBottomBar(
                         navController.navigate(routes.inventory) {
                             popUpTo(navController.graph.startDestinationId)
                         }
-                    }
+                    },
+                    modifier = Modifier.semantics { testTag = "android:id/itemsPage" }
                 )
             }
 
@@ -233,7 +242,8 @@ fun NavDrawerBottomBar(
                         navController.navigate(Screen.AdminUserManagement.route) {
                             popUpTo(navController.graph.startDestinationId)
                         }
-                    }
+                    },
+                    modifier = Modifier.semantics { testTag = "android:id/userManagementPage" }
                 )
             }
 
@@ -246,7 +256,8 @@ fun NavDrawerBottomBar(
                         navController.navigate(Screen.ClientContact.route) {
                             popUpTo(navController.graph.startDestinationId)
                         }
-                    }
+                    },
+                    modifier = Modifier.semantics { testTag = "android:id/contactPage" }
                 )
             }
 
@@ -258,7 +269,8 @@ fun NavDrawerBottomBar(
                     navController.navigate(Screen.Profile.route) {
                         popUpTo(navController.graph.startDestinationId)
                     }
-                }
+                },
+                modifier = Modifier.semantics { testTag = "android:id/profilePage" }
             )
         }
 
@@ -270,6 +282,7 @@ fun NavDrawerBottomBar(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .offset(y = (-30).dp)
+                    .semantics { testTag = "android:id/coopAddProductButton" }
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -287,6 +300,7 @@ fun NavDrawerBottomBar(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .offset(y = (-30).dp)
+                    .semantics { testTag = "android:id/coopAddProductButton" }
             ) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
@@ -322,6 +336,7 @@ fun NavDrawerBottomBar(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .offset(y = (-30).dp)
+                    .semantics { testTag = "android:id/adminAddUserButton" }
             ) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
