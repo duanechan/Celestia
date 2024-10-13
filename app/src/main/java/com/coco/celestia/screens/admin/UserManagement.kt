@@ -97,7 +97,7 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
                     leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon") },
                     modifier = Modifier
                         .width(screenWidth * 0.75f) // will make the searchbar 90% of the screen width
-                        .offset(y = ((-50).dp))
+                        .offset(y = ((-35).dp))
                 ) {}
                 Spacer(modifier = Modifier.width(5.dp))
                 Button(
@@ -174,12 +174,14 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                     .padding(13.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Spacer(modifier = Modifier.width(24.dp))
+                Spacer(modifier = Modifier.width(15.dp))
                 Text(
                     text = "EMAIL",
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
+                        .weight(1.5f)
+                        .fillMaxWidth()
+                        .offset(x=(-10).dp),
+                    softWrap = false,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Start
                 )
@@ -187,7 +189,8 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                     text = "NAME",
                     modifier = Modifier
                         .weight(2f)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .offset(x=(-12).dp),
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.End
                 )
@@ -257,7 +260,7 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
             }
         }
         item {
-            Spacer(modifier = Modifier.height(95.dp))
+            Spacer(modifier = Modifier.height(90.dp))
         }
     }
 }
