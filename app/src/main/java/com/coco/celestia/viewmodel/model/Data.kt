@@ -20,7 +20,7 @@ data class OrderData(
     val orderId: String = "",
     val orderDate: String = "",
     val status: String = "",
-    var orderData: MutableList<ProductData> = mutableListOf(),
+    var orderData: ProductData = ProductData(),
     val client: String = "",
     val barangay: String = "",
     val street: String = "",

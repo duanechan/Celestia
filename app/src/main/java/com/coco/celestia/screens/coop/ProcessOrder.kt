@@ -95,7 +95,6 @@ fun ProcessOrderError(errorMessage: String) {
 
 @Composable
 fun ProcessOrder(order: OrderData) {
-    val orderedProducts = order.orderData.filter { it.type == "Meat" || it.type == "Coffee" }
     Box(
         contentAlignment = Alignment.TopCenter,
         modifier = Modifier
@@ -109,11 +108,7 @@ fun ProcessOrder(order: OrderData) {
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(30.dp))
-            LazyVerticalGrid(columns = GridCells.Fixed(2)) {
-                items(orderedProducts) {
-                    OrderItem(product = it)
-                }
-            }
+            OrderItem(product = order.orderData)
         }
     }
 }

@@ -58,6 +58,7 @@ import com.coco.celestia.viewmodel.ProductViewModel
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.ui.graphics.painter.Painter
 import com.coco.celestia.ui.theme.*
+import kotlinx.coroutines.selects.select
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -246,9 +247,9 @@ fun FarmerManageOrder(
                     }
                     is OrderState.SUCCESS -> {
                         val filteredOrders = orderData.filter { order ->
-                            (selectedCategory.isEmpty() || order.orderData.any { it.name == selectedCategory }) &&
-                                    order.orderId.contains(searchQuery, ignoreCase = true) &&
-                                    order.status.lowercase() != "pending"
+                            (selectedCategory.isEmpty() || order.orderData.name == selectedCategory) &&
+                                order.orderId.contains(searchQuery, ignoreCase = true) &&
+                                order.status.lowercase() != "pending"
                         }
 
                         if (filteredOrders.isEmpty()) {
@@ -316,7 +317,7 @@ fun FarmerManageRequest(
             // Filter orders by pending status
             val pendingOrders = orderData.filter { it.status == "PENDING" }
             val filteredOrders = pendingOrders.filter { order ->
-                (selectedCategory.isEmpty() || order.orderData.any { it.name == selectedCategory }) &&
+                (selectedCategory.isEmpty() || order.orderData.name == selectedCategory) &&
                         order.orderId.contains(searchQuery, ignoreCase = true)
             }
 

@@ -77,7 +77,7 @@ fun FarmerOrderDetails(
         }
 
         else -> {
-            val products = orderData.orderData.filter { it.type == "Vegetable" }
+            val product = orderData.orderData
 
             Column(
                 modifier = Modifier
@@ -189,50 +189,48 @@ fun FarmerOrderDetails(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Spacer(modifier = Modifier.width(50.dp))
-                                LazyColumn(
+                                Column(
                                     verticalArrangement = Arrangement.Center,
                                     horizontalAlignment = Alignment.Start,
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    items(products) { product ->
-                                        Card(
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(start = 20.dp, end = 50.dp),
+                                        shape = RoundedCornerShape(16.dp),
+                                        elevation = CardDefaults.elevatedCardElevation(
+                                            defaultElevation = 4.dp
+                                        )
+                                    ) {
+                                        Box(
                                             modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(start = 20.dp, end = 50.dp),
-                                            shape = RoundedCornerShape(16.dp),
-                                            elevation = CardDefaults.elevatedCardElevation(
-                                                defaultElevation = 4.dp
-                                            )
+                                                .fillMaxSize()
+                                                .background(
+                                                    Brush.verticalGradient(
+                                                        colors = listOf(Apricot2, Copper)
+                                                    )
+                                                )
                                         ) {
-                                            Box(
+                                            Column(
                                                 modifier = Modifier
-                                                    .fillMaxSize()
-                                                    .background(
-                                                        Brush.verticalGradient(
-                                                            colors = listOf(Apricot2, Copper)
-                                                        )
-                                                    )
+                                                    .fillMaxWidth()
+                                                    .padding(30.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally
                                             ) {
-                                                Column(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(30.dp),
-                                                    horizontalAlignment = Alignment.CenterHorizontally
-                                                ) {
-                                                    Text(
-                                                        text = product.name,
-                                                        fontWeight = FontWeight.Bold,
-                                                        fontSize = 30.sp,
-                                                        color = Cocoa,
-                                                    )
-                                                    Spacer(modifier = Modifier.height(8.dp))
-                                                    Text(
-                                                        text = "${product.quantity} kg",
-                                                        fontWeight = FontWeight.Bold,
-                                                        fontSize = 40.sp,
-                                                        color = Cocoa,
-                                                    )
-                                                }
+                                                Text(
+                                                    text = product.name,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 30.sp,
+                                                    color = Cocoa,
+                                                )
+                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Text(
+                                                    text = "${product.quantity} kg",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 40.sp,
+                                                    color = Cocoa,
+                                                )
                                             }
                                         }
                                     }

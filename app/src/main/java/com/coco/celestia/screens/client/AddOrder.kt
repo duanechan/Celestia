@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.client
 
+import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -37,6 +38,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
@@ -58,7 +60,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.viewmodel.CartViewModel
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
@@ -151,15 +152,12 @@ fun ProductCard(
     Spacer(modifier = Modifier.height(15.dp))
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductTypeCard(
     product: ProductData,
     navController: NavController,
-    cartViewModel: CartViewModel,
-    orderViewModel: OrderViewModel,
     onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit,
-    onOrderVegetable: (SnapshotStateList<ProductData>) -> Unit
+    onOrder: (ProductData) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var expanded by remember { mutableStateOf(false) }
@@ -230,12 +228,11 @@ fun ProductTypeCard(
                 AnimatedVisibility(visible = expanded) {
                     QuantitySelector(
                         navController = navController,
-                        cartViewModel = cartViewModel,
                         productType = productType,
                         productName = productName,
                         maxQuantity = productQuantity,
                         onAddToCartEvent = { onAddToCartEvent(it) },
-                        onOrderVegetable = { onOrderVegetable(it) }
+                        onOrder = { onOrder(it) }
                     )
                 }
             }
@@ -248,11 +245,10 @@ fun ProductTypeCard(
 fun OrderDetailsPanel(
     navController: NavController,
     type: String?,
-    cartViewModel: CartViewModel,
     orderViewModel: OrderViewModel,
     productViewModel: ProductViewModel,
     onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit,
-    onOrderVegetable: (SnapshotStateList<ProductData>) -> Unit
+    onOrder: (ProductData) -> Unit
 ) {
     val productData by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState()
@@ -283,10 +279,8 @@ fun OrderDetailsPanel(
                                 ProductTypeCard(
                                     product,
                                     navController,
-                                    cartViewModel,
-                                    orderViewModel,
                                     onAddToCartEvent = { onAddToCartEvent(it) },
-                                    onOrderVegetable = { onOrderVegetable(it) }
+                                    onOrder = { onOrder(it) }
                                 )
                             }
                         }
@@ -300,16 +294,14 @@ fun OrderDetailsPanel(
 @Composable
 fun QuantitySelector(
     navController: NavController,
-    cartViewModel: CartViewModel,
     productType: String?,
     productName: String?,
     maxQuantity: Int,
     onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit,
-    onOrderVegetable: (SnapshotStateList<ProductData>) -> Unit
+    onOrder: (ProductData) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var quantity by remember { mutableIntStateOf(1) }
-    val vegetableProduct = remember { mutableStateListOf<ProductData>() }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -359,26 +351,13 @@ fun QuantitySelector(
 
         Button(
             onClick = {
-                if(productType.toString() == "Vegetable") {
-                    onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added order.", System.currentTimeMillis()))
-                    onOrderVegetable(vegetableProduct)
-                    navController.navigate(Screen.Cart.route)
-                } else {
-                    cartViewModel.addToCart(
-                        uid,
-                        ProductData(
-                            productName.toString(),
-                            quantity,
-                            productType.toString()
-                        )
-                    )
-                    onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added to cart.", System.currentTimeMillis()))
-                    navController.navigate(Screen.Cart.route)
-                }
+                onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added order.", System.currentTimeMillis()))
+                onOrder(ProductData(productName.toString(), quantity, productType.toString()))
+                navController.navigate(Screen.OrderConfirmation.route)
             },
             modifier = Modifier.padding(top = 16.dp)
         ) {
-            Text(if (productType.toString() == "Vegetable") "Add Order" else "Add to Cart", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("Add Order" , color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
         Text(
             text = "Qty of Order",
@@ -392,7 +371,7 @@ fun QuantitySelector(
 @Composable
 fun ConfirmOrderRequestPanel(
     navController: NavController,
-    checkoutItems: SnapshotStateList<ProductData>,
+    checkoutItem: ProductData,
     userViewModel: UserViewModel,
     orderViewModel: OrderViewModel,
     transactionViewModel: TransactionViewModel,
@@ -415,11 +394,12 @@ fun ConfirmOrderRequestPanel(
                 orderId = "ORDR{${UUID.randomUUID()}}",
                 orderDate = Date.from(Instant.now()).toString(),
                 status = "PENDING",
-                orderData = checkoutItems,
+                orderData = checkoutItem,
                 client = "${userData?.firstname} ${userData?.lastname}",
                 barangay = barangay,
                 street = streetNumber
             )
+            Log.d("AddOrder", "Order Data: $checkoutItem")
             val transaction = TransactionData(
                 "TRNSCTN{${UUID.randomUUID()}}",
                 order

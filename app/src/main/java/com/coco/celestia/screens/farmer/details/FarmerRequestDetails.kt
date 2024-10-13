@@ -94,7 +94,7 @@ fun FarmerRequestDetails(
             }
         }
         else -> {
-            val products = orderData.orderData.filter { it.type == "Vegetable" }
+            val product = orderData.orderData
 
             LazyColumn(
                 modifier = Modifier
@@ -245,43 +245,32 @@ fun FarmerRequestDetails(
                                                 )
                                                 .padding(16.dp)
                                         ) {
-                                            if (products.isNotEmpty()) {
-                                                Column(
+                                            Column(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(top = 15.dp, bottom = 15.dp)
+                                            ) {
+                                                Row(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
-                                                        .padding(top = 15.dp, bottom = 15.dp)
+                                                        .padding(vertical = 8.dp),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
                                                 ) {
-                                                    products.forEach { product ->
-                                                        Row(
-                                                            modifier = Modifier
-                                                                .fillMaxWidth()
-                                                                .padding(vertical = 8.dp),
-                                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                                            verticalAlignment = Alignment.CenterVertically
-                                                        ) {
-                                                            Text(
-                                                                text = product.name,
-                                                                fontWeight = FontWeight.Bold,
-                                                                fontSize = 25.sp,
-                                                                color = Cocoa
-                                                            )
-                                                            Text(
-                                                                text = "${product.quantity} kg",
-                                                                fontWeight = FontWeight.Bold,
-                                                                fontSize = 25.sp,
-                                                                color = Cocoa,
-                                                                textAlign = TextAlign.End
-                                                            )
-                                                        }
-                                                    }
+                                                    Text(
+                                                        text = product.name,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 25.sp,
+                                                        color = Cocoa
+                                                    )
+                                                    Text(
+                                                        text = "${product.quantity} kg",
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 25.sp,
+                                                        color = Cocoa,
+                                                        textAlign = TextAlign.End
+                                                    )
                                                 }
-                                            } else {
-                                                Text(
-                                                    text = "No products ordered.",
-                                                    color = Cocoa,
-                                                    fontSize = 16.sp,
-                                                    modifier = Modifier.align(Alignment.Center)
-                                                )
                                             }
                                         }
                                     }
@@ -340,49 +329,37 @@ fun FarmerRequestDetails(
                                             .padding(16.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        if (products.isNotEmpty()) {
-                                            LazyColumn(
-                                                modifier = Modifier.fillMaxSize()
-                                            ) {
-                                                items(products.size) { index ->
-                                                    val requestedProduct = products[index]
-                                                    val availableProduct = productData.find {
-                                                        it.name.equals(
-                                                            requestedProduct.name,
-                                                            ignoreCase = true
-                                                        )
-                                                    }
-                                                    Column(
-                                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .padding(vertical = 8.dp)
-                                                    ) {
-                                                        Text(
-                                                            text = requestedProduct.name,
-                                                            fontWeight = FontWeight.Bold,
-                                                            fontSize = 30.sp,
-                                                            color = Cocoa,
-                                                            textAlign = TextAlign.Center
-                                                        )
-                                                        Spacer(modifier = Modifier.height(20.dp))
-                                                        Text(
-                                                            text = "${availableProduct?.quantity ?: "N/A"} kg",
-                                                            fontWeight = FontWeight.Bold,
-                                                            fontSize = 30.sp,
-                                                            color = Cocoa,
-                                                            textAlign = TextAlign.Center
-                                                        )
-                                                    }
-                                                }
+                                        Column(
+                                            modifier = Modifier.fillMaxSize()
+                                        ) {
+                                            val availableProduct = productData.find {
+                                                it.name.equals(
+                                                    product.name,
+                                                    ignoreCase = true
+                                                )
                                             }
-                                        } else {
-                                            Text(
-                                                text = "No inventory details available.",
-                                                color = Cocoa,
-                                                fontSize = 16.sp,
-                                                modifier = Modifier.align(Alignment.Center)
-                                            )
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+//                                                    .padding(vertical = 8.dp)
+                                            ) {
+                                                Text(
+                                                    text = product.name,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 30.sp,
+                                                    color = Cocoa,
+                                                    textAlign = TextAlign.Center
+                                                )
+                                                Spacer(modifier = Modifier.height(20.dp))
+                                                Text(
+                                                    text = "${availableProduct?.quantity ?: "N/A"} kg",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 30.sp,
+                                                    color = Cocoa,
+                                                    textAlign = TextAlign.Center
+                                                )
+                                            }
                                         }
                                     }
                                 }

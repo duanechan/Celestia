@@ -125,7 +125,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                             Text(
                                                 text = product.name,
                                                 fontSize = 60.sp,
-                                                fontWeight = FontWeight.Bold,
+                                                fontWeight = Bold,
                                                 modifier = Modifier.fillMaxWidth(),
                                                 textAlign = TextAlign.Center,
                                                 color = Cocoa
@@ -180,9 +180,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                     )
                                 }
                                 OrderState.SUCCESS -> {
-                                    val filteredOrders = allOrders.filter {
-                                        it.orderData.any { product -> product.name.equals(productName, ignoreCase = true) }
-                                    }
+                                    val filteredOrders = allOrders.filter { it.orderData.name.equals(productName, ignoreCase = true) }
 
                                     if (filteredOrders.isEmpty()) {
                                         Text(
@@ -205,7 +203,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                             text = "Product not found",
                             fontSize = 16.sp,
                             color = Color.Red,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = Bold,
                             modifier = Modifier.align(Alignment.Center)
                         )
                     }
@@ -215,7 +213,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                         text = "No products available",
                         fontSize = 16.sp,
                         color = Color.Gray,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = Bold,
                         modifier = Modifier.align(Alignment.Center)
                     )
                 }
@@ -223,7 +221,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                     Text(
                         text = "Error loading products",
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = Bold,
                         color = Color.Red,
                         modifier = Modifier.align(Alignment.Center)
                     )
@@ -265,7 +263,7 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
             Text(
                 text = "Order ID",
                 modifier = Modifier.weight(1f),
-                fontWeight = FontWeight.Bold,
+                fontWeight = Bold,
                 fontFamily = mintsansFontFamily,
                 textAlign = TextAlign.Center,
                 fontSize = 16.sp,
@@ -274,7 +272,7 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
             Text(
                 text = "Status",
                 modifier = Modifier.weight(1f),
-                fontWeight = FontWeight.Bold,
+                fontWeight = Bold,
                 fontFamily = mintsansFontFamily,
                 textAlign = TextAlign.Center,
                 fontSize = 16.sp,
@@ -283,7 +281,7 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
             Text(
                 text = "Qty",
                 modifier = Modifier.weight(1f),
-                fontWeight = FontWeight.Bold,
+                fontWeight = Bold,
                 fontFamily = mintsansFontFamily,
                 textAlign = TextAlign.Center,
                 fontSize = 16.sp,
@@ -334,7 +332,7 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                                 color = Cocoa
                             )
                             Text(
-                                text = order.orderData[0].quantity.toString(),
+                                text = order.orderData.quantity.toString(),
                                 modifier = Modifier.weight(1f),
                                 fontFamily = mintsansFontFamily,
                                 textAlign = TextAlign.Right,

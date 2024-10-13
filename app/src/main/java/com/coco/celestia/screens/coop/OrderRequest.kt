@@ -233,7 +233,7 @@ fun PreparingOrderItem(
                     fontSize = 30.sp,
                     fontWeight = FontWeight.Bold)
                 Text(
-                    text = if (order.orderData[0].type != "Vegetable") "${order.orderData[0].name}, ${order.orderData[0].quantity}kg" else order.orderData[0].name,
+                    text = if (order.orderData.type != "Vegetable") "${order.orderData.name}, ${order.orderData.quantity}kg" else order.orderData.name,
                     fontSize = 30.sp, fontWeight = FontWeight.Bold
                 )
                 Text(
@@ -285,7 +285,7 @@ fun PendingOrderItem(
                     .padding(16.dp)
                     .animateContentSize()
             ) {
-                Text(text = "${order.orderData[0].name}, ${order.orderData[0].quantity}kg",
+                Text(text = "${order.orderData.name}, ${order.orderData.quantity}kg",
                     fontSize = 30.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif)
                 Text(text = "${order.status} ●", fontSize = 20.sp, fontWeight = FontWeight.Light, color = Orange)
                 Text(text = "${order.street}, ${order.barangay}")

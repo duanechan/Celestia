@@ -28,7 +28,7 @@ fun LogoutDialog(onDismiss: () -> Unit, onLogout: () -> Unit) {
                     .testTag("android:id/confirmLogout")
                     .semantics { contentDescription = "confirmLogoutCD" }
             ) {
-                Text(text = "LogoutEyoo")
+                Text(text = "Logout")
             }
         },
         dismissButton = {

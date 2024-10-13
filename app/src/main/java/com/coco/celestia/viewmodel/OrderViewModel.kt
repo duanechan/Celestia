@@ -89,14 +89,11 @@ class OrderViewModel : ViewModel() {
                     val orders = snapshot.children
                         .mapNotNull { it.getValue(OrderData::class.java) }
                         .filter { order ->
-                            order.orderData.any { product ->
-                                filterKeywords.any { keyword ->
-                                    product.name.contains(keyword, ignoreCase = true) ||
-                                    product.type.contains(keyword, ignoreCase = true)
-                                }
+                            filterKeywords.any { keyword ->
+                                order.orderData.name.contains(keyword, ignoreCase = true) ||
+                                order.orderData.type.contains(keyword, ignoreCase = true)
                             }
                         }
-
                     _orderData.value = orders
                     _orderState.value = if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS
                 }
@@ -131,13 +128,12 @@ class OrderViewModel : ViewModel() {
                         userSnapshot.children.mapNotNull { orderSnapshot ->
                             orderSnapshot.getValue(OrderData::class.java)
                         }.filter { order ->
-                            order.orderData.any { product ->
-                                val isCoffeeOrMeat = product.type.equals("Coffee", ignoreCase = true) ||
-                                        product.type.equals("Meat", ignoreCase = true)
-                                val isVegetable = product.type.equals("Vegetable", ignoreCase = true)
+                                val isCoffeeOrMeat = order.orderData.type.equals("Coffee", ignoreCase = true) ||
+                                    order.orderData.type.equals("Meat", ignoreCase = true)
+                                val isVegetable = order.orderData.type.equals("Vegetable", ignoreCase = true)
                                 val matchesFilter = filterKeywords.any { keyword ->
-                                    product.name.contains(keyword, ignoreCase = true) ||
-                                            product.type.contains(keyword, ignoreCase = true)
+                                    order.orderData.name.contains(keyword, ignoreCase = true) ||
+                                    order.orderData.type.contains(keyword, ignoreCase = true)
                                 }
                                 when (role) {
                                     "Coop", "Admin" -> isCoffeeOrMeat && matchesFilter
@@ -147,12 +143,9 @@ class OrderViewModel : ViewModel() {
                                 }
                             }
                         }
+                        _orderData.value = orders
+                        _orderState.value = if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS
                     }
-
-                    _orderData.value = orders
-                    _orderState.value = if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS
-                }
-
                 override fun onCancelled(error: DatabaseError) {
                     _orderState.value = OrderState.ERROR(error.message)
                 }

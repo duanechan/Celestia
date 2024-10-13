@@ -86,7 +86,7 @@ fun ClientOrderDetails(
 
         // Display the order details when data is available
         else -> {
-            val products = orderData.orderData.filter { it.type == "Vegetable" }
+//            val products = orderData.orderData.filter { it.type == "Vegetable" }
 
             Column(
             ) {
@@ -225,44 +225,44 @@ fun ClientOrderDetails(
                                         horizontalAlignment = Alignment.Start,
                                         modifier = Modifier.weight(1f)
                                     ) {
-                                        items(products) { product ->
-                                            Card(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(start = 20.dp, end = 50.dp),
-                                                shape = RoundedCornerShape(16.dp),
-                                                elevation = CardDefaults.elevatedCardElevation(
-                                                    defaultElevation = 4.dp
-                                                )
-                                            ) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .fillMaxSize()
-                                                        .background(TreeBark)
-                                                ) {
-                                                    Column(
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .padding(30.dp),
-                                                        horizontalAlignment = Alignment.CenterHorizontally
-                                                    ) {
-                                                        Text(
-                                                            text = product.name,
-                                                            fontWeight = FontWeight.Bold,
-                                                            fontSize = 30.sp,
-                                                            color = (White),
-                                                        )
-                                                        Spacer(modifier = Modifier.height(8.dp))
-                                                        Text(
-                                                            text = "${product.quantity} kg",
-                                                            fontWeight = FontWeight.Bold,
-                                                            fontSize = 40.sp,
-                                                            color = (White),
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
+//                                        items(products) { product ->
+//                                            Card(
+//                                                modifier = Modifier
+//                                                    .fillMaxWidth()
+//                                                    .padding(start = 20.dp, end = 50.dp),
+//                                                shape = RoundedCornerShape(16.dp),
+//                                                elevation = CardDefaults.elevatedCardElevation(
+//                                                    defaultElevation = 4.dp
+//                                                )
+//                                            ) {
+//                                                Box(
+//                                                    modifier = Modifier
+//                                                        .fillMaxSize()
+//                                                        .background(TreeBark)
+//                                                ) {
+//                                                    Column(
+//                                                        modifier = Modifier
+//                                                            .fillMaxWidth()
+//                                                            .padding(30.dp),
+//                                                        horizontalAlignment = Alignment.CenterHorizontally
+//                                                    ) {
+//                                                        Text(
+//                                                            text = product.name,
+//                                                            fontWeight = FontWeight.Bold,
+//                                                            fontSize = 30.sp,
+//                                                            color = (White),
+//                                                        )
+//                                                        Spacer(modifier = Modifier.height(8.dp))
+//                                                        Text(
+//                                                            text = "${product.quantity} kg",
+//                                                            fontWeight = FontWeight.Bold,
+//                                                            fontSize = 40.sp,
+//                                                            color = (White),
+//                                                        )
+//                                                    }
+//                                                }
+//                                            }
+//                                        }
                                     }
                                 }
                              }

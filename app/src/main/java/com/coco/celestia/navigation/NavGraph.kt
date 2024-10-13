@@ -1,5 +1,6 @@
 package com.coco.celestia.navigation
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,7 +31,6 @@ import com.coco.celestia.screens.admin.AdminDashboard
 import com.coco.celestia.screens.admin.AdminInventory
 import com.coco.celestia.screens.admin.AdminUserManagement
 import com.coco.celestia.screens.admin.CheckAddUser
-import com.coco.celestia.screens.client.Cart
 import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientDashboard
 import com.coco.celestia.screens.client.ClientOrder
@@ -49,7 +49,6 @@ import com.coco.celestia.screens.farmer.details.FarmerItemDetails
 import com.coco.celestia.screens.farmer.details.FarmerOrderDetails
 import com.coco.celestia.screens.farmer.details.FarmerRequestDetails
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.viewmodel.CartViewModel
 import com.coco.celestia.viewmodel.ContactViewModel
 import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.OrderViewModel
@@ -61,7 +60,6 @@ import com.coco.celestia.viewmodel.model.ProductData
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    cartViewModel: CartViewModel = viewModel(),
     contactViewModel: ContactViewModel = viewModel(),
     locationViewModel: LocationViewModel = viewModel(),
     orderViewModel: OrderViewModel = viewModel(),
@@ -71,7 +69,7 @@ fun NavGraph(
     onNavigate: (String) -> Unit,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
-    var checkoutItems = remember { mutableStateListOf<ProductData>() }
+    var productData by remember { mutableStateOf(ProductData()) }
     val productName by productViewModel.productName.observeAsState("")
     var farmerName by remember { mutableStateOf("") }
     var addressName by remember { mutableStateOf("") }
@@ -149,15 +147,6 @@ fun NavGraph(
         composable(route = Screen.ClientContact.route) {
             onNavigate("Contacts")
             ClientContact(contactViewModel = contactViewModel)
-        }
-        composable(route = Screen.Cart.route) {
-            Cart(
-                navController = navController,
-                cartViewModel = cartViewModel,
-                onTitleChange = { onNavigate(it) },
-                onCheckoutEvent = { checkoutItems = it },
-                onCheckoutErrorEvent = { onEvent(it) }
-            )
         }
         composable(route = Screen.Admin.route) {
             onNavigate("Dashboard")
@@ -337,16 +326,18 @@ fun NavGraph(
                 type = type,
                 productViewModel = productViewModel,
                 orderViewModel = orderViewModel,
-                cartViewModel = cartViewModel,
                 onAddToCartEvent = { onEvent(it) },
-                onOrderVegetable = { checkoutItems = it },
+                onOrder = {
+                    productData = it
+                    Log.d("NavGraph", "productData: $productData\n$it")
+                },
             )
         }
         composable(route = Screen.OrderConfirmation.route) {
             onNavigate("Order Confirmation")
             ConfirmOrderRequestPanel(
                 navController = navController,
-                checkoutItems = checkoutItems,
+                checkoutItem = productData,
                 orderViewModel = orderViewModel,
                 userViewModel = userViewModel,
                 transactionViewModel = transactionViewModel,
