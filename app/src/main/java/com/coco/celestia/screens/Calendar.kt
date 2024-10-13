@@ -93,17 +93,17 @@ fun CalendarWidget(
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        Header(
+            yearMonth = yearMonth,
+            onPreviousMonthButtonClicked = onPreviousMonthButtonClicked,
+            onNextMonthButtonClicked = onNextMonthButtonClicked
+        )
         Row {
             repeat(days.size) {
                 val item = days[it]
                 DayItem(item, modifier = Modifier.weight(1f))
             }
         }
-        Header(
-            yearMonth = yearMonth,
-            onPreviousMonthButtonClicked = onPreviousMonthButtonClicked,
-            onNextMonthButtonClicked = onNextMonthButtonClicked
-        )
         Content(
             dates = dates,
             onDateClickListener = onDateClickListener

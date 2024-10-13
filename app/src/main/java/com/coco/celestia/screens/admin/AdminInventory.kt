@@ -5,11 +5,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -26,6 +29,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.Gray
@@ -33,7 +38,7 @@ import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 
 @Composable
-fun AdminInventory(productViewModel: ProductViewModel) {
+fun AdminInventory(productViewModel: ProductViewModel, navController: NavController) {
     val productData by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
     var query by remember { mutableStateOf("Coffee") }
@@ -53,7 +58,7 @@ fun AdminInventory(productViewModel: ProductViewModel) {
                 .padding(top = 7.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            TopBarInventory("Inventory")
+            TopBarInventory("Inventory", navController)
             Spacer(modifier = Modifier.height(40.dp))
 
             Row(
@@ -171,7 +176,7 @@ fun AdminItemCard(productName: String, quantity: Int) {
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBarInventory(title: String) {
+fun TopBarInventory(title: String, navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -179,15 +184,27 @@ fun TopBarInventory(title: String) {
     ) {
         TopAppBar(
             title = {
-                Box(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = title,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
+                        modifier = Modifier.weight(1f)
                     )
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        contentDescription = "Calendar Icon",
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .clickable {
+                            navController.navigate(Screen.Calendar.route)
+                        }
+                    )
+
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(

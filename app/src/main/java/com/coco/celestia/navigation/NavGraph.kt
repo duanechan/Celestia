@@ -19,6 +19,7 @@ import com.coco.celestia.screens.client.AddOrderPanel
 import com.coco.celestia.screens.client.ConfirmOrderRequestPanel
 import com.coco.celestia.screens.client.OrderDetailsPanel
 import com.coco.celestia.components.toast.ToastStatus
+import com.coco.celestia.screens.Calendar
 import com.coco.celestia.screens.ForgotPasswordScreen
 import com.coco.celestia.screens.LoginScreen
 import com.coco.celestia.screens.Profile
@@ -112,6 +113,10 @@ fun NavGraph(
                 onRegisterEvent = { onEvent(it) }
             )
         }
+        composable(route = Screen.Calendar.route) {
+            onNavigate("Calendar")
+            Calendar()
+        }
         composable(route = Screen.Farmer.route) {
             onNavigate("Dashboard")
             FarmerDashboard()
@@ -160,7 +165,7 @@ fun NavGraph(
         }
         composable(route = Screen.AdminInventory.route) {
             onNavigate("Inventory")
-            AdminInventory(productViewModel = productViewModel)
+            AdminInventory(productViewModel = productViewModel, navController = navController)
         }
         composable(route = Screen.AdminUserManagement.route) {
             onNavigate("User Management")
