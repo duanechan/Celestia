@@ -200,7 +200,6 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                         .fillMaxWidth(),
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center
-
                 )
             }
         }
