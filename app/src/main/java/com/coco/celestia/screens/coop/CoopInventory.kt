@@ -52,6 +52,15 @@ import com.coco.celestia.R
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.screens.admin.DropdownMenuItem
+import com.coco.celestia.ui.theme.DeliveredItem
+import com.coco.celestia.ui.theme.GreenBeans
+import com.coco.celestia.ui.theme.Kiniing
+import com.coco.celestia.ui.theme.Ordered
+import com.coco.celestia.ui.theme.Packed
+import com.coco.celestia.ui.theme.RawMeat
+import com.coco.celestia.ui.theme.RoastedBeans
+import com.coco.celestia.ui.theme.Sorted
+import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 
@@ -198,18 +207,20 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
     LaunchedEffect(Unit) {
         productViewModel.fetchProductByType(type.toString())
     }
-    Column( modifier = Modifier
+    Column(modifier = Modifier
         .fillMaxSize()
         .padding(top = 90.dp)
         .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row (modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)){
-            Text(text = type.toString(),
+        Row(modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)) {
+            Text(
+                text = type.toString(),
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(top = 10.dp, bottom = 10.dp),
-                color = fontColor)
+                color = fontColor
+            )
 
             Image(
                 painter = painterResource(id = iconRes),
@@ -222,6 +233,17 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
 
         productData.forEach { product ->
             Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = when (product.name) {
+                        "Green Beans" -> GreenBeans
+                        "Roasted Beans" -> RoastedBeans
+                        "Packaged Beans" -> Packed
+                        "Sorted Beans" -> Sorted
+                        "Kiniing" -> Kiniing
+                        "Raw Meat" -> RawMeat
+                        else -> Color.White // Default color if no match
+                    }
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
@@ -231,15 +253,27 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
                     modifier = Modifier
                         .padding(16.dp)
                 ) {
-                    Text(text = product.name,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold)
+                    Text(
+                        text = product.name,
+                        fontSize = 25.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier.padding(12.dp)
+                    )
                     Spacer(modifier = Modifier.weight(1f))
-                    Text(text = "${product.quantity}kg", fontSize = 35.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "${product.quantity}kg",
+                        fontSize = 35.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                    )
                 }
             }
         }
         Card(
+            colors = CardDefaults.cardColors(
+                containerColor = Ordered
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(100.dp)
@@ -249,12 +283,24 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
                 modifier = Modifier
                     .padding(16.dp)
             ) {
-                Text(text = "Ordered", fontSize = 18.sp)
+                Text(text = "Ordered",
+                    fontSize = 25.sp,
+                    modifier = Modifier.padding(10.dp),
+                    color = Color.White,
+                    fontFamily = mintsansFontFamily,
+                    fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.weight(1f))
-                Text(text = "kg", fontSize = 18.sp)
+                Text(text = "kg",
+                    fontSize = 35.sp,
+                    color = Color.White,
+                    fontFamily = mintsansFontFamily,
+                    fontWeight = FontWeight.Bold)
             }
         }
         Card(
+            colors = CardDefaults.cardColors(
+                containerColor = DeliveredItem
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(100.dp)
@@ -264,9 +310,18 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
                 modifier = Modifier
                     .padding(16.dp)
             ) {
-                Text(text = "Delivered", fontSize = 18.sp)
+                Text(text = "Delivered",
+                    fontSize = 25.sp,
+                    modifier = Modifier.padding(10.dp),
+                    color = Color.White,
+                    fontFamily = mintsansFontFamily,
+                    fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.weight(1f))
-                Text(text = "kg", fontSize = 18.sp)
+                Text(text = "kg",
+                    fontSize = 35.sp,
+                    color = Color.White,
+                    fontFamily = mintsansFontFamily,
+                    fontWeight = FontWeight.Bold)
             }
         }
     }
