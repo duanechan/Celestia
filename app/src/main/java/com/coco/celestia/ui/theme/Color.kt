@@ -47,3 +47,19 @@ val Brown1 = Color(0xFFDFC193)
 val Copper3 = Color(0xFFDAB09A)
 val Apricot = Color(0xFFF6E5C4)
 val Apricot2 = Color(0xFFE9C276)
+
+// Coop Items Palette
+val GreenBeans = Color(0xFF5A8F5C)
+val RoastedBeans = Color(0xFF362E26)
+val Packed = Color(0xFFB06520)
+val Sorted = Color(0xFF3E3E3E)
+val Ordered = Color(0xFFE0A83B)
+val DeliveredItem = Color(0xFF01A69E)
+val Kiniing = Color(0xFFE86A33)
+val RawMeat = Color(0xFFFB4949)
+
+// Coop Order Palette
+val PendingStatus = Color(0xFFDB873A)
+val PreparingStatus = Color(0xFFE86A33)
+val DeliveringStatus = Color(0xFF01A69E)
+val CompletedStatus = Color(0xFF7CC659)

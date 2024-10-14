@@ -2,6 +2,7 @@ package com.coco.celestia.screens.coop
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
@@ -42,9 +45,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.ui.theme.CompletedStatus
+import com.coco.celestia.ui.theme.DeliveringStatus
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.ui.theme.Orange
+import com.coco.celestia.ui.theme.PendingStatus
+import com.coco.celestia.ui.theme.PreparingStatus
+import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
@@ -77,7 +85,8 @@ fun OrderRequest(
         TopBar(title = "Orders")
         Row (modifier = Modifier
             .height(75.dp)
-            .padding(top = 5.dp)) {
+            .padding(top = 5.dp)
+            .background(Color.Transparent)) {
             SearchBar(
                 query = query,
                 onQueryChange = { query = it },
@@ -92,6 +101,65 @@ fun OrderRequest(
 
             }
             // TODO: Implement filter button here.
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .padding(horizontal = 8.dp)
+                .padding(top = 8.dp)
+                .background(Color.Transparent)
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            Button(
+                onClick = { /* Handle filter click */ },
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .height(40.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PendingStatus,
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Pending", fontFamily = mintsansFontFamily)
+            }
+            Button(
+                onClick = { /* Handle filter click */ },
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .height(40.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = PreparingStatus,
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Preparing", fontFamily = mintsansFontFamily)
+            }
+            Button(
+                onClick = { /* Handle filter click */ },
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .height(40.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = DeliveringStatus,
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Delivering", fontFamily = mintsansFontFamily)
+            }
+            Button(
+                onClick = { /* Handle filter click */ },
+                modifier = Modifier
+                    .height(40.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = CompletedStatus,
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Completed", fontFamily = mintsansFontFamily)
+            }
         }
 
         var orderCount = 1
@@ -208,40 +276,60 @@ fun PreparingOrderItem(
     orderViewModel: OrderViewModel,
 ) {
     val orderId = order.orderId.substring(5,9).uppercase()
-    
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.White)
             .padding(16.dp)
     ) {
-        Card {
+        Card () {
             Column(
                 modifier = Modifier
                     .padding(16.dp)
-                    .animateContentSize()
+                    .animateContentSize(),
             ) {
-                Text(
-                    text = orderCount.toString(),
-                    fontSize = 50.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black,
-                    modifier = Modifier.padding(5.dp)
-                )
-
-                Text(text = "Order ID: $orderId",
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold)
-                Text(
-                    text = if (order.orderData.type != "Vegetable") "${order.orderData.name}, ${order.orderData.quantity}kg" else order.orderData.name,
-                    fontSize = 30.sp, fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "${order.status} ●",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Light,
-                    color = Orange
-                )
+                Row {
+                    Text(
+                        text = orderCount.toString(),
+                        fontSize = 80.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black,
+                        modifier = Modifier.padding(5.dp)
+                    )
+                    Column (modifier = Modifier.padding(16.dp)) {
+                        Text(text = "Order ID: $orderId",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold)
+                        Text(
+                            text = if (order.orderData.type != "Vegetable") "${order.orderData.name}, ${order.orderData.quantity}kg" else order.orderData.name,
+                            fontSize = 25.sp, fontWeight = FontWeight.Bold
+                        )
+                        Text(text = "Client Name: $orderId",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold)
+                    }
+                }
+                Box(
+                    modifier = Modifier
+                        .padding(start = 5.dp)
+                        .background(
+                            when (order.status) {
+                                "PREPARING" -> PreparingStatus
+                                else -> Color.Gray
+                            },
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = order.status,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
                 Text(text = "${order.street}, ${order.barangay}")
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(text = order.orderDate)
@@ -286,8 +374,26 @@ fun PendingOrderItem(
                     .animateContentSize()
             ) {
                 Text(text = "${order.orderData.name}, ${order.orderData.quantity}kg",
-                    fontSize = 30.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif)
-                Text(text = "${order.status} ●", fontSize = 20.sp, fontWeight = FontWeight.Light, color = Orange)
+                    fontSize = 30.sp, fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily)
+                Box(
+                    modifier = Modifier
+                        .padding(5.dp)
+                        .background(
+                            when (order.status) {
+                                "PENDING" -> PendingStatus
+                                else -> Color.Gray
+                            },
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = order.status,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
                 Text(text = "${order.street}, ${order.barangay}")
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(text = order.orderDate)
@@ -301,9 +407,9 @@ fun PendingOrderItem(
                             action = "Accept"
                             showDialog = true
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Green)
+                        colors = ButtonDefaults.buttonColors(containerColor = CompletedStatus)
                     ) {
-                        Text("Accept")
+                        Text("Accept", fontFamily = mintsansFontFamily, fontWeight = FontWeight.Bold)
                     }
                 }
             }
