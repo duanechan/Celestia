@@ -114,8 +114,7 @@ fun NavGraph(
         composable(route = Screen.Calendar.route) {
             onNavigate("Calendar")
             Calendar(
-                orderViewModel = orderViewModel,
-                productViewModel = productViewModel
+                orderViewModel = orderViewModel
             )
         }
         composable(route = Screen.Farmer.route) {

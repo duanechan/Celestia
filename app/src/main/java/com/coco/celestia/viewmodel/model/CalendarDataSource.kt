@@ -9,6 +9,7 @@ class CalendarDataSource {
         return yearMonth.getDaysOfMonthStartingFromMonday()
             .map { date ->
                 CalendarUIState.Date(
+                    fullDate = date,
                     dayOfMonth = if (date.monthValue == yearMonth.monthValue) {
                         "${date.dayOfMonth}"
                     } else {

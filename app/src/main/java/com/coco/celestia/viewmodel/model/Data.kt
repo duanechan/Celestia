@@ -3,6 +3,7 @@ package com.coco.celestia.viewmodel.model
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import com.coco.celestia.viewmodel.UserState
+import java.time.LocalDate
 import java.time.YearMonth
 
 data class UserData(
@@ -63,11 +64,12 @@ data class CalendarUIState(
         )
     }
     data class Date(
+        val fullDate: LocalDate,
         val dayOfMonth: String,
         val isSelected: Boolean
     ) {
         companion object {
-            val Empty = Date("", false)
+            val Empty = Date(LocalDate.MIN, "", false)
         }
     }
 }
