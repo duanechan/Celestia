@@ -276,6 +276,7 @@ fun PreparingOrderItem(
     orderViewModel: OrderViewModel,
 ) {
     val orderId = order.orderId.substring(5,9).uppercase()
+    val orderClient = order.client
 
     Column(
         modifier = Modifier
@@ -305,7 +306,7 @@ fun PreparingOrderItem(
                             text = if (order.orderData.type != "Vegetable") "${order.orderData.name}, ${order.orderData.quantity}kg" else order.orderData.name,
                             fontSize = 25.sp, fontWeight = FontWeight.Bold
                         )
-                        Text(text = "Client Name: $orderId",
+                        Text(text = "Client Name: $orderClient",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold)
                     }
