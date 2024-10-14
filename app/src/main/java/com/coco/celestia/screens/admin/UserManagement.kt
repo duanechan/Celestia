@@ -176,23 +176,13 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
             ) {
                 Spacer(modifier = Modifier.width(15.dp))
                 Text(
-                    text = "EMAIL",
-                    modifier = Modifier
-                        .weight(1.5f)
-                        .fillMaxWidth()
-                        .offset(x=(-10).dp),
-                    softWrap = false,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Start
-                )
-                Text(
                     text = "NAME",
                     modifier = Modifier
                         .weight(2f)
                         .fillMaxWidth()
-                        .offset(x=(-12).dp),
+                        .offset(x=5.dp),
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.End
+                    textAlign = TextAlign.Start
                 )
                 Text(
                     text = "ROLE",
@@ -201,16 +191,15 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                         .fillMaxWidth()
                         .padding(start = 20.dp),
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.End
+                    textAlign = TextAlign.Start
                 )
                 Text(
                     text = "EDIT",
                     modifier = Modifier
                         .weight(2f)
-                        .fillMaxWidth()
-                        .padding(end = 10.dp),
+                        .fillMaxWidth(),
                     fontWeight = FontWeight.SemiBold,
-                    textAlign = TextAlign.End
+                    textAlign = TextAlign.Center
 
                 )
             }
@@ -225,34 +214,30 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = user.email,
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
-                        textAlign = TextAlign.End,
-                    )
-                    Text(
                         text = user.firstname + " " + user.lastname,
                         modifier = Modifier
                             .weight(2f)
                             .fillMaxWidth(),
-                        textAlign = TextAlign.End,
+                        textAlign = TextAlign.Start,
                     )
                     Text(
                         text = user.role,
                         modifier = Modifier
                             .weight(2f)
                             .fillMaxWidth(),
-                        textAlign = TextAlign.Center,
+                        textAlign = TextAlign.Start,
                     )
                     IconButton(
                         onClick = {
                             onEditUserClick(user)
-                        }
+                        },
+                        modifier = Modifier.offset(x = (-30).dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit User"
+                            contentDescription = "Edit User",
+                            modifier = Modifier
+
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))

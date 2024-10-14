@@ -200,6 +200,7 @@ fun TopBarInventory(title: String, navController: NavController) {
                         contentDescription = "Calendar Icon",
                         modifier = Modifier
                             .padding(10.dp)
+                            .offset(x = (-10).dp)
                             .clickable {
                             navController.navigate(Screen.Calendar.route)
                         }
