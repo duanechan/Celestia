@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.coco.celestia.screens.coop.TopBar
+import com.coco.celestia.screens.coop.GradientBrush
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.routeHandler
@@ -105,7 +105,38 @@ fun NavDrawerTopBar(
             )
         }
         "Farmer" -> { GradientTopBar(title = title) }
-//        "Coop" -> { TopBar(title = title) }
+        "Coop" -> { TopBar(title = title) }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TopBar(title: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(GradientBrush)  // Apply the gradient background
+    ) {
+        TopAppBar(
+            title = {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = title,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+                titleContentColor = Color.White
+            ),
+            modifier = Modifier
+                .background(Color.Transparent)
+        )
     }
 }
 

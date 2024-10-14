@@ -70,7 +70,10 @@ import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.google.firebase.auth.FirebaseAuth
+import java.text.SimpleDateFormat
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.UUID
 
@@ -390,18 +393,21 @@ fun ConfirmOrderRequestPanel(
                 popUpTo(Screen.OrderConfirmation.route) { inclusive = true }
             }
         } else {
+            val currentDateTime = LocalDateTime.now()
+            val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")
+            val formattedDateTime = currentDateTime.format(formatter).toString()
+
             val order = OrderData(
-                orderId = "ORDR{${UUID.randomUUID()}}",
-                orderDate = Date.from(Instant.now()).toString(),
+                orderId = "Order-${UUID.randomUUID()}",
+                orderDate = formattedDateTime,
                 status = "PENDING",
                 orderData = checkoutItem,
                 client = "${userData?.firstname} ${userData?.lastname}",
                 barangay = barangay,
                 street = streetNumber
             )
-            Log.d("AddOrder", "Order Data: $checkoutItem")
             val transaction = TransactionData(
-                "TRNSCTN{${UUID.randomUUID()}}",
+                "Transaction-${UUID.randomUUID()}",
                 order
             )
             orderViewModel.placeOrder(uid, order)

@@ -85,7 +85,6 @@ fun CoopInventory(navController: NavController) {
             .background(Color(0xFFEFF0EF))
             .verticalScroll(rememberScrollState())
     ){
-        TopBar("Inventory")
         Spacer(modifier = Modifier.height(15.dp))
 
         when (productState) {
@@ -325,7 +324,6 @@ fun ProductTypeInventory(navController: NavController, type: String?) {
             }
         }
     }
-    TopBar("Inventory")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -411,7 +409,6 @@ fun AddProductForm(
         )
         Spacer(modifier = Modifier.width(12.dp))
     }
-    TopBar("Inventory")
 }
 
 @Composable
@@ -460,36 +457,7 @@ val GradientBrush = Brush.linearGradient(
     end = Offset(500f, 0f)
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TopBar(title: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(GradientBrush)  // Apply the gradient background
-    ) {
-        TopAppBar(
-            title = {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = title,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent,
-                titleContentColor = Color.White
-            ),
-            modifier = Modifier
-                .background(Color.Transparent)
-        )
-    }
-}
+
 
 
 

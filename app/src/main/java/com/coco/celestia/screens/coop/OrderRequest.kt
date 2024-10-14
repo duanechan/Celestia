@@ -82,7 +82,6 @@ fun OrderRequest(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TopBar(title = "Orders")
         Row (modifier = Modifier
             .height(75.dp)
             .padding(top = 5.dp)
@@ -107,7 +106,7 @@ fun OrderRequest(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
-                .padding(horizontal = 8.dp)
+                .padding(8.dp)
                 .padding(top = 8.dp)
                 .background(Color.Transparent)
                 .horizontalScroll(rememberScrollState()),
@@ -161,8 +160,6 @@ fun OrderRequest(
                 Text("Completed", fontFamily = mintsansFontFamily)
             }
         }
-
-        var orderCount = 1
 
         when (orderState) {
             is OrderState.LOADING -> LoadingOrders()
@@ -233,7 +230,8 @@ fun OrderItem(
     when(orderStatus) {
         "PENDING" -> {
             PendingOrderItem(
-                order,
+                navController = navController,
+                order = order,
                 onAccept = {
                     orderViewModel.updateOrder(order.copy(status = "PREPARING"))
                     transactionViewModel.recordTransaction(
@@ -241,16 +239,6 @@ fun OrderItem(
                         TransactionData(
                             "TRNSCTN{${order.orderId}}",
                             order.copy(status = "PREPARING")
-                        )
-                    )
-                },
-                onReject = {
-                    orderViewModel.updateOrder(order.copy(status = "REJECTED"))
-                    transactionViewModel.recordTransaction(
-                        auth.currentUser?.uid.toString(),
-                        TransactionData(
-                            "TRNSCTN{${order.orderId}}",
-                            order.copy(status = "REJECTED")
                         )
                     )
                 }
@@ -303,7 +291,7 @@ fun PreparingOrderItem(
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold)
                         Text(
-                            text = if (order.orderData.type != "Vegetable") "${order.orderData.name}, ${order.orderData.quantity}kg" else order.orderData.name,
+                            text = "${order.orderData.name}, ${order.orderData.quantity}kg",
                             fontSize = 25.sp, fontWeight = FontWeight.Bold
                         )
                         Text(text = "Client Name: $orderClient",
@@ -336,8 +324,8 @@ fun PreparingOrderItem(
                 Text(text = order.orderDate)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
-                    horizontalArrangement = Arrangement.End,
-                    modifier = Modifier.fillMaxWidth()
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    modifier = Modifier.fillMaxWidth().padding(8.dp)
                 ) {
                     OutlinedButton(
                         onClick = {
@@ -355,9 +343,9 @@ fun PreparingOrderItem(
 
 @Composable
 fun PendingOrderItem(
+    navController: NavController,
     order: OrderData,
     onAccept: () -> Unit,
-    onReject: () -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var action by remember { mutableStateOf("") }
@@ -400,9 +388,17 @@ fun PendingOrderItem(
                 Text(text = order.orderDate)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier.fillMaxWidth().padding(8.dp)
                 ) {
+                    OutlinedButton(
+                        onClick = {
+                            navController.navigate(Screen.CoopProcessOrder.createRoute(order.orderId))
+                        },
+                        colors = ButtonDefaults.buttonColors(contentColor = Color.DarkGray, containerColor = Color.Transparent)
+                    ) {
+                        Text("View Order")
+                    }
                     Button(
                         onClick = {
                             action = "Accept"
@@ -424,19 +420,19 @@ fun PendingOrderItem(
                 showDialog = false
             },
             title = {
-                Text(text = "$action Order")
+                Text(text = "Order ${order.orderId.substring(5,9).uppercase()}")
             },
             text = {
-                Text(text = "Are you sure you want to $action this order?")
+                Text(text = "Are you sure you want to accept this order?")
             },
             confirmButton = {
                 Button(
                     onClick = {
                         showDialog = false
-                        if (action == "Accept") onAccept() else onReject()
+                        onAccept()
                     }
                 ) {
-                    Text("Yes")
+                    Text("Accept")
                 }
             },
             dismissButton = {
@@ -445,7 +441,7 @@ fun PendingOrderItem(
                         showDialog = false
                     }
                 ) {
-                    Text("No")
+                    Text("Cancel")
                 }
             }
         )
