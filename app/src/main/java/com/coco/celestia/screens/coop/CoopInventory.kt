@@ -52,6 +52,7 @@ import com.coco.celestia.R
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.screens.admin.DropdownMenuItem
+import com.coco.celestia.ui.theme.CoopBackground
 import com.coco.celestia.ui.theme.DeliveredItem
 import com.coco.celestia.ui.theme.GreenBeans
 import com.coco.celestia.ui.theme.Kiniing
@@ -82,10 +83,10 @@ fun CoopInventory(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .height(860.dp)
-            .background(Color(0xFFEFF0EF))
+            .background(CoopBackground)
             .verticalScroll(rememberScrollState())
     ){
-        Spacer(modifier = Modifier.height(15.dp))
+        Spacer(modifier = Modifier.height(100.dp))
 
         when (productState) {
             is ProductState.LOADING -> {
@@ -447,15 +448,7 @@ fun DropdownField(label: String, items: List<String>) {
 }
 
 
-// Define the gradient brush TODO: Move to a more appropriate folder
-val GradientBrush = Brush.linearGradient(
-    colors = listOf(
-        Color(0xFF83CA95),
-        Color(0xFF41644A)
-    ),
-    start = Offset(0f, 0f),
-    end = Offset(500f, 0f)
-)
+
 
 
 

@@ -1,5 +1,7 @@
 package com.coco.celestia.ui.theme
 
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 val Purple80 = Color(0xFFD0BCFF)
@@ -48,6 +50,9 @@ val Copper3 = Color(0xFFDAB09A)
 val Apricot = Color(0xFFF6E5C4)
 val Apricot2 = Color(0xFFE9C276)
 
+// Coop WhiteBG
+val CoopBackground = Color(0xFFF4F4F4)
+
 // Coop Items Palette
 val GreenBeans = Color(0xFF5A8F5C)
 val RoastedBeans = Color(0xFF362E26)
@@ -63,3 +68,13 @@ val PendingStatus = Color(0xFFDB873A)
 val PreparingStatus = Color(0xFFE86A33)
 val DeliveringStatus = Color(0xFF01A69E)
 val CompletedStatus = Color(0xFF7CC659)
+
+// Gradient Brush
+val GreenGradientBrush = Brush.linearGradient(
+    colors = listOf(
+        Color(0xFF83CA95),
+        Color(0xFF41644A)
+    ),
+    start = Offset(0f, 0f),
+    end = Offset(500f, 0f)
+)
