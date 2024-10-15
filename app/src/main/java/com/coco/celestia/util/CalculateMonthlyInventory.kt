@@ -9,7 +9,17 @@ import java.time.YearMonth
 fun calculateMonthlyInventory(orderData: List<OrderData>, productData: List<ProductData>): List<MonthlyInventory> {
     val currentMonth = YearMonth.now()
     val thisMonthOrders = orderData.filter {
-        YearMonth.from(LocalDate.parse(it.orderDate)) == currentMonth
+        if (it.orderDate.isEmpty()) {
+            false
+        } else {
+            try {
+                val orderYearMonth = YearMonth.from(LocalDate.parse(it.orderDate))
+                val isCurrentMonth = orderYearMonth == currentMonth
+                isCurrentMonth
+            } catch (e: Exception) {
+                false
+            }
+        }
     }
 
     val orderedQuantities = thisMonthOrders
