@@ -13,7 +13,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -29,7 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,9 +66,8 @@ fun AdminInventory(
             "Admin"
         )
     }
-    val context = LocalContext.current
     LaunchedEffect(orderData, productData) {
-        monthlyInventory = calculateMonthlyInventory(context, orderData, productData)
+        monthlyInventory = calculateMonthlyInventory(orderData, productData)
     }
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -220,7 +217,7 @@ fun AdminItemCard(productName: String, quantity: Int) {
         }
     }
 }
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun TopBarInventory(navController: NavController, onTabSelected: (String) -> Unit) {
     var selectedOption  by remember { mutableIntStateOf(0) }
