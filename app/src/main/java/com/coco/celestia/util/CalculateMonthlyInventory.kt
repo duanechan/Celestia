@@ -3,18 +3,26 @@ package com.coco.celestia.util
 import com.coco.celestia.viewmodel.model.MonthlyInventory
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.YearMonth
+import java.util.Locale
 
 fun calculateMonthlyInventory(orderData: List<OrderData>, productData: List<ProductData>): List<MonthlyInventory> {
+    val inputFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+    val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
     val currentMonth = YearMonth.now()
     val thisMonthOrders = orderData.filter {
-        if (it.orderDate.isEmpty()) {
+        if (it.targetDate.isEmpty()) {
             false
         } else {
             try {
-                val orderYearMonth = YearMonth.from(LocalDate.parse(it.orderDate))
-                val isCurrentMonth = orderYearMonth == currentMonth
+                val parsedDate = inputFormat.parse(it.targetDate)
+                val formattedDate = outputFormat.format(parsedDate!!)
+
+                val targetYearMonth = YearMonth.from(LocalDate.parse(formattedDate))
+                val isCurrentMonth = targetYearMonth == currentMonth
                 isCurrentMonth
             } catch (e: Exception) {
                 false

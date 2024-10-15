@@ -50,7 +50,9 @@ import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.model.CalendarUIState
 import com.coco.celestia.viewmodel.model.OrderData
+import java.text.SimpleDateFormat
 import java.time.YearMonth
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,6 +66,8 @@ fun Calendar(
     val orderState by orderViewModel.orderState.observeAsState(OrderState.EMPTY)
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     var targetDate by remember { mutableStateOf("") }
+    val inputFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+    val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     LaunchedEffect(key1 = targetDate) {
         orderViewModel.fetchAllOrders(
@@ -120,7 +124,11 @@ fun Calendar(
                     CircularProgressIndicator()
                 }
                 is OrderState.SUCCESS -> {
-                    val sameDate = orderData.filter { it.orderDate == targetDate }
+                    val sameDate = orderData.filter { order ->
+                        val parsedDate = inputFormat.parse(order.targetDate)
+                        val formattedDate = outputFormat.format(parsedDate!!)
+                        formattedDate == targetDate
+                    }
                     if (sameDate.isNotEmpty()) {
                         sameDate.forEach { order ->
                             OrderItem(order = order)
@@ -293,7 +301,7 @@ fun ContentItem(
     LaunchedEffect(Unit) {
         orderViewModel.fetchAllOrders("", "Admin")
     }
-    val targetDates = orderData.map { it.orderDate }.distinct()
+    val targetDates = orderData.map { it.targetDate }.distinct()
 
     Box(
         modifier = modifier
