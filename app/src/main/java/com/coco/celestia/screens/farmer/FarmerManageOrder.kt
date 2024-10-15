@@ -57,6 +57,9 @@ import com.coco.celestia.viewmodel.model.UserData
 import com.coco.celestia.viewmodel.ProductViewModel
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import com.coco.celestia.ui.theme.*
 import kotlinx.coroutines.selects.select
 
@@ -128,7 +131,8 @@ fun FarmerManageOrder(
                         .border(
                             BorderStroke(1.dp, color = Cocoa),
                             shape = RoundedCornerShape(16.dp)
-                        ),
+                        )
+                        .semantics { testTag = "android:id/searchBar" },
                     singleLine = true,
                     colors = TextFieldDefaults.textFieldColors(
                         containerColor = Color.Transparent,
@@ -152,6 +156,7 @@ fun FarmerManageOrder(
                                 BorderStroke(1.dp, color = Cocoa),
                                 shape = RoundedCornerShape(16.dp)
                             )
+                            .semantics { testTag = "android:id/filterButton" }
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.filter),
@@ -166,13 +171,15 @@ fun FarmerManageOrder(
                         onDismissRequest = { filterMenuExpanded = false },
                         modifier = Modifier
                             .background(color = LightApricot, shape = RoundedCornerShape(8.dp))
+                            .semantics { testTag = "android:id/filterMenu" }
                     ) {
                         DropdownMenuItem(
                             text = { Text("All Categories", color = Cocoa) },
                             onClick = {
                                 selectedCategory = ""
                                 filterMenuExpanded = false
-                            }
+                            },
+                            modifier = Modifier.semantics { testTag = "android:id/filterAllCategories" }
                         )
                         categoryOptions.forEach { category ->
                             DropdownMenuItem(
@@ -180,7 +187,8 @@ fun FarmerManageOrder(
                                 onClick = {
                                     selectedCategory = category
                                     filterMenuExpanded = false
-                                }
+                                },
+                                modifier = Modifier.semantics { testTag = "android:id/filterCategory_$category" }
                             )
                         }
                     }
@@ -199,7 +207,9 @@ fun FarmerManageOrder(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isOrderStatusView) GoldenYellow else Brown1
                     ),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics { testTag = "android:id/orderStatusButton" }
                 ) {
                     Text("Order Status", color = Cocoa)
                 }
@@ -211,7 +221,9 @@ fun FarmerManageOrder(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (!isOrderStatusView) GoldenYellow else Brown1
                     ),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics { testTag = "android:id/orderRequestButton" }
                 ) {
                     Text("Order Requests", color = Cocoa)
                 }
@@ -229,20 +241,26 @@ fun FarmerManageOrder(
                                 .padding(16.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator()
+                            CircularProgressIndicator(
+                                modifier = Modifier.semantics { testTag = "android:id/loadingIndicator" }
+                            )
                         }
                     }
                     is OrderState.ERROR -> {
                         Text(
                             "Failed to load orders: ${(orderState as OrderState.ERROR).message}",
                             color = Color.Red,
-                            modifier = Modifier.padding(16.dp)
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .semantics { testTag = "android:id/orderError" }
                         )
                     }
                     is OrderState.EMPTY -> {
                         Text(
                             "No orders available.",
-                            modifier = Modifier.padding(16.dp)
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .semantics { testTag = "android:id/emptyOrdersText" }
                         )
                     }
                     is OrderState.SUCCESS -> {
@@ -259,17 +277,21 @@ fun FarmerManageOrder(
                                     .padding(16.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("No orders match your search and filter criteria.")
+                                Text("No orders match your search and filter criteria.",
+                                    modifier = Modifier.semantics { testTag = "android:id/noMatchingOrdersText" })
                             }
                         } else {
                             filteredOrders.forEach { order ->
                                 if (userData == null) {
-                                    CircularProgressIndicator()
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.semantics { testTag = "android:id/userLoadingIndicator" }
+                                    )
                                 } else {
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(8.dp)
+                                            .semantics { testTag = "android:id/orderCard_${order.orderId}" }
                                     ) {
                                         ManageOrderCards(navController, order)
                                     }
@@ -345,11 +367,13 @@ fun ManageOrderCards(navController: NavController, order: OrderData) {
     Row(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 2.dp)
+            .semantics { testTag = "android:id/manageOrderRow_${order.orderId}" }
     ) {
         Card(
             modifier = Modifier
                 .weight(1f)
-                .height(180.dp),
+                .height(180.dp)
+                .semantics { testTag = "android:id/manageOrderCard+${order.orderId}" },
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.Transparent
@@ -377,20 +401,24 @@ fun ManageOrderCards(navController: NavController, order: OrderData) {
                     // Order Info
                     Column(
                         verticalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxHeight()
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .semantics { testTag = "android:id/orderInfoColumn_${order.orderId}" }
                     ) {
                         Text(
                             text = "Order ID: $orderId",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Cocoa
+                            color = Cocoa,
+                            modifier = Modifier.semantics { testTag = "android:id/orderIdText_${order.orderId}" }
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Client Name: $clientName",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Normal,
-                            color = Cocoa
+                            color = Cocoa,
+                            modifier = Modifier.semantics { testTag = "android:id/clientNameText_${order.orderId}" }
                         )
                     }
                     Icon(
@@ -400,6 +428,7 @@ fun ManageOrderCards(navController: NavController, order: OrderData) {
                         modifier = Modifier
                             .size(24.dp)
                             .align(Alignment.CenterVertically)
+                            .semantics { testTag = "navigateIcon_${order.orderId}" }
                     )
                 }
             }
@@ -429,7 +458,9 @@ fun OrderStatusCard(orderStatus: String) {
     }
 
     Card(
-        modifier = Modifier.size(100.dp, 180.dp),
+        modifier = Modifier
+            .size(100.dp, 180.dp)
+            .semantics { testTag = "android:id/orderStatusCard_$orderStatus" },
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
@@ -437,7 +468,8 @@ fun OrderStatusCard(orderStatus: String) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(16.dp)
+                .semantics { testTag = "android:id/orderStatusColumn_$orderStatus" },
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -445,7 +477,9 @@ fun OrderStatusCard(orderStatus: String) {
                 Icon(
                     painter = iconPainter as Painter,
                     contentDescription = orderStatus,
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier
+                        .size(40.dp)
+                        .semantics { testTag = "android:id/statusIcon_$orderStatus" },
                     tint = Cocoa
                 )
             } else {
@@ -453,7 +487,9 @@ fun OrderStatusCard(orderStatus: String) {
                     imageVector = iconPainter as ImageVector,
                     contentDescription = orderStatus,
                     tint = Cocoa,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier
+                        .size(32.dp)
+                        .semantics { testTag = "android:id/statusIcon_$orderStatus" }
                 )
             }
 
@@ -463,7 +499,8 @@ fun OrderStatusCard(orderStatus: String) {
                 text = orderStatus,
                 fontSize = 7.sp,
                 fontWeight = FontWeight.Bold,
-                color = Cocoa
+                color = Cocoa,
+                modifier = Modifier.semantics { testTag = "android:id/statusText_$orderStatus" }
             )
         }
     }
@@ -480,11 +517,13 @@ fun RequestCards(
     Row(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 8.dp)
+            .semantics { testTag = "android:id/requestRow_${order.orderId}" }
     ) {
         Card(
             modifier = Modifier
                 .weight(1f)
-                .height(175.dp),
+                .height(175.dp)
+                .semantics { testTag = "android:id/requestCard_${order.orderId}" },
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
                 containerColor = Color.Transparent
@@ -512,20 +551,24 @@ fun RequestCards(
                     // Order Info
                     Column(
                         verticalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxHeight()
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .semantics { testTag = "android:id/requestInfoColumn_${order.orderId}" }
                     ) {
                         Text(
                             text = "Order ID: $orderId",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Cocoa
+                            color = Cocoa,
+                            modifier = Modifier.semantics { testTag = "android:id/requestOrderIdText_${order.orderId}" }
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Client Name: $clientName",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Normal,
-                            color = Cocoa
+                            color = Cocoa,
+                            modifier = Modifier.semantics { testTag = "android:id/requestClientNameText_${order.orderId}" }
                         )
                     }
                     Icon(
@@ -535,6 +578,7 @@ fun RequestCards(
                         modifier = Modifier
                             .size(24.dp)
                             .align(Alignment.CenterVertically)
+                            .semantics { testTag = "android:id/requestNavigateIcon_${order.orderId}" }
                     )
                 }
             }
