@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -21,6 +22,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,13 +44,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.Cinnabar
+import com.coco.celestia.ui.theme.CompletedStatus
+import com.coco.celestia.ui.theme.DeliveringStatus
 import com.coco.celestia.ui.theme.GreenBeans
 import com.coco.celestia.ui.theme.Kiniing
 import com.coco.celestia.ui.theme.Packed
+import com.coco.celestia.ui.theme.PendingStatus
 import com.coco.celestia.ui.theme.PreparingStatus
 import com.coco.celestia.ui.theme.RawMeat
 import com.coco.celestia.ui.theme.RoastedBeans
 import com.coco.celestia.ui.theme.Sorted
+import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
@@ -119,7 +126,7 @@ fun ProcessOrder(order: OrderData) {
     Box(
         contentAlignment = Alignment.TopCenter,
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(top = 50.dp)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -128,30 +135,61 @@ fun ProcessOrder(order: OrderData) {
                 order = order,
                 orderCount = 1
             )
-            Text(text = "Available in Inventory ",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 5.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
-            Row (modifier = Modifier
-                .background(
-                    when (order.orderData.name) {
-                        "Green Beans" -> GreenBeans
-                        "Roasted Beans" -> RoastedBeans
-                        "Packaged Beans" -> Packed
-                        "Sorted Beans" -> Sorted
-                        "Kiniing" -> Kiniing
-                        "Raw Meat" -> RawMeat
-                        else -> Color.White
-                    }
-                )
-                .fillMaxWidth()
-                .height(80.dp),
-                horizontalArrangement = Arrangement.Center
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Delivery Info section
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceAround
             ) {
+                Column {
+                    Text(
+                        text = "Target Delivery:",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                    Text(text = "Location:", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                }
+                Column {
+                    Text(text = "December 10, 2024", fontSize = 14.sp)
+                    Text(text = "Idjay igid", fontSize = 14.sp)
+                }
+            }
 
+            Spacer(modifier = Modifier.height(16.dp))
 
+            // Change Status Buttons
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Button(
+                    onClick = { /* Handle delivering status */ },
+                    colors = ButtonDefaults.buttonColors(containerColor = DeliveringStatus),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp)
+                ) {
+                    Text(text = "Delivering",
+                        color = Color.White,
+                        fontFamily = mintsansFontFamily,
+                        fontWeight = FontWeight.Bold)
+                }
+                Button(
+                    onClick = { /* Handle complete status */ },
+                    colors = ButtonDefaults.buttonColors(containerColor = CompletedStatus),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 8.dp)
+                ) {
+                    Text(text = "Complete",
+                        color = Color.White,
+                        fontFamily = mintsansFontFamily,
+                        fontWeight = FontWeight.Bold)
+                }
             }
 
         }
@@ -198,6 +236,7 @@ fun OrderItem(product: ProductData,
                     }
                 }
                 Text(text = "Current Status: ",
+
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(start = 5.dp))
@@ -208,6 +247,9 @@ fun OrderItem(product: ProductData,
                         .background(
                             when (order.status) {
                                 "PREPARING" -> PreparingStatus
+                                "PENDING" -> PendingStatus
+                                "Delivering" -> DeliveringStatus
+                                "COMPLETED" -> CompletedStatus
                                 else -> Color.Gray
                             },
                             shape = RoundedCornerShape(50.dp)

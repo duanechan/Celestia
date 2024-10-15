@@ -50,6 +50,9 @@ val Copper3 = Color(0xFFDAB09A)
 val Apricot = Color(0xFFF6E5C4)
 val Apricot2 = Color(0xFFE9C276)
 
+// Coop WhiteBG
+val CoopBackground = Color(0xFFF4F4F4)
+
 // Coop Items Palette
 val GreenBeans = Color(0xFF5A8F5C)
 val RoastedBeans = Color(0xFF362E26)
@@ -67,7 +70,6 @@ val DeliveringStatus = Color(0xFF01A69E)
 val CompletedStatus = Color(0xFF7CC659)
 
 // Gradient Brush
-
 val GreenGradientBrush = Brush.linearGradient(
     colors = listOf(
         Color(0xFF83CA95),

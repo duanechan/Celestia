@@ -52,6 +52,7 @@ import com.coco.celestia.R
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.screens.admin.DropdownMenuItem
+import com.coco.celestia.ui.theme.CoopBackground
 import com.coco.celestia.ui.theme.DeliveredItem
 import com.coco.celestia.ui.theme.GreenBeans
 import com.coco.celestia.ui.theme.Kiniing
@@ -82,7 +83,7 @@ fun CoopInventory(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .height(860.dp)
-            .background(Color(0xFFEFF0EF))
+            .background(CoopBackground)
             .verticalScroll(rememberScrollState())
     ){
         Spacer(modifier = Modifier.height(100.dp))
