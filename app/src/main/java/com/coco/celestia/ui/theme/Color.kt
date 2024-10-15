@@ -71,7 +71,7 @@ val CompletedStatus = Color(0xFF7CC659)
 // Admin Palette
 val DarkBlue = Color(0xFF292B4D)
 val LightBlue = Color(0xFF5362bd)
-val BrownCoffee = Color(0xFF362E26)
+val BrownCoffee = Color(0xFF795548)
 val RedMeat = Color(0xFFFB4949)
 
 
