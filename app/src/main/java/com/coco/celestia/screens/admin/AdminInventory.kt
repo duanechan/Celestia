@@ -25,6 +25,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -33,9 +34,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.ui.theme.BlueGradientBrush
+import com.coco.celestia.ui.theme.BrownCoffee
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.Gray
+import com.coco.celestia.ui.theme.RedMeat
 import com.coco.celestia.util.calculateMonthlyInventory
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
@@ -103,7 +107,7 @@ fun AdminInventory(
                     },
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor =  if (selectedButton == "Coffee") Color(0xFF795548) else Color.White,
+                        containerColor =  if (selectedButton == "Coffee") BrownCoffee else Color.White,
                         contentColor = if (selectedButton == "Coffee") Color.White else Color.Black
                     ),
                     contentPadding = PaddingValues(0.dp),
@@ -121,7 +125,7 @@ fun AdminInventory(
                     },
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor =  if (selectedButton == "Meat") Color.Red else Color.White,
+                        containerColor =  if (selectedButton == "Meat") RedMeat else Color.White,
                         contentColor = if (selectedButton == "Meat") Color.White else Color.Black
                     ),
                     contentPadding = PaddingValues(0.dp),
@@ -221,7 +225,7 @@ fun AdminItemCard(productName: String, quantity: Int) {
 @Composable
 fun TopBarInventory(navController: NavController, onTabSelected: (String) -> Unit) {
     var selectedOption  by remember { mutableIntStateOf(0) }
-
+    Spacer(modifier = Modifier.height(35.dp))
     Column (
         modifier = Modifier
             .statusBarsPadding()
@@ -247,10 +251,14 @@ fun TopBarInventory(navController: NavController, onTabSelected: (String) -> Uni
         }
         Icon(
             imageVector = Icons.Default.DateRange,
+            tint = Color.White,
             contentDescription = "Calendar Icon",
             modifier = Modifier
                 .padding(10.dp)
                 .offset(x = (-10).dp)
+                .align(Alignment.CenterHorizontally)
+                .offset(x = 10.dp, y = 5.dp)
+                .size(30.dp)
                 .clickable {
                     navController.navigate(Screen.Calendar.route)
                 }

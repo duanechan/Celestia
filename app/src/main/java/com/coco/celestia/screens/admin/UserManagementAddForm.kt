@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.admin
 
+import android.content.ClipData.Item
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -62,7 +63,7 @@ fun AddUserForm(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Spacer(modifier = Modifier.height(50.dp))
+        Spacer(modifier = Modifier.height(80.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -78,7 +79,6 @@ fun AddUserForm(
                     contentDescription = "Back"
                 )
             }
-
             Spacer(modifier = Modifier.width(8.dp))
 
             Text(

@@ -50,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.coco.celestia.ui.theme.BlueGradientBrush
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.Gray
 import com.coco.celestia.viewmodel.UserViewModel
@@ -74,16 +75,15 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
         Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .background(DarkBlue)
+                .background(BlueGradientBrush)
                 .verticalScroll(rememberScrollState()) // Scrollable column
         ) {
-            TopBarAdmin("User Management")
 
             // Search Bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(DarkBlue)
+                    .background(BlueGradientBrush)
                     .padding(5.dp, 0.dp, 0.dp, 0.dp),
                         horizontalArrangement = Arrangement.Center
             ) {
@@ -97,7 +97,7 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
                     leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon") },
                     modifier = Modifier
                         .width(screenWidth * 0.75f) // will make the searchbar 90% of the screen width
-                        .offset(y = ((-35).dp))
+                        .offset(y = 75.dp)
                 ) {}
                 Spacer(modifier = Modifier.width(5.dp))
                 Button(
@@ -107,7 +107,7 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.LightGray
                     ),
-                    modifier = Modifier.padding(top = 9.dp)
+                    modifier = Modifier.padding(top = 120.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Menu,
@@ -246,36 +246,5 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
         item {
             Spacer(modifier = Modifier.height(90.dp))
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TopBarAdmin(title: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(DarkBlue)
-    ) {
-        TopAppBar(
-            title = {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = title,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent,
-                titleContentColor = Color.White
-            ),
-            modifier = Modifier
-                .background(Color.Transparent)
-        )
     }
 }

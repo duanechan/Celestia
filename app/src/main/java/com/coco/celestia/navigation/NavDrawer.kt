@@ -102,6 +102,7 @@ fun NavDrawerTopBar(
                 ),
             )
         }
+        "Admin" -> {TopBarAdmin(title = title)}
         "Farmer" -> { GradientTopBar(title = title) }
         "Coop" -> { TopBar(title = title) }
     }
@@ -114,6 +115,36 @@ fun TopBar(title: String) {
         modifier = Modifier
             .fillMaxWidth()
             .background(GreenGradientBrush)  // Apply the gradient background
+    ) {
+        TopAppBar(
+            title = {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = title,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = Color.Transparent,
+                titleContentColor = Color.White
+            ),
+            modifier = Modifier
+                .background(Color.Transparent)
+        )
+    }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TopBarAdmin(title: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(BlueGradientBrush)  // Apply the gradient background
     ) {
         TopAppBar(
             title = {
@@ -361,7 +392,7 @@ fun NavDrawerBottomBar(
             FloatingActionButton(
                 onClick = { navController.navigate(Screen.AdminAddUserManagementDB.route) },
                 shape = CircleShape,
-                containerColor = DarkBlue,
+                containerColor = LightBlue,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .offset(y = (-30).dp)

@@ -71,10 +71,10 @@ fun Calendar(
             "Admin"
         )
     }
-
     Scaffold(
         topBar = {
             TopAppBar(
+                modifier = Modifier.padding(top = 70.dp),
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
@@ -153,7 +153,6 @@ fun Calendar(
 
 @Composable
 fun OrderItem(order: OrderData) {
-    Column {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -172,7 +171,6 @@ fun OrderItem(order: OrderData) {
             }
         }
         // Add more details as needed
-    }
 }
 
 @Composable

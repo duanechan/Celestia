@@ -32,7 +32,6 @@ fun AdminDashboard() {
             .background(DarkBlue))
 
     Spacer(modifier = Modifier.height(50.dp))
-    TopBarAdmin("Dashboard")
     Text(text = "For Testing", fontSize = 50.sp, modifier =  Modifier.padding(50.dp,350.dp))
 
 }

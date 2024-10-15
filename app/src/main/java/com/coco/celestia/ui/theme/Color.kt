@@ -17,7 +17,6 @@ val Orange = Color(0xFFE86A33)
 val LightGreen = Color(0xFF41644A)
 val DarkGreen = Color(0xFF263A29)
 val BgColor = Color(0xFFF2E3DB)
-val DarkBlue = Color(0xFF292B4D)
 val Gray = Color(0xFF3E3E3E)
 
 //Client Palette
@@ -69,11 +68,27 @@ val PreparingStatus = Color(0xFFE86A33)
 val DeliveringStatus = Color(0xFF01A69E)
 val CompletedStatus = Color(0xFF7CC659)
 
+// Admin Palette
+val DarkBlue = Color(0xFF292B4D)
+val LightBlue = Color(0xFF5362bd)
+val BrownCoffee = Color(0xFF362E26)
+val RedMeat = Color(0xFFFB4949)
+
+
 // Gradient Brush
 val GreenGradientBrush = Brush.linearGradient(
     colors = listOf(
         Color(0xFF83CA95),
         Color(0xFF41644A)
+    ),
+    start = Offset(0f, 0f),
+    end = Offset(500f, 0f)
+)
+
+val BlueGradientBrush = Brush.linearGradient(
+    colors = listOf(
+        Color(0xFF5362bd),
+        Color(0xFF292B4D)
     ),
     start = Offset(0f, 0f),
     end = Offset(500f, 0f)
