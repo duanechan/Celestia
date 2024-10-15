@@ -57,11 +57,9 @@ import com.coco.celestia.viewmodel.model.UserData
 import com.coco.celestia.viewmodel.ProductViewModel
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import com.coco.celestia.ui.theme.*
-import kotlinx.coroutines.selects.select
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
