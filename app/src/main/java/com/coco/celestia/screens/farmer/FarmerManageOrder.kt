@@ -434,12 +434,12 @@ fun ManageOrderCards(navController: NavController, order: OrderData) {
 
         Spacer(modifier = Modifier.width(8.dp))
         // Status
-        OrderStatusCard(orderStatus)
+        OrderStatusCard(orderStatus = orderStatus, orderId = order.orderId)
     }
 }
 
 @Composable
-fun OrderStatusCard(orderStatus: String) {
+fun OrderStatusCard(orderStatus: String, orderId: String) {
     val backgroundColor = when (orderStatus) {
         "PREPARING" -> Brown1
         "PENDING" -> GoldenYellow
@@ -458,7 +458,7 @@ fun OrderStatusCard(orderStatus: String) {
     Card(
         modifier = Modifier
             .size(100.dp, 180.dp)
-            .semantics { testTag = "android:id/orderStatusCard_$orderStatus" },
+            .semantics { testTag = "android:id/orderStatusCard_$orderId" },
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
@@ -467,7 +467,7 @@ fun OrderStatusCard(orderStatus: String) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
-                .semantics { testTag = "android:id/orderStatusColumn_$orderStatus" },
+                .semantics { testTag = "android:id/orderStatusColumn_$orderId" },
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -477,7 +477,7 @@ fun OrderStatusCard(orderStatus: String) {
                     contentDescription = orderStatus,
                     modifier = Modifier
                         .size(40.dp)
-                        .semantics { testTag = "android:id/statusIcon_$orderStatus" },
+                        .semantics { testTag = "android:id/statusIcon_$orderId" },
                     tint = Cocoa
                 )
             } else {
@@ -487,7 +487,7 @@ fun OrderStatusCard(orderStatus: String) {
                     tint = Cocoa,
                     modifier = Modifier
                         .size(32.dp)
-                        .semantics { testTag = "android:id/statusIcon_$orderStatus" }
+                        .semantics { testTag = "android:id/statusIcon_$orderId" }
                 )
             }
 
@@ -498,7 +498,7 @@ fun OrderStatusCard(orderStatus: String) {
                 fontSize = 7.sp,
                 fontWeight = FontWeight.Bold,
                 color = Cocoa,
-                modifier = Modifier.semantics { testTag = "android:id/statusText_$orderStatus" }
+                modifier = Modifier.semantics { testTag = "android:id/statusText_$orderId" }
             )
         }
     }
