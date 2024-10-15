@@ -21,7 +21,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
@@ -41,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.coco.celestia.screens.coop.GradientBrush
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.routeHandler
@@ -115,7 +113,7 @@ fun TopBar(title: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(GradientBrush)  // Apply the gradient background
+            .background(GreenGradientBrush)  // Apply the gradient background
     ) {
         TopAppBar(
             title = {

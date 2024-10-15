@@ -77,11 +77,11 @@ fun OrderRequest(
             role = "Coop"
         )
     }
-
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.height(80.dp))
         Row (modifier = Modifier
             .height(75.dp)
             .padding(top = 5.dp)
@@ -105,7 +105,7 @@ fun OrderRequest(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
+                .height(65.dp)
                 .padding(8.dp)
                 .padding(top = 8.dp)
                 .background(Color.Transparent)
@@ -325,7 +325,9 @@ fun PreparingOrderItem(
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     horizontalArrangement = Arrangement.SpaceAround,
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
                 ) {
                     OutlinedButton(
                         onClick = {
@@ -389,7 +391,9 @@ fun PendingOrderItem(
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     horizontalArrangement = Arrangement.SpaceEvenly,
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
                 ) {
                     OutlinedButton(
                         onClick = {

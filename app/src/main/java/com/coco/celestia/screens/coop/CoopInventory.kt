@@ -85,7 +85,7 @@ fun CoopInventory(navController: NavController) {
             .background(Color(0xFFEFF0EF))
             .verticalScroll(rememberScrollState())
     ){
-        Spacer(modifier = Modifier.height(15.dp))
+        Spacer(modifier = Modifier.height(100.dp))
 
         when (productState) {
             is ProductState.LOADING -> {
@@ -447,15 +447,7 @@ fun DropdownField(label: String, items: List<String>) {
 }
 
 
-// Define the gradient brush TODO: Move to a more appropriate folder
-val GradientBrush = Brush.linearGradient(
-    colors = listOf(
-        Color(0xFF83CA95),
-        Color(0xFF41644A)
-    ),
-    start = Offset(0f, 0f),
-    end = Offset(500f, 0f)
-)
+
 
 
 

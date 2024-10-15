@@ -1,5 +1,7 @@
 package com.coco.celestia.ui.theme
 
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 val Purple80 = Color(0xFFD0BCFF)
@@ -63,3 +65,14 @@ val PendingStatus = Color(0xFFDB873A)
 val PreparingStatus = Color(0xFFE86A33)
 val DeliveringStatus = Color(0xFF01A69E)
 val CompletedStatus = Color(0xFF7CC659)
+
+// Gradient Brush
+
+val GreenGradientBrush = Brush.linearGradient(
+    colors = listOf(
+        Color(0xFF83CA95),
+        Color(0xFF41644A)
+    ),
+    start = Offset(0f, 0f),
+    end = Offset(500f, 0f)
+)
