@@ -89,7 +89,7 @@ fun App() {
             val currentConnectionState = checkNetworkConnection(context)
             if (firstLaunch || currentConnectionState != lastConnectionState) {
                 toastEvent = if (!currentConnectionState) {
-                    Triple(ToastStatus.FAILED, "You're offline. Please check your internet connection.", System.currentTimeMillis())
+                    Triple(ToastStatus.FAILED, "No internet connection.", System.currentTimeMillis())
                 } else {
                     Triple(ToastStatus.SUCCESSFUL, "Online!", System.currentTimeMillis())
                 }

@@ -55,6 +55,7 @@ import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 
 @Composable
@@ -69,9 +70,8 @@ fun NavGraph(
     onNavigate: (String) -> Unit,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
-    var productData by remember { mutableStateOf(ProductData()) }
+    var orderData by remember { mutableStateOf(OrderData()) }
     val productName by productViewModel.productName.observeAsState("")
-    var farmerName by remember { mutableStateOf("") }
     var addressName by remember { mutableStateOf("") }
     var quantityAmount by remember { mutableIntStateOf(0) }
     var productType by remember { mutableStateOf("") }
@@ -332,23 +332,20 @@ fun NavGraph(
                 navController = navController,
                 type = type,
                 productViewModel = productViewModel,
-                orderViewModel = orderViewModel,
+                userViewModel = userViewModel,
                 onAddToCartEvent = { onEvent(it) },
-                onOrder = {
-                    productData = it
-                    Log.d("NavGraph", "productData: $productData\n$it")
-                },
+                onOrder = { orderData = it },
             )
         }
         composable(route = Screen.OrderConfirmation.route) {
             onNavigate("Order Confirmation")
             ConfirmOrderRequestPanel(
                 navController = navController,
-                checkoutItem = productData,
+                order = orderData,
                 orderViewModel = orderViewModel,
                 userViewModel = userViewModel,
                 transactionViewModel = transactionViewModel,
-                onAddToCartEvent = { onEvent(it) }
+                onAddToCartEvent = { onEvent(it) },
             )
         }
         composable(route = Screen.Profile.route) {

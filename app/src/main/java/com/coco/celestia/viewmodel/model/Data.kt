@@ -17,6 +17,7 @@ data class UserData(
 data class OrderData(
     val orderId: String = "",
     val orderDate: String = "",
+    val targetDate: String = "",
     val status: String = "",
     var orderData: ProductData = ProductData(),
     val client: String = "",

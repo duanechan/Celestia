@@ -1,6 +1,5 @@
 package com.coco.celestia.screens.client
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,33 +22,36 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -57,9 +60,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.Popup
 import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.util.convertMillisToDate
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
@@ -70,11 +76,8 @@ import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.google.firebase.auth.FirebaseAuth
-import java.text.SimpleDateFormat
-import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Date
 import java.util.UUID
 
 @Composable
@@ -159,8 +162,9 @@ fun ProductCard(
 fun ProductTypeCard(
     product: ProductData,
     navController: NavController,
+    userViewModel: UserViewModel,
     onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit,
-    onOrder: (ProductData) -> Unit
+    onOrder: (OrderData) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var expanded by remember { mutableStateOf(false) }
@@ -184,7 +188,7 @@ fun ProductTypeCard(
 
     Card(
         modifier = Modifier
-            .padding(vertical = 16.dp)
+            .padding(vertical = 8.dp)
             .animateContentSize()
             .fillMaxWidth()
             .clickable { expanded = !expanded },
@@ -200,7 +204,7 @@ fun ProductTypeCard(
             Column {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     Column(
                         modifier = Modifier.weight(1f)
@@ -231,6 +235,7 @@ fun ProductTypeCard(
                 AnimatedVisibility(visible = expanded) {
                     QuantitySelector(
                         navController = navController,
+                        userViewModel = userViewModel,
                         productType = productType,
                         productName = productName,
                         maxQuantity = productQuantity,
@@ -248,10 +253,10 @@ fun ProductTypeCard(
 fun OrderDetailsPanel(
     navController: NavController,
     type: String?,
-    orderViewModel: OrderViewModel,
+    userViewModel: UserViewModel,
     productViewModel: ProductViewModel,
     onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit,
-    onOrder: (ProductData) -> Unit
+    onOrder: (OrderData) -> Unit
 ) {
     val productData by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState()
@@ -282,6 +287,7 @@ fun OrderDetailsPanel(
                                 ProductTypeCard(
                                     product,
                                     navController,
+                                    userViewModel = userViewModel,
                                     onAddToCartEvent = { onAddToCartEvent(it) },
                                     onOrder = { onOrder(it) }
                                 )
@@ -294,22 +300,46 @@ fun OrderDetailsPanel(
     }
 }
 
+typealias TargetDate = String
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuantitySelector(
     navController: NavController,
+    userViewModel: UserViewModel,
     productType: String?,
     productName: String?,
     maxQuantity: Int,
     onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit,
-    onOrder: (ProductData) -> Unit
+    onOrder: (OrderData) -> Unit
 ) {
-    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+    val userData by userViewModel.userData.observeAsState()
+    var showDatePicker by remember { mutableStateOf(false) }
+    var targetDateDialog by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState()
+    val selectedDate = datePickerState.selectedDateMillis?.let {
+        convertMillisToDate(it)
+    } ?: ""
     var quantity by remember { mutableIntStateOf(1) }
+    val currentDateTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    val formattedDateTime = currentDateTime.format(formatter).toString()
+
+    val order = OrderData(
+        orderId = "Order-${UUID.randomUUID()}",
+        orderDate = formattedDateTime,
+        targetDate = selectedDate,
+        status = "PENDING",
+        orderData = ProductData(productName.toString(), quantity, productType.toString()),
+        client = "${userData?.firstname} ${userData?.lastname}",
+        barangay = userData?.barangay.toString(),
+        street = userData?.streetNumber.toString()
+    )
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .padding(16.dp)
+            .fillMaxSize()
             .background(Color(0xFFFFF3E0), shape = RoundedCornerShape(24.dp))
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
@@ -340,7 +370,9 @@ fun QuantitySelector(
                     fontSize = 20.sp
                 ),
 //                suffix = { Text("kg", fontSize = 15.sp) },
-                modifier = Modifier.width(150.dp).padding(8.dp),
+                modifier = Modifier
+                    .width(150.dp)
+                    .padding(8.dp),
                 singleLine = true
             )
             Button(
@@ -354,9 +386,7 @@ fun QuantitySelector(
 
         Button(
             onClick = {
-                onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added order.", System.currentTimeMillis()))
-                onOrder(ProductData(productName.toString(), quantity, productType.toString()))
-                navController.navigate(Screen.OrderConfirmation.route)
+                targetDateDialog = true
             },
             modifier = Modifier.padding(top = 16.dp)
         ) {
@@ -368,13 +398,80 @@ fun QuantitySelector(
             color = Color.Gray,
             modifier = Modifier.padding(top = 8.dp)
         )
+        if (targetDateDialog) {
+            DatePickerDialog(
+                onDismissRequest = { targetDateDialog = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added order.", System.currentTimeMillis()))
+                            onOrder(order)
+                            navController.navigate(Screen.OrderConfirmation.route)
+                            targetDateDialog = false
+                        }
+                    ) {
+                        Text("Confirm Order")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { targetDateDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(text = "Do you want to place this order?", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "ID: ${order.orderId.substring(6, 10).uppercase()}")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "Product: ${productName.toString()}, ${quantity}kg")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(text = "Order Date: ${order.orderDate}")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = selectedDate,
+                        onValueChange = {},
+                        label = { Text("Target Date") },
+                        placeholder = { Text(selectedDate) },
+                        readOnly = true,
+                        trailingIcon = {
+                            IconButton(onClick = { showDatePicker = !showDatePicker }) {
+                                Icon(
+                                    imageVector = Icons.Default.DateRange,
+                                    contentDescription = ""
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    AnimatedVisibility(visible = showDatePicker) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .offset(y = (-19).dp)
+                        ) {
+                            DatePicker(
+                                state = datePickerState,
+                                showModeToggle = false,
+                                dateValidator = { it >= System.currentTimeMillis() },
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
 fun ConfirmOrderRequestPanel(
     navController: NavController,
-    checkoutItem: ProductData,
+    order: OrderData,
     userViewModel: UserViewModel,
     orderViewModel: OrderViewModel,
     transactionViewModel: TransactionViewModel,
@@ -393,19 +490,6 @@ fun ConfirmOrderRequestPanel(
                 popUpTo(Screen.OrderConfirmation.route) { inclusive = true }
             }
         } else {
-            val currentDateTime = LocalDateTime.now()
-            val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")
-            val formattedDateTime = currentDateTime.format(formatter).toString()
-
-            val order = OrderData(
-                orderId = "Order-${UUID.randomUUID()}",
-                orderDate = formattedDateTime,
-                status = "PENDING",
-                orderData = checkoutItem,
-                client = "${userData?.firstname} ${userData?.lastname}",
-                barangay = barangay,
-                street = streetNumber
-            )
             val transaction = TransactionData(
                 "Transaction-${UUID.randomUUID()}",
                 order
