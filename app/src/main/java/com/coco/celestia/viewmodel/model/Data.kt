@@ -1,8 +1,5 @@
 package com.coco.celestia.viewmodel.model
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import com.coco.celestia.viewmodel.UserState
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -51,8 +48,6 @@ data class LocationData(
     val barangay: String = ""
 )
 
-data class CartData(val items: MutableList<ProductData> = mutableListOf())
-
 data class CalendarUIState(
     val yearMonth: YearMonth,
     val dates: List<Date>
@@ -73,3 +68,9 @@ data class CalendarUIState(
         }
     }
 }
+
+data class MonthlyInventory(
+    val productName: String,
+    var remainingQuantity: Int,
+    val totalOrderedThisMonth: Int,
+)

@@ -157,7 +157,11 @@ fun NavGraph(
         }
         composable(route = Screen.AdminInventory.route) {
             onNavigate("Inventory")
-            AdminInventory(productViewModel = productViewModel, navController = navController)
+            AdminInventory(
+                orderViewModel = orderViewModel,
+                productViewModel = productViewModel,
+                navController = navController
+            )
         }
         composable(route = Screen.AdminUserManagement.route) {
             onNavigate("User Management")
