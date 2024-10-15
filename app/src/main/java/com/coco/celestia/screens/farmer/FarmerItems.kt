@@ -23,6 +23,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
@@ -50,21 +52,31 @@ fun FarmerItems(navController: NavController) {
     ) {
         when (farmerProductState) {
             is ProductState.LOADING -> {
-                Text("Loading products...", modifier = Modifier.padding(16.dp))
+                Text("Loading products...",
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .semantics { testTag = "android:id/loadingProductsText" })
             }
             is ProductState.ERROR -> {
                 Text(
                     "Failed to load products: ${(farmerProductState as ProductState.ERROR).message}",
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .semantics { testTag = "android:id/errorProductsText" }
                 )
             }
             is ProductState.EMPTY -> {
-                Text("No products available.", modifier = Modifier.padding(16.dp))
+                Text("No products available.",
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .semantics { testTag = "android:id/emptyProductsText" })
             }
             is ProductState.SUCCESS -> {
                 LazyColumn(
                     contentPadding = PaddingValues(top = 35.dp, bottom = 100.dp),
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .semantics { testTag = "android:id/farmerProductsList" }
                 ) {
                     item {
                         Box(
@@ -90,7 +102,9 @@ fun FarmerProductTypeInventory(product: ProductData, navController: NavControlle
             .padding(horizontal = 20.dp, vertical = 10.dp)
             .clickable {
                 navController.navigate(Screen.FarmerItemDetails.createRoute(product.name))
-            },
+            }
+            .semantics { testTag = "android:id/productCard_${product.name}" }
+        ,
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
         Box(
@@ -113,12 +127,14 @@ fun FarmerProductTypeInventory(product: ProductData, navController: NavControlle
                         text = product.name,
                         fontSize = 25.sp,
                         color = Cocoa,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { testTag = "android:id/productName_${product.name}" }
                     )
                     Text(
                         text = "${product.quantity}kg",
                         fontSize = 25.sp,
-                        color = Cocoa
+                        color = Cocoa,
+                        modifier = Modifier.semantics { testTag = "android:id/productQuantity_${product.name}" }
                     )
                 }
 
@@ -129,6 +145,7 @@ fun FarmerProductTypeInventory(product: ProductData, navController: NavControlle
                     modifier = Modifier
                         .size(24.dp)
                         .align(Alignment.Bottom)
+                        .semantics { testTag = "android:id/navigateIcon_${product.name}" }
                 )
             }
         }
