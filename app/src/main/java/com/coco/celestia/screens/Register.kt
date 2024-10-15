@@ -29,7 +29,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -95,7 +98,8 @@ fun RegisterScreen(
                                 onClick = {
                                     selectedRole = "Farmer"
                                     showRoleDialog = false
-                                }
+                                },
+                                modifier = Modifier.semantics { testTag = "android:id/farmerButton" }
                             ) {
                                 Text(text = "Farmer")
                             }
@@ -104,7 +108,8 @@ fun RegisterScreen(
                                 onClick = {
                                     selectedRole = "Client"
                                     showRoleDialog = false
-                                }
+                                },
+                                modifier = Modifier.semantics { testTag = "android:id/clientButton" }
                             ) {
                                 Text(text = "Client")
                             }
@@ -126,7 +131,8 @@ fun RegisterScreen(
                             navController.navigate(Screen.Login.route) {
                                 popUpTo(Screen.Login.route) { inclusive = true }
                             }
-                        }
+                        },
+                        modifier = Modifier.semantics { testTag = "android:id/cancelButton" }
                     ) {
                         Text(text = "Cancel")
                     }
@@ -157,7 +163,8 @@ fun RegisterScreen(
                 label = { Text(text = "Email") },
                 isError = !isValidEmail,
                 singleLine = true,
-                maxLines = 1
+                maxLines = 1,
+                modifier = Modifier.semantics { testTag = "android:id/emailFieldReg" }
             )
 
             Spacer(modifier = Modifier.height(2.dp))
@@ -179,7 +186,8 @@ fun RegisterScreen(
                 },
                 label = { Text(text = "First Name") },
                 singleLine = true,
-                maxLines = 1
+                maxLines = 1,
+                modifier = Modifier.semantics { testTag = "android:id/firstNameField" }
             )
 
             Spacer(modifier = Modifier.height(2.dp))
@@ -193,7 +201,8 @@ fun RegisterScreen(
                 },
                 label = { Text(text = "Last Name") },
                 singleLine = true,
-                maxLines = 1
+                maxLines = 1,
+                modifier = Modifier.semantics { testTag = "android:id/lastNameField" }
             )
 
             Spacer(modifier = Modifier.height(2.dp))
@@ -209,7 +218,8 @@ fun RegisterScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
-                maxLines = 1
+                maxLines = 1,
+                modifier = Modifier.semantics { testTag = "android:id/passwordField" }
             )
 
             Spacer(modifier = Modifier.height(2.dp))
@@ -225,7 +235,8 @@ fun RegisterScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 visualTransformation = PasswordVisualTransformation(),
                 singleLine = true,
-                maxLines = 1
+                maxLines = 1,
+                modifier = Modifier.semantics { testTag = "android:id/confirmPassField" }
             )
 
             Spacer(modifier = Modifier.height(15.dp))
@@ -239,6 +250,7 @@ fun RegisterScreen(
                     }
                 },
                 modifier = Modifier
+                    .semantics { testTag = "android:id/registerButton" }
                     .width(285.dp)
                     .height(50.dp)) {
                 Text(text = "Register")
