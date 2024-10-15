@@ -5,11 +5,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,13 +37,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.util.DateUtil
 import com.coco.celestia.util.getDisplayName
 import com.coco.celestia.viewmodel.CalendarViewModel
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.model.CalendarUIState
 import com.coco.celestia.viewmodel.model.OrderData
 import java.time.YearMonth
@@ -47,6 +56,7 @@ import java.time.YearMonth
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Calendar(
+    navController: NavController,
     orderViewModel: OrderViewModel,
     viewModel: CalendarViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
@@ -65,7 +75,21 @@ fun Calendar(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {Text(text = "Calendar")}
+                title = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = { navController.navigate(Screen.AdminInventory.route)}) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.Black
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Calendar")
+                    }
+                }
             )
         }
     ) { padding ->
@@ -102,7 +126,17 @@ fun Calendar(
                             OrderItem(order = order)
                         }
                     } else {
-                        Text("No orders found for this date.")
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                        ) {
+                            Text(
+                                text = "No orders found for this date.",
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                            )
+                        }
                     }
 
                 }
@@ -120,9 +154,23 @@ fun Calendar(
 @Composable
 fun OrderItem(order: OrderData) {
     Column {
-        Text("Order ID: ${order.orderId}")
-        Text("Client: ${order.client}")
-        Text("Status: ${order.status}")
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(8.dp)
+            ) {
+                Text(text = "Order Details", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Order ID: ${order.orderId}")
+                Text("Client: ${order.client}")
+                Text("Status: ${order.status}")
+            }
+        }
         // Add more details as needed
     }
 }
