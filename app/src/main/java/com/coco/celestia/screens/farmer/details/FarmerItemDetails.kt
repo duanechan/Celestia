@@ -36,6 +36,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import com.coco.celestia.screens.farmer.dialogs.EditQuantityDialog
 import com.coco.celestia.ui.theme.*
@@ -82,10 +85,14 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                 .background(color = BgColor)
                 .verticalScroll(rememberScrollState())
                 .padding(paddingValues)
+                .semantics { testTag = "android:id/farmerItemsDetailsScreen" }
         ) {
             when (productState) {
                 ProductState.LOADING -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                        .align(Alignment.Center)
+                        .semantics { testTag = "android:id/loadingIncidator" })
                 }
                 ProductState.SUCCESS -> {
                     val product = productData.find { it.name.equals(productName, ignoreCase = true) }
@@ -102,7 +109,8 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                 shape = RoundedCornerShape(16.dp),
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(270.dp),
+                                    .height(270.dp)
+                                    .semantics { testTag = "android:id/productCard_${product.name}," }
                                 colors = CardDefaults.cardColors(containerColor = Color.Transparent)
                             ) {
                                 Box(
@@ -126,7 +134,9 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                                 text = product.name,
                                                 fontSize = 60.sp,
                                                 fontWeight = Bold,
-                                                modifier = Modifier.fillMaxWidth(),
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .semantics { testTag = "android:id/productNameText" },
                                                 textAlign = TextAlign.Center,
                                                 color = Cocoa
                                             )
@@ -140,14 +150,17 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                                     text = "Quantity: $productQuantity kg",
                                                     fontSize = 20.sp,
                                                     textAlign = TextAlign.Center,
-                                                    color = Cocoa
+                                                    color = Cocoa,
+                                                    modifier = Modifier.semantics { testTag = "android:id/productQuantityText" }
                                                 )
 
                                                 Spacer(modifier = Modifier.width(8.dp))
 
                                                 IconButton(
                                                     onClick = { showEditDialog = true },
-                                                    modifier = Modifier.size(24.dp)
+                                                    modifier = Modifier
+                                                        .size(24.dp)
+                                                        .semantics { testTag = "android:id/editQuantityButton" }
                                                 ) {
                                                     Icon(
                                                         Icons.Filled.Edit,
@@ -167,6 +180,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                         modifier = Modifier
                                             .align(Alignment.CenterHorizontally)
                                             .padding(top = 20.dp)
+                                            .semantics { testTag = "android:id/orderLoadingIndicator" }
                                     )
                                 }
                                 OrderState.EMPTY -> {
@@ -177,6 +191,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                         modifier = Modifier
                                             .align(Alignment.CenterHorizontally)
                                             .padding(top = 20.dp)
+                                            .semantics { testTag = "android:id/noOrdersText" }
                                     )
                                 }
                                 OrderState.SUCCESS -> {
@@ -190,6 +205,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                             modifier = Modifier
                                                 .align(Alignment.CenterHorizontally)
                                                 .padding(top = 20.dp)
+                                                .semantics { testTag = "noOrdersForProductText" }
                                         )
                                     } else {
                                         OrderTable(orders = filteredOrders)
@@ -204,7 +220,9 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                             fontSize = 16.sp,
                             color = Color.Red,
                             fontWeight = Bold,
-                            modifier = Modifier.align(Alignment.Center)
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .semantics { testTag = "android:id/productNotFoundText" }
                         )
                     }
                 }
@@ -214,7 +232,9 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                         fontSize = 16.sp,
                         color = Color.Gray,
                         fontWeight = Bold,
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .semantics { testTag = "noProductsText" }
                     )
                 }
                 is ProductState.ERROR -> {
@@ -223,7 +243,9 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                         fontSize = 16.sp,
                         fontWeight = Bold,
                         color = Color.Red,
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .semantics { testTag = "android:id/errorLoadingProductsText" }
                     )
                 }
             }
@@ -251,6 +273,7 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 0.dp)
+            .semantics { testTag = "android:id/orderTable" }
     ) {
         // Table Header
         Spacer(modifier = Modifier.height(35.dp))
@@ -259,6 +282,7 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                 .fillMaxWidth()
                 .background(color = Sand)
                 .padding(20.dp)
+                .semantics { testTag = "android:id/orderTableHeader" }
         ) {
             Text(
                 text = "Order ID",
@@ -305,6 +329,7 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                 .fillMaxWidth()
                 .height(tableHeight)
                 .verticalScroll(rememberScrollState())
+                .semantics { testTag = "android:id/orderList" }
         ) {
             Column {
                 if (orders.isNotEmpty()) {
@@ -314,6 +339,7 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                                 .fillMaxWidth()
                                 .background(color = SoftOrange)
                                 .padding(50.dp)
+                                .semantics { testTag = "android:id/orderRow_${order.orderId}" }
                         ) {
                             Text(
                                 text = order.orderId.substring(5, 9),
@@ -356,6 +382,7 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                                 .fillMaxWidth()
                                 .background(color = SoftOrange)
                                 .padding(50.dp)
+                                .semantics { testTag = "android:id/blankRow_$it" }
                         ) {
                             Text(
                                 text = "---",
@@ -384,7 +411,8 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                         text = "No orders available",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp),
+                            .padding(8.dp)
+                            .semantics { testTag = "android:id/noOrdersAvailableText" },
                         textAlign = TextAlign.Center,
                         fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                         color = Color.Gray
@@ -394,7 +422,3 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
         }
     }
 }
-
-
-
-

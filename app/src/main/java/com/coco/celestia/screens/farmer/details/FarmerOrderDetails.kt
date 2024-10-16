@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -53,7 +55,8 @@ fun FarmerOrderDetails(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = BgColor),
+                    .background(color = BgColor)
+                    .semantics { testTag = "android:id/loadingOrderDetails"},
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(color = Cocoa)
@@ -64,7 +67,8 @@ fun FarmerOrderDetails(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = BgColor),
+                    .background(color = BgColor)
+                    .semantics { testTag = "android:id/orderNotFound" },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -84,12 +88,14 @@ fun FarmerOrderDetails(
                     .fillMaxSize()
                     .background(color = BgColor)
                     .padding(top = 80.dp)
+                    .semantics { testTag = "android:id/orderDetailsScreen" }
             ) {
                 // Order details card
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(430.dp),
+                        .height(430.dp)
+                        .semantics { testTag = "android:id/orderDetailsCard" },
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = Color.Transparent
@@ -109,7 +115,9 @@ fun FarmerOrderDetails(
                             modifier = Modifier.padding(16.dp)
                         ) {
                             Box(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics { testTag = "android:id/backButtonBox" },
                                 contentAlignment = Alignment.TopStart
                             ) {
                                 Text(
@@ -118,6 +126,7 @@ fun FarmerOrderDetails(
                                     color = Cocoa,
                                     modifier = Modifier
                                         .clickable { navController.popBackStack() }
+                                        .semantics { testTag = "android:id/backButton" }
                                 )
                             }
 
@@ -130,14 +139,18 @@ fun FarmerOrderDetails(
                                 fontSize = 20.sp,
                                 color = Cocoa,
                                 textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics { testTag = "android:id/orderIdLabel" }
                             )
                             Text(
                                 text = orderData.orderId.substring(5, 38),
                                 fontSize = 15.sp,
                                 color = Cocoa,
                                 textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics { testTag = "android:id/orderIdText" }
                             )
                             Spacer(modifier = Modifier.height(20.dp))
                             Text(
@@ -146,14 +159,18 @@ fun FarmerOrderDetails(
                                 color = Cocoa,
                                 textAlign = TextAlign.Center,
                                 fontWeight = FontWeight.Bold,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics { testTag = "android:id/deliveryAddressLabel" }
                             )
                             Text(
                                 text = "${orderData.street}, ${orderData.barangay}",
                                 fontSize = 15.sp,
                                 color = Cocoa,
                                 textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics { testTag = "android:id/deliveryAddressText" }
                             )
                             Spacer(modifier = Modifier.height(20.dp))
                             Row(
@@ -161,12 +178,15 @@ fun FarmerOrderDetails(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(start = 90.dp)
+                                    .semantics { testTag = "android:id/orderedProductRow" }
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.ShoppingCart,
                                     contentDescription = "Ordered Products Icon",
                                     tint = Cocoa,
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .semantics { testTag = "android:id/shoppingCartIcon" }
                                 )
 
                                 Spacer(modifier = Modifier.width(1.dp))
@@ -177,7 +197,9 @@ fun FarmerOrderDetails(
                                     textAlign = TextAlign.Start,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 20.sp,
-                                    modifier = Modifier.padding(start = 15.dp)
+                                    modifier = Modifier
+                                        .padding(start = 15.dp)
+                                        .semantics { testTag = "android:id/orderedProductLabel" }
                                 )
                             }
 
@@ -186,18 +208,23 @@ fun FarmerOrderDetails(
                             Row(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics { testTag = "android:id/productInfoRow" }
                             ) {
                                 Spacer(modifier = Modifier.width(50.dp))
                                 Column(
                                     verticalArrangement = Arrangement.Center,
                                     horizontalAlignment = Alignment.Start,
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .semantics { testTag = "android:id/productInfoColumn" }
                                 ) {
                                     Card(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(start = 20.dp, end = 50.dp),
+                                            .padding(start = 20.dp, end = 50.dp)
+                                            .semantics { testTag = "android:id/productCard" },
                                         shape = RoundedCornerShape(16.dp),
                                         elevation = CardDefaults.elevatedCardElevation(
                                             defaultElevation = 4.dp
@@ -215,7 +242,8 @@ fun FarmerOrderDetails(
                                             Column(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
-                                                    .padding(30.dp),
+                                                    .padding(30.dp)
+                                                    .semantics { testTag = "android:id/productColumn" },
                                                 horizontalAlignment = Alignment.CenterHorizontally
                                             ) {
                                                 Text(
@@ -223,6 +251,7 @@ fun FarmerOrderDetails(
                                                     fontWeight = FontWeight.Bold,
                                                     fontSize = 30.sp,
                                                     color = Cocoa,
+                                                    modifier = Modifier.semantics { testTag = "android:id/productNameText" }
                                                 )
                                                 Spacer(modifier = Modifier.height(8.dp))
                                                 Text(
@@ -230,6 +259,7 @@ fun FarmerOrderDetails(
                                                     fontWeight = FontWeight.Bold,
                                                     fontSize = 40.sp,
                                                     color = Cocoa,
+                                                    modifier = Modifier.semantics { testTag = "android:id/productQuantityText" }
                                                 )
                                             }
                                         }
