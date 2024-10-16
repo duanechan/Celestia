@@ -125,9 +125,14 @@ fun Calendar(
                 }
                 is OrderState.SUCCESS -> {
                     val sameDate = orderData.filter { order ->
-                        val parsedDate = inputFormat.parse(order.targetDate)
-                        val formattedDate = outputFormat.format(parsedDate!!)
-                        formattedDate == targetDate
+                        val targetDates = order.targetDate
+                        if (targetDate.isNotEmpty() && order.status != "PENDING") {
+                            val parsedDate = inputFormat.parse(targetDates)
+                            val formattedDate = parsedDate?.let { outputFormat.format(it) }
+                            formattedDate == targetDate
+                        } else {
+                            false
+                        }
                     }
                     if (sameDate.isNotEmpty()) {
                         sameDate.forEach { order ->
@@ -171,8 +176,6 @@ fun OrderItem(order: OrderData) {
                     .align(Alignment.CenterEnd)
                     .padding(8.dp)
             ) {
-                Text(text = "Order Details", fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(16.dp))
                 Text("Order ID: ${order.orderId}")
                 Text("Client: ${order.client}")
                 Text("Status: ${order.status}")
@@ -297,11 +300,21 @@ fun ContentItem(
     modifier: Modifier = Modifier
 ) {
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
+    val inputFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+    val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     LaunchedEffect(Unit) {
         orderViewModel.fetchAllOrders("", "Admin")
     }
-    val targetDates = orderData.map { it.targetDate }.distinct()
+
+    val targetDates = orderData
+        .filter { it.status != "PENDING" }
+        .map { order ->
+            val parsedDate = inputFormat.parse(order.targetDate)
+            val formattedDate = parsedDate?.let { outputFormat.format(it) }
+            formattedDate
+        }
+        .distinct()
 
     Box(
         modifier = modifier

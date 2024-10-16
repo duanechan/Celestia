@@ -82,7 +82,6 @@ fun AdminInventory(
                 .verticalScroll(rememberScrollState())
         ) {
             TopBarInventory(
-                navController,
                 onTabSelected = { selectedTab = it }
             )
 
@@ -223,7 +222,7 @@ fun AdminItemCard(productName: String, quantity: Int) {
 }
 
 @Composable
-fun TopBarInventory(navController: NavController, onTabSelected: (String) -> Unit) {
+fun TopBarInventory(onTabSelected: (String) -> Unit) {
     var selectedOption  by remember { mutableIntStateOf(0) }
     Spacer(modifier = Modifier.height(35.dp))
     Column (
@@ -249,19 +248,5 @@ fun TopBarInventory(navController: NavController, onTabSelected: (String) -> Uni
                 )
             }
         }
-        Icon(
-            imageVector = Icons.Default.DateRange,
-            tint = Color.White,
-            contentDescription = "Calendar Icon",
-            modifier = Modifier
-                .padding(10.dp)
-                .offset(x = (-10).dp)
-                .align(Alignment.CenterHorizontally)
-                .offset(x = 10.dp, y = 5.dp)
-                .size(30.dp)
-                .clickable {
-                    navController.navigate(Screen.Calendar.route)
-                }
-        )
     }
 }

@@ -1,7 +1,10 @@
 package com.coco.celestia.navigation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -12,6 +15,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.List
@@ -102,7 +106,7 @@ fun NavDrawerTopBar(
                 ),
             )
         }
-        "Admin" -> {TopBarAdmin(title = title)}
+        "Admin" -> {TopBarAdmin(title = title, navController = navController)}
         "Farmer" -> { GradientTopBar(title = title) }
         "Coop" -> { TopBar(title = title) }
     }
@@ -140,7 +144,7 @@ fun TopBar(title: String) {
 }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBarAdmin(title: String) {
+fun TopBarAdmin(title: String, navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -148,16 +152,32 @@ fun TopBarAdmin(title: String) {
     ) {
         TopAppBar(
             title = {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Row (
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ){
                     Text(
                         text = title,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = Color.White,
+                        modifier = Modifier.weight(1f)
                     )
                 }
+            },
+            actions = {
+                Icon(
+                    imageVector = Icons.Default.DateRange,
+                    tint = Color.White,
+                    contentDescription = "Calendar Icon",
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .size(30.dp)
+                        .clickable {
+                            navController.navigate(Screen.Calendar.route)
+                        }
+                )
             },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.Transparent,

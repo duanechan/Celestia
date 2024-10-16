@@ -14,19 +14,13 @@ fun calculateMonthlyInventory(orderData: List<OrderData>, productData: List<Prod
 
     val currentMonth = YearMonth.now()
     val thisMonthOrders = orderData.filter {
-        if (it.targetDate.isEmpty()) {
+        it.status != "PENDING" && it.targetDate.isNotEmpty() && try {
+            val parsedDate = inputFormat.parse(it.targetDate)
+            val formattedDate = outputFormat.format(parsedDate!!)
+            val targetYearMonth = YearMonth.from(LocalDate.parse(formattedDate))
+            targetYearMonth == currentMonth
+        } catch (e: Exception) {
             false
-        } else {
-            try {
-                val parsedDate = inputFormat.parse(it.targetDate)
-                val formattedDate = outputFormat.format(parsedDate!!)
-
-                val targetYearMonth = YearMonth.from(LocalDate.parse(formattedDate))
-                val isCurrentMonth = targetYearMonth == currentMonth
-                isCurrentMonth
-            } catch (e: Exception) {
-                false
-            }
         }
     }
 
