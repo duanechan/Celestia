@@ -110,7 +110,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(270.dp)
-                                    .semantics { testTag = "android:id/productCard_${product.name}," }
+                                    .semantics { testTag = "android:id/productCard_${product.name}" },
                                 colors = CardDefaults.cardColors(containerColor = Color.Transparent)
                             ) {
                                 Box(
