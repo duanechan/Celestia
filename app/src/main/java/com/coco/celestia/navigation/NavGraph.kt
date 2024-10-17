@@ -233,7 +233,8 @@ fun NavGraph(
             productType = type ?: ""
 
             ProductTypeInventory(
-                type = productType
+                type = productType,
+                userRole = userRole
             )
         }
         composable(route = Screen.CoopAddProductInventory.route) {

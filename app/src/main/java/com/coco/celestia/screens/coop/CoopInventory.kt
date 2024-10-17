@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -21,11 +23,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -51,8 +56,12 @@ import com.coco.celestia.ui.theme.RawMeat
 import com.coco.celestia.ui.theme.RoastedBeans
 import com.coco.celestia.ui.theme.Sorted
 import com.coco.celestia.ui.theme.mintsansFontFamily
+import com.coco.celestia.util.calculateMonthlyInventory
+import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.model.MonthlyInventory
+import com.coco.celestia.viewmodel.model.ProductData
 
 @Composable
 fun CoopInventory(navController: NavController, role: String) {
@@ -97,9 +106,13 @@ fun CoopInventory(navController: NavController, role: String) {
 }
 
 @Composable
-fun ProductTypeInventory(type: String?) {
+fun ProductTypeInventory(type: String?, userRole: String) {
     val productViewModel: ProductViewModel = viewModel()
+    val orderViewModel: OrderViewModel = viewModel()
+    val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val productData by productViewModel.productData.observeAsState(emptyList())
+    var monthlyInventory by remember { mutableStateOf<List<MonthlyInventory>>(emptyList()) }
+    var selectedTab by remember { mutableStateOf("Current Inventory") }
 
     val fontColor = when (type) {
         "Coffee" -> Color(0xFFB06520)
@@ -113,13 +126,25 @@ fun ProductTypeInventory(type: String?) {
 
     LaunchedEffect(Unit) {
         productViewModel.fetchProductByType(type.toString())
+        orderViewModel.fetchAllOrders(
+            "",
+            userRole
+        )
     }
+    LaunchedEffect(orderData, productData) {
+        monthlyInventory = calculateMonthlyInventory(orderData, productData)
+    }
+
     Column(modifier = Modifier
         .fillMaxSize()
-        .padding(top = 90.dp)
+        .padding(top = 10.dp)
         .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        TopBarCoopInventory(
+            onTabSelected = { selectedTab = it }
+        )
+
         Row(modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)) {
             Text(
                 text = type.toString(),
@@ -138,45 +163,12 @@ fun ProductTypeInventory(type: String?) {
             )
         }
 
-        productData.forEach { product ->
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = when (product.name) {
-                        "Green Beans" -> GreenBeans
-                        "Roasted Beans" -> RoastedBeans
-                        "Packaged Beans" -> Packed
-                        "Sorted Beans" -> Sorted
-                        "Kiniing" -> Kiniing
-                        "Raw Meat" -> RawMeat
-                        else -> Color.White // Default color if no match
-                    }
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .padding(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = product.name,
-                        fontSize = 25.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        modifier = Modifier.padding(12.dp)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        text = "${product.quantity}kg",
-                        fontSize = 35.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                    )
-                }
-            }
+        if (selectedTab == "Current Inventory") {
+            CoopItemList(productData)
+        } else {
+            CoopMonthlyItemList(monthlyInventory)
         }
+
         Card(
             colors = CardDefaults.cardColors(
                 containerColor = Ordered
@@ -229,6 +221,97 @@ fun ProductTypeInventory(type: String?) {
                     color = Color.White,
                     fontFamily = mintsansFontFamily,
                     fontWeight = FontWeight.Bold)
+            }
+        }
+        Spacer(modifier = Modifier.height(100.dp))
+    }
+}
+
+@Composable
+fun CoopItemList(itemList: List<ProductData>) {
+    if (itemList.isNotEmpty()) {
+        itemList.forEach { product ->
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = when (product.name) {
+                        "Green Beans" -> GreenBeans
+                        "Roasted Beans" -> RoastedBeans
+                        "Packaged Beans" -> Packed
+                        "Sorted Beans" -> Sorted
+                        "Kiniing" -> Kiniing
+                        "Raw Meat" -> RawMeat
+                        else -> Color.White // Default color if no match
+                    }
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .padding(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = product.name,
+                        fontSize = 25.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(
+                        text = "${product.quantity}kg",
+                        fontSize = 35.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CoopMonthlyItemList(itemList: List<MonthlyInventory>) {
+    if (itemList.isNotEmpty()) {
+        itemList.forEach { product ->
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = when (product.productName) {
+                        "Green Beans" -> GreenBeans
+                        "Roasted Beans" -> RoastedBeans
+                        "Packaged Beans" -> Packed
+                        "Sorted Beans" -> Sorted
+                        "Kiniing" -> Kiniing
+                        "Raw Meat" -> RawMeat
+                        else -> Color.White // Default color if no match
+                    }
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .padding(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = product.productName,
+                        fontSize = 25.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier.padding(12.dp)
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(
+                        text = "${product.remainingQuantity}kg",
+                        fontSize = 35.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                    )
+                }
             }
         }
     }
@@ -316,6 +399,36 @@ fun AddProductForm(
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
         )
         Spacer(modifier = Modifier.width(12.dp))
+    }
+}
+
+@Composable
+fun TopBarCoopInventory(onTabSelected: (String) -> Unit) {
+    var selectedOption  by remember { mutableIntStateOf(0) }
+    Spacer(modifier = Modifier.height(35.dp))
+    Column (
+        modifier = Modifier
+            .statusBarsPadding()
+            .wrapContentHeight()
+            .padding(vertical = 20.dp)
+    ){
+        TabRow(
+            selectedTabIndex = selectedOption,
+            modifier = Modifier.wrapContentHeight()
+        ) {
+            val tabTitles = listOf("Current Inventory", "Inventory This Month")
+            tabTitles.forEachIndexed { index, title ->
+                Tab(
+                    text = { Text(title)},
+                    selected = selectedOption == index,
+                    onClick = {
+                        selectedOption = index
+                        onTabSelected(title)
+                    },
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
+        }
     }
 }
 
