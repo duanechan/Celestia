@@ -1,4 +1,4 @@
-package com.coco.celestia.screens.client
+    package com.coco.celestia.screens.client
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -237,17 +237,16 @@ fun ClientOrder(
 
 @Composable
 fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController: NavController) {
-    var expanded by remember { mutableStateOf(false) }
     val clientName = "${user.firstname} ${user.lastname}"
-    val orderId = order.orderId.substring(5, 9).uppercase()
+    val orderId = order.orderId.substring(6, 10).uppercase()
     val orderStatus = order.status
 
     Row {
         Card(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .height(165.dp)
-                .padding(top = 0.dp, bottom = 10.dp, start = 27.dp, end = 0.dp)
+                .padding(top = 0.dp, bottom = 10.dp, start = 16.dp, end = 16.dp)
                 .clickable {
                     navController.navigate("ClientOrderDetails/${order.orderId}/$orderCount")
                 },
@@ -255,7 +254,6 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
         ) {
             Column(
                 Modifier
-                    .clickable { expanded = !expanded }
                     .padding(16.dp)
             ) {
                 Row {

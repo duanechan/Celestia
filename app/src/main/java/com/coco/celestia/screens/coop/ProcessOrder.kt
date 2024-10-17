@@ -127,7 +127,7 @@ fun ProcessOrder(order: OrderData) {
         contentAlignment = Alignment.TopCenter,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 50.dp)
+            .padding(top = 75.dp)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             OrderItem(
