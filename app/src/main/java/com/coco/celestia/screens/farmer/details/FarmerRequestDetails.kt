@@ -166,7 +166,7 @@ fun FarmerRequestDetails(
                                             .semantics { testTag = "android:id/orderIdLabel" }
                                     )
                                     Text(
-                                        text = orderData.orderId.substring(5, 38),
+                                        text = orderData.orderId.substring(6, 38),
                                         color = Cocoa,
                                         textAlign = TextAlign.Center,
                                         modifier = Modifier
@@ -208,9 +208,7 @@ fun FarmerRequestDetails(
                                             .semantics { testTag = "android:id/orderDateLabel" }
                                     )
                                     Text(
-                                        text = "${orderData.orderDate.take(10)}${
-                                            orderData.orderDate.takeLast(5)
-                                        }",
+                                        text = orderData.orderDate,
                                         color = Cocoa,
                                         textAlign = TextAlign.Center,
                                         modifier = Modifier

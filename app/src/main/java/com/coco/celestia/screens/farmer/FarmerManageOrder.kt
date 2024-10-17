@@ -108,7 +108,7 @@ fun FarmerManageOrder(
                 .verticalScroll(rememberScrollState())
                 .background(color = BgColor)
         ) {
-            // Search and Filter Row
+            // Search and Filter Row with Transaction Icon
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -142,6 +142,30 @@ fun FarmerManageOrder(
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
+
+                // Transaction Icon Button
+                IconButton(
+                    onClick = { navController.navigate(Screen.FarmerTransactions.route) },
+                    modifier = Modifier
+                        .background(
+                            color = Apricot,
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .border(
+                            BorderStroke(1.dp, color = Cocoa),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.transactions), // Add your transaction icon here
+                        contentDescription = "Transactions",
+                        tint = Cocoa
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Filter Icon Button
                 Box {
                     IconButton(
                         onClick = { filterMenuExpanded = true },
@@ -275,7 +299,7 @@ fun FarmerManageOrder(
                                     .padding(16.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("No orders match your search and filter criteria.",
+                                Text("Waiting for approval of requests.",
                                     modifier = Modifier.semantics { testTag = "android:id/noMatchingOrdersText" })
                             }
                         } else {
@@ -359,7 +383,7 @@ fun FarmerManageRequest(
 @Composable
 fun ManageOrderCards(navController: NavController, order: OrderData) {
     val clientName = order.client
-    val orderId = order.orderId.substring(5, 9).uppercase()
+    val orderId = order.orderId.substring(6, 10).uppercase()
     val orderStatus = order.status
 
     Row(
@@ -510,7 +534,7 @@ fun RequestCards(
     order: OrderData,
 ) {
     val clientName = order.client
-    val orderId = order.orderId.substring(5, 9).uppercase()
+    val orderId = order.orderId.substring(6, 10).uppercase()
 
     Row(
         modifier = Modifier

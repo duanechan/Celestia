@@ -18,7 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.viewmodel.ProductState
@@ -342,7 +341,7 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                                 .semantics { testTag = "android:id/orderRow_${order.orderId}" }
                         ) {
                             Text(
-                                text = order.orderId.substring(5, 9),
+                                text = order.orderId.substring(6, 10),
                                 modifier = Modifier.weight(1f),
                                 fontFamily = mintsansFontFamily,
                                 textAlign = TextAlign.Left,

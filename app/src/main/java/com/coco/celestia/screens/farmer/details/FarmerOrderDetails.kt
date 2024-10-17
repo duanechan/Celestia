@@ -3,8 +3,6 @@ package com.coco.celestia.screens.farmer.details
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -94,7 +92,7 @@ fun FarmerOrderDetails(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(430.dp)
+                        .height(390.dp)
                         .semantics { testTag = "android:id/orderDetailsCard" },
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
@@ -144,7 +142,7 @@ fun FarmerOrderDetails(
                                     .semantics { testTag = "android:id/orderIdLabel" }
                             )
                             Text(
-                                text = orderData.orderId.substring(5, 38),
+                                text = orderData.orderId.substring(6, 38),
                                 fontSize = 15.sp,
                                 color = Cocoa,
                                 textAlign = TextAlign.Center,
@@ -242,7 +240,7 @@ fun FarmerOrderDetails(
                                             Column(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
-                                                    .padding(30.dp)
+                                                    .padding(15.dp)
                                                     .semantics { testTag = "android:id/productColumn" },
                                                 horizontalAlignment = Alignment.CenterHorizontally
                                             ) {

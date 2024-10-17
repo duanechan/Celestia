@@ -43,6 +43,7 @@ import com.coco.celestia.screens.farmer.FarmerDashboard
 import com.coco.celestia.screens.farmer.FarmerItems
 import com.coco.celestia.screens.farmer.FarmerManageOrder
 import com.coco.celestia.screens.farmer.FarmerProductTypeInventory
+import com.coco.celestia.screens.farmer.FarmerTransactions
 import com.coco.celestia.screens.farmer.details.FarmerItemDetails
 import com.coco.celestia.screens.farmer.details.FarmerOrderDetails
 import com.coco.celestia.screens.farmer.details.FarmerRequestDetails
@@ -133,6 +134,10 @@ fun NavGraph(
         composable(route = Screen.FarmerItems.route) {
             onNavigate("Vegetables")
             FarmerItems(navController = navController)
+        }
+        composable(route = Screen.FarmerTransactions.route) {
+            onNavigate("Transactions")
+            FarmerTransactions(navController = navController)
         }
         composable(route = Screen.Client.route) {
             onNavigate("Dashboard")
