@@ -14,9 +14,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 sealed class OrderState {
-    object LOADING : OrderState()
-    object SUCCESS : OrderState()
-    object EMPTY : OrderState()
+    data object LOADING : OrderState()
+    data object SUCCESS : OrderState()
+    data object EMPTY : OrderState()
     data class ERROR(val message: String) : OrderState()
 }
 
@@ -128,6 +128,8 @@ class OrderViewModel : ViewModel() {
                         userSnapshot.children.mapNotNull { orderSnapshot ->
                             orderSnapshot.getValue(OrderData::class.java)
                         }.filter { order ->
+                                val isCoffee = order.orderData.type.equals("Coffee", ignoreCase = true)
+                                val isMeat = order.orderData.type.equals("Meat", ignoreCase = true)
                                 val isCoffeeOrMeat = order.orderData.type.equals("Coffee", ignoreCase = true) ||
                                     order.orderData.type.equals("Meat", ignoreCase = true)
                                 val isVegetable = order.orderData.type.equals("Vegetable", ignoreCase = true)
@@ -137,6 +139,8 @@ class OrderViewModel : ViewModel() {
                                 }
                                 when (role) {
                                     "Coop", "Admin" -> isCoffeeOrMeat && matchesFilter
+                                    "CoopCoffee" -> isCoffee && matchesFilter
+                                    "CoopMeat" -> isMeat && matchesFilter
                                     "Farmer" -> isVegetable && matchesFilter
                                     "Client" -> matchesFilter
                                     else -> false

@@ -4,7 +4,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -13,9 +12,9 @@ import kotlinx.coroutines.tasks.await
 import kotlin.reflect.full.memberProperties
 
 sealed class ProductState {
-    object LOADING : ProductState()
-    object SUCCESS : ProductState()
-    object EMPTY : ProductState()
+    data object LOADING : ProductState()
+    data object SUCCESS : ProductState()
+    data object EMPTY : ProductState()
     data class ERROR(val message: String) : ProductState()
 }
 
@@ -110,6 +109,8 @@ class ProductViewModel : ViewModel() {
                     val products = snapshot.children.mapNotNull {
                         it.getValue(ProductData::class.java)
                     }.filter { product ->
+                        val coffee = product.type.equals("Coffee", ignoreCase = true)
+                        val meat = product.type.equals("Meat", ignoreCase = true)
                         val coffeeOrMeat = product.type.equals("Coffee", ignoreCase = true) ||
                                 product.type.equals("Meat", ignoreCase = true)
                         val vegetable = product.type.equals("Vegetable", ignoreCase = true)
@@ -121,6 +122,8 @@ class ProductViewModel : ViewModel() {
                         }
                         when (role) {
                             "Coop", "Admin" -> coffeeOrMeat && filtered
+                            "CoopCoffee" -> coffee && filtered
+                            "CoopMeat" -> meat && filtered
                             "Farmer" -> vegetable && filtered
                             else -> filtered
                         }

@@ -1,12 +1,10 @@
 package com.coco.celestia.navigation
 
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -61,6 +59,7 @@ import com.coco.celestia.viewmodel.model.ProductData
 @Composable
 fun NavGraph(
     navController: NavHostController,
+    userRole: String,
     contactViewModel: ContactViewModel = viewModel(),
     locationViewModel: LocationViewModel = viewModel(),
     orderViewModel: OrderViewModel = viewModel(),
@@ -201,13 +200,14 @@ fun NavGraph(
             onNavigate("Orders")
             OrderRequest(
                 navController = navController,
+                userRole = userRole,
                 orderViewModel = orderViewModel,
                 transactionViewModel = transactionViewModel
             )
         }
         composable(route = Screen.CoopInventory.route) {
             onNavigate("Inventory")
-            CoopInventory(navController = navController)
+            CoopInventory(navController = navController, role = userRole)
         }
         composable(
             route = Screen.CoopProcessOrder.route,
@@ -233,7 +233,6 @@ fun NavGraph(
             productType = type ?: ""
 
             ProductTypeInventory(
-                navController = navController,
                 type = productType
             )
         }

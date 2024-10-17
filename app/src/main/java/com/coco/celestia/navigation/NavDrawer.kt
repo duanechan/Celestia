@@ -106,49 +106,21 @@ fun NavDrawerTopBar(
                 ),
             )
         }
-        "Admin" -> {TopBarAdmin(title = title, navController = navController)}
+        "Admin" -> {TopBar(title = title, navController = navController, gradient = BlueGradientBrush)}
         "Farmer" -> { GradientTopBar(title = title) }
-        "Coop" -> { TopBar(title = title) }
+        "Coop" -> { TopBar(title = title, navController = navController, gradient = GreenGradientBrush) }
+        "CoopCoffee" -> { TopBar(title = title, navController = navController, gradient = GreenGradientBrush) }
+        "CoopMeat" -> { TopBar(title = title, navController = navController, gradient = GreenGradientBrush) }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(title: String) {
+fun TopBar(title: String, navController: NavController, gradient: Brush) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(GreenGradientBrush)  // Apply the gradient background
-    ) {
-        TopAppBar(
-            title = {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = title,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Transparent,
-                titleContentColor = Color.White
-            ),
-            modifier = Modifier
-                .background(Color.Transparent)
-        )
-    }
-}
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TopBarAdmin(title: String, navController: NavController) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(BlueGradientBrush)  // Apply the gradient background
+            .background(gradient)  // Apply the gradient background
     ) {
         TopAppBar(
             title = {
@@ -261,7 +233,7 @@ fun NavDrawerBottomBar(
                 modifier = Modifier.semantics { testTag = "android:id/dashboardPage" }
             )
 
-            if(role == "Coop" || role == "Client" || role == "Farmer") {
+            if(role == "Coop" || role == "CoopCoffee" || role == "CoopMeat"|| role == "Client" || role == "Farmer") {
                 NavigationBarItem(
                     icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Orders", tint = if (role == "Client") VeryDarkPurple else bottomBarColors.second) },
                     label = { Text("Orders", color = if (role == "Client") Color.White else bottomBarColors.second, fontFamily = mintsansFontFamily) },
@@ -282,7 +254,7 @@ fun NavDrawerBottomBar(
                 )
             }
 
-            if (role == "Admin" || role == "Coop" || role == "Farmer") {
+            if (role == "Admin" || role == "Coop" || role == "CoopCoffee" || role == "CoopMeat" || role == "Farmer") {
                 val (backgroundColor, contentColor) = bottomColorConfig(role)
 
                 NavigationBarItem(
@@ -354,7 +326,7 @@ fun NavDrawerBottomBar(
             )
         }
 
-        if (role == "Coop" && currentDestination == Screen.CoopProductInventory.route) {
+        if ((role == "Coop" || role == "CoopCoffee" || role == "CoopMeat") && currentDestination == Screen.CoopProductInventory.route) {
             FloatingActionButton(
                 onClick = { navController.navigate(Screen.CoopAddProductInventory.route) },
                 shape = CircleShape,
@@ -372,7 +344,7 @@ fun NavDrawerBottomBar(
                 )
             }
         }
-        if (role == "Coop" && currentDestination == Screen.CoopAddProductInventory.route) {
+        if ((role == "Coop" || role == "CoopCoffee" || role == "CoopMeat") && currentDestination == Screen.CoopAddProductInventory.route) {
             FloatingActionButton(
                 onClick = { navController.navigate(Screen.CoopAddProductInventoryDB.route) },
                 shape = CircleShape,
@@ -434,6 +406,8 @@ fun bottomColorConfig(role: String): Pair<Color, Color> {
         "Admin" -> Pair(Color.White, DarkBlue)
         "Client" -> Pair(LightOrange, Color.White)
         "Coop" -> Pair(Color.White, DarkGreen)
+        "CoopCoffee" -> Pair(Color.White, DarkGreen)
+        "CoopMeat" -> Pair(Color.White, DarkGreen)
         "Farmer" -> Pair(Yellow4, Cocoa)
         else -> Pair(Color.White, Color.Black) // Default
     }

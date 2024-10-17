@@ -145,6 +145,7 @@ fun App() {
     ) { // APP CONTENT
         NavGraph(
             navController = navController,
+            userRole = userData?.role.toString(),
             onNavigate = { topBarTitle = it },
             onEvent = { toastEvent = Triple(it.first, it.second, it.third) }
         )
