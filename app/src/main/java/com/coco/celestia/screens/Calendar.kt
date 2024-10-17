@@ -5,13 +5,16 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.CircularProgressIndicator
@@ -22,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -51,7 +55,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Calendar(
-    navController: NavController,
+    userRole: String,
     orderViewModel: OrderViewModel,
     viewModel: CalendarViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
@@ -65,10 +69,16 @@ fun Calendar(
     LaunchedEffect(key1 = targetDate) {
         orderViewModel.fetchAllOrders(
             "",
-            "Admin"
+            userRole
         )
     }
-    Scaffold { padding ->
+    Scaffold (
+        topBar = {
+            TopAppBar(
+                title = {}
+            )
+        }
+    ) { padding ->
         Surface (
             modifier = Modifier
                 .fillMaxSize()
