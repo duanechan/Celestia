@@ -99,14 +99,15 @@ fun FarmerManageOrder(
         )
         userViewModel.fetchUser(uid)
     }
+    Spacer(modifier = Modifier.width(30.dp))
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(top = 80.dp, bottom = 25.dp)
-                .verticalScroll(rememberScrollState())
                 .background(color = BgColor)
+                .padding(top = 100.dp, bottom = 25.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             // Search and Filter Row with Transaction Icon
             Row(

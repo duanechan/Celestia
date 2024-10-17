@@ -48,7 +48,7 @@ fun FarmerItems(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(color = BgColor)
-            .padding(top = 60.dp)
+            .padding(top = 80.dp, bottom = 30.dp)
     ) {
         when (farmerProductState) {
             is ProductState.LOADING -> {

@@ -104,7 +104,7 @@ fun FarmerRequestDetails(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(color = BgColor)
-                    .padding(top = 10.dp)
+                    .padding(top = 30.dp)
                     .semantics { testTag = "android:id/orderDetailsScreen" }
             ) {
                 item {
@@ -127,7 +127,7 @@ fun FarmerRequestDetails(
                             Column(
                                 modifier = Modifier
                                     .padding(
-                                        top = 60.dp,
+                                        top = 80.dp,
                                         start = 40.dp,
                                         end = 40.dp,
                                         bottom = 20.dp
