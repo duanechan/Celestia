@@ -157,11 +157,11 @@ fun FarmerManageOrder(
                             shape = RoundedCornerShape(16.dp)
                         )
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.coffeeicon), // Add your transaction icon here
-                        contentDescription = "Transactions",
-                        tint = Cocoa
-                    )
+//                    Icon(
+//                        painter = painterResource(id = R.drawable.transactions), // Add your transaction icon here
+//                        contentDescription = "Transactions",
+//                        tint = Cocoa
+//                    )
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -176,7 +176,7 @@ fun FarmerManageOrder(
                                 shape = RoundedCornerShape(16.dp)
                             )
                             .border(
-                                BorderStroke(1.dp, color = Cocoa),
+                                BorderStroke(1. dp, color = Cocoa),
                                 shape = RoundedCornerShape(16.dp)
                             )
                             .semantics { testTag = "android:id/filterButton" }
