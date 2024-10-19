@@ -308,30 +308,36 @@ fun ProfileScreen(
                 }
             }
         }
-        Button(
-            onClick = { saveInfoDialog = true },
-            enabled = saveButtonEnabled,
-            modifier = Modifier.semantics { testTag = "android:id/saveButton" }
-        ) {
-            Text(text = "Save")
+
+        Row(modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center){
+            Button(
+                onClick = { saveInfoDialog = true },
+                enabled = saveButtonEnabled,
+                modifier = Modifier.semantics { testTag = "android:id/saveButton" }
+            ) {
+                Text(text = "Save")
+            }
+            Button(
+                onClick = { logoutDialog = true },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = Color.DarkGray
+                ),
+                modifier = Modifier
+                    .padding(8.dp)
+                    .semantics { testTag = "android:id/logoutButton" }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ExitToApp,
+                    contentDescription = "Logout",
+                    modifier = Modifier.size(24.dp)
+                )
+                Text("Logout")
+            }
         }
-        Button(
-            onClick = { logoutDialog = true },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.White,
-                contentColor = Color.DarkGray
-            ),
-            modifier = Modifier
-                .padding(8.dp)
-                .semantics { testTag = "android:id/logoutButton" }
-        ) {
-            Icon(
-                imageVector = Icons.Default.ExitToApp,
-                contentDescription = "Logout",
-                modifier = Modifier.size(24.dp)
-            )
-            Text("Logout")
-        }
+
     }
 }
 
