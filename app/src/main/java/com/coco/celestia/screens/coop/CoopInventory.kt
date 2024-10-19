@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -419,7 +420,10 @@ fun TopBarCoopInventory(onTabSelected: (String) -> Unit) {
             val tabTitles = listOf("Current Inventory", "Inventory This Month")
             tabTitles.forEachIndexed { index, title ->
                 Tab(
-                    text = { Text(title)},
+                    text = { Text(title,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily,
+                        fontSize = 15.sp)},
                     selected = selectedOption == index,
                     onClick = {
                         selectedOption = index
