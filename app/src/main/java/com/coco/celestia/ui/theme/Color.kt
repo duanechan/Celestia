@@ -20,7 +20,7 @@ val BgColor = Color(0xFFF2E3DB)
 val Gray = Color(0xFF3E3E3E)
 
 //Profile Palette
-val EditDetailsBg = Color(0XFFBFBFBF)
+val GrayTextField = Color(0XFFdcdcdc)
 
 //Client Palette
 val LightOrange = Color(0xFFDB873A) //navbar
@@ -79,7 +79,7 @@ val BrownCoffee = Color(0xFF795548)
 val RedMeat = Color(0xFFFB4949)
 
 
-// Gradient Brush
+// Coop Gradient Brush
 val GreenGradientBrush = Brush.linearGradient(
     colors = listOf(
         Color(0xFF83CA95),
@@ -89,11 +89,42 @@ val GreenGradientBrush = Brush.linearGradient(
     end = Offset(500f, 0f)
 )
 
+//Client Profile 
+val OrangeGradientBrush = Brush.linearGradient(
+    colors = listOf(
+        Color(0xFFDB873A),
+        Color(0xFFE9C4A0)
+    ),
+    start = Offset(0f, 0f),
+    end = Offset(0f, 800f)
+)
+
+//Admin Profile
 val BlueGradientBrush = Brush.horizontalGradient(
     colors = listOf(
         Color(0xFF40458d),
         Color(0xFF252746)
  )
-)
-//    start = Offset(0f, 0f),
+    //    start = Offset(0f, 0f),
 //    end = Offset(500f, 0f)
+)
+
+//Farmer Profile
+val FarmerGradientBrush = Brush.linearGradient(
+    colors = listOf(
+        Color(0xFFE6B962),
+        Color(0xfff2daad)
+    ),
+    start = Offset(0f, 0f),
+    end = Offset(0f, 800f)
+)
+
+//Gray
+val GrayGradientBrush = Brush.linearGradient(
+    colors = listOf(
+        Color(0x80FFFFFF),
+        Color(0x80000000)
+    ),
+    start = Offset(0f, 0f),
+    end = Offset(0f, 500f)
+)

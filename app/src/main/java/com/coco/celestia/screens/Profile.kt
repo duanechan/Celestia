@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -56,9 +57,13 @@ import com.coco.celestia.components.dialogs.LogoutDialog
 import com.coco.celestia.components.dialogs.SaveInfoDialog
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.ui.theme.BlueGradientBrush
 import com.coco.celestia.ui.theme.CelestiaTheme
-import com.coco.celestia.ui.theme.EditDetailsBg
+import com.coco.celestia.ui.theme.FarmerGradientBrush
+import com.coco.celestia.ui.theme.GrayGradientBrush
+import com.coco.celestia.ui.theme.GrayTextField
 import com.coco.celestia.ui.theme.GreenGradientBrush
+import com.coco.celestia.ui.theme.OrangeGradientBrush
 import com.coco.celestia.util.isValidEmail
 import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.UserViewModel
@@ -192,6 +197,18 @@ fun ProfileScreen(
         )
     }
 
+    fun getGradientBrushForRole(role: String): Brush {
+        return when (role) {
+            "Admin" -> BlueGradientBrush
+            "Client" -> OrangeGradientBrush
+            "Farmer" -> FarmerGradientBrush
+            "Coop" -> GreenGradientBrush
+            else -> GrayGradientBrush
+        }
+    }
+
+    val gradientBrush = getGradientBrushForRole(role)
+
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 80.dp)
@@ -203,11 +220,13 @@ fun ProfileScreen(
                 .fillMaxWidth()
                 .height(250.dp)
                 .background(
-                    brush = GreenGradientBrush,
+                    brush = gradientBrush,
                     shape = RoundedCornerShape(bottomEnd = 16.dp, bottomStart = 16.dp)
                 ),
             contentAlignment = Alignment.Center
-        ) {
+        )
+
+        {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
@@ -240,13 +259,12 @@ fun ProfileScreen(
                 .fillMaxWidth()
                 .padding(16.dp)
                 .background(
-                    color = EditDetailsBg,
+                    color = GrayTextField,
                     shape = RoundedCornerShape(bottomEnd = 16.dp, bottomStart = 16.dp)
                 )
                 .padding(16.dp)
         ) {
             Column {
-
                 OutlinedTextField(
                     value = updatedEmail,
                     onValueChange = {
@@ -256,10 +274,11 @@ fun ProfileScreen(
                     singleLine = true,
                     maxLines = 1,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    modifier = Modifier.semantics { testTag = "android:id/updateEmailField" }
+                    modifier = Modifier.semantics { testTag = "android:id/updateEmailField" },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color.White // Background color
+                    )
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-
 
                 OutlinedTextField(
                     value = updatedPhoneNumber,
@@ -268,10 +287,11 @@ fun ProfileScreen(
                     singleLine = true,
                     maxLines = 1,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    modifier = Modifier.semantics { testTag = "android:id/updatePhoneNumber" }
+                    modifier = Modifier.semantics { testTag = "android:id/updatePhoneNumber" },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color.White// Background color
+                    )
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-
 
                 OutlinedTextField(
                     value = updatedStreetNumber,
@@ -280,10 +300,11 @@ fun ProfileScreen(
                     singleLine = true,
                     maxLines = 1,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                    modifier = Modifier.semantics { testTag = "android:id/updateStreetNumber" }
+                    modifier = Modifier.semantics { testTag = "android:id/updateStreetNumber" },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        containerColor = Color.White // Background color
+                    )
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-
 
                 ExposedDropdownMenuBox(
                     expanded = expanded,
@@ -296,7 +317,10 @@ fun ProfileScreen(
                         readOnly = true,
                         modifier = Modifier
                             .menuAnchor()
-                            .semantics { testTag = "android:id/updateBarangay" }
+                            .semantics { testTag = "android:id/updateBarangay" },
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = Color.White// Background color
+                        )
                     )
                     ExposedDropdownMenu(
                         expanded = expanded,
