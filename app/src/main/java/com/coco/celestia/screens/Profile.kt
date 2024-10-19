@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -78,6 +79,7 @@ fun ProfilePagePreview() {
         val phoneNumber = it.phoneNumber
         val streetNumber = it.streetNumber
         val barangay = it.barangay
+        val role = it.role
 
         CelestiaTheme {
             Surface(
@@ -95,6 +97,7 @@ fun ProfilePagePreview() {
                     phoneNumber,
                     streetNumber,
                     barangay,
+                    role,
                     onLogoutEvent = {},
                     onProfileUpdateEvent = {}
                 )
@@ -116,6 +119,7 @@ fun ProfileScreen(
     phoneNumber: String,
     streetNumber: String,
     barangay: String,
+    role: String,
     onLogoutEvent: (Triple<ToastStatus, String, Long>) -> Unit,
     onProfileUpdateEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
@@ -190,7 +194,8 @@ fun ProfileScreen(
 
     Column(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 80.dp),
+            .padding(horizontal = 16.dp, vertical = 80.dp)
+            .verticalScroll(rememberScrollState())
     ) {
 
         Box(
@@ -221,7 +226,12 @@ fun ProfileScreen(
                     fontSize = 28.sp,
                     color = Color.White
                 )
-                //TODO: Add role below name
+                Text(
+                    text = role,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 18.sp,
+                    color = Color.White
+                )
             }
         }
 
@@ -358,6 +368,7 @@ fun Profile(
         val phoneNumber = it.phoneNumber
         val streetNumber = it.streetNumber
         val barangay = it.barangay
+        val role = it.role
 
         ProfileScreen(
             navController,
@@ -369,6 +380,7 @@ fun Profile(
             phoneNumber,
             streetNumber,
             barangay,
+            role,
             onLogoutEvent = { event -> onLogoutEvent(event) },
             onProfileUpdateEvent = { event -> onProfileUpdateEvent(event) }
         )
