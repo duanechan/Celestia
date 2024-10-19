@@ -38,6 +38,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -93,8 +95,9 @@ fun OrderRequest(
                 onActiveChange = {},
                 leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search") },
                 placeholder = { Text("Search") },
-                modifier = Modifier.height(50.dp)
-
+                modifier = Modifier
+                    .height(50.dp)
+                    .semantics { testTag = "android:id/OrderSearchBar" }
             ) {
 
             }
@@ -108,14 +111,16 @@ fun OrderRequest(
                 .padding(8.dp)
                 .padding(top = 8.dp)
                 .background(Color.Transparent)
-                .horizontalScroll(rememberScrollState()),
+                .horizontalScroll(rememberScrollState())
+                .semantics { testTag = "android:id/FilterButtonsRow" },
             horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             Button(
                 onClick = { /* Handle filter click */ },
                 modifier = Modifier
                     .padding(end = 8.dp)
-                    .height(40.dp),
+                    .height(40.dp)
+                    .semantics { testTag = "android:id/PendingButton" },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = PendingStatus,
                     contentColor = Color.White
@@ -127,7 +132,8 @@ fun OrderRequest(
                 onClick = { /* Handle filter click */ },
                 modifier = Modifier
                     .padding(end = 8.dp)
-                    .height(40.dp),
+                    .height(40.dp)
+                    .semantics { testTag = "android:id/PreparingButton" },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = PreparingStatus,
                     contentColor = Color.White
@@ -139,7 +145,8 @@ fun OrderRequest(
                 onClick = { /* Handle filter click */ },
                 modifier = Modifier
                     .padding(end = 8.dp)
-                    .height(40.dp),
+                    .height(40.dp)
+                    .semantics { testTag = "android:id/DeliveringButton" },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = DeliveringStatus,
                     contentColor = Color.White
@@ -150,7 +157,8 @@ fun OrderRequest(
             Button(
                 onClick = { /* Handle filter click */ },
                 modifier = Modifier
-                    .height(40.dp),
+                    .height(40.dp)
+                    .semantics { testTag = "android:id/CompletedButton" },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = CompletedStatus,
                     contentColor = Color.White
@@ -165,7 +173,7 @@ fun OrderRequest(
             is OrderState.ERROR -> OrdersError(errorMessage = (orderState as OrderState.ERROR).message)
             is OrderState.EMPTY -> EmptyOrders()
             is OrderState.SUCCESS -> {
-                LazyColumn {
+                LazyColumn (modifier = Modifier.semantics { testTag = "android:id/OrderList" }){
                     itemsIndexed(orderData) { index, order ->
                         OrderItem(
                             order = order,
@@ -185,7 +193,9 @@ fun OrderRequest(
 
 @Composable
 fun LoadingOrders() {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .semantics { testTag = "android:id/LoadingOrders" }) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             CircularProgressIndicator()
         }
@@ -194,7 +204,9 @@ fun LoadingOrders() {
 
 @Composable
 fun OrdersError(errorMessage: String) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .semantics { testTag = "android:id/OrdersError" }) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "Error: $errorMessage",
@@ -206,7 +218,9 @@ fun OrdersError(errorMessage: String) {
 
 @Composable
 fun EmptyOrders() {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .semantics { testTag = "android:id/EmptyOrders" }) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "No pending orders.",
@@ -261,6 +275,7 @@ fun PreparingOrderItem(
     orderCount: Int,
     navController: NavController,
     orderViewModel: OrderViewModel,
+    modifier: Modifier = Modifier, //testing
 ) {
     val orderId = order.orderId.substring(5,9).uppercase()
     val orderClient = order.client
@@ -270,6 +285,7 @@ fun PreparingOrderItem(
             .fillMaxWidth()
             .background(Color.White)
             .padding(16.dp)
+            .semantics { testTag = "android:id/PreparingOrderItem_$orderCount" }
     ) {
         Card {
             Column(
@@ -341,6 +357,7 @@ fun PendingOrderItem(
     navController: NavController,
     order: OrderData,
     onAccept: () -> Unit,
+    modifier: Modifier = Modifier //testing
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var action by remember { mutableStateOf("") }
@@ -350,6 +367,7 @@ fun PendingOrderItem(
             .fillMaxWidth()
             .background(Color.White)
             .padding(16.dp)
+            .semantics { testTag = "android:id/PendingOrderItem_${order.orderId}" }
     ) {
         Card {
             Column(
@@ -440,7 +458,8 @@ fun PendingOrderItem(
                 ) {
                     Text("Cancel")
                 }
-            }
+            },
+            modifier = Modifier.semantics { testTag = "android:id/OrderAcceptingDialog" }
         )
     }
 }
