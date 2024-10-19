@@ -391,6 +391,7 @@ fun NavDrawerBottomBar(
                     .align(Alignment.TopCenter)
                     .offset(y = (-30).dp)
                     .semantics { testTag = "android:id/adminAddUserButton" }
+
             ) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
