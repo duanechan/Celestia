@@ -44,9 +44,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.coco.celestia.ui.theme.BlueGradientBrush
-import com.coco.celestia.ui.theme.DarkBlue
-import com.coco.celestia.ui.theme.Gray
+import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.UserData
 
@@ -90,7 +88,7 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
                     placeholder = { Text(text = "Search", color = DarkBlue) },
                     leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon") },
                     modifier = Modifier
-                        .width(screenWidth * 0.75f) // will make the searchbar 90% of the screen width
+                        .width(screenWidth * 0.75f)
                         .offset(y = 75.dp)
                 ) {}
                 Spacer(modifier = Modifier.width(5.dp))
@@ -99,13 +97,13 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
 
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.LightGray
+                        containerColor = LightBlue
                     ),
                     modifier = Modifier.padding(top = 120.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.List,
-                        tint = Color.Black,
+                        tint = Color.White,
                         contentDescription = "Audit Logs",
                         modifier = Modifier
                             .size(35.dp)
@@ -207,7 +205,7 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(if (index % 2 == 0) Color.LightGray else Color.White)
+                        .background(if (index % 2 == 0) PaleBlue else Color.White)
                         .padding(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {

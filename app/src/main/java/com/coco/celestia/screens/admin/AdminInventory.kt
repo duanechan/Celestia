@@ -34,6 +34,7 @@ import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.Gray
 import com.coco.celestia.ui.theme.RedMeat
+import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.util.calculateMonthlyInventory
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
@@ -108,7 +109,10 @@ fun AdminInventory(
                         .weight(1f)
                         .fillMaxHeight()
                 ) {
-                    Text(text = "Coffee")
+                    Text(text = "COFFEE",
+                        fontFamily = mintsansFontFamily,
+                        fontWeight = if (selectedButton == "Coffee") FontWeight.Normal else FontWeight.Bold)
+
                 }
 
                 Button(
@@ -126,7 +130,9 @@ fun AdminInventory(
                         .weight(1f)
                         .fillMaxHeight()
                 ) {
-                    Text(text = "Meat")
+                    Text(text = "MEAT",
+                        fontFamily = mintsansFontFamily,
+                        fontWeight = if (selectedButton == "Meat") FontWeight.Normal else FontWeight.Bold)
                 }
             }
             Spacer(modifier = Modifier.height(20.dp))
@@ -211,15 +217,15 @@ fun AdminItemCard(productName: String, quantity: Int, ordered: Int) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Inventory:",
+                    text = "Inventory",
                     fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily,
                     color = Gray
                 )
                 Text(
                     text = "${quantity}kg",
-                    fontSize = 25.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontSize = 20.sp,
+                    fontFamily = mintsansFontFamily,
                     color = Gray
                 )
             }
@@ -231,15 +237,15 @@ fun AdminItemCard(productName: String, quantity: Int, ordered: Int) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Ordered:",
+                        text = "Ordered",
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily,
                         color = Gray
                     )
                     Text(
                         text = "-${ordered}kg",
-                        fontSize = 25.sp,
-                        fontWeight = FontWeight.Medium,
+                        fontSize = 20.sp,
+                        fontFamily = mintsansFontFamily,
                         color = Gray
                     )
                 }
@@ -265,7 +271,14 @@ fun TopBarInventory(onTabSelected: (String) -> Unit) {
             val tabTitles = listOf("Current Inventory", "Inventory This Month")
             tabTitles.forEachIndexed { index, title ->
                 Tab(
-                    text = { Text(title)},
+                    text = {
+                        Text(
+                            text = title,
+                            fontFamily = mintsansFontFamily,
+                            fontSize = 13.sp,
+                            fontWeight = if (selectedOption == index) FontWeight.Bold else FontWeight.Normal
+                        )
+                    },
                     selected = selectedOption == index,
                     onClick = {
                         selectedOption = index
