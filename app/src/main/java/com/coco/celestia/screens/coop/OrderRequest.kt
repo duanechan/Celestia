@@ -50,6 +50,7 @@ import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.ui.theme.PendingStatus
 import com.coco.celestia.ui.theme.PreparingStatus
 import com.coco.celestia.ui.theme.mintsansFontFamily
+import com.coco.celestia.util.formatDate
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
@@ -300,13 +301,7 @@ fun PreparingOrderItem(
                 Box(
                     modifier = Modifier
                         .padding(start = 5.dp)
-                        .background(
-                            when (order.status) {
-                                "PREPARING" -> PreparingStatus
-                                else -> Color.Gray
-                            },
-                            shape = RoundedCornerShape(8.dp)
-                        )
+                        .background(PreparingStatus, shape = RoundedCornerShape(8.dp))
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
@@ -319,7 +314,7 @@ fun PreparingOrderItem(
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(text = "${order.street}, ${order.barangay}")
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = order.orderDate)
+                Text(text = formatDate(order.orderDate).toString())
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     horizontalArrangement = Arrangement.SpaceAround,
