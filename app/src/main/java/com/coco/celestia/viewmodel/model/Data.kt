@@ -49,6 +49,8 @@ data class LocationData(
     val barangay: String = ""
 )
 
+data class ItemData(val name: String = "", val items: MutableList<ProductData> = mutableListOf())
+
 data class CalendarUIState(
     val yearMonth: YearMonth,
     val dates: List<Date>

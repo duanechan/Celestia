@@ -249,7 +249,7 @@ fun NavGraph(
                 userRole = userRole
             )
         }
-        composable(route = Screen.CoopAddProductInventory.route) {
+        composable(route = Screen.AddProductInventory.route) {
             LaunchedEffect(Unit) {
                 productViewModel.updateProductName("")
                 quantityAmount = 0
@@ -281,7 +281,7 @@ fun NavGraph(
                     productType = ""
                 } else {
                     onEvent(Triple(ToastStatus.WARNING, "Please fill in all fields", System.currentTimeMillis()))
-                    navController.navigate(Screen.CoopAddProductInventory.route)
+                    navController.navigate(Screen.AddProductInventory.route)
                 }
             }
         }

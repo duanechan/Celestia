@@ -163,7 +163,6 @@ fun OrderItem(order: OrderData) {
                 Text("Status: ${order.status}")
             }
         }
-        // Add more details as needed
 }
 
 @Composable

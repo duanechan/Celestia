@@ -328,7 +328,7 @@ fun NavDrawerBottomBar(
 
         if ((role == "Coop" || role == "CoopCoffee" || role == "CoopMeat") && currentDestination == Screen.CoopProductInventory.route) {
             FloatingActionButton(
-                onClick = { navController.navigate(Screen.CoopAddProductInventory.route) },
+                onClick = { navController.navigate(Screen.AddProductInventory.route) },
                 shape = CircleShape,
                 containerColor = DarkGreen,
                 modifier = Modifier
@@ -344,7 +344,7 @@ fun NavDrawerBottomBar(
                 )
             }
         }
-        if ((role == "Coop" || role == "CoopCoffee" || role == "CoopMeat") && currentDestination == Screen.CoopAddProductInventory.route) {
+        if ((role == "Coop" || role == "CoopCoffee" || role == "CoopMeat") && currentDestination == Screen.AddProductInventory.route) {
             FloatingActionButton(
                 onClick = { navController.navigate(Screen.CoopAddProductInventoryDB.route) },
                 shape = CircleShape,
@@ -367,7 +367,7 @@ fun NavDrawerBottomBar(
             FloatingActionButton(
                 onClick = { navController.navigate(Screen.AdminAddUserManagement.route) },
                 shape = CircleShape,
-                containerColor = DarkBlue,
+                containerColor = LightBlue,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .offset(y = (-30).dp)
@@ -376,7 +376,9 @@ fun NavDrawerBottomBar(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add",
                     tint = Color.White,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier
+                        .size(24.dp)
+//                        .background(BlueGradientBrush)
                 )
             }
         }
@@ -384,11 +386,12 @@ fun NavDrawerBottomBar(
             FloatingActionButton(
                 onClick = { navController.navigate(Screen.AdminAddUserManagementDB.route) },
                 shape = CircleShape,
-                containerColor = LightBlue,
+                containerColor = DarkBlue,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .offset(y = (-30).dp)
                     .semantics { testTag = "android:id/adminAddUserButton" }
+
             ) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
