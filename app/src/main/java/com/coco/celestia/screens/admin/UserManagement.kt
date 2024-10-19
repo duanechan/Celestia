@@ -3,7 +3,6 @@ package com.coco.celestia.screens.admin
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,20 +21,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,7 +44,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import com.coco.celestia.ui.theme.BlueGradientBrush
 import com.coco.celestia.ui.theme.DarkBlue
 import com.coco.celestia.ui.theme.Gray
@@ -110,7 +104,7 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
                     modifier = Modifier.padding(top = 120.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Menu,
+                        imageVector = Icons.Default.List,
                         tint = Color.Black,
                         contentDescription = "Audit Logs",
                         modifier = Modifier
@@ -132,7 +126,11 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
 
         usersData?.forEach{ user ->
             //Add Conditional Statement for Coop Members Only not all Users
-            users.add(user)
+            if (user != null) {
+                if (user.role == "CoopCoffee" || user.role == "CoopMeat") {
+                    users.add(user)
+                }
+            }
         }
 
         UserTable(
@@ -163,6 +161,7 @@ fun DropdownMenuItem(onClick: () -> Unit, interactionSource: @Composable () -> U
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (UserData) -> Unit) {
+    var role by remember { mutableStateOf("") }
     LazyColumn(
         modifier = modifier.fillMaxWidth()
     ) {
@@ -219,8 +218,14 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                             .fillMaxWidth(),
                         textAlign = TextAlign.Start,
                     )
+                    role = if (user.role == "CoopCoffee") {
+                        "Coffee"
+                    } else {
+                        "Meat"
+                    }
+
                     Text(
-                        text = user.role,
+                        text = role,
                         modifier = Modifier
                             .weight(2f)
                             .fillMaxWidth(),
