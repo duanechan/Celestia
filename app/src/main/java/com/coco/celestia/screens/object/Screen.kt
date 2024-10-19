@@ -30,7 +30,7 @@ sealed class Screen(val route: String) {
     data object CoopProductInventory: Screen("coop_inventory/{type}") {
         fun createRoute(type: String) = "coop_inventory/$type"
     }
-    data object CoopAddProductInventory: Screen("coop_add_product_inventory/{type}") {
+    data object AddProductInventory: Screen("coop_add_product_inventory/{type}") {
         fun createRoute(type: String) = "coop_add_product_inventory/$type"
     }
     data object CoopAddProductInventoryDB: Screen("coop_add_product_inventory_db")

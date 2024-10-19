@@ -328,7 +328,7 @@ fun NavDrawerBottomBar(
 
         if ((role == "Coop" || role == "CoopCoffee" || role == "CoopMeat") && currentDestination == Screen.CoopProductInventory.route) {
             FloatingActionButton(
-                onClick = { navController.navigate(Screen.CoopAddProductInventory.route) },
+                onClick = { navController.navigate(Screen.AddProductInventory.route) },
                 shape = CircleShape,
                 containerColor = DarkGreen,
                 modifier = Modifier
@@ -344,7 +344,7 @@ fun NavDrawerBottomBar(
                 )
             }
         }
-        if ((role == "Coop" || role == "CoopCoffee" || role == "CoopMeat") && currentDestination == Screen.CoopAddProductInventory.route) {
+        if ((role == "Coop" || role == "CoopCoffee" || role == "CoopMeat") && currentDestination == Screen.AddProductInventory.route) {
             FloatingActionButton(
                 onClick = { navController.navigate(Screen.CoopAddProductInventoryDB.route) },
                 shape = CircleShape,
