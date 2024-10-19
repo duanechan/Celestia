@@ -224,20 +224,13 @@ fun ClientOrderDetails(
 
                             // products list display
                             Row(
-                                horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Spacer(modifier = Modifier.width(50.dp))
-                                Column(
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.Start,
-                                    modifier = Modifier.weight(1f)
-                                ) {
                                     Card(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(start = 20.dp, end = 50.dp),
+                                            .height(100.dp),
                                         shape = RoundedCornerShape(16.dp),
                                         elevation = CardDefaults.elevatedCardElevation(
                                             defaultElevation = 4.dp
@@ -247,12 +240,14 @@ fun ClientOrderDetails(
                                             modifier = Modifier
                                                 .fillMaxSize()
                                                 .background(TreeBark)
+                                                .height(25.dp)
+                                                .padding(start = 10.dp, end = 10.dp),
+                                            contentAlignment = Alignment.Center
                                         ) {
-                                            Column(
+                                            Row(
                                                 modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(30.dp),
-                                                horizontalAlignment = Alignment.CenterHorizontally
+                                                    .fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically
                                             ) {
                                                 Text(
                                                     text = product.name,
@@ -260,7 +255,7 @@ fun ClientOrderDetails(
                                                     fontSize = 30.sp,
                                                     color = (White),
                                                 )
-                                                Spacer(modifier = Modifier.height(8.dp))
+                                                Spacer(modifier = Modifier.weight(1f))
                                                 Text(
                                                     text = "${product.quantity} kg",
                                                     fontWeight = FontWeight.Bold,
@@ -270,7 +265,6 @@ fun ClientOrderDetails(
                                             }
                                         }
                                     }
-                                }
                             }
                         }
                     }
@@ -375,8 +369,8 @@ fun ClientOrderDetails(
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.width(50.dp))
                 }
+                Spacer(modifier = Modifier.height(130.dp))
             }
         }
     }
