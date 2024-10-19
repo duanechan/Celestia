@@ -38,6 +38,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -88,18 +90,23 @@ fun CoopInventory(navController: NavController, role: String) {
         when (productState) {
             is ProductState.LOADING -> {
                 Text("Loading products...")
+                Modifier.semantics { testTag = "android:id/LoadingText" }
             }
             is ProductState.ERROR -> {
                 Text("Failed to load products: ${(productState as ProductState.ERROR).message}")
+                Modifier.semantics { testTag = "android:id/ErrorText" }
             }
             is ProductState.EMPTY -> {
                 Text("No products available.")
+                Modifier.semantics { testTag = "android:id/EmptyText" }
             }
             is ProductState.SUCCESS -> {
                 if (role == "CoopCoffee") {
                     navController.navigate(Screen.CoopProductInventory.createRoute("Coffee"))
+                    Modifier.semantics { testTag = "android:id/NavigateToCoffeeInventory" }
                 } else {
                     navController.navigate(Screen.CoopProductInventory.createRoute("Meat"))
+                    Modifier.semantics { testTag = "NavigateToMeatInventory" }
                 }
             }
         }
@@ -143,7 +150,8 @@ fun ProductTypeInventory(type: String?, userRole: String) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         TopBarCoopInventory(
-            onTabSelected = { selectedTab = it }
+            onTabSelected = { selectedTab = it },
+//            Modifier.semantics { testTag = "android:id/TopBarCoopInventory" }
         )
 
         Row(modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)) {
@@ -161,11 +169,13 @@ fun ProductTypeInventory(type: String?, userRole: String) {
                 modifier = Modifier
                     .size(35.dp)
                     .padding(top = 5.dp)
+                    .semantics { testTag = "android:id/${type}Icon" }
             )
         }
 
         if (selectedTab == "Current Inventory") {
             CoopItemList(productData)
+            Modifier.semantics { testTag = "android:id/CurrentInventory" }
         } else {
             CoopMonthlyItemList(monthlyInventory)
         }
@@ -178,6 +188,7 @@ fun ProductTypeInventory(type: String?, userRole: String) {
                 .fillMaxWidth()
                 .height(100.dp)
                 .padding(8.dp)
+                .semantics { testTag = "android:id/OrderedCard" }
         ) {
             Row(
                 modifier = Modifier
@@ -205,6 +216,7 @@ fun ProductTypeInventory(type: String?, userRole: String) {
                 .fillMaxWidth()
                 .height(100.dp)
                 .padding(8.dp)
+                .semantics { testTag = "android:id/DeliveredCard" }
         ) {
             Row(
                 modifier = Modifier
@@ -248,6 +260,7 @@ fun CoopItemList(itemList: List<ProductData>) {
                     .fillMaxWidth()
                     .height(100.dp)
                     .padding(8.dp)
+                    .semantics { testTag = "android:id/ProductCard_${product.name}" }
             ) {
                 Row(
                     modifier = Modifier
@@ -361,6 +374,7 @@ fun AddProductForm(
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded },
+            modifier = Modifier.semantics { testTag = "android:id/ProductDropdown" }
         ) {
             OutlinedTextField(
                 readOnly = true,
@@ -396,7 +410,9 @@ fun AddProductForm(
             value = if (quantity == 0) "" else quantity.toString(),
             onValueChange = onQuantityChange,
             label = { Text("Quantity (kg)") },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { testTag = "android:id/QuantityField" },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
         )
         Spacer(modifier = Modifier.width(12.dp))
@@ -429,17 +445,11 @@ fun TopBarCoopInventory(onTabSelected: (String) -> Unit) {
                         selectedOption = index
                         onTabSelected(title)
                     },
-                    modifier = Modifier.padding(8.dp)
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .semantics { testTag = "android:id/Tab_${title.replace(" ", "")}" }
                 )
             }
         }
     }
 }
-
-
-
-
-
-
-
-
