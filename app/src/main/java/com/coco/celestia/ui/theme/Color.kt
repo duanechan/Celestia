@@ -19,6 +19,9 @@ val DarkGreen = Color(0xFF263A29)
 val BgColor = Color(0xFFF2E3DB)
 val Gray = Color(0xFF3E3E3E)
 
+//Profile Palette
+val EditDetailsBg = Color(0XFFBFBFBF)
+
 //Client Palette
 val LightOrange = Color(0xFFDB873A) //navbar
 val LightGray = Color (0xFFE5E5E4)  //client bg

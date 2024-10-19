@@ -1,4 +1,4 @@
-    package com.coco.celestia.screens.client
+package com.coco.celestia.screens.client
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -148,40 +148,56 @@ fun ClientOrder(
                     onSearch = {},
                     active = false,
                     onActiveChange = {},
-                    placeholder = { Text(text = "Search...", color = Color.Black, fontSize = 15.sp) },
-                    leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon") },
+                    placeholder = {
+                        Text(
+                            text = "Search...",
+                            color = Color.Black,
+                            fontSize = 15.sp
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search Icon"
+                        )
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .height(50.dp)
                         .offset(y = -13.dp)
-                ){
+                ) {
 
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                Button(
-                    onClick = { expanded = true },
+                Box (
                     modifier = Modifier
                         .weight(1f)
-                        .height(50.dp),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Text(text = "Filter: $selectedStatus", fontSize = 15.sp, maxLines = 1)
-                }
+                ){
+                    Button(
+                        onClick = { expanded = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Text(text = "Filter: $selectedStatus", fontSize = 15.sp, maxLines = 1)
+                    }
 
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    statuses.forEach { status ->
-                        DropdownMenuItem(
-                            text = { Text(text = status) },
-                            onClick = {
-                                selectedStatus = status
-                                expanded = false
-                            }
-                        )
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                    ) {
+                        statuses.forEach { status ->
+                            DropdownMenuItem(
+                                text = { Text(text = status) },
+                                onClick = {
+                                    selectedStatus = status
+                                    expanded = false
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -296,9 +312,9 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                             color = LightOrange,
                             modifier = Modifier.padding(top = 0.dp, start = 10.dp)
                         )
-                        }
                     }
                 }
             }
         }
     }
+}

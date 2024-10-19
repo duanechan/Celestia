@@ -2,12 +2,17 @@ package com.coco.celestia.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
@@ -27,8 +32,10 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusModifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
@@ -47,10 +54,13 @@ import com.coco.celestia.components.dialogs.SaveInfoDialog
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.CelestiaTheme
+import com.coco.celestia.ui.theme.EditDetailsBg
+import com.coco.celestia.ui.theme.GreenGradientBrush
 import com.coco.celestia.util.isValidEmail
 import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
+
 
 @Preview
 @Composable
@@ -163,7 +173,13 @@ fun ProfileScreen(
                         )
                     )
                 }
-                onProfileUpdateEvent(Triple(ToastStatus.SUCCESSFUL, "Profile updated successfully!", System.currentTimeMillis()))
+                onProfileUpdateEvent(
+                    Triple(
+                        ToastStatus.SUCCESSFUL,
+                        "Profile updated successfully!",
+                        System.currentTimeMillis()
+                    )
+                )
                 saveInfoDialog = false
             },
             onDismiss = { saveInfoDialog = false }
@@ -172,72 +188,125 @@ fun ProfileScreen(
 
     Column(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 80.dp),
+            .padding(horizontal = 16.dp, vertical = 100.dp)
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.profile_icon),
-            contentDescription = "Profile Icon",
-            modifier = Modifier.size(100.dp)
-        )
-        Text(text = "$firstName $lastName", fontWeight = FontWeight.Bold, fontSize = 25.sp)
-        OutlinedTextField(
-            value = updatedEmail,
-            onValueChange = {
-                updatedEmail = it
-            },
-            label = { Text(text = "Email") },
-            singleLine = true,
-            maxLines = 1,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            modifier = Modifier.semantics { testTag = "android:id/updateEmailField" }
-        )
-        OutlinedTextField(
-            value = updatedPhoneNumber,
-            onValueChange = { updatedPhoneNumber = it },
-            label = { Text(text = "Phone Number") },
-            singleLine = true,
-            maxLines = 1,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            modifier = Modifier.semantics { testTag = "android:id/updatePhoneNumber" }
-        )
-        OutlinedTextField(
-            value = updatedStreetNumber,
-            onValueChange = { updatedStreetNumber = it },
-            label = { Text(text = "Street No.") },
-            singleLine = true,
-            maxLines = 1,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-            modifier = Modifier.semantics { testTag = "android:id/updateStreetNumber" }
-        )
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded },
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(250.dp)
+                .background(
+                    brush = GreenGradientBrush,
+                    shape = RoundedCornerShape(bottomEnd = 16.dp, bottomStart = 16.dp)
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            OutlinedTextField(
-                value = updatedBarangay,
-                onValueChange = { updatedBarangay = it },
-                label = { Text("Barangay") },
-                readOnly = true,
-                modifier = Modifier
-                    .menuAnchor()
-                    .semantics { testTag = "android:id/updateBarangay" }
-            )
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(16.dp)
             ) {
-                locationData?.forEach { location ->
-                    DropdownMenuItem(
-                        text = { Text(text = location.barangay) },
-                        onClick = {
-                            updatedBarangay = location.barangay
-                            expanded = false
-                        },
-                        modifier = Modifier.semantics { testTag = "android:id/barangayDropdownItem_${location.barangay}" }
+
+                Image(
+                    painter = painterResource(id = R.drawable.profile_icon),
+                    contentDescription = "Profile Icon",
+                    modifier = Modifier.size(100.dp)
+                )
+
+                Text(
+                    text = "$firstName $lastName",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 28.sp,
+                    color = Color.White
+                )
+                //TODO: Add role below name
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .background(
+                    color = EditDetailsBg,
+                    shape = RoundedCornerShape(bottomEnd = 16.dp, bottomStart = 16.dp)
+                )
+                .padding(16.dp)
+        ) {
+            Column {
+
+                OutlinedTextField(
+                    value = updatedEmail,
+                    onValueChange = {
+                        updatedEmail = it
+                    },
+                    label = { Text(text = "Email") },
+                    singleLine = true,
+                    maxLines = 1,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    modifier = Modifier.semantics { testTag = "android:id/updateEmailField" }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+
+                OutlinedTextField(
+                    value = updatedPhoneNumber,
+                    onValueChange = { updatedPhoneNumber = it },
+                    label = { Text(text = "Phone Number") },
+                    singleLine = true,
+                    maxLines = 1,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    modifier = Modifier.semantics { testTag = "android:id/updatePhoneNumber" }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+
+                OutlinedTextField(
+                    value = updatedStreetNumber,
+                    onValueChange = { updatedStreetNumber = it },
+                    label = { Text(text = "Street No.") },
+                    singleLine = true,
+                    maxLines = 1,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    modifier = Modifier.semantics { testTag = "android:id/updateStreetNumber" }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded },
+                ) {
+                    OutlinedTextField(
+                        value = updatedBarangay,
+                        onValueChange = { updatedBarangay = it },
+                        label = { Text("Barangay") },
+                        readOnly = true,
+                        modifier = Modifier
+                            .menuAnchor()
+                            .semantics { testTag = "android:id/updateBarangay" }
                     )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                    ) {
+                        locationData?.forEach { location ->
+                            DropdownMenuItem(
+                                text = { Text(text = location.barangay) },
+                                onClick = {
+                                    updatedBarangay = location.barangay
+                                    expanded = false
+                                },
+                                modifier = Modifier.semantics {
+                                    testTag = "android:id/barangayDropdownItem_${location.barangay}"
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
+
         Button(
             onClick = { saveInfoDialog = true },
             enabled = saveButtonEnabled,
