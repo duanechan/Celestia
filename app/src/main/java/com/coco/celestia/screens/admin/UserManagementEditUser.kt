@@ -36,6 +36,12 @@ fun EditUser(
     var expanded by remember { mutableStateOf(false) }
     val content = LocalContext.current
 
+    if (updatedRole == "CoopCoffee") {
+        updatedRole = "Coffee"
+    } else if (updatedRole == "CoopMeat"){
+        updatedRole = "Meat"
+    }
+
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = { Text(text = "Enter your input") },
@@ -74,11 +80,7 @@ fun EditUser(
                             androidx.compose.material3.DropdownMenuItem(
                                 text = { Text(roleItem) },
                                 onClick = {
-                                    updatedRole = if (roleItem == "Coffee") {
-                                        "CoopCoffee"
-                                    } else {
-                                        "CoopMeat"
-                                    }
+                                    updatedRole = roleItem
                                     expanded = false
                                 }
                             )
@@ -94,6 +96,11 @@ fun EditUser(
                     userData.let {
                         userViewModel.getUserUidByEmail(it.email) { uid ->
                             if (uid != null) {
+                                updatedRole = if (updatedRole == "Coffee") {
+                                    "CoopCoffee"
+                                } else {
+                                    "CoopMeat"
+                                }
                                 userViewModel.updateUser(
                                     uid,
                                     it.copy(

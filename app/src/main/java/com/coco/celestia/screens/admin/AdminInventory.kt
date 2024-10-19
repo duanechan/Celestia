@@ -7,13 +7,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -25,7 +22,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -33,8 +29,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.ui.theme.BlueGradientBrush
 import com.coco.celestia.ui.theme.BrownCoffee
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.ui.theme.DarkBlue
@@ -169,7 +163,7 @@ fun AdminInventory(
 fun AdminItemList(itemList: List<ProductData>) {
     if (itemList.isNotEmpty()) {
         itemList.forEach { (name, quantity) ->
-            AdminItemCard(name, quantity)
+            AdminItemCard(name, quantity, 0)
             Spacer(modifier = Modifier.height(10.dp))
         }
         Spacer(modifier = Modifier.height(50.dp))
@@ -179,8 +173,8 @@ fun AdminItemList(itemList: List<ProductData>) {
 @Composable
 fun AdminMonthlyInventoryList(itemList: List<MonthlyInventory>) {
     if (itemList.isNotEmpty()) {
-        itemList.forEach { (productName, remainingQuantity) ->
-            AdminItemCard(productName, remainingQuantity)
+        itemList.forEach { item ->
+            AdminItemCard(item.productName, item.remainingQuantity, item.totalOrderedThisMonth)
             Spacer(modifier = Modifier.height(10.dp))
         }
         Spacer(modifier = Modifier.height(50.dp))
@@ -188,7 +182,7 @@ fun AdminMonthlyInventoryList(itemList: List<MonthlyInventory>) {
 }
 
 @Composable
-fun AdminItemCard(productName: String, quantity: Int) {
+fun AdminItemCard(productName: String, quantity: Int, ordered: Int) {
     Card(modifier = Modifier
         .width(500.dp)
         .height(200.dp)
@@ -210,13 +204,46 @@ fun AdminItemCard(productName: String, quantity: Int) {
                 color = Gray,
                 modifier = Modifier.padding(top = 15.dp, start = 10.dp)
             )
-            Text(
-                text = "${quantity}kg",
-                fontSize = 25.sp,
-                fontWeight = FontWeight.Medium,
-                color = Gray,
-                modifier = Modifier.padding(top = 15.dp, start = 10.dp)
-            )
+            Row (
+                modifier = Modifier
+                    .padding(top = 15.dp, start = 10.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Inventory:",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Gray
+                )
+                Text(
+                    text = "${quantity}kg",
+                    fontSize = 25.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Gray
+                )
+            }
+            if (ordered != 0) {
+                Row (
+                    modifier = Modifier
+                        .padding(top = 15.dp, start = 10.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Ordered:",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Gray
+                    )
+                    Text(
+                        text = "-${ordered}kg",
+                        fontSize = 25.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Gray
+                    )
+                }
+            }
         }
     }
 }
