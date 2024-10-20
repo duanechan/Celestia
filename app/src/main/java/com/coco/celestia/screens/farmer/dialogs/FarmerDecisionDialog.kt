@@ -8,15 +8,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.coco.celestia.ui.theme.*
+import androidx.compose.ui.Alignment
 
 @Composable
 fun FarmerDecisionDialog(
     decisionType: String,
-    onConfirm: (String?) -> Unit,
+    onConfirm: (String?, Boolean?) -> Unit,
     onDismiss: () -> Unit
 ) {
     var selectedReason by remember { mutableStateOf<String?>(null) }
     var showReasonDropdown by remember { mutableStateOf(false) }
+    var isPartialFulfillment by remember { mutableStateOf<Boolean?>(null) } // State to track full or partial
+
     val rejectionReasons = listOf("Out of stock", "Too Far", "Not Available")
 
     val title = when (decisionType) {
@@ -78,6 +82,42 @@ fun FarmerDecisionDialog(
                             fontSize = 12.sp
                         )
                     }
+                } else if (decisionType == "ACCEPT") {
+                    // Full or partial fulfillment options
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(text = "Fulfillment Type:", fontSize = 20.sp)
+
+                    Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = isPartialFulfillment == false,
+                                onClick = { isPartialFulfillment = false }
+                            )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(text = "Full Fulfill")
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = isPartialFulfillment == true,
+                                onClick = { isPartialFulfillment = true }
+                            )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(text = "Partial Fulfill")
+                        }
+                    }
+
+                    if (isPartialFulfillment == null) {
+                        Spacer(modifier = Modifier.height(15.dp))
+                        Text(
+                            text = "You must select a fulfillment type.",
+                            color = Color.Red,
+                            fontSize = 12.sp
+                        )
+                    }
                 }
             }
         },
@@ -85,21 +125,21 @@ fun FarmerDecisionDialog(
             TextButton(
                 onClick = {
                     if (decisionType == "REJECT" && selectedReason != null) {
-                        onConfirm(selectedReason)
-                    } else if (decisionType == "ACCEPT") {
-                        onConfirm(null)
+                        onConfirm(selectedReason, null)
+                    } else if (decisionType == "ACCEPT" && isPartialFulfillment != null) {
+                        onConfirm(null, isPartialFulfillment)
                     }
                 },
                 enabled = decisionType != "REJECT" || selectedReason != null
             ) {
-                Text("Confirm", color = Color(0xFF4CAF50), fontSize = 16.sp)
+                Text("Confirm", color = SageGreen, fontSize = 16.sp)
             }
         },
         dismissButton = {
             TextButton(
                 onClick = onDismiss
             ) {
-                Text("Cancel", color = Color(0xFFA2453D), fontSize = 16.sp)
+                Text("Cancel", color = Copper, fontSize = 16.sp)
             }
         },
         shape = RoundedCornerShape(16.dp),

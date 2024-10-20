@@ -109,14 +109,12 @@ fun FarmerManageOrder(
                 .padding(top = 100.dp, bottom = 25.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Search and Filter Row with Transaction Icon
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Search TextField
                 TextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
@@ -157,11 +155,11 @@ fun FarmerManageOrder(
                             shape = RoundedCornerShape(16.dp)
                         )
                 ) {
-//                    Icon(
-//                        painter = painterResource(id = R.drawable.transactions), // Add your transaction icon here
-//                        contentDescription = "Transactions",
-//                        tint = Cocoa
-//                    )
+                    Icon(
+                        painter = painterResource(id = R.drawable.transactions), // Add your transaction icon here
+                        contentDescription = "Transactions",
+                        tint = Cocoa
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))

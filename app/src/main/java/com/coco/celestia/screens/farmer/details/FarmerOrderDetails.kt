@@ -1,7 +1,6 @@
 package com.coco.celestia.screens.farmer.details
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -54,7 +53,7 @@ fun FarmerOrderDetails(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(color = BgColor)
-                    .semantics { testTag = "android:id/loadingOrderDetails"},
+                    .semantics { testTag = "android:id/loadingOrderDetails" },
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(color = Cocoa)
@@ -79,8 +78,6 @@ fun FarmerOrderDetails(
         }
 
         else -> {
-            val product = orderData.orderData
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -88,185 +85,201 @@ fun FarmerOrderDetails(
                     .padding(top = 80.dp)
                     .semantics { testTag = "android:id/orderDetailsScreen" }
             ) {
-                // Order details card
-                Card(
+                OrderDetailsCard(orderData = orderData)
+            }
+        }
+    }
+}
+
+@Composable
+fun OrderDetailsCard(orderData: OrderData) {
+    val product = orderData.orderData
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(385.dp)
+            .semantics { testTag = "android:id/orderDetailsCard" },
+        shape = RoundedCornerShape(15.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Yellow4, Sand)
+                    )
+                )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Spacer(modifier = Modifier.height(5.dp))
+
+                // Order ID
+                Text(
+                    text = "Order ID",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = Cocoa,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(390.dp)
-                        .semantics { testTag = "android:id/orderDetailsCard" },
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.Transparent
-                    ),
-                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+                        .semantics { testTag = "android:id/orderIdLabel" }
+                )
+                Text(
+                    text = orderData.orderId.substring(6, 38),
+                    fontSize = 15.sp,
+                    color = Cocoa,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTag = "android:id/orderIdText" }
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Delivery Address
+                Text(
+                    text = "Delivery Address",
+                    fontSize = 20.sp,
+                    color = Cocoa,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTag = "android:id/deliveryAddressLabel" }
+                )
+                Text(
+                    text = "${orderData.street}, ${orderData.barangay}",
+                    fontSize = 15.sp,
+                    color = Cocoa,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTag = "android:id/deliveryAddressText" }
+                )
+
+                // Target Date
+                Spacer(modifier = Modifier.height(20.dp))
+                Text(
+                    text = "Target Date",
+                    fontSize = 20.sp,
+                    color = Cocoa,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTag = "android:id/targetDateLabel" }
+                )
+                Text(
+                    text = orderData.targetDate, // Assuming targetDate is a string
+                    fontSize = 15.sp,
+                    color = Cocoa,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTag = "android:id/targetDateText" }
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Product Info
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 90.dp)
+                        .semantics { testTag = "android:id/orderedProductRow" }
                 ) {
-                    Box(
+                    Icon(
+                        imageVector = Icons.Default.ShoppingCart,
+                        contentDescription = "Ordered Products Icon",
+                        tint = Cocoa,
                         modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(Yellow4, Sand)
-                                )
-                            )
+                            .size(24.dp)
+                            .semantics { testTag = "android:id/shoppingCartIcon" }
+                    )
+
+                    Spacer(modifier = Modifier.width(1.dp))
+
+                    Text(
+                        text = "Ordered Product",
+                        color = Cocoa,
+                        textAlign = TextAlign.Start,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        modifier = Modifier
+                            .padding(start = 15.dp)
+                            .semantics { testTag = "android:id/orderedProductLabel" }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(15.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTag = "android:id/productInfoRow" }
+                ) {
+                    Spacer(modifier = Modifier.width(50.dp))
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.Start,
+                        modifier = Modifier
+                            .weight(1f)
+                            .semantics { testTag = "android:id/productInfoColumn" }
                     ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp)
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 20.dp, end = 50.dp)
+                                .semantics { testTag = "android:id/productCard" },
+                            shape = RoundedCornerShape(16.dp),
+                            elevation = CardDefaults.elevatedCardElevation(
+                                defaultElevation = 4.dp
+                            )
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .semantics { testTag = "android:id/backButtonBox" },
-                                contentAlignment = Alignment.TopStart
-                            ) {
-                                Text(
-                                    text = "«",
-                                    fontSize = 50.sp,
-                                    color = Cocoa,
-                                    modifier = Modifier
-                                        .clickable { navController.popBackStack() }
-                                        .semantics { testTag = "android:id/backButton" }
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(5.dp))
-
-                            // Order details
-                            Text(
-                                text = "Order ID",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
-                                color = Cocoa,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .semantics { testTag = "android:id/orderIdLabel" }
-                            )
-                            Text(
-                                text = orderData.orderId.substring(6, 38),
-                                fontSize = 15.sp,
-                                color = Cocoa,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .semantics { testTag = "android:id/orderIdText" }
-                            )
-                            Spacer(modifier = Modifier.height(20.dp))
-                            Text(
-                                text = "Delivery Address",
-                                fontSize = 20.sp,
-                                color = Cocoa,
-                                textAlign = TextAlign.Center,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .semantics { testTag = "android:id/deliveryAddressLabel" }
-                            )
-                            Text(
-                                text = "${orderData.street}, ${orderData.barangay}",
-                                fontSize = 15.sp,
-                                color = Cocoa,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .semantics { testTag = "android:id/deliveryAddressText" }
-                            )
-                            Spacer(modifier = Modifier.height(20.dp))
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 90.dp)
-                                    .semantics { testTag = "android:id/orderedProductRow" }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ShoppingCart,
-                                    contentDescription = "Ordered Products Icon",
-                                    tint = Cocoa,
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .semantics { testTag = "android:id/shoppingCartIcon" }
-                                )
-
-                                Spacer(modifier = Modifier.width(1.dp))
-
-                                Text(
-                                    text = "Ordered Product",
-                                    color = Cocoa,
-                                    textAlign = TextAlign.Start,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp,
-                                    modifier = Modifier
-                                        .padding(start = 15.dp)
-                                        .semantics { testTag = "android:id/orderedProductLabel" }
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(15.dp))
-
-                            Row(
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .semantics { testTag = "android:id/productInfoRow" }
-                            ) {
-                                Spacer(modifier = Modifier.width(50.dp))
-                                Column(
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.Start,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .semantics { testTag = "android:id/productInfoColumn" }
-                                ) {
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(start = 20.dp, end = 50.dp)
-                                            .semantics { testTag = "android:id/productCard" },
-                                        shape = RoundedCornerShape(16.dp),
-                                        elevation = CardDefaults.elevatedCardElevation(
-                                            defaultElevation = 4.dp
+                                    .fillMaxSize()
+                                    .background(
+                                        Brush.verticalGradient(
+                                            colors = listOf(Apricot2, Copper)
                                         )
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .background(
-                                                    Brush.verticalGradient(
-                                                        colors = listOf(Apricot2, Copper)
-                                                    )
-                                                )
-                                        ) {
-                                            Column(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(15.dp)
-                                                    .semantics { testTag = "android:id/productColumn" },
-                                                horizontalAlignment = Alignment.CenterHorizontally
-                                            ) {
-                                                Text(
-                                                    text = product.name,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 30.sp,
-                                                    color = Cocoa,
-                                                    modifier = Modifier.semantics { testTag = "android:id/productNameText" }
-                                                )
-                                                Spacer(modifier = Modifier.height(8.dp))
-                                                Text(
-                                                    text = "${product.quantity} kg",
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 40.sp,
-                                                    color = Cocoa,
-                                                    modifier = Modifier.semantics { testTag = "android:id/productQuantityText" }
-                                                )
-                                            }
-                                        }
-                                    }
+                                    )
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(15.dp)
+                                        .semantics { testTag = "android:id/productColumn" },
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = product.name,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 30.sp,
+                                        color = Cocoa,
+                                        modifier = Modifier.semantics { testTag = "android:id/productNameText" }
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "${product.quantity} kg",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 40.sp,
+                                        color = Cocoa,
+                                        modifier = Modifier.semantics { testTag = "android:id/productQuantityText" }
+                                    )
                                 }
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(20.dp))
                 }
             }
         }

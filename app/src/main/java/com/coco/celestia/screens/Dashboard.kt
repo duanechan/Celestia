@@ -23,8 +23,6 @@ fun Dashboard(role: String) {
         meatBar()
         orderSummaryBar()
     }
-
-
 }
 
 @Composable

@@ -33,18 +33,14 @@ import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun FarmerTransactions(navController: NavController) {
-    val auth = FirebaseAuth.getInstance()
-    val uid = auth.currentUser?.uid ?: ""
+    val uid = FirebaseAuth.getInstance().uid.toString()
     val transactionViewModel: TransactionViewModel = viewModel()
     val transactionData by transactionViewModel.transactionData.observeAsState(emptyList())
     val transactionState by transactionViewModel.transactionState.observeAsState(TransactionState.LOADING)
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(Unit, transactionData) {
         if (transactionData.isEmpty()) {
-            transactionViewModel.fetchTransactions(
-                uid = uid,
-                filter = ""
-            )
+            transactionViewModel.fetchTransactions(uid = uid, filter = "")
         }
     }
 

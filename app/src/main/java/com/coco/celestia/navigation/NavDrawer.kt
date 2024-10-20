@@ -107,7 +107,7 @@ fun NavDrawerTopBar(
             )
         }
         "Admin" -> { TopBar(title = title, navController = navController, gradient = BlueGradientBrush) }
-        "Farmer" -> { GradientTopBar(title = title) }
+        "Farmer" -> { GradientTopBar(title = title, navController = navController) }
         "Coop" -> { TopBar(title = title, navController = navController, gradient = GreenGradientBrush) }
         "CoopCoffee" -> { TopBar(title = title, navController = navController, gradient = GreenGradientBrush) }
         "CoopMeat" -> { TopBar(title = title, navController = navController, gradient = GreenGradientBrush) }
@@ -163,7 +163,13 @@ fun TopBar(title: String, navController: NavController, gradient: Brush) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GradientTopBar(title: String) {
+fun GradientTopBar(title: String, navController: NavController) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination?.route
+
+    // List of routes where the back button should be hidden
+    val noBackButtonRoutes = listOf("farmer_dashboard", "farmer_manage_order", "farmer_items", "profile")
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -179,21 +185,28 @@ fun GradientTopBar(title: String) {
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-//                    IconButton(
-//                        onClick = {},
-//                        modifier = Modifier.align(Alignment.CenterStart)
-//                    ) {
-//                        Icon(
-//                            imageVector = Icons.Default.KeyboardArrowLeft,
-//                            contentDescription = "Back button",
-//                        )
-//                    }
                     Text(
                         text = title,
                         fontWeight = FontWeight.Bold,
                         color = Cocoa,
                         modifier = Modifier.align(Alignment.Center)
                     )
+                }
+            },
+            navigationIcon = {
+                if (currentDestination !in noBackButtonRoutes) {
+                    IconButton(
+                        onClick = {
+                            navController.popBackStack()
+                        },
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowLeft,
+                            contentDescription = "Back button",
+                            tint = Cocoa
+                        )
+                    }
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(

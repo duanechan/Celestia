@@ -23,6 +23,7 @@ data class OrderData(
     val client: String = "",
     val barangay: String = "",
     val street: String = "",
+    val rejectionReason: String? = null
 )
 
 data class ProductData(

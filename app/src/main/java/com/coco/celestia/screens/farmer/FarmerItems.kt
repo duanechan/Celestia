@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -23,8 +23,6 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.SearchBar
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import com.coco.celestia.viewmodel.model.ProductData
@@ -51,7 +49,7 @@ fun FarmerItems(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(color = BgColor)
-            .padding(top = 70.dp, bottom = 30.dp)
+            .padding(top = 100.dp, bottom = 30.dp)
     ) {
         when (itemState) {
             is ItemState.LOADING -> LoadingFarmerProducts()
@@ -83,21 +81,16 @@ fun FarmerItems(items: List<ProductData>, navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // TODO: Search functionality
-                    SearchBar(
-                        query = query,
-                        onQueryChange = { query = it },
-                        onSearch = {},
-                        active = false,
-                        onActiveChange = {},
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search Items") },
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        content = {}
-                    )
+                    // Search bar or additional header content could go here
                 }
             }
-            items(items.sortedByDescending { it.quantity }) { product ->
-                FarmerProductTypeInventory(product = product, navController = navController)
+            // Use itemsIndexed to get the index and the product data
+            itemsIndexed(items.sortedByDescending { it.quantity }) { index, product ->
+                FarmerProductTypeInventory(
+                    product = product,
+                    navController = navController,
+                    isFirst = (index == 0) // Only the first item will get the extra top padding
+                )
             }
         }
     }
@@ -172,17 +165,24 @@ fun LoadingFarmerProducts() {
 }
 
 @Composable
-fun FarmerProductTypeInventory(product: ProductData, navController: NavController) {
+fun FarmerProductTypeInventory(
+    product: ProductData,
+    navController: NavController,
+    isFirst: Boolean = false // Add a flag for the first card
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(170.dp)
-            .padding(horizontal = 20.dp, vertical = 10.dp)
+            .padding(
+                horizontal = 20.dp,
+                vertical = 10.dp
+            )
+            .then(if (isFirst) Modifier.padding(top = 16.dp) else Modifier) // Conditionally add top padding
             .clickable {
                 navController.navigate(Screen.FarmerItemDetails.createRoute(product.name))
             }
-            .semantics { testTag = "android:id/productCard_${product.name}" }
-        ,
+            .semantics { testTag = "android:id/productCard_${product.name}" },
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
         Box(
@@ -229,4 +229,3 @@ fun FarmerProductTypeInventory(product: ProductData, navController: NavControlle
         }
     }
 }
-
