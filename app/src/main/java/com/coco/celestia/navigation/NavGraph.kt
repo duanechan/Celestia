@@ -50,6 +50,7 @@ import com.coco.celestia.screens.farmer.details.FarmerOrderDetails
 import com.coco.celestia.screens.farmer.details.FarmerRequestDetails
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.ContactViewModel
+import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
@@ -57,12 +58,14 @@ import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
     userRole: String,
     contactViewModel: ContactViewModel = viewModel(),
+    itemViewModel: FarmerItemViewModel = viewModel(),
     locationViewModel: LocationViewModel = viewModel(),
     orderViewModel: OrderViewModel = viewModel(),
     productViewModel: ProductViewModel = viewModel(),
@@ -71,6 +74,7 @@ fun NavGraph(
     onNavigate: (String) -> Unit,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
+    val uid = FirebaseAuth.getInstance().uid.toString()
     var orderData by remember { mutableStateOf(OrderData()) }
     val productName by productViewModel.productName.observeAsState("")
     var addressName by remember { mutableStateOf("") }
@@ -256,6 +260,8 @@ fun NavGraph(
             }
 
             AddProductForm(
+                userViewModel = userViewModel,
+                itemViewModel = itemViewModel,
                 productViewModel = productViewModel,
                 quantity = quantityAmount,
                 onProductNameChange = { productViewModel.onProductNameChange(it) },
@@ -277,6 +283,27 @@ fun NavGraph(
                     navController.navigate(Screen.CoopInventory.route)
                     onEvent(Triple(ToastStatus.SUCCESSFUL, "${quantityAmount}kg of $productName added to $productType inventory.", System.currentTimeMillis()))
                     productViewModel.updateProductName("")
+                    quantityAmount = 0
+                    productType = ""
+                } else {
+                    onEvent(Triple(ToastStatus.WARNING, "Please fill in all fields", System.currentTimeMillis()))
+                    navController.navigate(Screen.AddProductInventory.route)
+                }
+            }
+        }
+        composable(route = Screen.FarmerAddProductInventoryDB.route) {
+            LaunchedEffect(Unit) {
+                if(productName.isNotEmpty() &&
+                    quantityAmount > 0)
+                {
+                    val product = ProductData(
+                        name = productName,
+                        quantity = quantityAmount,
+                        type = "Vegetable"
+                    )
+                    itemViewModel.addItem(uid, product)
+                    navController.navigate(Screen.FarmerItems.route)
+                    onEvent(Triple(ToastStatus.SUCCESSFUL, "${quantityAmount}kg of $productName added to your inventory.", System.currentTimeMillis()))
                     quantityAmount = 0
                     productType = ""
                 } else {

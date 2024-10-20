@@ -60,11 +60,14 @@ import com.coco.celestia.ui.theme.RoastedBeans
 import com.coco.celestia.ui.theme.Sorted
 import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.util.calculateMonthlyInventory
+import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.MonthlyInventory
 import com.coco.celestia.viewmodel.model.ProductData
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun CoopInventory(navController: NavController, role: String) {
@@ -334,18 +337,35 @@ fun CoopMonthlyItemList(itemList: List<MonthlyInventory>) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddProductForm(
+    userViewModel: UserViewModel,
+    itemViewModel: FarmerItemViewModel,
     productViewModel: ProductViewModel,
     quantity: Int,
     onProductNameChange: (String) -> Unit,
     onQuantityChange: (String) -> Unit
 ) {
+    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var expanded by remember { mutableStateOf(false) }
+    val userData by userViewModel.userData.observeAsState()
     val productData by productViewModel.productData.observeAsState()
     val productName by productViewModel.productName.observeAsState("")
     val from by productViewModel.from.observeAsState("")
+    var role by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
-        productViewModel.fetchProducts("", "Coop")
+    LaunchedEffect(uid) {
+        userViewModel.fetchUser(uid)
+    }
+
+    LaunchedEffect(userData) {
+        userData?.let {
+            role = it.role
+            if (role.contains("Coop")) {
+                productViewModel.fetchProducts("", "Coop")
+            }
+            if (role == "Farmer") {
+                itemViewModel.getItems(uid)
+            }
+        }
     }
 
     Column(
@@ -371,38 +391,51 @@ fun AddProductForm(
         )
 
         // Product Name
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded },
-            modifier = Modifier.semantics { testTag = "android:id/ProductDropdown" }
-        ) {
-            OutlinedTextField(
-                readOnly = true,
-                value = productName,
-                onValueChange = {},
-                placeholder = { Text("Select Product") },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor()
-            )
-
-            ExposedDropdownMenu(
+        if (role.contains("Coop")) {
+            ExposedDropdownMenuBox(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onExpandedChange = { expanded = !expanded },
+                modifier = Modifier.semantics { testTag = "android:id/ProductDropdown" }
             ) {
-                productData?.forEach { productItem ->
-                    androidx.compose.material3.DropdownMenuItem(
-                        text = { Text(productItem.name) },
-                        onClick = {
-                            onProductNameChange(productItem.name)
-                            expanded = false
-                        }
-                    )
+                OutlinedTextField(
+                    readOnly = true,
+                    value = productName,
+                    onValueChange = {},
+                    placeholder = { Text("Select Product") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    productData?.forEach { productItem ->
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { Text(productItem.name) },
+                            onClick = {
+                                onProductNameChange(productItem.name)
+                                expanded = false
+                            }
+                        )
+                    }
                 }
             }
+        }
+        if (role == "Farmer") {
+            OutlinedTextField(
+                value = productName,
+                onValueChange = onProductNameChange,
+                label = { Text("Product Name") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { testTag = "android:id/ProductNameField" },
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text)
+            )
         }
 
         // Quantity

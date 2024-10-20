@@ -56,14 +56,22 @@ class FarmerItemViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 _itemState.value = ItemState.LOADING
-                val query = database.child(uid).child("items").push()
-                query.setValue(product)
-                    .addOnSuccessListener {
+                val query = database.child(uid).child("items").child(product.name.lowercase())
+                query.addListenerForSingleValueEvent(object: ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val item = snapshot.getValue(ProductData::class.java)
+                        if (item == null) {
+                            query.setValue(product)
+                        } else {
+                            query.child("quantity").setValue(item.quantity + product.quantity)
+                        }
                         _itemState.value = ItemState.SUCCESS
                     }
-                    .addOnFailureListener {
-                        _itemState.value = ItemState.ERROR("Error: Failed to add product.")
+
+                    override fun onCancelled(error: DatabaseError) {
+                        _itemState.value = ItemState.ERROR(error.message)
                     }
+                })
             } catch (e: Exception) {
                 _itemState.value = ItemState.ERROR(e.message.toString())
             }

@@ -19,9 +19,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.SearchBar
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import com.coco.celestia.viewmodel.model.ProductData
@@ -38,7 +41,7 @@ fun FarmerItems(navController: NavController) {
     val itemData by itemViewModel.itemData.observeAsState(emptyList())
     val itemState by itemViewModel.itemState.observeAsState(ItemState.LOADING)
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(Unit, itemData) {
         if (itemData.isEmpty()) {
             itemViewModel.getItems(uid = uid)
         }
@@ -48,40 +51,60 @@ fun FarmerItems(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(color = BgColor)
-            .padding(top = 80.dp, bottom = 30.dp)
+            .padding(top = 70.dp, bottom = 30.dp)
     ) {
         when (itemState) {
             is ItemState.LOADING -> LoadingFarmerProducts()
-            is ItemState.ERROR -> {
-                Text(
-                    "Failed to load products: ${(itemState as ItemState.ERROR).message}",
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .semantics { testTag = "android:id/errorProductsText" }
-                )
-            }
-            is ItemState.EMPTY -> EmptyFarmerProducts(navController = navController)
-            is ItemState.SUCCESS -> {
-                LazyColumn(
-                    contentPadding = PaddingValues(top = 35.dp, bottom = 100.dp),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .semantics { testTag = "android:id/farmerProductsList" }
+            is ItemState.ERROR -> ErrorFarmerProducts(message = (itemState as ItemState.ERROR).message)
+            is ItemState.EMPTY -> EmptyFarmerProducts()
+            is ItemState.SUCCESS -> FarmerItems(items = itemData, navController = navController)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FarmerItems(items: List<ProductData>, navController: NavController) {
+    var query by remember { mutableStateOf("") }
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        LazyColumn(
+            contentPadding = PaddingValues(bottom = 100.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .semantics { testTag = "android:id/farmerProductsList" }
+        ) {
+            item {
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    item {
-                        Box(modifier = Modifier.fillMaxWidth())
-                    }
-                    items(itemData) { product ->
-                        FarmerProductTypeInventory(product = product, navController = navController)
-                    }
+                    // TODO: Search functionality
+                    SearchBar(
+                        query = query,
+                        onQueryChange = { query = it },
+                        onSearch = {},
+                        active = false,
+                        onActiveChange = {},
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search Items") },
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        content = {}
+                    )
                 }
+            }
+            items(items.sortedByDescending { it.quantity }) { product ->
+                FarmerProductTypeInventory(product = product, navController = navController)
             }
         }
     }
 }
 
 @Composable
-fun EmptyFarmerProducts(navController: NavController) {
+fun ErrorFarmerProducts(message: String) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier.fillMaxSize()
@@ -89,13 +112,34 @@ fun EmptyFarmerProducts(navController: NavController) {
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxSize().padding(16.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            IconButton(
-                onClick = { navController.navigate(Screen.AddProductInventory.route) }
-            ) {
-                Icon(imageVector = Icons.Default.AddCircle, tint = SageGreen, contentDescription = "Add product", modifier = Modifier.size(50.dp))
-            }
+            Text(
+                "Failed to load products: $message}",
+                modifier = Modifier
+                    .padding(16.dp)
+                    .semantics { testTag = "android:id/errorProductsText" }
+            )
+        }
+    }
+}
+
+@Composable
+fun EmptyFarmerProducts() {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            Icon(imageVector = Icons.Outlined.Home, tint = SageGreen, contentDescription = "Add product", modifier = Modifier.size(100.dp))
             Text("No products available.",
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
@@ -112,7 +156,13 @@ fun LoadingFarmerProducts() {
         contentAlignment = Alignment.Center,
         modifier = Modifier.fillMaxSize()
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
             Text("Loading products...",
                 modifier = Modifier
                     .padding(16.dp)
@@ -152,7 +202,7 @@ fun FarmerProductTypeInventory(product: ProductData, navController: NavControlle
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = product.name,
+                        text = product.name.replaceFirstChar { it.uppercase() },
                         fontSize = 25.sp,
                         color = Cocoa,
                         fontWeight = FontWeight.Bold,

@@ -106,7 +106,7 @@ fun NavDrawerTopBar(
                 ),
             )
         }
-        "Admin" -> {TopBar(title = title, navController = navController, gradient = BlueGradientBrush)}
+        "Admin" -> { TopBar(title = title, navController = navController, gradient = BlueGradientBrush) }
         "Farmer" -> { GradientTopBar(title = title) }
         "Coop" -> { TopBar(title = title, navController = navController, gradient = GreenGradientBrush) }
         "CoopCoffee" -> { TopBar(title = title, navController = navController, gradient = GreenGradientBrush) }
@@ -344,6 +344,7 @@ fun NavDrawerBottomBar(
                 )
             }
         }
+
         if ((role == "Coop" || role == "CoopCoffee" || role == "CoopMeat") && currentDestination == Screen.AddProductInventory.route) {
             FloatingActionButton(
                 onClick = { navController.navigate(Screen.CoopAddProductInventoryDB.route) },
@@ -353,6 +354,45 @@ fun NavDrawerBottomBar(
                     .align(Alignment.TopCenter)
                     .offset(y = (-30).dp)
                     .semantics { testTag = "android:id/coopAddProductButton" }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Save",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+        if (role == "Farmer" && currentDestination == Screen.FarmerItems.route) {
+            FloatingActionButton(
+                onClick = { navController.navigate(Screen.AddProductInventory.route) },
+                shape = CircleShape,
+                containerColor = SageGreen,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = (-30).dp)
+                    .semantics { testTag = "android:id/farmerAddProductButton" }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+
+        if (role == "Farmer" && currentDestination == Screen.AddProductInventory.route) {
+            FloatingActionButton(
+                onClick = { navController.navigate(Screen.FarmerAddProductInventoryDB.route) },
+                shape = CircleShape,
+                containerColor = SageGreen,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = (-30).dp)
+                    .semantics { testTag = "android:id/farmerAddProductButton" }
             ) {
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
