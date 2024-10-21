@@ -52,6 +52,7 @@ import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.ContactViewModel
 import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.LocationViewModel
+import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
@@ -128,10 +129,25 @@ fun NavGraph(
 //            Dashboard(userRole = userRole,
 //                orderViewModel = orderViewModel)
 //        }
-
         composable(route = Screen.Farmer.route) {
             onNavigate("Dashboard")
-            FarmerDashboard()
+            //initial - to fix later
+            val userData by userViewModel.userData.observeAsState()
+            val orderData by orderViewModel.orderData.observeAsState(emptyList())
+            val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
+            val selectedCategory = ""
+            val searchQuery = ""
+
+            if (userData != null) {
+                FarmerDashboard(
+                    navController = navController,
+                    userData = userData,
+                    orderData = orderData,
+                    orderState = orderState,
+                    selectedCategory = selectedCategory,
+                    searchQuery = searchQuery
+                )
+            }
         }
         composable(route = Screen.FarmerManageOrder.route) {
             onNavigate("Orders")

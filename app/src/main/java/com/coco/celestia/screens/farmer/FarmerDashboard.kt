@@ -1,31 +1,76 @@
 package com.coco.celestia.screens.farmer
 
-
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.coco.celestia.R
-import com.coco.celestia.navigation.GradientTopBar
+import com.coco.celestia.viewmodel.OrderState
+import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.UserData
+import com.coco.celestia.ui.theme.*
 
-@Preview
 @Composable
-fun FarmerDashboard() {
-    Image(painter = painterResource(id = R.drawable.clientdashboardmock), contentDescription = "Login Image",
-        modifier = Modifier.size(1000.dp))
+fun FarmerDashboard(
+    navController: NavController,
+    userData: UserData?,
+    orderData: List<OrderData>,
+    orderState: OrderState,
+    selectedCategory: String,
+    searchQuery: String
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BgColor)
+            .padding(top = 120.dp)
+    ) {
+        userData?.let { user ->
+            Text(
+                text = "Welcome, ${user.firstname} ${user.lastname}!",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+                color = Cocoa
+            )
+        }
 
-    Spacer(modifier = Modifier.height(50.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(start = 20.dp, end = 10.dp, top = 270.dp)
+        ) {
+            Text(
+                text = "Recent Order Requests",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+                color = Cocoa
+            )
+            Spacer(modifier = Modifier.height(8.dp))
 
-    Text(text = "Farmer Dashboard Test", fontSize = 50.sp, modifier =  Modifier.padding(50.dp,350.dp))
+            val latestOrders = orderData
+            FarmerManageRequest(
+                navController = navController,
+                userData = userData,
+                orderData = latestOrders,
+                orderState = orderState,
+                selectedCategory = selectedCategory,
+                searchQuery = searchQuery
+            )
+        }
+    }
 }
-
-
