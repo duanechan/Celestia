@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.UserData
 
@@ -55,7 +56,7 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
     var expanded by remember { mutableStateOf(false) }
     var selectedUser by remember { mutableStateOf<UserData?>(null) }
     val usersData by userViewModel.usersData.observeAsState()
-    val userState by userViewModel.userState.observeAsState()
+    val userState by userViewModel.userState.observeAsState(UserState.LOADING)
     val users: MutableList<UserData?> = mutableListOf()
 
     LaunchedEffect(userState) {

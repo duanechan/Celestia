@@ -1,6 +1,5 @@
 package com.coco.celestia.screens.admin
 
-import android.content.ClipData.Item
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,8 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
@@ -20,6 +22,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,6 +33,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
@@ -190,7 +195,7 @@ fun CheckAddUser(
     role: (String),
     onRegisterEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
-    val userState by userViewModel.userState.observeAsState(UserState.LOADING)
+    val userState by userViewModel.userState.observeAsState("")
     val subject = "Welcome to Coco: Coop Connects"
     val placeholderPass = "Coco123"
     val body = """
@@ -216,24 +221,65 @@ fun CheckAddUser(
 
             """.trimIndent()
 
+    if (email.isNotEmpty() && firstname.isNotEmpty() && lastname.isNotEmpty()) {
+        val passwordInput = remember { mutableStateOf("") }
+        val (showDialog, setShowDialog) = mutableStateOf(true)
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { setShowDialog(false) },
+                title = { Text("Enter Password") },
+                text = {
+                    TextField(
+                        value = passwordInput.value,
+                        onValueChange = { passwordInput.value = it },
+                        label = { Text("Password") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                    )
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        setShowDialog(false)
+                        userViewModel.addAccount(email, firstname, lastname, placeholderPass, role, passwordInput.value)
+                    }) {
+                        Text("Confirm")
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = {
+                        setShowDialog(false)
+                        navController.navigate(Screen.AdminUserManagement.route)
+                    }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+    } else {
+        onRegisterEvent(
+            Triple(
+                ToastStatus.WARNING,
+                "All fields must be filled",
+                System.currentTimeMillis()
+            )
+        )
+        navController.navigate(Screen.AdminUserManagement.route)
+    }
+
     LaunchedEffect(userState) {
         when (userState) {
-            is UserState.ERROR -> {
-                onRegisterEvent(Triple(ToastStatus.FAILED, (userState as UserState.ERROR).message, System.currentTimeMillis()))
-            }
             is UserState.REGISTER_SUCCESS -> {
                 sendEmail(email, subject, body)
                 onRegisterEvent(Triple(ToastStatus.SUCCESSFUL, "Registration Successful", System.currentTimeMillis()))
                 userViewModel.resetUserState()
                 navController.navigate(Screen.AdminUserManagement.route)
             }
+            is UserState.ERROR -> {
+                onRegisterEvent(Triple(ToastStatus.WARNING, "Error: ${(userState as UserState.ERROR).message}", System.currentTimeMillis()))
+                navController.navigate(Screen.AdminUserManagement.route)
+            }
             else -> {}
         }
-    }
-
-    if (email.isNotEmpty() && firstname.isNotEmpty() && lastname.isNotEmpty()) {
-        userViewModel.register(email, firstname, lastname, placeholderPass, role)
-    } else {
-        onRegisterEvent(Triple(ToastStatus.WARNING, "All text must be filled", System.currentTimeMillis()))
     }
 }
