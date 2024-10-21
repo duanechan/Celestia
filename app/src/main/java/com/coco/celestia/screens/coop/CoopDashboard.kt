@@ -1,8 +1,13 @@
 package com.coco.celestia.screens.coop
 
-import android.graphics.Color
-import androidx.compose.foundation.Image
+import android.graphics.Typeface
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import android.graphics.Color as AndroidColor
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,21 +19,31 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.coco.celestia.R
+import com.coco.celestia.ui.theme.Copper
+import com.coco.celestia.ui.theme.Copper3
+import com.coco.celestia.ui.theme.DarkGreen
+import com.coco.celestia.ui.theme.GreenBeans
 import com.coco.celestia.ui.theme.GreenGradientBrush
-import com.github.anastr.speedviewlib.components.indicators.Indicator
+import com.coco.celestia.ui.theme.RoastedBeans
+import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.XAxis
@@ -38,6 +53,7 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import kotlinx.coroutines.delay
 
 
 @Preview
@@ -60,11 +76,16 @@ fun CoopDashboard() {
 fun OverviewSummaryBox(){
     Box(modifier = Modifier
         .padding(8.dp)
-        .background(androidx.compose.ui.graphics.Color.White)
-        .fillMaxWidth()){
-        Text(text = "Overview Summary", fontWeight = FontWeight.Bold)
+        .fillMaxWidth()
+        .border(BorderStroke(3.dp, Color.White), shape = RoundedCornerShape(18.dp))
+        .clip(RoundedCornerShape(18.dp))
+        .background(Color.White)){
+        Text(text = "Overview Summary",
+            fontWeight = FontWeight.Bold,
+            color = DarkGreen,
+            modifier = Modifier.padding(start = 8.dp, top = 8.dp))
         Spacer(modifier = Modifier.height(5.dp))
-        Row {
+        Row(modifier = Modifier.padding(12.dp)) {
             Column {
                 TimeToMarketGaugeChart(avgTimeToMarket, maxTimeToMarket)
                 DefectRatesPieChart(defectRates)
@@ -75,7 +96,7 @@ fun OverviewSummaryBox(){
     }
 }
 
-
+//Sample Data
 val productionData = listOf(
     Entry(0f, 50f),
     Entry(1f, 60f),
@@ -97,10 +118,12 @@ val maxTimeToMarket = 10f
 
 @Composable
 fun TotalProductionVolumeLineChart(dataPoints: List<Entry>) {
-    Box(modifier = Modifier
-        .padding(5.dp)
-        .width(250.dp)
-        .height(250.dp)){
+    Box(
+        modifier = Modifier
+            .padding(5.dp)
+            .width(300.dp)
+            .height(300.dp)
+    ) {
 
         AndroidView(
             modifier = Modifier
@@ -112,14 +135,30 @@ fun TotalProductionVolumeLineChart(dataPoints: List<Entry>) {
                     xAxis.position = XAxis.XAxisPosition.BOTTOM
                     axisRight.isEnabled = false
                     legend.isEnabled = true
+
+                    // Load default bold Typeface
+                    val boldTypeface = Typeface.DEFAULT_BOLD
+                    xAxis.typeface = boldTypeface // Make X-axis numbers bold
+                    axisLeft.typeface = boldTypeface // Make Y-axis numbers bold
+
+                    // Configure Left Y-Axis
+                    axisLeft.setDrawGridLines(true)
+                    axisLeft.gridLineWidth = 2f
+
+                    // Disable Right Y-Axis
+                    axisRight.isEnabled = false
+
+                    // Enable legend
+                    legend.isEnabled = true
                 }
             },
             update = { lineChart ->
                 val dataSet = LineDataSet(dataPoints, "Production Volume").apply {
-                    color = Color.GREEN
-                    valueTextColor = Color.BLACK
-                    lineWidth = 2f
-                    circleRadius = 4f
+                    color = Color(0xFF5A8F5C).toArgb()
+                    valueTextColor = AndroidColor.BLACK
+                    lineWidth = 4f
+                    circleRadius = 6f
+
                     setDrawCircleHole(false)
                 }
                 lineChart.data = LineData(dataSet)
@@ -133,85 +172,67 @@ fun TotalProductionVolumeLineChart(dataPoints: List<Entry>) {
 fun DefectRatesPieChart(entries: List<PieEntry>) {
 
     Box(modifier = Modifier
-        .padding(5.dp)
-        .width(150.dp)
-        .height(150.dp)){
+        .width(160.dp)
+        .height(160.dp)){
 
         AndroidView(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp),
+                .height(500.dp),
             factory = { context ->
                 PieChart(context).apply {
                     description.isEnabled = false
                     isDrawHoleEnabled = false
                     setUsePercentValues(true)
                     legend.isEnabled = true
+                    legend.textColor = AndroidColor.BLACK
+                    legend.textSize = 12f
                 }
             },
+
             update = { pieChart ->
                 val dataSet = PieDataSet(entries, "Defect Rates").apply {
                     setColors(
-                        Color.RED,
-                        Color.YELLOW,
-                        Color.BLUE
+                        RoastedBeans.toArgb(),
+                        Copper.toArgb(),
+                        Copper3.toArgb()
                     )
-                    valueTextColor = Color.WHITE
+                    valueTextColor = AndroidColor.BLACK
+
                 }
                 pieChart.data = PieData(dataSet)
                 pieChart.invalidate() // Refresh chart with new data
             }
         )
     }
-
 }
 
 @Composable
 fun TimeToMarketGaugeChart(averageTime: Float, maxTime: Float) {
-    val progress = (averageTime / maxTime) * 100
+    var targetProgress by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(Unit) {
+        targetProgress = (averageTime / maxTime) * 100
+    }
+
+    val animatedProgress by animateFloatAsState(
+        targetValue = targetProgress,
+        animationSpec = tween(durationMillis = 1000)
+    )
 
     Box(
         modifier = Modifier
-            .padding(5.dp)
+            .padding(top = 15.dp)
             .size(150.dp)
     ) {
-        // Using AndroidView to integrate SpeedView into Jetpack Compose
-        AndroidView(
-            factory = { context ->
-                com.github.anastr.speedviewlib.SpeedView(context).apply {
-                    // Set max to 100 (or your max progress)
-                    maxSpeed = 100f
-
-                    // Set current progress with animation duration
-                    speedTo(progress, 1000)
-
-                    // Disable speedometer trembling for simplicity
-                    withTremble = false
-
-                    // Customize indicator style
-                    setIndicator(indicator = Indicator.Indicators.NormalIndicator)
-
-//                    // Set colors
-//                    speedometerColor = Color.Transparent
-//                    needleColor = MaterialTheme.colors.primary
-//                    needlePointColor = MaterialTheme.colors.primary
-//                    needlePointRadius = 10f
-//                    needleWidth = 10f
-//                    needleRadius = 60f
-//
-//                    // Set text properties
-//                    textColor = MaterialTheme.colors.onBackground
-//                    textSize = 20f
-//                    textTypeface = Typeface.DEFAULT_BOLD
-                }
-            },
-            update = { speedView ->
-                // Update speed dynamically
-                speedView.speedTo(progress, 1000)
-            },
+        // Circular progress indicator
+        CircularProgressIndicator(
+            progress = animatedProgress / 100f, // Normalize to [0, 1]
             modifier = Modifier
                 .size(150.dp)
-                .padding(16.dp)
+                .padding(16.dp),
+            color = Color(0xFF5A8F5C), // Replace with your defined color
+            strokeWidth = 15.dp  // Adjust thickness for a modern look
         )
 
         Column(
@@ -220,15 +241,13 @@ fun TimeToMarketGaugeChart(averageTime: Float, maxTime: Float) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Avg. Time to Market: $averageTime Days",
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center
+                text = "Time to Market:",
+                fontSize = 10.sp,
             )
             Text(
-                text = "${progress.toInt()}%",
-                fontSize = 20.sp,
+                text = "${averageTime.toInt()} Days", // Display average time as integer
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
             )
         }
     }
