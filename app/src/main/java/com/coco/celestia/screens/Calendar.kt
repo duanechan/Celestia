@@ -2,19 +2,17 @@ package com.coco.celestia.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.CircularProgressIndicator
@@ -23,7 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -37,9 +34,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.coco.celestia.util.DateUtil
 import com.coco.celestia.util.getDisplayName
 import com.coco.celestia.viewmodel.CalendarViewModel
@@ -66,7 +63,7 @@ fun Calendar(
     val inputFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
     val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
-    LaunchedEffect(key1 = targetDate) {
+    LaunchedEffect(Unit) {
         orderViewModel.fetchAllOrders(
             "",
             userRole
@@ -79,31 +76,60 @@ fun Calendar(
             )
         }
     ) { padding ->
-        Surface (
+        LazyColumn (
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(padding)
         ) {
-            CalendarWidget(
-                orderViewModel = orderViewModel,
-                days = DateUtil.daysOfWeek,
-                yearMonth = uiState.yearMonth,
-                dates = uiState.dates,
-                onPreviousMonthButtonClicked = { prevMonth ->
-                    viewModel.toPreviousMonth(prevMonth)
-                },
-                onNextMonthButtonClicked =  { nextMonth ->
-                    viewModel.toNextMonth(nextMonth)
-                },
-                onDateClickListener = { selectedDate ->
-                    targetDate = selectedDate.fullDate.toString()
+            item {
+                CalendarWidget(
+                    orderViewModel = orderViewModel,
+                    days = DateUtil.daysOfWeek,
+                    yearMonth = uiState.yearMonth,
+                    dates = uiState.dates,
+                    onPreviousMonthButtonClicked = { prevMonth ->
+                        viewModel.toPreviousMonth(prevMonth)
+                    },
+                    onNextMonthButtonClicked =  { nextMonth ->
+                        viewModel.toNextMonth(nextMonth)
+                    },
+                    onDateClickListener = { selectedDate ->
+                        targetDate = selectedDate.fullDate.toString()
+                    }
+                )
+            }
+
+            item {
+                Row (
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Product Name",
+                        modifier = Modifier
+                            .weight(2f)
+                            .fillMaxWidth()
+                            .offset(x=5.dp),
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Start
+                    )
+                    Text(
+                        text = "Quantity",
+                        modifier = Modifier
+                            .weight(2f)
+                            .fillMaxWidth(),
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
                 }
-            )
+            }
 
             when (orderState) {
                 is OrderState.LOADING -> {
-                    CircularProgressIndicator()
+                    item {
+                        CircularProgressIndicator()
+                    }
                 }
                 is OrderState.SUCCESS -> {
                     val sameDate = orderData.filter { order ->
@@ -117,29 +143,35 @@ fun Calendar(
                         }
                     }
                     if (sameDate.isNotEmpty()) {
-                        sameDate.forEach { order ->
+                        itemsIndexed(sameDate) { _, order ->
                             OrderItem(order = order)
                         }
                     } else {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp)
-                        ) {
-                            Text(
-                                text = "No orders found for this date.",
+                        item {
+                            Box(
                                 modifier = Modifier
-                                    .align(Alignment.CenterStart)
-                            )
+                                    .fillMaxSize()
+                                    .padding(16.dp)
+                            ) {
+                                Text(
+                                    text = "No orders found for this date.",
+                                    modifier = Modifier
+                                        .align(Alignment.CenterStart)
+                                )
+                            }
                         }
                     }
 
                 }
                 OrderState.EMPTY -> {
-                    Text("No orders found for this date.")
+                    item {
+                        Text("No orders found for this date.")
+                    }
                 }
                 is OrderState.ERROR -> {
-                    Text("Error: ${(orderState as OrderState.ERROR).message}")
+                    item {
+                        Text("Error: ${(orderState as OrderState.ERROR).message}")
+                    }
                 }
             }
         }
@@ -148,21 +180,28 @@ fun Calendar(
 
 @Composable
 fun OrderItem(order: OrderData) {
-        Box(
+    Row (
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = order.orderData.name,
             modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .padding(8.dp)
-            ) {
-                Text("Order ID: ${order.orderId}")
-                Text("Client: ${order.client}")
-                Text("Status: ${order.status}")
-            }
-        }
+                .weight(2f)
+                .fillMaxWidth(),
+            textAlign = TextAlign.Start,
+        )
+        Text(
+            text = "${order.orderData.quantity}",
+            modifier = Modifier
+                .weight(2f)
+                .fillMaxWidth(),
+            textAlign = TextAlign.Center,
+        )
+        //Add Price
+    }
 }
 
 @Composable
@@ -188,7 +227,7 @@ fun CalendarWidget(
         Row {
             repeat(days.size) {
                 val item = days[it]
-                DayItem(item, modifier = Modifier.weight(1f))
+                DayItem(item, modifier = Modifier.weight(2f))
             }
         }
         Content(
@@ -264,7 +303,7 @@ fun Content(
                         orderViewModel = orderViewModel,
                         date = item,
                         onClickListener = onDateClickListener,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(2f)
                     )
                     index++
                 }
@@ -297,7 +336,7 @@ fun ContentItem(
         }
         .distinct()
 
-    Box(
+    Row (
         modifier = modifier
             .background(
                 color = when {
@@ -308,13 +347,15 @@ fun ContentItem(
             )
             .clickable {
                 onClickListener(date)
-            }
+            },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
     ) {
         Text(
             text = date.dayOfMonth,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier
-                .align(Alignment.Center)
+                .weight(2f)
                 .padding(10.dp)
         )
     }
