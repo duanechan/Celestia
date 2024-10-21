@@ -6,9 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.FirebaseNetworkException
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -142,6 +145,84 @@ class UserViewModel : ViewModel() {
         }
     }
 
+    fun addAccount(email: String, firstname: String, lastname: String, password: String, role: String, currentPass: String) {
+        viewModelScope.launch {
+            _userState.value = UserState.LOADING
+            val currentUser = auth.currentUser
+
+            try {
+                reAuthenticate(currentUser, currentPass)
+                val result = auth.createUserWithEmailAndPassword(email, password).await()
+                val newUser = result.user
+
+                if (newUser != null) {
+                    val userData = UserData(email, firstname, lastname, role)
+                    database.child(newUser.uid).setValue(userData).await()
+                    auth.signOut()
+                    signInUser(currentUser?.email ?: "", currentPass)
+                    _userState.value = UserState.REGISTER_SUCCESS
+                } else {
+                    _userState.value = UserState.ERROR("Registration failed. No user created.")
+                }
+            } catch (e: FirebaseAuthUserCollisionException) {
+                _userState.value = UserState.ERROR("Account already exists.")
+            } catch (e: FirebaseNetworkException) {
+                _userState.value = UserState.ERROR("No internet connection.")
+            } catch (e: Exception) {
+                _userState.value = UserState.ERROR(e.message ?: "Unknown error occurred during registration.")
+            }
+        }
+    }
+
+    private suspend fun signInUser(email: String, password: String) {
+        try {
+            auth.signInWithEmailAndPassword(email, password).await()
+        } catch (e: FirebaseAuthException) {
+            _userState.value = UserState.ERROR("Sign-in failed: ${e.message}")
+        }
+    }
+
+    private suspend fun reAuthenticate(currentUser: FirebaseUser?, currentPass: String) {
+        currentUser?.let { user ->
+            try {
+                val currentEmail = user.email ?: throw Exception("Email not available for re-authentication")
+                val credential = EmailAuthProvider.getCredential(currentEmail, currentPass)
+
+                val task = user.reauthenticate(credential)
+                task.await()
+
+                if (task.isSuccessful) {
+                    // Re-authentication was successful
+                } else {
+                    _userState.value = UserState.ERROR("Re-authentication failed. Please try again.")
+                }
+            } catch (e: FirebaseAuthInvalidCredentialsException) {
+                _userState.value = UserState.ERROR("Re-authentication failed. Incorrect password.")
+                throw Exception("Re-authentication failed. Incorrect password.")
+            } catch (e: FirebaseAuthException) {
+                handleReAuthError(e)
+            } catch (e: Exception) {
+                _userState.value = UserState.ERROR("Re-authentication failed. ${e.message}")
+            }
+        } ?: run {
+            _userState.value = UserState.ERROR("Re-authentication failed. Original user is null.")
+        }
+    }
+
+
+    private fun handleReAuthError(e: FirebaseAuthException) {
+        when (e.errorCode) {
+            "ERROR_INVALID_PASSWORD" -> {
+                _userState.value = UserState.ERROR("Re-authentication failed. Incorrect password.")
+            }
+            "ERROR_USER_NOT_FOUND" -> {
+                _userState.value = UserState.ERROR("Re-authentication failed. User not found.")
+            }
+            else -> {
+                _userState.value = UserState.ERROR("Re-authentication failed. ${e.message}")
+            }
+        }
+    }
 
     /**
      * Logs in a user with the provided email and password.

@@ -279,7 +279,7 @@ fun NavDrawerBottomBar(
                         )
                     },
                     label = { Text("Items", color = contentColor, fontFamily = mintsansFontFamily) },
-                    selected = currentDestination == routes.inventory,
+                    selected = currentDestination == routes.inventory || currentDestination == Screen.AdminAddProduct.route,
                     onClick = {
                         navController.navigate(routes.inventory) {
                             popUpTo(navController.graph.startDestinationId)
@@ -449,6 +449,44 @@ fun NavDrawerBottomBar(
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = "Save",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+        if (role == "Admin" && currentDestination == Screen.AdminInventory.route) {
+            FloatingActionButton(
+                onClick = { navController.navigate(Screen.AdminAddProduct.route) },
+                shape = CircleShape,
+                containerColor = LightBlue,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = (-30).dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Product",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(24.dp)
+//                        .background(BlueGradientBrush)
+                )
+            }
+        }
+        if (role == "Admin" && currentDestination == Screen.AdminAddProduct.route) {
+            FloatingActionButton(
+                onClick = { navController.navigate(Screen.AdminConfirmAddProduct.route) },
+                shape = CircleShape,
+                containerColor = DarkBlue,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = (-30).dp)
+
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Confirm Add Product",
                     tint = Color.White,
                     modifier = Modifier.size(24.dp)
                 )

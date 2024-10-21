@@ -26,10 +26,12 @@ import com.coco.celestia.screens.Profile
 import com.coco.celestia.screens.RegisterScreen
 import com.coco.celestia.screens.SplashScreen
 import com.coco.celestia.screens.admin.AddUserForm
+import com.coco.celestia.screens.admin.AdminAddProduct
 import com.coco.celestia.screens.admin.AdminDashboard
 import com.coco.celestia.screens.admin.AdminInventory
 import com.coco.celestia.screens.admin.AdminUserManagement
 import com.coco.celestia.screens.admin.CheckAddUser
+import com.coco.celestia.screens.admin.ConfirmAddProduct
 import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientDashboard
 import com.coco.celestia.screens.client.ClientOrder
@@ -201,6 +203,13 @@ fun NavGraph(
             )
         }
         composable(route = Screen.AdminAddUserManagement.route) {
+            LaunchedEffect(Unit) {
+                emailSend = ""
+                firstname = ""
+                lastname = ""
+                role = ""
+            }
+
             AddUserForm(
                 navController = navController,
                 email = emailSend,
@@ -222,6 +231,28 @@ fun NavGraph(
                 lastname = lastname,
                 role = role,
                 onRegisterEvent = { onEvent(it) }
+            )
+        }
+        composable(route = Screen.AdminAddProduct.route) {
+            LaunchedEffect(Unit) {
+                productViewModel.updateProductName("")
+                productType = ""
+            }
+
+            AdminAddProduct(
+                navController = navController,
+                productName = productName,
+                onProductNameChanged = { productViewModel.updateProductName(it)},
+                onTypeSelected = { productType = it}
+            )
+        }
+        composable(route = Screen.AdminConfirmAddProduct.route) {
+            ConfirmAddProduct(
+                navController = navController,
+                productViewModel = productViewModel,
+                productName = productName,
+                productType = productType,
+                onToastEvent = { onEvent(it) }
             )
         }
         composable(route = Screen.Coop.route) {
