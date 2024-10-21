@@ -15,11 +15,13 @@ activityCompose = "1.8.2"
 composeBom = "2023.08.00"
 googleGmsGoogleServices = "4.4.2"
 firebaseDatabase = "21.0.0"
+mpandroidchart = "v3.1.0"
 navigationCompose = "2.7.7"
 protoliteWellKnownTypes = "18.0.0"
 navigationRuntimeKtx = "2.7.7"
 runtimeLivedata = "1.6.8"
 media3Decoder = "1.4.1"
+speedviewlib = "1.6.1"
 
 [libraries]
 accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version = "0.30.1" }
@@ -47,9 +49,11 @@ firebase-database = { group = "com.google.firebase", name = "firebase-database",
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 mail-javax-mail-api = { module = "javax.mail:javax.mail-api", version.ref = "javaxMailApiVersion" }
+mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpandroidchart" }
 protolite-well-known-types = { group = "com.google.firebase", name = "protolite-well-known-types", version.ref = "protoliteWellKnownTypes" }
 androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }
+speedviewlib = { module = "com.github.anastr:speedviewlib", version.ref = "speedviewlib" }
 ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-media3-decoder = { group = "androidx.media3", name = "media3-decoder", version.ref = "media3Decoder" }
 

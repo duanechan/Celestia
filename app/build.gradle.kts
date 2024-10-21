@@ -54,6 +54,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.mpandroidchart)
+    implementation(libs.speedviewlib)
     implementation(libs.accompanist.systemuicontroller)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
