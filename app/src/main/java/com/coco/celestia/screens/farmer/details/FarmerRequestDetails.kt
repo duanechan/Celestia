@@ -179,14 +179,14 @@ fun OrderDetails(
                     val fulfillmentStatus = if (isPartialFulfillment == true) "PARTIALLY FULFILLED" else "PREPARING"
                     // Update order status accordingly
                     val updatedOrder = orderData.copy(status = fulfillmentStatus)
-                    orderViewModel.updateOrder(updatedOrder)
+                    // orderViewModel.updateOrder(updatedOrder)
                     onAccept()
                 } else {
                     setOrderAccepted(false)
                     setRejectionReason(selectedReason)
                     // Update order status to rejected with reason
                     val updatedOrder = orderData.copy(status = "REJECTED", rejectionReason = selectedReason)
-                    orderViewModel.updateOrder(updatedOrder)
+                    // orderViewModel.updateOrder(updatedOrder)
                     onReject(selectedReason!!)
                 }
                 setConfirmationDialog(true)

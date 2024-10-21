@@ -38,7 +38,7 @@ class OrderViewModel : ViewModel() {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
             try {
-                val snapshot = database.get().await()
+                val snapshot = database.child("client").get().await()
                 if (snapshot.exists()) {
                     for(user in snapshot.children) {
                         var found = false
@@ -83,7 +83,7 @@ class OrderViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
-            database.child(uid).addValueEventListener(object : ValueEventListener {
+            database.child("client").child(uid).addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val filterKeywords = filter.split(",").map { it.trim() }
                     val orders = snapshot.children
@@ -120,7 +120,7 @@ class OrderViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
-            database.addValueEventListener(object : ValueEventListener {
+            database.child("client").addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val filterKeywords = filter.split(",").map { it.trim() }
 
@@ -172,7 +172,7 @@ class OrderViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
-            val query = database.child(uid).push()
+            val query = database.child("client").child(uid).push()
             query.setValue(order)
                 .addOnCompleteListener {
                     _orderState.value = OrderState.SUCCESS
@@ -183,6 +183,28 @@ class OrderViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Takes an order to fulfill.
+     *
+     * This function allows coop users to take on an order to fulfill.
+     *
+     * @param uid The UID of the user taking on the order.
+     * @param order The order data to be taken on.
+     * @throws Exception If there is an error taking on the order.
+     */
+    fun takeOnOrder(uid: String, role: String, order: OrderData) {
+        viewModelScope.launch {
+            _orderState.value = OrderState.LOADING
+            val query = database.child(role.lowercase()).child(uid).child("preparing").push()
+            query.setValue(order.copy(status = "PREPARING"))
+                .addOnCompleteListener {
+                    _orderState.value = OrderState.SUCCESS
+                }
+                .addOnFailureListener {
+                    _orderState.value = OrderState.ERROR(it.message ?: "Unknown error")
+                }
+        }
+    }
     /**
      * Updates an order in the database based on the order ID.
      *

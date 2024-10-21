@@ -56,6 +56,7 @@ import com.coco.celestia.util.formatDate
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -239,6 +240,7 @@ fun OrderItem(
     orderViewModel: OrderViewModel,
     transactionViewModel: TransactionViewModel,
 ) {
+    val uid = FirebaseAuth.getInstance().uid.toString()
     val orderStatus = order.status
     when(orderStatus) {
         "PENDING" -> {
@@ -246,7 +248,7 @@ fun OrderItem(
                 navController = navController,
                 order = order,
                 onAccept = {
-                    orderViewModel.updateOrder(order.copy(status = "PREPARING"))
+                    orderViewModel.takeOnOrder(uid, "coop", order)
                     transactionViewModel.recordTransaction(
                         auth.currentUser?.uid.toString(),
                         TransactionData(
