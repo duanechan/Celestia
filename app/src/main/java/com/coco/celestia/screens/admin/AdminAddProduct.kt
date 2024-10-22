@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -26,15 +25,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.util.sendEmail
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
-import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.model.ProductData
 
 @Composable
@@ -46,6 +42,10 @@ fun AdminAddProduct(
 ) {
     val radioOptions = listOf("Coffee", "Meat")
     val ( selectedOption, onOptionSelected) = remember{ mutableStateOf(radioOptions[0])}
+
+    LaunchedEffect(Unit) {
+        onTypeSelected(selectedOption)
+    }
 
     Column (
         modifier = Modifier
@@ -107,7 +107,10 @@ fun AdminAddProduct(
             ) {
                 RadioButton(
                     selected = (option == selectedOption),
-                    onClick = null
+                    onClick = {
+                        onOptionSelected(option)
+                        onTypeSelected(option)
+                    }
                 )
 
                 Text(
