@@ -35,6 +35,7 @@ import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientDashboard
 import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.client.ClientOrderDetails
+import com.coco.celestia.screens.client.ProductTypeCard
 import com.coco.celestia.screens.coop.AddProductForm
 import com.coco.celestia.screens.coop.CoopDashboard
 import com.coco.celestia.screens.coop.CoopInventory
@@ -104,7 +105,7 @@ fun NavGraph(
             LoginScreen(
                 mainNavController = navController,
                 userViewModel = userViewModel,
-                onLoginEvent =  { onEvent(it) }
+                onLoginEvent = { onEvent(it) }
             )
         }
         composable(route = Screen.ForgotPassword.route) {
@@ -185,9 +186,30 @@ fun NavGraph(
             onNavigate("Transactions")
             FarmerTransactions(navController = navController)
         }
+
+        //TODO: Initial might change
         composable(route = Screen.Client.route) {
-            onNavigate("Dashboard")
-            ClientDashboard()
+            val userData by userViewModel.userData.observeAsState()
+            val orderData by orderViewModel.orderData.observeAsState(emptyList())
+            val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
+            val productViewModel: ProductViewModel = viewModel()
+            val orderViewModel: OrderViewModel = viewModel()
+
+            val selectedCategory = ""
+            val searchQuery = ""
+
+            userData?.let { user ->
+                ClientDashboard(
+                    navController = navController,
+                    userData = user,
+                    orderData = orderData,
+                    orderState = orderState,
+                    selectedCategory = selectedCategory,
+                    searchQuery = searchQuery,
+                    productViewModel = productViewModel,
+                    orderViewModel = orderViewModel
+                )
+            }
         }
         composable(route = Screen.ClientOrder.route) {
             onNavigate("Orders")
@@ -201,6 +223,7 @@ fun NavGraph(
             onNavigate("Contacts")
             ClientContact(contactViewModel = contactViewModel)
         }
+
         composable(route = Screen.Admin.route) {
             onNavigate("Dashboard")
             // Fetch user data when the composable is first launched
@@ -245,7 +268,7 @@ fun NavGraph(
                 lastname = lastname,
                 role = role,
                 onEmailChanged = { emailSend = it },
-                onFirstNameChanged = { firstname = it},
+                onFirstNameChanged = { firstname = it },
                 onLastNameChanged = { lastname = it },
                 onRoleChanged = { role = it }
             )
@@ -350,9 +373,9 @@ fun NavGraph(
 
         composable(route = Screen.CoopAddProductInventoryDB.route) {
             LaunchedEffect(Unit) {
-                if(productName.isNotEmpty() &&
-                    quantityAmount > 0)
-                {
+                if (productName.isNotEmpty() &&
+                    quantityAmount > 0
+                ) {
                     val product = ProductData(
                         name = productName,
                         quantity = quantityAmount,
@@ -360,21 +383,33 @@ fun NavGraph(
                     )
                     productViewModel.updateProductQuantity(product.name, product.quantity)
                     navController.navigate(Screen.CoopInventory.route)
-                    onEvent(Triple(ToastStatus.SUCCESSFUL, "${quantityAmount}kg of $productName added to $productType inventory.", System.currentTimeMillis()))
+                    onEvent(
+                        Triple(
+                            ToastStatus.SUCCESSFUL,
+                            "${quantityAmount}kg of $productName added to $productType inventory.",
+                            System.currentTimeMillis()
+                        )
+                    )
                     productViewModel.updateProductName("")
                     quantityAmount = 0
                     productType = ""
                 } else {
-                    onEvent(Triple(ToastStatus.WARNING, "Please fill in all fields", System.currentTimeMillis()))
+                    onEvent(
+                        Triple(
+                            ToastStatus.WARNING,
+                            "Please fill in all fields",
+                            System.currentTimeMillis()
+                        )
+                    )
                     navController.navigate(Screen.AddProductInventory.route)
                 }
             }
         }
         composable(route = Screen.FarmerAddProductInventoryDB.route) {
             LaunchedEffect(Unit) {
-                if(productName.isNotEmpty() &&
-                    quantityAmount > 0)
-                {
+                if (productName.isNotEmpty() &&
+                    quantityAmount > 0
+                ) {
                     val product = ProductData(
                         name = productName,
                         quantity = quantityAmount,
@@ -382,11 +417,23 @@ fun NavGraph(
                     )
                     itemViewModel.addItem(uid, product)
                     navController.navigate(Screen.FarmerItems.route)
-                    onEvent(Triple(ToastStatus.SUCCESSFUL, "${quantityAmount}kg of $productName added to your inventory.", System.currentTimeMillis()))
+                    onEvent(
+                        Triple(
+                            ToastStatus.SUCCESSFUL,
+                            "${quantityAmount}kg of $productName added to your inventory.",
+                            System.currentTimeMillis()
+                        )
+                    )
                     quantityAmount = 0
                     productType = ""
                 } else {
-                    onEvent(Triple(ToastStatus.WARNING, "Please fill in all fields", System.currentTimeMillis()))
+                    onEvent(
+                        Triple(
+                            ToastStatus.WARNING,
+                            "Please fill in all fields",
+                            System.currentTimeMillis()
+                        )
+                    )
                     navController.navigate(Screen.AddProductInventory.route)
                 }
             }
@@ -495,5 +542,34 @@ fun NavGraph(
                 ClientOrderDetails(navController, it, orderCount)
             }
         }
+
+        //TODO: fix navigation in categorybox
+//        composable(
+//            route = "productTypeCard/{productName}",
+//            arguments = listOf(navArgument("productName") { type = NavType.StringType })
+//        ) { backStackEntry ->
+//            val productName = backStackEntry.arguments?.getString("productName") ?: ""
+//
+//            // Here, you can fetch the product based on the productName
+//            productViewModel.fetchProductByType(productName)
+//
+//            // Observe the product data
+//            val productData by productViewModel.productData.observeAsState(emptyList())
+//
+//            // Ensure there's a product to display
+//            if (productData.isNotEmpty()) {
+//                // Example of how to get the first product, modify as needed
+//                val product = productData.first()
+//
+//                // Pass the necessary parameters to ProductTypeCard
+//                ProductTypeCard(
+//                    product = product,
+//                    navController = navController,
+//                    userViewModel = userViewModel,
+//                    onAddToCartEvent = { /* handle add to cart event */ },
+//                    onOrder = { /* handle order event */ }
+//                )
+//            }
+//        }
     }
 }
