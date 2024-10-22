@@ -196,6 +196,7 @@ fun CheckAddUser(
     onRegisterEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val userState by userViewModel.userState.observeAsState("")
+    var userRole by remember { mutableStateOf("") }
     val subject = "Welcome to Coco: Coop Connects"
     val placeholderPass = "Coco123"
     val body = """
@@ -241,7 +242,12 @@ fun CheckAddUser(
                 confirmButton = {
                     Button(onClick = {
                         setShowDialog(false)
-                        userViewModel.addAccount(email, firstname, lastname, placeholderPass, role, passwordInput.value)
+                        userRole = if (role == "Coffee") {
+                            "CoopCoffee"
+                        } else {
+                            "CoopMeat"
+                        }
+                        userViewModel.addAccount(email, firstname, lastname, placeholderPass, userRole, passwordInput.value)
                     }) {
                         Text("Confirm")
                     }
