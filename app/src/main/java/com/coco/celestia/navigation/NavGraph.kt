@@ -135,28 +135,21 @@ fun NavGraph(
         composable(route = Screen.Farmer.route) {
             onNavigate("Dashboard")
 
-            // Fetch user and order data when the composable is first launched
             LaunchedEffect(Unit) {
                 val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
                 userViewModel.fetchUser(uid)
                 orderViewModel.fetchAllOrders(filter = "", role = "Farmer")
             }
 
-            // Observing LiveData from ViewModels
             val userData by userViewModel.userData.observeAsState()
             val orderData by orderViewModel.orderData.observeAsState(emptyList())
             val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
-
-            // Local state for category and search query
             val selectedCategory = ""
             val searchQuery = ""
 
-            // Show a loading indicator while user data is being fetched
             if (userData == null || orderState == OrderState.LOADING) {
-                // Show loading UI or a placeholder
                 LoadingIndicator()
             } else {
-                // Render the FarmerDashboard when userData is available
                 FarmerDashboard(
                     navController = navController,
                     userData = userData,
@@ -164,7 +157,7 @@ fun NavGraph(
                     orderState = orderState,
                     selectedCategory = selectedCategory,
                     searchQuery = searchQuery,
-                    productViewModel = viewModel()
+                    itemViewModel = viewModel()
                 )
             }
         }

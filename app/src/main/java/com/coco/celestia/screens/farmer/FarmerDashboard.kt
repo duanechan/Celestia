@@ -3,6 +3,7 @@ package com.coco.celestia.screens.farmer
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -38,9 +40,10 @@ import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.UserData
 import com.coco.celestia.ui.theme.*
-import com.coco.celestia.viewmodel.ProductState
-import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.FarmerItemViewModel
+import com.coco.celestia.viewmodel.ItemState
 import com.coco.celestia.viewmodel.model.ProductData
+import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -52,28 +55,39 @@ fun FarmerDashboard(
     orderState: OrderState,
     selectedCategory: String,
     searchQuery: String,
-    productViewModel: ProductViewModel = viewModel()
+    itemViewModel: FarmerItemViewModel = viewModel()
 ) {
-    val productData by productViewModel.productData.observeAsState(emptyList())
-    val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
+    val uid = FirebaseAuth.getInstance().uid.toString()
+    val itemData by itemViewModel.itemData.observeAsState(emptyList())
+    val itemState by itemViewModel.itemState.observeAsState(ItemState.LOADING)
 
-    LaunchedEffect(Unit) {
-        productViewModel.fetchProducts(filter = "", role = "Farmer")
+    LaunchedEffect(Unit, itemData) {
+        itemViewModel.getItems(uid = uid)
     }
 
-    when (productState) {
-        is ProductState.LOADING -> {
-            CircularProgressIndicator(modifier = Modifier.fillMaxSize())
+    when (itemState) {
+        is ItemState.LOADING -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
         }
-        is ProductState.SUCCESS -> {
-            if (productData.isEmpty()) {
-                Text("No products available", modifier = Modifier.padding(16.dp))
+        is ItemState.SUCCESS -> {
+            if (itemData.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No items available", modifier = Modifier.padding(16.dp))
+                }
             } else {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(BgColor)
-                        .padding(top = 120.dp)
+                        .padding(top = 110.dp)
                 ) {
                     Column(
                         modifier = Modifier
@@ -92,18 +106,28 @@ fun FarmerDashboard(
                             color = Cocoa
                         )
                         Spacer(modifier = Modifier.height(5.dp))
+
                         userData?.let { user ->
                             Text(
                                 text = "Welcome, ${user.firstname} ${user.lastname}!",
-                                fontSize = 20.sp,
+                                fontSize = 25.sp,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Start,
                                 modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
                                 color = Cocoa
                             )
                         }
-                        Spacer(modifier = Modifier.height(80.dp))
+                        Spacer(modifier = Modifier.height(50.dp))
 
+                        Text(
+                            text = "In Season Products",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.fillMaxWidth().padding(start = 20.dp),
+                            color = Cocoa
+                        )
+                        InSeasonCropsPlaceholder()
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
                             text = "Product Stock Levels",
@@ -113,8 +137,8 @@ fun FarmerDashboard(
                             color = Cocoa
                         )
 
-                        StockLevelBarGraph(products = productData)
-                        Spacer(modifier = Modifier.height(20.dp))
+                        StockLevelBarGraph(items = itemData)
+                        Spacer(modifier = Modifier.height(10.dp))
 
                         Text(
                             text = "Order Listings",
@@ -140,15 +164,50 @@ fun FarmerDashboard(
                 }
             }
         }
-        is ProductState.ERROR -> {
-            Text(
-                text = "Error loading product data: ${(productState as ProductState.ERROR).message}",
-                color = Color.Red,
-                modifier = Modifier.padding(16.dp)
-            )
+        is ItemState.ERROR -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Error loading item data: ${(itemState as ItemState.ERROR).message}",
+                    color = Color.Red,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
         }
-        is ProductState.EMPTY -> {
-            Text("No products available", modifier = Modifier.padding(16.dp))
+        is ItemState.EMPTY -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No items available", modifier = Modifier.padding(16.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun InSeasonCropsPlaceholder() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 5.dp, top = 10.dp, end = 20.dp),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        repeat(3) {
+            Box(
+                modifier = Modifier
+                    .size(110.dp)
+                    .background(PaleGold, shape = RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "In Season",
+                    fontSize = 14.sp,
+                    color = Color.DarkGray
+                )
+            }
         }
     }
 }
@@ -223,17 +282,24 @@ fun OrderStatusSection(
 }
 
 @Composable
-fun StockLevelBarGraph(products: List<ProductData>) {
-    val maxQuantity = products.maxOfOrNull { it.quantity } ?: 1
+fun StockLevelBarGraph(items: List<ProductData>) {
+    val topItems = items.sortedByDescending { it.quantity }.take(3)
+    val maxQuantity = topItems.maxOfOrNull { it.quantity } ?: 1
+
+    val itemsToDisplay = topItems + List(3 - topItems.size) { ProductData(name = "Placeholder", quantity = 0) }
 
     Column(modifier = Modifier.padding(start = 16.dp, top = 10.dp, end = 10.dp)) {
-        products.forEach { product ->
-            Text(text = product.name, fontSize = 14.sp, color = Cocoa)
+        itemsToDisplay.forEach { item ->
+            Text(
+                text = if (item.name == "Placeholder") "No Product" else item.name,
+                fontSize = 14.sp,
+                color = if (item.name == "Placeholder") Color.Gray else Cocoa
+            )
             Spacer(modifier = Modifier.height(4.dp))
 
             var animationPlayed by remember { mutableStateOf(false) }
             val animatedWidth by animateDpAsState(
-                targetValue = if (animationPlayed) (product.quantity.toFloat() / maxQuantity.toFloat() * 100).dp else 0.dp,
+                targetValue = if (animationPlayed) (item.quantity.toFloat() / maxQuantity.toFloat() * 100).dp else 0.dp,
                 animationSpec = tween(durationMillis = 1000)
             )
 
@@ -250,13 +316,14 @@ fun StockLevelBarGraph(products: List<ProductData>) {
                 Box(
                     modifier = Modifier
                         .fillMaxHeight()
-                        .width(animatedWidth)
-                        .background(GoldenYellow, shape = RoundedCornerShape(10.dp))
+                        .width(if (item.name == "Placeholder") 0.dp else animatedWidth)
+                        .background(
+                            if (item.name == "Placeholder") Color.LightGray else GoldenYellow,
+                            shape = RoundedCornerShape(10.dp)
+                        )
                 )
             }
             Spacer(modifier = Modifier.height(3.dp))
         }
     }
 }
-
-

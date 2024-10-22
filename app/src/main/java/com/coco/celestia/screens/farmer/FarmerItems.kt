@@ -81,7 +81,6 @@ fun FarmerItems(items: List<ProductData>, navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Search bar or additional header content could go here
                 }
             }
             // Use itemsIndexed to get the index and the product data
@@ -89,7 +88,7 @@ fun FarmerItems(items: List<ProductData>, navController: NavController) {
                 FarmerProductTypeInventory(
                     product = product,
                     navController = navController,
-                    isFirst = (index == 0) // Only the first item will get the extra top padding
+                    isFirst = (index == 0)
                 )
             }
         }
@@ -168,7 +167,7 @@ fun LoadingFarmerProducts() {
 fun FarmerProductTypeInventory(
     product: ProductData,
     navController: NavController,
-    isFirst: Boolean = false // Add a flag for the first card
+    isFirst: Boolean = false
 ) {
     Card(
         modifier = Modifier
@@ -178,7 +177,7 @@ fun FarmerProductTypeInventory(
                 horizontal = 20.dp,
                 vertical = 10.dp
             )
-            .then(if (isFirst) Modifier.padding(top = 16.dp) else Modifier) // Conditionally add top padding
+            .then(if (isFirst) Modifier.padding(top = 16.dp) else Modifier)
             .clickable {
                 navController.navigate(Screen.FarmerItemDetails.createRoute(product.name))
             }

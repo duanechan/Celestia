@@ -49,6 +49,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.CoopBackground
 import com.coco.celestia.ui.theme.DeliveredItem
 import com.coco.celestia.ui.theme.GreenBeans
@@ -256,7 +257,7 @@ fun CoopItemList(itemList: List<ProductData>) {
                         "Sorted Beans" -> Sorted
                         "Kiniing" -> Kiniing
                         "Raw Meat" -> RawMeat
-                        else -> Color.White // Default color if no match
+                        else -> Color.White
                     }
                 ),
                 modifier = Modifier
@@ -371,6 +372,7 @@ fun AddProductForm(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(color = BgColor)
             .padding(top = 100.dp)
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)

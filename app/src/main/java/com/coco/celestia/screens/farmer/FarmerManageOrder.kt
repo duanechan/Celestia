@@ -157,7 +157,7 @@ fun FarmerManageOrder(
                         )
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.transactions), // Add your transaction icon here
+                        painter = painterResource(id = R.drawable.transactions),
                         contentDescription = "Transactions",
                         tint = Cocoa
                     )
@@ -321,7 +321,6 @@ fun FarmerManageOrder(
                                         ) {
                                             ManageOrderCards(navController, order)
 
-                                            // Add the OrderStatusCard here
                                             OrderStatusCard(orderStatus = order.status, orderId = order.orderId)
                                         }
                                     }
@@ -366,7 +365,6 @@ fun FarmerManageRequest(
             Text("No pending orders available.")
         }
         is OrderState.SUCCESS -> {
-            // Filter orders by pending status
             val pendingOrders = orderData.filter { it.status == "PENDING" }
             val filteredOrders = pendingOrders.filter { order ->
                 (selectedCategory.isEmpty() || order.orderData.name == selectedCategory) &&
@@ -392,8 +390,8 @@ fun FarmerManageRequest(
 fun ManageOrderCards(
     navController: NavController,
     order: OrderData,
-    cardWidth: Dp = 250.dp, // Default width
-    cardHeight: Dp = 180.dp // Default height
+    cardWidth: Dp = 250.dp,
+    cardHeight: Dp = 180.dp
 ) {
     val clientName = order.client
     val orderId = order.orderId.substring(6, 10).uppercase()
@@ -405,7 +403,7 @@ fun ManageOrderCards(
     ) {
         Card(
             modifier = Modifier
-                .width(cardWidth) // Use width instead of weight
+                .width(cardWidth)
                 .height(cardHeight)
                 .semantics { testTag = "android:id/manageOrderCard+${order.orderId}" },
             shape = RoundedCornerShape(12.dp),
@@ -467,10 +465,7 @@ fun ManageOrderCards(
                 }
             }
         }
-
         Spacer(modifier = Modifier.width(8.dp))
-        // Status
-//        OrderStatusCard(orderStatus = orderStatus, orderId = order.orderId)
     }
 }
 
@@ -478,12 +473,12 @@ fun ManageOrderCards(
 fun OrderStatusCard(
     orderStatus: String,
     orderId: String,
-    cardWidth: Dp = 100.dp, // Default width
-    cardHeight: Dp = 180.dp // Default height
+    cardWidth: Dp = 100.dp,
+    cardHeight: Dp = 180.dp
 ) {
     val backgroundColor = when (orderStatus) {
         "PREPARING" -> Brown1
-        "PENDING" -> GoldenYellow
+        "PARTIAL" -> GoldenYellow
         "REJECTED" -> Copper3
         else -> Color.Gray
         // Additional statuses can be added here
@@ -491,14 +486,14 @@ fun OrderStatusCard(
 
     val iconPainter = when (orderStatus) {
         "PREPARING" -> painterResource(id = R.drawable.preparing)
-        "PENDING" -> Icons.Default.Refresh
+        "PARTIAL" -> Icons.Default.Refresh
         "REJECTED" -> Icons.Default.Clear
         else -> Icons.Default.Warning
     }
 
     Card(
         modifier = Modifier
-            .size(cardWidth, cardHeight) // Set custom width and height
+            .size(cardWidth, cardHeight)
             .semantics { testTag = "android:id/orderStatusCard_$orderId" },
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),

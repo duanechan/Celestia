@@ -56,7 +56,6 @@ import com.coco.celestia.util.formatDate
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -277,7 +276,7 @@ fun PreparingOrderItem(
     orderCount: Int,
     navController: NavController,
     orderViewModel: OrderViewModel,
-    modifier: Modifier = Modifier, //testing
+    modifier: Modifier = Modifier,
 ) {
     val orderId = order.orderId.substring(5,9).uppercase()
     val orderClient = order.client
@@ -359,7 +358,7 @@ fun PendingOrderItem(
     navController: NavController,
     order: OrderData,
     onAccept: () -> Unit,
-    modifier: Modifier = Modifier //testing
+    modifier: Modifier = Modifier
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var action by remember { mutableStateOf("") }
