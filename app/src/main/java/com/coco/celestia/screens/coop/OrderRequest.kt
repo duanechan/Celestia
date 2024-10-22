@@ -116,7 +116,7 @@ fun OrderRequest(
             horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             Button(
-                onClick = { /* Handle filter click */ },
+                onClick = { keywords = "PENDING" },
                 modifier = Modifier
                     .padding(end = 8.dp)
                     .height(40.dp)
@@ -129,7 +129,7 @@ fun OrderRequest(
                 Text("Pending", fontFamily = mintsansFontFamily)
             }
             Button(
-                onClick = { /* Handle filter click */ },
+                onClick = { keywords = "PREPARING" },
                 modifier = Modifier
                     .padding(end = 8.dp)
                     .height(40.dp)
@@ -142,7 +142,7 @@ fun OrderRequest(
                 Text("Preparing", fontFamily = mintsansFontFamily)
             }
             Button(
-                onClick = { /* Handle filter click */ },
+                onClick = { keywords = "DELIVERING" },
                 modifier = Modifier
                     .padding(end = 8.dp)
                     .height(40.dp)
@@ -155,7 +155,7 @@ fun OrderRequest(
                 Text("Delivering", fontFamily = mintsansFontFamily)
             }
             Button(
-                onClick = { /* Handle filter click */ },
+                onClick = { keywords = "COMPLETED" },
                 modifier = Modifier
                     .height(40.dp)
                     .semantics { testTag = "android:id/CompletedButton" },
@@ -196,7 +196,10 @@ fun LoadingOrders() {
     Box(modifier = Modifier
         .fillMaxSize()
         .semantics { testTag = "android:id/LoadingOrders" }) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(25.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             CircularProgressIndicator()
         }
     }
@@ -221,10 +224,14 @@ fun EmptyOrders() {
     Box(modifier = Modifier
         .fillMaxSize()
         .semantics { testTag = "android:id/EmptyOrders" }) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(25.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
             Text(
-                text = "No pending orders.",
-                fontSize = 20.sp
+                text = "Empty orders",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
             )
         }
     }

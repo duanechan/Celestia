@@ -12,6 +12,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlin.reflect.full.memberProperties
 
 sealed class OrderState {
     data object LOADING : OrderState()
@@ -90,8 +91,10 @@ class OrderViewModel : ViewModel() {
                         .mapNotNull { it.getValue(OrderData::class.java) }
                         .filter { order ->
                             filterKeywords.any { keyword ->
-                                order.orderData.name.contains(keyword, ignoreCase = true) ||
-                                order.orderData.type.contains(keyword, ignoreCase = true)
+                                order::class.memberProperties.any { property ->
+                                    val value = property.getter.call(order)?.toString() ?: ""
+                                    value.contains(keyword, ignoreCase = true)
+                                }
                             }
                         }
                     _orderData.value = orders
@@ -134,8 +137,10 @@ class OrderViewModel : ViewModel() {
                                     order.orderData.type.equals("Meat", ignoreCase = true)
                                 val isVegetable = order.orderData.type.equals("Vegetable", ignoreCase = true)
                                 val matchesFilter = filterKeywords.any { keyword ->
-                                    order.orderData.name.contains(keyword, ignoreCase = true) ||
-                                    order.orderData.type.contains(keyword, ignoreCase = true)
+                                    order::class.memberProperties.any { property ->
+                                        val value = property.getter.call(order)?.toString() ?: ""
+                                        value.contains(keyword, ignoreCase = true)
+                                    }
                                 }
                                 when (role) {
                                     "Coop", "Admin" -> isCoffeeOrMeat && matchesFilter

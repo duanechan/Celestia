@@ -32,11 +32,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.viewmodel.model.UserData
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.XAxis
@@ -46,25 +47,59 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-@Preview
+
 @Composable
-fun AdminDashboard() {
-    Box(modifier = Modifier
-        .background(BlueGradientBrush)
-        .fillMaxSize()){
-        Column() {
-            Spacer(modifier = Modifier.height(118.dp))
+fun AdminDashboard(userData: UserData?) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BlueGradientBrush)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+
+            val dateFormat = SimpleDateFormat("EEEE, MMMM d yyyy", Locale.getDefault())
+            val today = dateFormat.format(Date())
+            Spacer(modifier = Modifier.height(100.dp))
+            userData?.let { user ->
+                Text(
+                    text = "Welcome, ${user.firstname} ${user.lastname}!",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Start,
+                    fontFamily = mintsansFontFamily,
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color.White
+                )
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = today,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Light,
+                textAlign = TextAlign.Start,
+                fontFamily = mintsansFontFamily,
+                modifier = Modifier.fillMaxWidth(),
+                color = Color.White
+            )
+            Spacer(modifier = Modifier.height(50.dp))
             SummaryDashboard()
         }
-
     }
 }
+
 
 @Composable
 fun SummaryDashboard(){
     Box(modifier = Modifier
-        .padding(8.dp)
+        .padding(1.dp)
         .fillMaxWidth()
         .border(BorderStroke(3.dp, Color.White), shape = RoundedCornerShape(18.dp))
         .clip(RoundedCornerShape(18.dp))
@@ -74,7 +109,7 @@ fun SummaryDashboard(){
             color = DarkBlue,
             modifier = Modifier.padding(start = 8.dp, top = 8.dp))
         Spacer(modifier = Modifier.height(5.dp))
-        Row(modifier = Modifier.padding(12.dp)) {
+        Row(modifier = Modifier.padding(5.dp)) {
             Column {
                 TestAdminChart(avgTimeToMarket, maxTimeToMarket)
                 InventoryPieChart(PieChartItem)
