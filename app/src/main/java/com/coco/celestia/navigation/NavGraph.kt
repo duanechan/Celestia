@@ -50,6 +50,7 @@ import com.coco.celestia.screens.farmer.FarmerTransactions
 import com.coco.celestia.screens.farmer.details.FarmerItemDetails
 import com.coco.celestia.screens.farmer.details.FarmerOrderDetails
 import com.coco.celestia.screens.farmer.details.FarmerRequestDetails
+import com.coco.celestia.screens.farmer.details.LoadingIndicator
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.ContactViewModel
 import com.coco.celestia.viewmodel.FarmerItemViewModel
@@ -133,21 +134,37 @@ fun NavGraph(
 //        }
         composable(route = Screen.Farmer.route) {
             onNavigate("Dashboard")
-            //initial - to fix later
+
+            // Fetch user and order data when the composable is first launched
+            LaunchedEffect(Unit) {
+                val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+                userViewModel.fetchUser(uid)
+                orderViewModel.fetchAllOrders(filter = "", role = "Farmer")
+            }
+
+            // Observing LiveData from ViewModels
             val userData by userViewModel.userData.observeAsState()
             val orderData by orderViewModel.orderData.observeAsState(emptyList())
             val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
+
+            // Local state for category and search query
             val selectedCategory = ""
             val searchQuery = ""
 
-            if (userData != null) {
+            // Show a loading indicator while user data is being fetched
+            if (userData == null || orderState == OrderState.LOADING) {
+                // Show loading UI or a placeholder
+                LoadingIndicator()
+            } else {
+                // Render the FarmerDashboard when userData is available
                 FarmerDashboard(
                     navController = navController,
                     userData = userData,
                     orderData = orderData,
                     orderState = orderState,
                     selectedCategory = selectedCategory,
-                    searchQuery = searchQuery
+                    searchQuery = searchQuery,
+                    productViewModel = viewModel()
                 )
             }
         }

@@ -59,6 +59,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.unit.Dp
 import com.coco.celestia.ui.theme.*
 
 @Composable
@@ -287,8 +288,8 @@ fun FarmerManageOrder(
                     is OrderState.SUCCESS -> {
                         val filteredOrders = orderData.filter { order ->
                             (selectedCategory.isEmpty() || order.orderData.name == selectedCategory) &&
-                                order.orderId.contains(searchQuery, ignoreCase = true) &&
-                                order.status.lowercase() != "pending"
+                                    order.orderId.contains(searchQuery, ignoreCase = true) &&
+                                    order.status.lowercase() != "pending"
                         }
 
                         if (filteredOrders.isEmpty()) {
@@ -314,7 +315,15 @@ fun FarmerManageOrder(
                                             .padding(8.dp)
                                             .semantics { testTag = "android:id/orderCard_${order.orderId}" }
                                     ) {
-                                        ManageOrderCards(navController, order)
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            ManageOrderCards(navController, order)
+
+                                            // Add the OrderStatusCard here
+                                            OrderStatusCard(orderStatus = order.status, orderId = order.orderId)
+                                        }
                                     }
                                 }
                             }
@@ -380,10 +389,14 @@ fun FarmerManageRequest(
 }
 
 @Composable
-fun ManageOrderCards(navController: NavController, order: OrderData) {
+fun ManageOrderCards(
+    navController: NavController,
+    order: OrderData,
+    cardWidth: Dp = 250.dp, // Default width
+    cardHeight: Dp = 180.dp // Default height
+) {
     val clientName = order.client
     val orderId = order.orderId.substring(6, 10).uppercase()
-    val orderStatus = order.status
 
     Row(
         modifier = Modifier
@@ -392,8 +405,8 @@ fun ManageOrderCards(navController: NavController, order: OrderData) {
     ) {
         Card(
             modifier = Modifier
-                .weight(1f)
-                .height(180.dp)
+                .width(cardWidth) // Use width instead of weight
+                .height(cardHeight)
                 .semantics { testTag = "android:id/manageOrderCard+${order.orderId}" },
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
@@ -457,18 +470,23 @@ fun ManageOrderCards(navController: NavController, order: OrderData) {
 
         Spacer(modifier = Modifier.width(8.dp))
         // Status
-        OrderStatusCard(orderStatus = orderStatus, orderId = order.orderId)
+//        OrderStatusCard(orderStatus = orderStatus, orderId = order.orderId)
     }
 }
 
 @Composable
-fun OrderStatusCard(orderStatus: String, orderId: String) {
+fun OrderStatusCard(
+    orderStatus: String,
+    orderId: String,
+    cardWidth: Dp = 100.dp, // Default width
+    cardHeight: Dp = 180.dp // Default height
+) {
     val backgroundColor = when (orderStatus) {
         "PREPARING" -> Brown1
         "PENDING" -> GoldenYellow
         "REJECTED" -> Copper3
         else -> Color.Gray
-        // To add delivering and finished/completed
+        // Additional statuses can be added here
     }
 
     val iconPainter = when (orderStatus) {
@@ -480,7 +498,7 @@ fun OrderStatusCard(orderStatus: String, orderId: String) {
 
     Card(
         modifier = Modifier
-            .size(100.dp, 180.dp)
+            .size(cardWidth, cardHeight) // Set custom width and height
             .semantics { testTag = "android:id/orderStatusCard_$orderId" },
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
