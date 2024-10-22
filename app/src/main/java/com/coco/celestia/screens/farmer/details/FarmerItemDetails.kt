@@ -35,17 +35,21 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import com.coco.celestia.screens.farmer.dialogs.EditQuantityDialog
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.viewmodel.FarmerItemViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun FarmerItemDetails(navController: NavController, productName: String) {
+    val uid = FirebaseAuth.getInstance().uid.toString()
     val farmerProductViewModel: ProductViewModel = viewModel()
+    val farmerItemViewModel: FarmerItemViewModel = viewModel()
     val productData by farmerProductViewModel.productData.observeAsState(emptyList())
+    val itemData by farmerItemViewModel.itemData.observeAsState(emptyList())
     val productState by farmerProductViewModel.productState.observeAsState(ProductState.LOADING)
     val orderViewModel: OrderViewModel = viewModel()
     val allOrders by orderViewModel.orderData.observeAsState(emptyList())
@@ -54,25 +58,17 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
     var productQuantity by remember { mutableStateOf(0) }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(Unit, itemData) {
+        farmerItemViewModel.getItems(uid = uid)
+
         if (productData.isEmpty()) {
-            farmerProductViewModel.fetchProducts(
-                filter = "",
-                role = "Farmer"
-            )
+            farmerProductViewModel.fetchProducts(filter = "", role = "Farmer")
         }
-        orderViewModel.fetchAllOrders(
-            filter = "",
-            role = "Farmer"
-        )
+        orderViewModel.fetchAllOrders(filter = "", role = "Farmer")
     }
 
-    // Fetch updated product data whenever the productName changes
     LaunchedEffect(productName) {
-        farmerProductViewModel.fetchProducts(
-            filter = "",
-            role = "Farmer"
-        )
+        farmerProductViewModel.fetchProducts(filter = "", role = "Farmer")
     }
 
     Scaffold(
@@ -90,13 +86,17 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                 ProductState.LOADING -> {
                     CircularProgressIndicator(
                         modifier = Modifier
-                        .align(Alignment.Center)
-                        .semantics { testTag = "android:id/loadingIncidator" })
+                            .align(Alignment.Center)
+                            .semantics { testTag = "android:id/loadingIndicator" }
+                    )
                 }
                 ProductState.SUCCESS -> {
                     val product = productData.find { it.name.equals(productName, ignoreCase = true) }
                     if (product != null) {
-                        productQuantity = product.quantity
+                        // Get quantity from itemData
+                        val availableProduct = itemData.find { it.name.equals(productName, ignoreCase = true) }
+                        productQuantity = availableProduct?.quantity ?: 0
+
                         Column(
                             modifier = Modifier
                                 .fillMaxHeight()
@@ -148,6 +148,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                                 Text(
                                                     text = "Quantity: $productQuantity kg",
                                                     fontSize = 20.sp,
+                                                    fontWeight = Bold,
                                                     textAlign = TextAlign.Center,
                                                     color = Cocoa,
                                                     modifier = Modifier.semantics { testTag = "android:id/productQuantityText" }

@@ -394,7 +394,13 @@ fun NavGraph(
             arguments = listOf(navArgument("productName") { type = NavType.StringType })
         ) { backStackEntry ->
             val productNameDetail = backStackEntry.arguments?.getString("productName")
-            FarmerItemDetails(navController = navController, productName = productNameDetail ?: "")
+            val productViewModel: ProductViewModel = viewModel()
+            val productData by productViewModel.productData.observeAsState(emptyList())
+
+            FarmerItemDetails(
+                navController = navController,
+                productName = productNameDetail ?: ""
+            )
         }
         composable(
             route = Screen.FarmerRequestDetails.route,
