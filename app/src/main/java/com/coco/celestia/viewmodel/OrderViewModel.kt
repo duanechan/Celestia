@@ -38,7 +38,7 @@ class OrderViewModel : ViewModel() {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
             try {
-                val snapshot = database.child("client").get().await()
+                val snapshot = database.get().await()
                 if (snapshot.exists()) {
                     for(user in snapshot.children) {
                         var found = false
@@ -83,7 +83,7 @@ class OrderViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
-            database.child("client").child(uid).addValueEventListener(object : ValueEventListener {
+            database.child(uid).addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val filterKeywords = filter.split(",").map { it.trim() }
                     val orders = snapshot.children
@@ -120,7 +120,7 @@ class OrderViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
-            database.child("client").addValueEventListener(object : ValueEventListener {
+            database.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val filterKeywords = filter.split(",").map { it.trim() }
 
@@ -172,7 +172,7 @@ class OrderViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
-            val query = database.child("client").child(uid).push()
+            val query = database.child(uid).push()
             query.setValue(order)
                 .addOnCompleteListener {
                     _orderState.value = OrderState.SUCCESS

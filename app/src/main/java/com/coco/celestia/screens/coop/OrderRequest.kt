@@ -248,7 +248,7 @@ fun OrderItem(
                 navController = navController,
                 order = order,
                 onAccept = {
-                    orderViewModel.takeOnOrder(uid, "coop", order)
+                    orderViewModel.updateOrder(order.copy(status = "PREPARING"))
                     transactionViewModel.recordTransaction(
                         auth.currentUser?.uid.toString(),
                         TransactionData(
