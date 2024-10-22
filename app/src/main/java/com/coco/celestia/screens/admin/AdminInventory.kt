@@ -7,10 +7,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -22,6 +26,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -41,6 +46,7 @@ import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.model.MonthlyInventory
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun AdminInventory(
@@ -48,6 +54,7 @@ fun AdminInventory(
     productViewModel: ProductViewModel,
     navController: NavController
 ) {
+    val uid = FirebaseAuth.getInstance().uid.toString()
     val productData by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
@@ -170,7 +177,14 @@ fun AdminInventory(
 fun AdminItemList(itemList: List<ProductData>) {
     if (itemList.isNotEmpty()) {
         itemList.forEach { item ->
-            AdminItemCard(item.name, item.quantity, 0, item.priceKg)
+            AdminItemCard(
+                item.name,
+                item.quantity,
+                0,
+                item.priceKg,
+                "current",
+                onEditProductClick = {}
+            )
             Spacer(modifier = Modifier.height(10.dp))
         }
         Spacer(modifier = Modifier.height(50.dp))
@@ -181,7 +195,14 @@ fun AdminItemList(itemList: List<ProductData>) {
 fun AdminMonthlyInventoryList(itemList: List<MonthlyInventory>) {
     if (itemList.isNotEmpty()) {
         itemList.forEach { item ->
-            AdminItemCard(item.productName, item.remainingQuantity, item.totalOrderedThisMonth, item.priceKg)
+            AdminItemCard(
+                item.productName,
+                item.remainingQuantity,
+                item.totalOrderedThisMonth,
+                item.priceKg,
+                "monthly",
+                onEditProductClick = {}
+            )
             Spacer(modifier = Modifier.height(10.dp))
         }
         Spacer(modifier = Modifier.height(50.dp))
@@ -189,7 +210,14 @@ fun AdminMonthlyInventoryList(itemList: List<MonthlyInventory>) {
 }
 
 @Composable
-fun AdminItemCard(productName: String, quantity: Int, ordered: Int, price: Double) {
+fun AdminItemCard(
+    productName: String,
+    quantity: Int,
+    ordered: Int,
+    price: Double,
+    identifier: String,
+    onEditProductClick: (ProductData) -> Unit
+) {
     Card(modifier = Modifier
         .width(500.dp)
         .height(200.dp)
@@ -199,55 +227,44 @@ fun AdminItemCard(productName: String, quantity: Int, ordered: Int, price: Doubl
             containerColor = Color.White
         )) {
         var expanded by remember { mutableStateOf(false) }
-        Column(
-            Modifier
-                .clickable { expanded = !expanded }
-                .padding(16.dp)
-        ) {
-            Row (
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = productName,
-                    fontSize = 25.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Gray,
-                    modifier = Modifier
-                        .padding(top = 15.dp, start = 10.dp)
-                        .alignBy(LastBaseline)
-                )
+        val productData = ProductData (
+            name = productName,
+            quantity = quantity,
 
-                Text(
-                    text = "₱ $price",
-                    fontSize = 20.sp,
-                    color = Gray,
-                    modifier = Modifier
-                        .padding(top = 15.dp, start = 10.dp)
-                        .alignBy(LastBaseline)
-                )
-            }
-            Row (
-                modifier = Modifier
-                    .padding(top = 15.dp, start = 10.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            Column(
+                Modifier
+                    .clickable { expanded = !expanded }
+                    .padding(16.dp)
             ) {
-                Text(
-                    text = "Inventory",
-                    fontSize = 20.sp,
-                    fontFamily = mintsansFontFamily,
-                    color = Gray
-                )
-                Text(
-                    text = "${quantity}kg",
-                    fontSize = 20.sp,
-                    fontFamily = mintsansFontFamily,
-                    color = Gray
-                )
-            }
-            if (ordered != 0) {
+                Row (
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = productName,
+                        fontSize = 25.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Gray,
+                        modifier = Modifier
+                            .padding(top = 15.dp, start = 10.dp)
+                            .alignBy(LastBaseline)
+                    )
+
+                    Text(
+                        text = "₱ $price",
+                        fontSize = 20.sp,
+                        color = Gray,
+                        modifier = Modifier
+                            .padding(top = 15.dp, start = 10.dp)
+                            .alignBy(LastBaseline)
+                    )
+                }
                 Row (
                     modifier = Modifier
                         .padding(top = 15.dp, start = 10.dp)
@@ -255,16 +272,50 @@ fun AdminItemCard(productName: String, quantity: Int, ordered: Int, price: Doubl
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Ordered",
+                        text = "Inventory",
                         fontSize = 20.sp,
                         fontFamily = mintsansFontFamily,
                         color = Gray
                     )
                     Text(
-                        text = "-${ordered}kg",
+                        text = "${quantity}kg",
                         fontSize = 20.sp,
                         fontFamily = mintsansFontFamily,
                         color = Gray
+                    )
+                }
+                if (identifier == "monthly") {
+                    Row (
+                        modifier = Modifier
+                            .padding(top = 15.dp, start = 10.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Ordered",
+                            fontSize = 20.sp,
+                            fontFamily = mintsansFontFamily,
+                            color = Gray
+                        )
+                        Text(
+                            text = "-${ordered}kg",
+                            fontSize = 20.sp,
+                            fontFamily = mintsansFontFamily,
+                            color = Gray
+                        )
+                    }
+                }
+            }
+            if (identifier == "current") {
+                IconButton(
+                    onClick = { onEditProductClick(productData) },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit"
                     )
                 }
             }
