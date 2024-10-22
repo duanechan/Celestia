@@ -203,8 +203,19 @@ fun NavGraph(
         }
         composable(route = Screen.Admin.route) {
             onNavigate("Dashboard")
-            AdminDashboard()
+            // Fetch user data when the composable is first launched
+            LaunchedEffect(Unit) {
+                val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+                userViewModel.fetchUser(uid)
+            }
+            val userData by userViewModel.userData.observeAsState()
+            if (userData == null) {
+                LoadingIndicator()
+            } else {
+                AdminDashboard(userData = userData)
+            }
         }
+
         composable(route = Screen.AdminInventory.route) {
             onNavigate("Inventory")
             AdminInventory(
