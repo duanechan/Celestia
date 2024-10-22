@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.LastBaseline
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -168,8 +169,8 @@ fun AdminInventory(
 @Composable
 fun AdminItemList(itemList: List<ProductData>) {
     if (itemList.isNotEmpty()) {
-        itemList.forEach { (name, quantity) ->
-            AdminItemCard(name, quantity, 0)
+        itemList.forEach { item ->
+            AdminItemCard(item.name, item.quantity, 0, item.priceKg)
             Spacer(modifier = Modifier.height(10.dp))
         }
         Spacer(modifier = Modifier.height(50.dp))
@@ -180,7 +181,7 @@ fun AdminItemList(itemList: List<ProductData>) {
 fun AdminMonthlyInventoryList(itemList: List<MonthlyInventory>) {
     if (itemList.isNotEmpty()) {
         itemList.forEach { item ->
-            AdminItemCard(item.productName, item.remainingQuantity, item.totalOrderedThisMonth)
+            AdminItemCard(item.productName, item.remainingQuantity, item.totalOrderedThisMonth, item.priceKg)
             Spacer(modifier = Modifier.height(10.dp))
         }
         Spacer(modifier = Modifier.height(50.dp))
@@ -188,7 +189,7 @@ fun AdminMonthlyInventoryList(itemList: List<MonthlyInventory>) {
 }
 
 @Composable
-fun AdminItemCard(productName: String, quantity: Int, ordered: Int) {
+fun AdminItemCard(productName: String, quantity: Int, ordered: Int, price: Double) {
     Card(modifier = Modifier
         .width(500.dp)
         .height(200.dp)
@@ -203,13 +204,30 @@ fun AdminItemCard(productName: String, quantity: Int, ordered: Int) {
                 .clickable { expanded = !expanded }
                 .padding(16.dp)
         ) {
-            Text(
-                text = productName,
-                fontSize = 35.sp,
-                fontWeight = FontWeight.Bold,
-                color = Gray,
-                modifier = Modifier.padding(top = 15.dp, start = 10.dp)
-            )
+            Row (
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = productName,
+                    fontSize = 25.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Gray,
+                    modifier = Modifier
+                        .padding(top = 15.dp, start = 10.dp)
+                        .alignBy(LastBaseline)
+                )
+
+                Text(
+                    text = "₱ $price",
+                    fontSize = 20.sp,
+                    color = Gray,
+                    modifier = Modifier
+                        .padding(top = 15.dp, start = 10.dp)
+                        .alignBy(LastBaseline)
+                )
+            }
             Row (
                 modifier = Modifier
                     .padding(top = 15.dp, start = 10.dp)

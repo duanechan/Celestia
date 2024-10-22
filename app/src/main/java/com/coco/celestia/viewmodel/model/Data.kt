@@ -29,7 +29,8 @@ data class OrderData(
 data class ProductData(
     val name: String = "",
     val quantity: Int = 0,
-    val type: String = ""
+    val type: String = "",
+    val priceKg: Double = 0.0
 )
 
 data class TransactionData(
@@ -77,4 +78,5 @@ data class MonthlyInventory(
     val productName: String,
     var remainingQuantity: Int,
     val totalOrderedThisMonth: Int,
+    val priceKg: Double
 )

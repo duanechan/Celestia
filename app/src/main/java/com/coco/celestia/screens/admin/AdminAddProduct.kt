@@ -36,9 +36,11 @@ import com.coco.celestia.viewmodel.model.ProductData
 @Composable
 fun AdminAddProduct(
     navController: NavController,
+    productPrice: String,
     productName: String,
     onProductNameChanged: (String) -> Unit,
-    onTypeSelected: (String) -> Unit
+    onTypeSelected: (String) -> Unit,
+    onPriceChanged: (String) -> Unit
 ) {
     val radioOptions = listOf("Coffee", "Meat")
     val ( selectedOption, onOptionSelected) = remember{ mutableStateOf(radioOptions[0])}
@@ -118,6 +120,17 @@ fun AdminAddProduct(
                 )
             }
         }
+
+        OutlinedTextField (
+            value = productPrice,
+            onValueChange = { onPriceChanged(it) },
+            label = { Text(text = "Price/Kg") },
+            singleLine = true,
+            maxLines = 1,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp)
+        )
     }
 }
 
@@ -127,13 +140,15 @@ fun ConfirmAddProduct(
     productViewModel: ProductViewModel,
     productName: String,
     productType: String,
+    productPrice: String,
     onToastEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val productState by productViewModel.productState.observeAsState()
     val product = ProductData (
         name = productName,
         quantity = 0,
-        type = productType
+        type = productType,
+        priceKg = productPrice.toDouble()
     )
 
     LaunchedEffect(productState) {
@@ -149,7 +164,7 @@ fun ConfirmAddProduct(
         }
     }
 
-    if (productName.isNotEmpty() && productType.isNotEmpty()) {
+    if (productName.isNotEmpty() && productType.isNotEmpty() && productPrice.isNotEmpty()) {
         productViewModel.addProduct(product)
     } else {
         onToastEvent(Triple(ToastStatus.WARNING, "All Fields must be filled", System.currentTimeMillis()))

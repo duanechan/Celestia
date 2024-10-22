@@ -19,7 +19,6 @@ import com.coco.celestia.screens.client.ConfirmOrderRequestPanel
 import com.coco.celestia.screens.client.OrderDetailsPanel
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.Calendar
-import com.coco.celestia.screens.Dashboard
 import com.coco.celestia.screens.ForgotPasswordScreen
 import com.coco.celestia.screens.LoginScreen
 import com.coco.celestia.screens.Profile
@@ -84,6 +83,7 @@ fun NavGraph(
     var addressName by remember { mutableStateOf("") }
     var quantityAmount by remember { mutableIntStateOf(0) }
     var productType by remember { mutableStateOf("") }
+    var productPrice by remember { mutableStateOf("") }
     var emailSend by remember { mutableStateOf("") }
     var firstname by remember { mutableStateOf("") }
     var lastname by remember { mutableStateOf("") }
@@ -254,13 +254,16 @@ fun NavGraph(
             LaunchedEffect(Unit) {
                 productViewModel.updateProductName("")
                 productType = ""
+                productPrice = ""
             }
 
             AdminAddProduct(
                 navController = navController,
+                productPrice = productPrice,
                 productName = productName,
-                onProductNameChanged = { productViewModel.updateProductName(it)},
-                onTypeSelected = { productType = it}
+                onProductNameChanged = { productViewModel.updateProductName(it) },
+                onTypeSelected = { productType = it },
+                onPriceChanged = { productPrice = it }
             )
         }
         composable(route = Screen.AdminConfirmAddProduct.route) {
@@ -269,6 +272,7 @@ fun NavGraph(
                 productViewModel = productViewModel,
                 productName = productName,
                 productType = productType,
+                productPrice = productPrice,
                 onToastEvent = { onEvent(it) }
             )
         }
