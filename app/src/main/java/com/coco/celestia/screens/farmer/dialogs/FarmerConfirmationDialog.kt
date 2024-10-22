@@ -10,6 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -28,20 +30,25 @@ fun FarmerConfirmationDialog(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { testTag = "android:id/dialogTitleColumn" }
             ) {
                 Icon(
                     imageVector = if (isAccepted) Icons.Default.Check else Icons.Default.Close,
                     contentDescription = if (isAccepted) "Checkmark Icon" else "Close Icon",
                     tint = if (isAccepted) Color.Green else Color.Red,
-                    modifier = Modifier.size(50.dp)
+                    modifier = Modifier
+                        .size(50.dp)
+                        .semantics { testTag = "android:id/dialogIcon" }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = if (isAccepted) "Order Accepted" else "Order Rejected",
                     fontSize = 20.sp,
                     color = Color(0xFF6D4A26),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.semantics { testTag = "android:id/dialogTitleText" }
                 )
             }
         },
@@ -52,24 +59,30 @@ fun FarmerConfirmationDialog(
                     fontSize = 16.sp,
                     color = Color.Black,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTag = "android:id/dialogRejectReasonText" }
                 )
             }
         },
         confirmButton = {
             Box(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { testTag = "android:id/dialogConfirmButtonBox" },
                 contentAlignment = Alignment.Center
             ) {
                 TextButton(
                     onClick = {
                         navController.popBackStack()
-                    }
+                    },
+                    modifier = Modifier.semantics { testTag = "android:id/dialogConfirmButton" }
                 ) {
                     Text(
                         text = "OK",
                         color = Color(0xFF4CAF50),
-                        fontSize = 16.sp
+                        fontSize = 16.sp,
+                        modifier = Modifier.semantics { testTag = "android:id/dialogConfirmButtonText" }
                     )
                 }
             }
