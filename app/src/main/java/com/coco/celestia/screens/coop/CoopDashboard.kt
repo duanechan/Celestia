@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -33,17 +34,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.coco.celestia.ui.theme.Copper
-import com.coco.celestia.ui.theme.Copper3
-import com.coco.celestia.ui.theme.DarkGreen
-import com.coco.celestia.ui.theme.GreenBeans
-import com.coco.celestia.ui.theme.GreenGradientBrush
-import com.coco.celestia.ui.theme.RoastedBeans
-import com.coco.celestia.ui.theme.mintsansFontFamily
+import com.coco.celestia.ui.theme.*
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.components.XAxis
@@ -53,7 +49,6 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
-import kotlinx.coroutines.delay
 
 
 @Preview
@@ -65,11 +60,9 @@ fun CoopDashboard() {
         Column() {
             Spacer(modifier = Modifier.height(118.dp))
             OverviewSummaryBox()
+            InventoryManagementBox()
         }
-
     }
-
-
 }
 
 @Composable
@@ -93,6 +86,46 @@ fun OverviewSummaryBox(){
             TotalProductionVolumeLineChart(productionData)
         }
 
+    }
+}
+
+// Example usage
+val avgGreenBeans = 85f
+val maxGreenBeans = 100f
+
+
+// Example usage
+val avgToastBeans = 75f
+val maxToastBeans = 100f
+
+// Example usage
+val avgPacked = 90f
+val maxPacked = 100f
+
+@Composable
+fun InventoryManagementBox(){
+    Box(modifier = Modifier
+        .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 0.dp)
+        .fillMaxWidth()
+        .border(BorderStroke(3.dp, Color.White), shape = RoundedCornerShape(18.dp))
+        .clip(RoundedCornerShape(18.dp))
+        .background(Color.White)
+        .height(200.dp)){
+        Text(text = "Stock Levels",
+            fontWeight = FontWeight.Bold,
+            color = DarkGreen,
+            modifier = Modifier.padding(start = 8.dp, top = 8.dp))
+        Spacer(modifier = Modifier.height(5.dp))
+        Row(
+            modifier = Modifier
+                .padding(12.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            GreenBeansGaugeChart(avgGreenBeans, maxGreenBeans)
+            RoastedGaugeChart(avgToastBeans, maxToastBeans)
+            PackedGaugeChart(avgPacked, maxPacked)
+        }
     }
 }
 
@@ -253,6 +286,174 @@ fun TimeToMarketGaugeChart(averageTime: Float, maxTime: Float) {
     }
 }
 
+@Composable
+fun GreenBeansGaugeChart(averageTime: Float, maxTime: Float) {
+    var targetProgress by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(Unit) {
+        targetProgress = (averageTime / maxTime) * 100
+    }
+
+    val animatedProgress by animateFloatAsState(
+        targetValue = targetProgress,
+        animationSpec = tween(durationMillis = 1000)
+    )
+
+    Box(
+        modifier = Modifier
+            .padding(top = 15.dp)
+            .width(135.dp)
+            .height(165.dp)
+    ) {
+        Box(){
+            // Circular progress indicator
+            CircularProgressIndicator(
+                progress = animatedProgress / 100f,
+                modifier = Modifier
+                    .size(150.dp)
+                    .padding(16.dp),
+                color = Color(0xFF5A8F5C), // Replace with your defined color
+                strokeWidth = 15.dp  // Adjust thickness for a modern look
+            )
+            Column(
+                modifier = Modifier.fillMaxSize()
+                    .padding(bottom = 25.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+
+            ) {
+                Text(
+                    text = "${averageTime.toInt()}",
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = "Kg",
+                    fontSize = 10.sp,
+                )
+            }
+        }
+        Text(
+            text = "Green Beans",
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(top = 130.dp, start = 32.dp)
+        )
+    }
+}
+
+
+@Composable
+fun RoastedGaugeChart(averageTime: Float, maxTime: Float) {
+    var targetProgress by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(Unit) {
+        targetProgress = (averageTime / maxTime) * 100
+    }
+
+    val animatedProgress by animateFloatAsState(
+        targetValue = targetProgress,
+        animationSpec = tween(durationMillis = 750)
+    )
+
+    Box(
+        modifier = Modifier
+            .padding(top = 15.dp)
+            .width(135.dp)
+            .height(165.dp)
+    ) {
+        Box(){
+            // Circular progress indicator
+            CircularProgressIndicator(
+                progress = animatedProgress / 100f,
+                modifier = Modifier
+                    .size(150.dp)
+                    .padding(16.dp),
+                color = RoastedBeans, // Replace with your defined color
+                strokeWidth = 15.dp  // Adjust thickness for a modern look
+            )
+            Column(
+                modifier = Modifier.fillMaxSize()
+                    .padding(bottom = 25.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+
+            ) {
+                Text(
+                    text = "${averageTime.toInt()}",
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = "Kg",
+                    fontSize = 10.sp,
+                )
+            }
+        }
+        Text(
+            text = "Roasted",
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(top = 130.dp, start = 45.dp)
+        )
+    }
+}
+
+@Composable
+fun PackedGaugeChart(averageTime: Float, maxTime: Float) {
+    var targetProgress by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(Unit) {
+        targetProgress = (averageTime / maxTime) * 100
+    }
+
+    val animatedProgress by animateFloatAsState(
+        targetValue = targetProgress,
+        animationSpec = tween(durationMillis = 500)
+    )
+
+    Box(
+        modifier = Modifier
+            .padding(top = 15.dp)
+            .width(135.dp)
+            .height(165.dp)
+    ) {
+        Box(){
+            // Circular progress indicator
+            CircularProgressIndicator(
+                progress = animatedProgress / 100f,
+                modifier = Modifier
+                    .size(150.dp)
+                    .padding(16.dp),
+                color = Packed, // Replace with your defined color
+                strokeWidth = 15.dp  // Adjust thickness for a modern look
+            )
+            Column(
+                modifier = Modifier.fillMaxSize()
+                    .padding(bottom = 25.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+
+            ) {
+                Text(
+                    text = "${averageTime.toInt()}",
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = "Kg",
+                    fontSize = 10.sp,
+                )
+            }
+        }
+        Text(
+            text = "Packed",
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(top = 130.dp, start = 45.dp)
+        )
+    }
+}
 
 
 
