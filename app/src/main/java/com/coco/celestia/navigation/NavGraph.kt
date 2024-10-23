@@ -195,10 +195,6 @@ fun NavGraph(
                 ClientDashboard(
                     navController = navController,
                     userData = user,
-                    orderData = orderData,
-                    orderState = orderState,
-                    selectedCategory = selectedCategory,
-                    searchQuery = searchQuery,
                     productViewModel = productViewModel,
                     orderViewModel = orderViewModel
                 )
@@ -537,34 +533,5 @@ fun NavGraph(
                 ClientOrderDetails(navController, it, orderCount)
             }
         }
-
-        //TODO: fix navigation in categorybox
-//        composable(
-//            route = "productTypeCard/{productName}",
-//            arguments = listOf(navArgument("productName") { type = NavType.StringType })
-//        ) { backStackEntry ->
-//            val productName = backStackEntry.arguments?.getString("productName") ?: ""
-//
-//            // Here, you can fetch the product based on the productName
-//            productViewModel.fetchProductByType(productName)
-//
-//            // Observe the product data
-//            val productData by productViewModel.productData.observeAsState(emptyList())
-//
-//            // Ensure there's a product to display
-//            if (productData.isNotEmpty()) {
-//                // Example of how to get the first product, modify as needed
-//                val product = productData.first()
-//
-//                // Pass the necessary parameters to ProductTypeCard
-//                ProductTypeCard(
-//                    product = product,
-//                    navController = navController,
-//                    userViewModel = userViewModel,
-//                    onAddToCartEvent = { /* handle add to cart event */ },
-//                    onOrder = { /* handle order event */ }
-//                )
-//            }
-//        }
     }
 }

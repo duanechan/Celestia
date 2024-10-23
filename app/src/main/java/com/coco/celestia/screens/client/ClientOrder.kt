@@ -128,7 +128,7 @@ fun ClientOrder(
             var text by remember { mutableStateOf("") }
             var selectedStatus by remember { mutableStateOf("All") }
             var expanded by remember { mutableStateOf(false) }
-            val statuses = listOf("All", "Pending", "Preparing", "Rejected") //removed 'accept' since status changed to preparing
+            val statuses = listOf("All", "Pending", "Preparing", "Rejected", "Delivering","Completed")
 
             Row(
                 modifier = Modifier

@@ -131,36 +131,38 @@ class OrderViewModel : ViewModel() {
                         userSnapshot.children.mapNotNull { orderSnapshot ->
                             orderSnapshot.getValue(OrderData::class.java)
                         }.filter { order ->
-                                val isCoffee = order.orderData.type.equals("Coffee", ignoreCase = true)
-                                val isMeat = order.orderData.type.equals("Meat", ignoreCase = true)
-                                val isCoffeeOrMeat = order.orderData.type.equals("Coffee", ignoreCase = true) ||
+                            val isCoffee = order.orderData.type.equals("Coffee", ignoreCase = true)
+                            val isMeat = order.orderData.type.equals("Meat", ignoreCase = true)
+                            val isCoffeeOrMeat = order.orderData.type.equals("Coffee", ignoreCase = true) ||
                                     order.orderData.type.equals("Meat", ignoreCase = true)
-                                val isVegetable = order.orderData.type.equals("Vegetable", ignoreCase = true)
-                                val matchesFilter = filterKeywords.any { keyword ->
-                                    order::class.memberProperties.any { property ->
-                                        val value = property.getter.call(order)?.toString() ?: ""
-                                        value.contains(keyword, ignoreCase = true)
-                                    }
-                                }
-                                when (role) {
-                                    "Coop", "Admin" -> isCoffeeOrMeat && matchesFilter
-                                    "CoopCoffee" -> isCoffee && matchesFilter
-                                    "CoopMeat" -> isMeat && matchesFilter
-                                    "Farmer" -> isVegetable && matchesFilter
-                                    "Client" -> matchesFilter
-                                    else -> false
+                            val isVegetable = order.orderData.type.equals("Vegetable", ignoreCase = true)
+                            val matchesFilter = filterKeywords.any { keyword ->
+                                order::class.memberProperties.any { property ->
+                                    val value = property.getter.call(order)?.toString() ?: ""
+                                    value.contains(keyword, ignoreCase = true)
                                 }
                             }
+                            when (role) {
+                                "Coop", "Admin" -> isCoffeeOrMeat && matchesFilter
+                                "CoopCoffee" -> isCoffee && matchesFilter
+                                "CoopMeat" -> isMeat && matchesFilter
+                                "Farmer" -> isVegetable && matchesFilter
+                                "Client" -> matchesFilter
+                                // "Client" -> order.status.equals("completed", ignoreCase = true) && matchesFilter
+                                else -> false
+                            }
                         }
-                        _orderData.value = orders
-                        _orderState.value = if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS
                     }
+                    _orderData.value = orders
+                    _orderState.value = if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS
+                }
                 override fun onCancelled(error: DatabaseError) {
                     _orderState.value = OrderState.ERROR(error.message)
                 }
             })
         }
     }
+
 
     /**
      * Places an order in the database based on the provided UID.
