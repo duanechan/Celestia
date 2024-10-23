@@ -197,7 +197,9 @@ fun LoadingOrders() {
         .fillMaxSize()
         .semantics { testTag = "android:id/LoadingOrders" }) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(25.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(25.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             CircularProgressIndicator()
@@ -225,7 +227,9 @@ fun EmptyOrders() {
         .fillMaxSize()
         .semantics { testTag = "android:id/EmptyOrders" }) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(25.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(25.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -273,8 +277,15 @@ fun OrderItem(
                 orderCount = orderCount
             )
         }
-        // TODO: Add other order statuses here
+        "DELIVERING" -> {
+            DeliveringOrderItem()
+        }
     }
+}
+
+@Composable
+fun DeliveringOrderItem() {
+
 }
 
 @Composable

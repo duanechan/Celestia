@@ -107,6 +107,7 @@ fun ProcessOrderError(errorMessage: String) {
 @Composable
 fun ProcessOrder(order: OrderData) {
     val productViewModel: ProductViewModel = viewModel()
+    val orderViewModel: OrderViewModel = viewModel()
     val productData by productViewModel.productData.observeAsState(emptyList())
     Box(
         contentAlignment = Alignment.TopCenter,
@@ -152,7 +153,9 @@ fun ProcessOrder(order: OrderData) {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(
-                    onClick = { /* Handle delivering status */ },
+                    onClick = {
+                        orderViewModel.updateOrder(order.copy(status = "DELIVERING"))
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = DeliveringStatus),
                     modifier = Modifier
                         .weight(1f)
@@ -164,7 +167,10 @@ fun ProcessOrder(order: OrderData) {
                         fontWeight = FontWeight.Bold)
                 }
                 Button(
-                    onClick = { /* Handle complete status */ },
+                    onClick = {
+                        orderViewModel.updateOrder(order.copy(status = "COMPLETED"))
+                        // TODO: Handle completed order.
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = CompletedStatus),
                     modifier = Modifier
                         .weight(1f)
@@ -186,7 +192,7 @@ fun OrderItem(product: ProductData,
               order: OrderData,
               orderCount: Int) {
 
-    val orderId = order.orderId.substring(5,9).uppercase()
+    val orderId = order.orderId.substring(6,10).uppercase()
     val orderClient = order.client
 
     Column(modifier = Modifier
@@ -215,7 +221,7 @@ fun OrderItem(product: ProductData,
                         Text(text = "Client Name:",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold)
-                        Text(text = "$orderClient",
+                        Text(text = orderClient,
                             fontSize = 28.sp,
                             fontWeight = FontWeight.Bold)
                     }

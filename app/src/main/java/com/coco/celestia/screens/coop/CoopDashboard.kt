@@ -2,15 +2,14 @@ package com.coco.celestia.screens.coop
 
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
+import android.icu.text.SimpleDateFormat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import android.graphics.Color as AndroidColor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,7 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -38,25 +36,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.OrderViewModel
 // Add these imports
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Text
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.github.mikephil.charting.charts.LineChart
@@ -67,7 +55,7 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
-import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Locale
 import kotlin.math.cos
 import kotlin.math.sin
@@ -113,10 +101,10 @@ fun OverviewSummaryBox(orderViewModel: OrderViewModel, productViewModel: Product
                     modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    ProductStockTrendsChart(productViewModel)
                     OrderStatusDonutChart(orderViewModel)
                     // call the productrends
                 }
-//                ProductStockTrendsChart(productViewModel)
             }
         }
     }
@@ -202,7 +190,7 @@ fun OrderStatusDonutChart(orderViewModel: OrderViewModel) {
 
                     // Calculate position for percentage text
                     val angleInRadians = Math.toRadians(startAngle + (sweepAngle / 2). toDouble())
-                    val textRadius = size.width / 2 * 1.7f
+                    val textRadius = size.width / 2 * 1.5f
                     val x = center.x + (textRadius * cos(angleInRadians)).toFloat()
                     val y = center.y + (textRadius * sin(angleInRadians)).toFloat()
 
@@ -252,140 +240,138 @@ fun OrderStatusDonutChart(orderViewModel: OrderViewModel) {
         )
     }
 }
-//
-//@Composable
-//fun ProductStockTrendsChart(viewModel: ProductViewModel) {
-//    val products by viewModel.productData.observeAsState(emptyList())
-//    val productState by viewModel.productState.observeAsState(ProductState.LOADING)
-//
-//    // Fetch only coffee products when component is first rendered
-//    LaunchedEffect(Unit) {
-//        viewModel.fetchProductByType("Coffee") // Only fetch coffee products
-//    }
-//
-//    when (productState) {
-//        ProductState.LOADING -> {
-//            Box(
-//                modifier = Modifier.fillMaxSize(),
-//                contentAlignment = Alignment.Center
-//            ) {
-//                CircularProgressIndicator()
-//            }
-//        }
-//
-//        ProductState.EMPTY -> {
-//            Box(
-//                modifier = Modifier.fillMaxSize(),
-//                contentAlignment = Alignment.Center
-//            ) {
-//                Text("No coffee data available")
-//            }
-//        }
-//
-//        is ProductState.ERROR -> {
-//            Box(
-//                modifier = Modifier.fillMaxSize(),
-//                contentAlignment = Alignment.Center
-//            ) {
-//                Text("Error: ${(productState as ProductState.ERROR).message}")
-//            }
-//        }
-//
-//        ProductState.SUCCESS -> {
-//            Box(
-//                modifier = Modifier
-//                    .padding(5.dp)
-//                    .fillMaxWidth()
-//                    .height(300.dp)
-//                    .background(Color.White, RoundedCornerShape(16.dp))
-//                    .border(1.dp, Color.LightGray, RoundedCornerShape(16.dp))
-//            ) {
-//                AndroidView(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .height(300.dp)
-//                        .padding(16.dp),
-//                    factory = { context ->
-//                        LineChart(context).apply {
-//                            description.isEnabled = false
-//                            xAxis.position = XAxis.XAxisPosition.BOTTOM
-//                            axisRight.isEnabled = false
-//
-//                            val boldTypeface = Typeface.DEFAULT_BOLD
-//                            xAxis.apply {
-//                                typeface = boldTypeface
-//                                textColor = Color(0xFF6F4E37).toArgb() // Coffee brown color
-//                                setDrawGridLines(false)
-//                                granularity = 1f
-//                                labelRotationAngle = -45f
-//                            }
-//
-//                            axisLeft.apply {
-//                                typeface = boldTypeface
-//                                textColor = Color(0xFF6F4E37).toArgb() // Coffee brown color
-//                                setDrawGridLines(true)
-//                                gridLineWidth = 1f
-//                                gridColor = Color.LightGray.toArgb()
-//                                axisLineWidth = 2f
-//                                axisLineColor = Color(0xFF6F4E37).toArgb() // Coffee brown color
-//                            }
-//
-//                            legend.apply {
-//                                isEnabled = true
-//                                textSize = 12f
-//                                typeface = boldTypeface
-//                                textColor = Color(0xFF6F4E37).toArgb() // Coffee brown color
-//                                verticalAlignment = Legend.LegendVerticalAlignment.TOP
-//                                horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
-//                                orientation = Legend.LegendOrientation.VERTICAL
-//                                setDrawInside(true)
-//                            }
-//
-//                            setTouchEnabled(true)
-//                            isDragEnabled = true
-//                            setScaleEnabled(true)
-//                            setPinchZoom(true)
-//                            animateX(1500)
-//                        }
-//                    },
-//                    update = { lineChart ->
-//                        val dataSets = ArrayList<ILineDataSet>()
-//
-//                        // Group coffee products by name
-//                        val groupedProducts = products.groupBy { it.name }
-//
-//                        groupedProducts.forEach { (productName, productGroup) ->
-//                            val entries = listOf(
-//                                Entry(0f, productGroup.firstOrNull()?.quantity?.toFloat() ?: 0f)
-//                            )
-//
-//                            val dataSet = LineDataSet(entries, productGroup .firstOrNull()?.name ?: "")
-//                            dataSet.apply {
-//                                setDrawCircles(false)
-//                                setDrawValues(false)
-//                                color = Color(0xFF6F4E37).toArgb() // Coffee brown color
-//                                lineWidth = 2f
-//                                setDrawFilled(true)
-//                                fillDrawable = ColorDrawable(Color(0xFF6F4E37).toArgb()) // Coffee brown color
-//                            }
-//
-//                            dataSets.add(dataSet)
-//                        }
-//
-//                        val lineData = LineData(dataSets)
-//                        lineData.apply {
-//                            setValueTextColor(Color(0xFF6F4E37).toArgb()) // Coffee brown color
-//                            setValueTextSize(10f)
-//                        }
-//
-//                        lineChart.data = lineData
-//                        lineChart.invalidate()
-//                    }
-//                )
-//            }
-//        }
-//    }
-//}
+
+@Composable
+fun ProductStockTrendsChart(productViewModel: ProductViewModel) {
+    val orderViewModel: OrderViewModel = viewModel()
+    val orders by orderViewModel.orderData.observeAsState(emptyList())  // List of orders
+    val products by productViewModel.productData.observeAsState(emptyList())  // List of products
+    val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
+
+    LaunchedEffect(Unit) {
+        orderViewModel.fetchAllOrders("Coffee", "Coop")
+        productViewModel.fetchProductByType("Coffee")  // Only fetch coffee products
+    }
+
+    val lastFiveDays = (0..4).map { offset ->
+        Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -offset) }.time
+    }.sortedBy { it }
+    val dateFormatter = SimpleDateFormat("MM/dd", Locale.US)
+    val formattedLastFiveDays = lastFiveDays.map { dateFormatter.format(it) }
+    val joinedData = products.map { product ->
+        product to orders.filter { order ->
+            order.orderData.name == product.name && order.orderDate in formattedLastFiveDays
+        }
+    }
+
+    when (productState) {
+        ProductState.LOADING -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+        ProductState.EMPTY -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No coffee data available")
+            }
+        }
+
+        is ProductState.ERROR -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Error: ${(productState as ProductState.ERROR).message}")
+            }
+        }
+
+        ProductState.SUCCESS -> {
+            Box(
+                modifier = Modifier
+                    .padding(5.dp)
+                    .fillMaxWidth()
+                    .height(300.dp)
+                    .background(Color.White, RoundedCornerShape(16.dp))
+                    .border(1.dp, Color.LightGray, RoundedCornerShape(16.dp))
+            ) {
+                AndroidView(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp)
+                        .padding(16.dp),
+                    factory = { context ->
+                        LineChart(context).apply {
+                            description.isEnabled = false
+                            xAxis.position = XAxis.XAxisPosition.BOTTOM
+                            axisRight.isEnabled = false
+
+                            setTouchEnabled(true)
+                            isDragEnabled = true
+                            setScaleEnabled(true)
+                            setPinchZoom(true)
+
+                            xAxis.apply {
+                                textColor = Color(0xFF6F4E37).toArgb()
+                                setDrawGridLines(false)
+                                granularity = 1f
+                                labelRotationAngle = -45f
+                            }
+
+                            axisLeft.apply {
+                                textColor = Color(0xFF6F4E37).toArgb()
+                                setDrawGridLines(true)
+                                gridColor = Color.LightGray.toArgb()
+                            }
+
+                            legend.apply {
+                                textColor = Color(0xFF6F4E37).toArgb()
+                                textSize = 12f
+                                verticalAlignment = Legend.LegendVerticalAlignment.TOP
+                                horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
+                                orientation = Legend.LegendOrientation.VERTICAL
+                                setDrawInside(true)
+                            }
+                        }
+                    },
+                    update = { lineChart ->
+                        val dataSets = joinedData.map { (product, matchedOrders) ->
+                            val entries = formattedLastFiveDays.mapIndexed { index, date ->
+                                val quantity = matchedOrders.find { it.orderDate == date }?.orderData?.quantity ?: 0
+                                Entry(index.toFloat(), quantity.toFloat())
+                            }
+
+                            LineDataSet(entries, product.name).apply {
+                                color = Color(0xFF6F4E37).toArgb()
+                                lineWidth = 2f
+                                setDrawCircles(true)
+                                circleRadius = 4f
+                                setCircleColor(Color(0xFF6F4E37).toArgb())
+                                mode = LineDataSet.Mode.CUBIC_BEZIER
+                                setDrawFilled(true)
+                                fillColor = Color(0xFF6F4E37).toArgb()
+                            }
+                        }
+
+                        lineChart.apply {
+                            data = LineData(dataSets)
+                            xAxis.valueFormatter = IndexAxisValueFormatter(formattedLastFiveDays.toTypedArray())
+                            animateX(1000)
+                            invalidate()
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
 
 
 
