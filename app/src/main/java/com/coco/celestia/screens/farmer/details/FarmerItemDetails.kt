@@ -258,7 +258,8 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                 currentQuantity = productQuantity,
                 onDismiss = { showEditDialog = false },
                 onConfirm = { newQuantity ->
-                    farmerProductViewModel.updateProductQuantity(productName, newQuantity - productQuantity)
+                    val quantityDifference = newQuantity - productQuantity
+                    farmerItemViewModel.updateItemQuantity(productName, quantityDifference)
                     productQuantity = newQuantity
                     showEditDialog = false
                 }
@@ -354,6 +355,7 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                                 modifier = Modifier.weight(1f),
                                 fontFamily = mintsansFontFamily,
                                 textAlign = TextAlign.Center,
+                                fontSize = 13.sp,
                                 fontWeight = Bold,
                                 color = Cocoa
                             )

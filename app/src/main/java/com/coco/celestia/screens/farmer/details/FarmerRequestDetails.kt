@@ -186,7 +186,7 @@ fun OrderDetails(
                 if (decisionType == "ACCEPT") {
                     setOrderAccepted(true)
                     // Determine whether it's full or partial fulfillment
-                    val fulfillmentStatus = if (isPartialFulfillment == true) "PARTIALLY FULFILLED" else "PREPARING"
+                    val fulfillmentStatus = if (isPartialFulfillment == true) "INCOMPLETE" else "PREPARING"
                     // Update order status accordingly
                     val updatedOrder = orderData.copy(status = fulfillmentStatus)
                      orderViewModel.updateOrder(updatedOrder)

@@ -43,8 +43,8 @@ import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Brush
@@ -478,15 +478,18 @@ fun OrderStatusCard(
 ) {
     val backgroundColor = when (orderStatus) {
         "PREPARING" -> Brown1
-        "PARTIAL" -> GoldenYellow
+        "INCOMPLETE" -> GoldenYellow
         "REJECTED" -> Copper3
         else -> Color.Gray
-        // Additional statuses can be added here
     }
 
-    val iconPainter = when (orderStatus) {
+    val iconPainter: Painter? = when (orderStatus) {
         "PREPARING" -> painterResource(id = R.drawable.preparing)
-        "PARTIAL" -> Icons.Default.Refresh
+        "INCOMPLETE" -> painterResource(id = R.drawable.incomplete)
+        else -> null
+    }
+
+    val iconVector: ImageVector? = when (orderStatus) {
         "REJECTED" -> Icons.Default.Clear
         else -> Icons.Default.Warning
     }
@@ -507,22 +510,22 @@ fun OrderStatusCard(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (orderStatus == "PREPARING") {
+            if (iconPainter != null) {
                 Icon(
-                    painter = iconPainter as Painter,
+                    painter = iconPainter,
                     contentDescription = orderStatus,
                     modifier = Modifier
-                        .size(40.dp)
+                        .size(35.dp)
                         .semantics { testTag = "android:id/statusIcon_$orderId" },
                     tint = Cocoa
                 )
-            } else {
+            } else if (iconVector != null) {
                 Icon(
-                    imageVector = iconPainter as ImageVector,
+                    imageVector = iconVector,
                     contentDescription = orderStatus,
                     tint = Cocoa,
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(35.dp)
                         .semantics { testTag = "android:id/statusIcon_$orderId" }
                 )
             }

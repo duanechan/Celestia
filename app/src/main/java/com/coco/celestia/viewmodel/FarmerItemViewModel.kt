@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.coco.celestia.viewmodel.model.ContactData
 import com.coco.celestia.viewmodel.model.ItemData
 import com.coco.celestia.viewmodel.model.ProductData
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -74,6 +75,47 @@ class FarmerItemViewModel : ViewModel() {
                 })
             } catch (e: Exception) {
                 _itemState.value = ItemState.ERROR(e.message.toString())
+            }
+        }
+    }
+    fun updateItemQuantity(itemName: String, quantity: Int) {
+        viewModelScope.launch {
+            try {
+                _itemState.value = ItemState.LOADING
+                val uid = FirebaseAuth.getInstance().uid.toString()
+                val snapshot = database.child(uid).child("items").get().await()
+                var itemFound = false
+                for (item in snapshot.children) {
+                    val name = item.child("name").getValue(String::class.java)
+
+                    if (name.equals(itemName, ignoreCase = true)) {  // Case insensitive match
+                        val currentQuantity = item.child("quantity").getValue(Int::class.java) ?: 0
+                        val newQuantity = currentQuantity + quantity
+
+                        // Update the quantity in the database
+                        item.child("quantity").ref.setValue(newQuantity).await()
+
+                        // Update the local LiveData with a new list
+                        val updatedItem = item.getValue(ProductData::class.java)?.copy(quantity = newQuantity)
+                        updatedItem?.let {
+                            // Create a new list to trigger recomposition
+                            _itemData.value = _itemData.value?.map { existingItem ->
+                                if (existingItem.name.equals(itemName, ignoreCase = true)) updatedItem else existingItem
+                            }?.toList()
+                        }
+
+                        itemFound = true
+                        break
+                    }
+                }
+                if (!itemFound) {
+                    _itemState.value = ItemState.ERROR("Item not found")
+                } else {
+                    // Optionally, refresh items if needed
+                    getItems(uid)
+                }
+            } catch (e: Exception) {
+                _itemState.value = ItemState.ERROR(e.message ?: "Error updating item quantity")
             }
         }
     }

@@ -270,7 +270,7 @@ fun OrderStatusSection(
                                 .fillMaxWidth()
                                 .padding(5.dp)
                         ) {
-                            ManageOrderCards(navController, order, cardWidth = 250.dp, cardHeight = 90.dp)
+                            ManageOrderCards(navController, order, cardWidth = 240.dp, cardHeight = 90.dp)
 
                             OrderStatusCard(orderStatus = order.status, orderId = order.orderId, cardWidth = 400.dp, cardHeight = 90.dp)
                         }

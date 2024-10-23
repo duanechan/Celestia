@@ -39,10 +39,8 @@ fun FarmerItems(navController: NavController) {
     val itemData by itemViewModel.itemData.observeAsState(emptyList())
     val itemState by itemViewModel.itemState.observeAsState(ItemState.LOADING)
 
-    LaunchedEffect(Unit, itemData) {
-        if (itemData.isEmpty()) {
-            itemViewModel.getItems(uid = uid)
-        }
+    LaunchedEffect(navController.currentBackStackEntry) {
+        itemViewModel.getItems(uid = uid)
     }
 
     Box(
