@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,6 +31,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
@@ -128,12 +130,12 @@ fun ClientDashboard(
     }
 }
 
-//TODO: will change vegetable icon, and fix the positions here
-
 @Composable
 fun BrowseCategories(navController: NavController) {
     Column(
         modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
             .background(VeryDarkGreen, shape = RoundedCornerShape(8.dp))
             .padding(horizontal = 16.dp, vertical = 16.dp)
     ) {
@@ -141,10 +143,11 @@ fun BrowseCategories(navController: NavController) {
             text = "Browse Categories",
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = Color.White,
+            modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -154,19 +157,24 @@ fun BrowseCategories(navController: NavController) {
                 productName = "Coffee",
                 iconId = R.drawable.coffeeicon,
                 navController = navController,
-                iconColor = Color(0xFFB06520)
+                iconColor = Color.White,
+                modifier = Modifier.weight(1f)
             )
+            Spacer(modifier = Modifier.width(12.dp))
             CategoryBox(
                 productName = "Meat",
                 iconId = R.drawable.meaticon,
                 navController = navController,
-                iconColor = Color(0xFFFF5151)
+                iconColor = Color.White,
+                modifier = Modifier.weight(1f)
             )
+            Spacer(modifier = Modifier.width(12.dp))
             CategoryBox(
                 productName = "Vegetable",
-                iconId = R.drawable.vegetableicon,
+                iconId = R.drawable.vegetable,
                 navController = navController,
-                iconColor = Color(0xFF41644A)
+                iconColor = Color.White,
+                modifier = Modifier.weight(1f)
             )
         }
     }
@@ -177,20 +185,36 @@ fun CategoryBox(
     productName: String,
     iconId: Int,
     navController: NavController,
-    iconColor: Color
+    iconColor: Color,
+    modifier: Modifier = Modifier
 ) {
+    val gradientBrush = when (productName) {
+        "Coffee" -> Brush.linearGradient(
+            colors = listOf(Color(0xFFB79276), Color(0xFF91684A))
+        )
+        "Meat" -> Brush.linearGradient(
+            colors = listOf(Color(0xFFD45C5C), Color(0xFFAA3333))
+        )
+        "Vegetable" -> Brush.linearGradient(
+            colors = listOf(Color(0xFF4CB05C), Color(0xFF4F8A45))
+        )
+        else -> Brush.linearGradient(
+            colors = listOf(Color.Gray, Color.LightGray)
+        )
+    }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .size(100.dp, 120.dp)
-            .background(Color.White, shape = RoundedCornerShape(8.dp))
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .background(brush = gradientBrush, shape = RoundedCornerShape(8.dp))
             .padding(8.dp)
             .clickable {
                 navController.navigate(Screen.OrderDetails.createRoute(productName))
             }
     ) {
-
         Image(
             painter = painterResource(id = iconId),
             contentDescription = "$productName icon",
@@ -198,13 +222,13 @@ fun CategoryBox(
             colorFilter = ColorFilter.tint(iconColor)
         )
 
-        Spacer(modifier = Modifier.height(4.dp))
-
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = productName,
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
+            color = Color.White,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
     }
