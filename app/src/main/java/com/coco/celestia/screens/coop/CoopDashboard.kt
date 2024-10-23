@@ -1,11 +1,13 @@
 package com.coco.celestia.screens.coop
 
 import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import android.graphics.Color as AndroidColor
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -26,12 +28,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -39,421 +43,351 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.viewmodel.OrderViewModel
+// Add these imports
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Text
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.unit.sp
+import com.coco.celestia.viewmodel.ProductState
+import com.coco.celestia.viewmodel.ProductViewModel
 import com.github.mikephil.charting.charts.LineChart
-import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.data.PieData
-import com.github.mikephil.charting.data.PieDataSet
-import com.github.mikephil.charting.data.PieEntry
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
+import java.text.SimpleDateFormat
+import java.util.Locale
+import kotlin.math.cos
+import kotlin.math.sin
 
 
-@Preview
 @Composable
-fun CoopDashboard() {
+fun CoopDashboard(
+    orderViewModel: OrderViewModel,
+    productViewModel: ProductViewModel
+) {
+    LaunchedEffect(Unit) {
+        orderViewModel.fetchAllOrders(filter = "", role = "Coop")
+    }
+
     Box(modifier = Modifier
         .background(GreenGradientBrush)
-        .fillMaxSize()){
-        Column() {
+        .fillMaxSize()) {
+        Column {
             Spacer(modifier = Modifier.height(118.dp))
-            OverviewSummaryBox()
-            InventoryManagementBox()
+            OverviewSummaryBox(orderViewModel, productViewModel)
         }
     }
 }
 
 @Composable
-fun OverviewSummaryBox(){
+fun OverviewSummaryBox(orderViewModel: OrderViewModel, productViewModel: ProductViewModel) {
     Box(modifier = Modifier
         .padding(8.dp)
         .fillMaxWidth()
         .border(BorderStroke(3.dp, Color.White), shape = RoundedCornerShape(18.dp))
         .clip(RoundedCornerShape(18.dp))
-        .background(Color.White)){
-        Text(text = "Overview Summary",
-            fontWeight = FontWeight.Bold,
-            color = DarkGreen,
-            modifier = Modifier.padding(start = 8.dp, top = 8.dp))
-        Spacer(modifier = Modifier.height(5.dp))
-        Row(modifier = Modifier.padding(12.dp)) {
-            Column {
-                TimeToMarketGaugeChart(avgTimeToMarket, maxTimeToMarket)
-                DefectRatesPieChart(defectRates)
-            }
-            TotalProductionVolumeLineChart(productionData)
-        }
-
-    }
-}
-
-// Example usage
-val avgGreenBeans = 85f
-val maxGreenBeans = 100f
-
-
-// Example usage
-val avgToastBeans = 75f
-val maxToastBeans = 100f
-
-// Example usage
-val avgPacked = 90f
-val maxPacked = 100f
-
-@Composable
-fun InventoryManagementBox(){
-    Box(modifier = Modifier
-        .padding(start = 8.dp, top = 8.dp, end = 8.dp, bottom = 0.dp)
-        .fillMaxWidth()
-        .border(BorderStroke(3.dp, Color.White), shape = RoundedCornerShape(18.dp))
-        .clip(RoundedCornerShape(18.dp))
-        .background(Color.White)
-        .height(200.dp)){
-        Text(text = "Stock Levels",
-            fontWeight = FontWeight.Bold,
-            color = DarkGreen,
-            modifier = Modifier.padding(start = 8.dp, top = 8.dp))
-        Spacer(modifier = Modifier.height(5.dp))
-        Row(
-            modifier = Modifier
-                .padding(12.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            GreenBeansGaugeChart(avgGreenBeans, maxGreenBeans)
-            RoastedGaugeChart(avgToastBeans, maxToastBeans)
-            PackedGaugeChart(avgPacked, maxPacked)
-        }
-    }
-}
-
-//Sample Data
-val productionData = listOf(
-    Entry(0f, 50f),
-    Entry(1f, 60f),
-    Entry(2f, 70f),
-    Entry(3f, 80f),
-    Entry(4f, 90f)
-)
-
-// Sample Data
-val defectRates = listOf(
-    PieEntry(40f, "Quality Defects"),
-    PieEntry(30f, "Roasting Errors"),
-    PieEntry(30f, "Packaging Defects")
-)
-
-// Example usage
-val avgTimeToMarket = 7f
-val maxTimeToMarket = 10f
-
-@Composable
-fun TotalProductionVolumeLineChart(dataPoints: List<Entry>) {
-    Box(
-        modifier = Modifier
-            .padding(5.dp)
-            .width(300.dp)
-            .height(300.dp)
-    ) {
-
-        AndroidView(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp),
-            factory = { context ->
-                LineChart(context).apply {
-                    description.isEnabled = false
-                    xAxis.position = XAxis.XAxisPosition.BOTTOM
-                    axisRight.isEnabled = false
-                    legend.isEnabled = true
-
-                    // Load default bold Typeface
-                    val boldTypeface = Typeface.DEFAULT_BOLD
-                    xAxis.typeface = boldTypeface // Make X-axis numbers bold
-                    axisLeft.typeface = boldTypeface // Make Y-axis numbers bold
-
-                    // Configure Left Y-Axis
-                    axisLeft.setDrawGridLines(true)
-                    axisLeft.gridLineWidth = 2f
-
-                    // Disable Right Y-Axis
-                    axisRight.isEnabled = false
-
-                    // Enable legend
-                    legend.isEnabled = true
-                }
-            },
-            update = { lineChart ->
-                val dataSet = LineDataSet(dataPoints, "Production Volume").apply {
-                    color = Color(0xFF5A8F5C).toArgb()
-                    valueTextColor = AndroidColor.BLACK
-                    lineWidth = 4f
-                    circleRadius = 6f
-
-                    setDrawCircleHole(false)
-                }
-                lineChart.data = LineData(dataSet)
-                lineChart.invalidate()
-            }
-        )
-    }
-}
-
-@Composable
-fun DefectRatesPieChart(entries: List<PieEntry>) {
-
-    Box(modifier = Modifier
-        .width(160.dp)
-        .height(160.dp)){
-
-        AndroidView(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(500.dp),
-            factory = { context ->
-                PieChart(context).apply {
-                    description.isEnabled = false
-                    isDrawHoleEnabled = false
-                    setUsePercentValues(true)
-                    legend.isEnabled = true
-                    legend.textColor = AndroidColor.BLACK
-                    legend.textSize = 12f
-                }
-            },
-
-            update = { pieChart ->
-                val dataSet = PieDataSet(entries, "Defect Rates").apply {
-                    setColors(
-                        RoastedBeans.toArgb(),
-                        Copper.toArgb(),
-                        Copper3.toArgb()
-                    )
-                    valueTextColor = AndroidColor.BLACK
-
-                }
-                pieChart.data = PieData(dataSet)
-                pieChart.invalidate() // Refresh chart with new data
-            }
-        )
-    }
-}
-
-@Composable
-fun TimeToMarketGaugeChart(averageTime: Float, maxTime: Float) {
-    var targetProgress by remember { mutableStateOf(0f) }
-
-    LaunchedEffect(Unit) {
-        targetProgress = (averageTime / maxTime) * 100
-    }
-
-    val animatedProgress by animateFloatAsState(
-        targetValue = targetProgress,
-        animationSpec = tween(durationMillis = 1000)
-    )
-
-    Box(
-        modifier = Modifier
-            .padding(top = 15.dp)
-            .size(150.dp)
-    ) {
-        // Circular progress indicator
-        CircularProgressIndicator(
-            progress = animatedProgress / 100f, // Normalize to [0, 1]
-            modifier = Modifier
-                .size(150.dp)
-                .padding(16.dp),
-            color = Color(0xFF5A8F5C), // Replace with your defined color
-            strokeWidth = 15.dp  // Adjust thickness for a modern look
-        )
-
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        .background(Color.White)) {
+        Column {
             Text(
-                text = "Time to Market:",
-                fontSize = 10.sp,
-            )
-            Text(
-                text = "${averageTime.toInt()} Days", // Display average time as integer
-                fontSize = 15.sp,
+                text = "Overview Summary",
                 fontWeight = FontWeight.Bold,
+                color = DarkGreen,
+                modifier = Modifier.padding(start = 8.dp, top = 8.dp)
             )
-        }
-    }
-}
-
-@Composable
-fun GreenBeansGaugeChart(averageTime: Float, maxTime: Float) {
-    var targetProgress by remember { mutableStateOf(0f) }
-
-    LaunchedEffect(Unit) {
-        targetProgress = (averageTime / maxTime) * 100
-    }
-
-    val animatedProgress by animateFloatAsState(
-        targetValue = targetProgress,
-        animationSpec = tween(durationMillis = 1000)
-    )
-
-    Box(
-        modifier = Modifier
-            .padding(top = 15.dp)
-            .width(135.dp)
-            .height(165.dp)
-    ) {
-        Box(){
-            // Circular progress indicator
-            CircularProgressIndicator(
-                progress = animatedProgress / 100f,
-                modifier = Modifier
-                    .size(150.dp)
-                    .padding(16.dp),
-                color = Color(0xFF5A8F5C), // Replace with your defined color
-                strokeWidth = 15.dp  // Adjust thickness for a modern look
-            )
-            Column(
-                modifier = Modifier.fillMaxSize()
-                    .padding(bottom = 25.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-
-            ) {
-                Text(
-                    text = "${averageTime.toInt()}",
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = "Kg",
-                    fontSize = 10.sp,
-                )
+            Spacer(modifier = Modifier.height(5.dp))
+            Row(modifier = Modifier.padding(12.dp)) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    OrderStatusDonutChart(orderViewModel)
+                    // call the productrends
+                }
+//                ProductStockTrendsChart(productViewModel)
             }
         }
-        Text(
-            text = "Green Beans",
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 130.dp, start = 32.dp)
-        )
     }
 }
 
-
 @Composable
-fun RoastedGaugeChart(averageTime: Float, maxTime: Float) {
-    var targetProgress by remember { mutableStateOf(0f) }
+fun OrderStatusDonutChart(orderViewModel: OrderViewModel) {
+    val orders by orderViewModel.orderData.observeAsState(emptyList())
 
-    LaunchedEffect(Unit) {
-        targetProgress = (averageTime / maxTime) * 100
+    val totalOrders = orders.size.toFloat()
+    val pending = orders.count { it.status == "PENDING" }
+    val preparing = orders.count { it.status == "PREPARING" }
+    val completed = orders.count { it.status == "COMPLETED" }
+
+    val pendingPercentage = if (totalOrders > 0) (pending / totalOrders) * 100 else 0f
+    val preparingPercentage = if (totalOrders > 0) (preparing / totalOrders) * 100 else 0f
+    val completedPercentage = if (totalOrders > 0) (completed / totalOrders) * 100 else 0f
+
+    // Animation states
+    var targetPendingProgress by remember { mutableStateOf(0f) }
+    var targetPreparingProgress by remember { mutableStateOf(0f) }
+    var targetCompletedProgress by remember { mutableStateOf(0f) }
+
+    // Trigger animations
+    LaunchedEffect(pendingPercentage, preparingPercentage, completedPercentage) {
+        targetPendingProgress = pendingPercentage
+        targetPreparingProgress = preparingPercentage
+        targetCompletedProgress = completedPercentage
     }
 
-    val animatedProgress by animateFloatAsState(
-        targetValue = targetProgress,
+    // Animated values
+    val animatedPendingProgress by animateFloatAsState(
+        targetValue = targetPendingProgress,
+        animationSpec = tween(durationMillis = 750)
+    )
+    val animatedPreparingProgress by animateFloatAsState(
+        targetValue = targetPreparingProgress,
+        animationSpec = tween(durationMillis = 750)
+    )
+    val animatedCompletedProgress by animateFloatAsState(
+        targetValue = targetCompletedProgress,
         animationSpec = tween(durationMillis = 750)
     )
 
-    Box(
-        modifier = Modifier
-            .padding(top = 15.dp)
-            .width(135.dp)
-            .height(165.dp)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.padding(16.dp)
     ) {
-        Box(){
-            // Circular progress indicator
-            CircularProgressIndicator(
-                progress = animatedProgress / 100f,
-                modifier = Modifier
-                    .size(150.dp)
-                    .padding(16.dp),
-                color = RoastedBeans, // Replace with your defined color
-                strokeWidth = 15.dp  // Adjust thickness for a modern look
-            )
-            Column(
-                modifier = Modifier.fillMaxSize()
-                    .padding(bottom = 25.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .height(100.dp)
+                .width(100.dp)
+        ) {
+            Canvas(modifier = Modifier.size(85.dp)) {
+                val canvasSize = size.minDimension
+                val radius = canvasSize / 2
+                val strokeWidth = 30f
+                val center = Offset(size.width / 2, size.height / 2)
 
+                drawCircle(
+                    color = Color.LightGray.copy(alpha = 0.3f),
+                    radius = radius,
+                    style = Stroke(strokeWidth)
+                )
+
+                var startAngle = 0f
+                val statusData = listOf(
+                    Triple(animatedPendingProgress, PendingStatus, "Pending"),
+                    Triple(animatedPreparingProgress, PreparingStatus, "Preparing"),
+                    Triple(animatedCompletedProgress, CompletedStatus, "Completed")
+                )
+
+                statusData.forEach { (percentage, color, _) ->
+                    val sweepAngle = percentage * 3.6f
+                    drawArc(
+                        color = color,
+                        startAngle = startAngle,
+                        sweepAngle = sweepAngle,
+                        useCenter = false,
+                        style = Stroke(width = strokeWidth)
+                    )
+
+                    // Calculate position for percentage text
+                    val angleInRadians = Math.toRadians(startAngle + (sweepAngle / 2). toDouble())
+                    val textRadius = size.width / 2 * 1.7f
+                    val x = center.x + (textRadius * cos(angleInRadians)).toFloat()
+                    val y = center.y + (textRadius * sin(angleInRadians)).toFloat()
+
+                    // Draw percentage text
+                    drawContext.canvas.nativeCanvas.apply {
+                        val paint = android.graphics.Paint().apply {
+                            textSize = 40f
+                            isFakeBoldText = true
+                            textAlign = android.graphics.Paint.Align.CENTER
+                            this.color = color.toArgb()
+                        }
+                        drawText(
+                            "${String.format("%.1f", percentage)}%",
+                            x,
+                            y,
+                            paint
+                        )
+                    }
+                    startAngle += sweepAngle
+                }
+            }
+
+            // Total orders in center
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.align(Alignment.Center)
             ) {
                 Text(
-                    text = "${averageTime.toInt()}",
-                    fontSize = 30.sp,
+                    text = "${totalOrders.toInt()}",
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
+                    color = DarkGreen
                 )
                 Text(
-                    text = "Kg",
-                    fontSize = 10.sp,
+                    text = "Total",
+                    fontSize = 12.sp,
+                    color = DarkGreen
                 )
             }
         }
         Text(
-            text = "Roasted",
-            fontSize = 11.sp,
+            text = "Order Status Breakdown",
+            fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 130.dp, start = 45.dp)
+            color = DarkGreen,
+            modifier = Modifier.padding(top = 10.dp)
         )
     }
 }
+//
+//@Composable
+//fun ProductStockTrendsChart(viewModel: ProductViewModel) {
+//    val products by viewModel.productData.observeAsState(emptyList())
+//    val productState by viewModel.productState.observeAsState(ProductState.LOADING)
+//
+//    // Fetch only coffee products when component is first rendered
+//    LaunchedEffect(Unit) {
+//        viewModel.fetchProductByType("Coffee") // Only fetch coffee products
+//    }
+//
+//    when (productState) {
+//        ProductState.LOADING -> {
+//            Box(
+//                modifier = Modifier.fillMaxSize(),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                CircularProgressIndicator()
+//            }
+//        }
+//
+//        ProductState.EMPTY -> {
+//            Box(
+//                modifier = Modifier.fillMaxSize(),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                Text("No coffee data available")
+//            }
+//        }
+//
+//        is ProductState.ERROR -> {
+//            Box(
+//                modifier = Modifier.fillMaxSize(),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                Text("Error: ${(productState as ProductState.ERROR).message}")
+//            }
+//        }
+//
+//        ProductState.SUCCESS -> {
+//            Box(
+//                modifier = Modifier
+//                    .padding(5.dp)
+//                    .fillMaxWidth()
+//                    .height(300.dp)
+//                    .background(Color.White, RoundedCornerShape(16.dp))
+//                    .border(1.dp, Color.LightGray, RoundedCornerShape(16.dp))
+//            ) {
+//                AndroidView(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(300.dp)
+//                        .padding(16.dp),
+//                    factory = { context ->
+//                        LineChart(context).apply {
+//                            description.isEnabled = false
+//                            xAxis.position = XAxis.XAxisPosition.BOTTOM
+//                            axisRight.isEnabled = false
+//
+//                            val boldTypeface = Typeface.DEFAULT_BOLD
+//                            xAxis.apply {
+//                                typeface = boldTypeface
+//                                textColor = Color(0xFF6F4E37).toArgb() // Coffee brown color
+//                                setDrawGridLines(false)
+//                                granularity = 1f
+//                                labelRotationAngle = -45f
+//                            }
+//
+//                            axisLeft.apply {
+//                                typeface = boldTypeface
+//                                textColor = Color(0xFF6F4E37).toArgb() // Coffee brown color
+//                                setDrawGridLines(true)
+//                                gridLineWidth = 1f
+//                                gridColor = Color.LightGray.toArgb()
+//                                axisLineWidth = 2f
+//                                axisLineColor = Color(0xFF6F4E37).toArgb() // Coffee brown color
+//                            }
+//
+//                            legend.apply {
+//                                isEnabled = true
+//                                textSize = 12f
+//                                typeface = boldTypeface
+//                                textColor = Color(0xFF6F4E37).toArgb() // Coffee brown color
+//                                verticalAlignment = Legend.LegendVerticalAlignment.TOP
+//                                horizontalAlignment = Legend.LegendHorizontalAlignment.RIGHT
+//                                orientation = Legend.LegendOrientation.VERTICAL
+//                                setDrawInside(true)
+//                            }
+//
+//                            setTouchEnabled(true)
+//                            isDragEnabled = true
+//                            setScaleEnabled(true)
+//                            setPinchZoom(true)
+//                            animateX(1500)
+//                        }
+//                    },
+//                    update = { lineChart ->
+//                        val dataSets = ArrayList<ILineDataSet>()
+//
+//                        // Group coffee products by name
+//                        val groupedProducts = products.groupBy { it.name }
+//
+//                        groupedProducts.forEach { (productName, productGroup) ->
+//                            val entries = listOf(
+//                                Entry(0f, productGroup.firstOrNull()?.quantity?.toFloat() ?: 0f)
+//                            )
+//
+//                            val dataSet = LineDataSet(entries, productGroup .firstOrNull()?.name ?: "")
+//                            dataSet.apply {
+//                                setDrawCircles(false)
+//                                setDrawValues(false)
+//                                color = Color(0xFF6F4E37).toArgb() // Coffee brown color
+//                                lineWidth = 2f
+//                                setDrawFilled(true)
+//                                fillDrawable = ColorDrawable(Color(0xFF6F4E37).toArgb()) // Coffee brown color
+//                            }
+//
+//                            dataSets.add(dataSet)
+//                        }
+//
+//                        val lineData = LineData(dataSets)
+//                        lineData.apply {
+//                            setValueTextColor(Color(0xFF6F4E37).toArgb()) // Coffee brown color
+//                            setValueTextSize(10f)
+//                        }
+//
+//                        lineChart.data = lineData
+//                        lineChart.invalidate()
+//                    }
+//                )
+//            }
+//        }
+//    }
+//}
 
-@Composable
-fun PackedGaugeChart(averageTime: Float, maxTime: Float) {
-    var targetProgress by remember { mutableStateOf(0f) }
 
-    LaunchedEffect(Unit) {
-        targetProgress = (averageTime / maxTime) * 100
-    }
-
-    val animatedProgress by animateFloatAsState(
-        targetValue = targetProgress,
-        animationSpec = tween(durationMillis = 500)
-    )
-
-    Box(
-        modifier = Modifier
-            .padding(top = 15.dp)
-            .width(135.dp)
-            .height(165.dp)
-    ) {
-        Box(){
-            // Circular progress indicator
-            CircularProgressIndicator(
-                progress = animatedProgress / 100f,
-                modifier = Modifier
-                    .size(150.dp)
-                    .padding(16.dp),
-                color = Packed, // Replace with your defined color
-                strokeWidth = 15.dp  // Adjust thickness for a modern look
-            )
-            Column(
-                modifier = Modifier.fillMaxSize()
-                    .padding(bottom = 25.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-
-            ) {
-                Text(
-                    text = "${averageTime.toInt()}",
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = "Kg",
-                    fontSize = 10.sp,
-                )
-            }
-        }
-        Text(
-            text = "Packed",
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 130.dp, start = 45.dp)
-        )
-    }
-}
 
 
 

@@ -305,7 +305,9 @@ fun NavGraph(
         }
         composable(route = Screen.Coop.route) {
             onNavigate("Dashboard")
-            CoopDashboard()
+            CoopDashboard(
+                orderViewModel = orderViewModel,
+                productViewModel = ProductViewModel())
         }
         composable(route = Screen.CoopOrder.route) {
             onNavigate("Orders")

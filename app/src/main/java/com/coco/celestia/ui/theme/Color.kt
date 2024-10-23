@@ -67,7 +67,7 @@ val RawMeat = Color(0xFFFB4949)
 
 // Coop Order Palette
 val PendingStatus = Color(0xFFDB873A)
-val PreparingStatus = Color(0xFFE86A33)
+val PreparingStatus = Color(0xFFC05729)
 val DeliveringStatus = Color(0xFF01A69E)
 val CompletedStatus = Color(0xFF7CC659)
 
