@@ -56,6 +56,7 @@ import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.delay
 
 @Composable
 fun ClientDashboard(
@@ -69,10 +70,9 @@ fun ClientDashboard(
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
 
     LaunchedEffect(Unit) {
-        orderViewModel.fetchAllOrders(
-            filter = "",
-            role = "Client"
-        )
+        orderViewModel.fetchAllOrders("", "Client")
+        Log.d("OrderData", "Observed orders: ${orderData.size}")
+        delay(1000)
     }
 
     Box(
@@ -128,52 +128,68 @@ fun ClientDashboard(
     }
 }
 
+//TODO: adjust icon and text size 
 @Composable
 fun BrowseCategories(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .background(VeryDarkGreen, shape = RoundedCornerShape(8.dp))
-            .padding(horizontal = 16.dp, vertical = 16.dp)
     ) {
-        Text(
-            text = "Browse Categories",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier.padding(bottom = 8.dp)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 8.dp)
         ) {
-            CategoryBox(
-                productName = "Coffee",
-                iconId = R.drawable.coffeeicon,
-                navController = navController,
-                iconColor = Color.White,
-                modifier = Modifier.weight(1f)
+            Image(
+                painter = painterResource(id = R.drawable.browsecategories),
+                contentDescription = "Browse Categories Icon",
+                modifier = Modifier.size(24.dp),
+                colorFilter = ColorFilter.tint(RavenBlack)
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            CategoryBox(
-                productName = "Meat",
-                iconId = R.drawable.meaticon,
-                navController = navController,
-                iconColor = Color.White,
-                modifier = Modifier.weight(1f)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Browse Categories",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = RavenBlack
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            CategoryBox(
-                productName = "Vegetable",
-                iconId = R.drawable.vegetable,
-                navController = navController,
-                iconColor = Color.White,
-                modifier = Modifier.weight(1f)
-            )
+        }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(VeryDarkGreen, shape = RoundedCornerShape(8.dp))
+                .padding(horizontal = 16.dp, vertical = 16.dp)
+        ) {
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                CategoryBox(
+                    productName = "Coffee",
+                    iconId = R.drawable.coffeeicon,
+                    navController = navController,
+                    iconColor = Color.White,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                CategoryBox(
+                    productName = "Meat",
+                    iconId = R.drawable.meaticon,
+                    navController = navController,
+                    iconColor = Color.White,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                CategoryBox(
+                    productName = "Vegetable",
+                    iconId = R.drawable.vegetable,
+                    navController = navController,
+                    iconColor = Color.White,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
 }
@@ -232,24 +248,24 @@ fun CategoryBox(
     }
 }
 
-////TODO: top ordered products of all clients (?)
-@Composable
-fun FeaturedProducts() {
-    Box(
-        modifier = Modifier
-            .background(VeryDarkGreen, shape = RoundedCornerShape(8.dp))
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        Text(
-            text = "Featured Products",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-    }
-}
+//top ordered products of all clients (?)
+//@Composable
+//fun FeaturedProducts() {
+//    Box(
+//        modifier = Modifier
+//            .background(VeryDarkGreen, shape = RoundedCornerShape(8.dp))
+//            .padding(horizontal = 16.dp, vertical = 8.dp)
+//    ) {
+//        Text(
+//            text = "Featured Products",
+//            fontSize = 20.sp,
+//            fontWeight = FontWeight.Bold,
+//            color = Color.White
+//        )
+//    }
+//}
 
-//TODO: show orders that are already delivered + Order history with buy again button
+//TODO:  Add buy again button, adjust spacer and icon/text sizes, and add design in error messages
 @Composable
 fun OrderHistory(
     orderData: List<OrderData>,
@@ -257,57 +273,68 @@ fun OrderHistory(
     userData: UserData,
     navController: NavController
 ) {
-    Box(
+    val completedOrders = orderData.filter { order ->
+        order.status.trim().equals("Completed", ignoreCase = true)
+    }
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(VeryDarkGreen, shape = RoundedCornerShape(8.dp))
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 8.dp)
         ) {
+            Image(
+                painter = painterResource(id = R.drawable.orderhistory),
+                contentDescription = "Order History Icon",
+                modifier = Modifier.size(24.dp),
+                colorFilter = ColorFilter.tint(RavenBlack)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "Order History",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = RavenBlack
             )
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-            when (orderState) {
-                is OrderState.LOADING -> {
-                    CircularProgressIndicator(color = Color.White)
-                }
-                is OrderState.ERROR -> {
+        when (orderState) {
+            is OrderState.LOADING -> {
+                CircularProgressIndicator(color = Color.White)
+            }
+            is OrderState.ERROR -> {
+                Text(
+                    text = "Error fetching orders: ${orderState.message}",
+                    color = Color.Red
+                )
+            }
+            is OrderState.EMPTY -> {
+                Text(text = "No completed orders found.", color = Color.Red)
+            }
+            is OrderState.SUCCESS -> {
+                if (completedOrders.isNotEmpty()) {
+                    LazyColumn {
+                        items(completedOrders.size) { index ->
+                            val order = completedOrders[index]
+                            OrderCardDetails(
+                                orderCount = index + 1,
+                                order = order,
+                                user = userData,
+                                navController = navController
+                            )
+                        }
+                    }
+                } else {
                     Text(
-                        text = "Error fetching orders: ${orderState.message}",
+                        text = "No completed orders found.",
+                        fontSize = 16.sp,
                         color = Color.Red
                     )
-                }
-                is OrderState.EMPTY -> {
-                    Text(text = "No completed orders found.", color = Color.White)
-                }
-                is OrderState.SUCCESS -> {
-                    if (orderData.isNotEmpty()) {
-                        LazyColumn {
-                            items(orderData.size) { index ->
-                                val order = orderData[index]
-                                OrderCardDetails(
-                                    orderCount = index + 1,
-                                    order = order,
-                                    user = userData,
-                                    navController = navController
-                                )
-                            }
-                        }
-                    } else {
-                        Text(
-                            text = "No completed orders found.",
-                            fontSize = 16.sp,
-                            color = Color.White
-                        )
-                    }
                 }
             }
         }
@@ -342,22 +369,6 @@ fun OrderCardDetails(
                     .padding(16.dp)
             ) {
                 Row {
-                    Box(
-                        modifier = Modifier
-                            .size(width = 50.dp, height = 150.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color.White),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = orderCount.toString(),
-                            fontSize = 50.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black,
-                            modifier = Modifier.padding(5.dp)
-                        )
-                    }
-
                     Column {
                         Text(
                             text = "Order ID: $orderId",
@@ -383,14 +394,14 @@ fun OrderCardDetails(
                             modifier = Modifier.padding(top = 0.dp, start = 10.dp)
                         )
 
-                        Button(
-                            onClick = {
-                                navController.navigate("Reorder/${order.orderId}")
-                            },
-                            modifier = Modifier.padding(top = 8.dp)
-                        ) {
-                            Text(text = "Buy Again")
-                        }
+//                        Button(
+//                            onClick = {
+//                                navController.navigate("Reorder/${order.orderId}")
+//                            },
+//                            modifier = Modifier.padding(top = 8.dp)
+//                        ) {
+//                            Text(text = "Buy Again")
+//                        }
                     }
                 }
             }
