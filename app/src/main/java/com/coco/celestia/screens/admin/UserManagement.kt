@@ -48,19 +48,27 @@ import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.UserData
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminUserManagement(userViewModel: UserViewModel) {
     var text by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
-    var selectedUser by remember { mutableStateOf<UserData?>(null) }
-    val usersData by userViewModel.usersData.observeAsState()
+    var selectedUser by remember { mutableStateOf(UserData()) }
+    val usersData by userViewModel.usersData.observeAsState(emptyList())
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
-    val users: MutableList<UserData?> = mutableListOf()
+    val users: MutableList<UserData> = mutableListOf()
 
     LaunchedEffect(userState) {
         userViewModel.fetchUsers()
+    }
+    usersData.forEach{ user ->
+        //Add Conditional Statement for Coop Members Only not all Users
+        if (user.role == "CoopCoffee" || user.role == "CoopMeat") {
+            users.add(user)
+        }
     }
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -78,7 +86,7 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
                     .fillMaxWidth()
                     .background(BlueGradientBrush)
                     .padding(5.dp, 0.dp, 0.dp, 0.dp),
-                        horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Center
             ) {
                 SearchBar(
                     query = text,
@@ -91,6 +99,7 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
                     modifier = Modifier
                         .width(screenWidth * 0.75f)
                         .offset(y = 75.dp)
+                        .semantics { testTag = "searchBar" }
                 ) {}
                 Spacer(modifier = Modifier.width(5.dp))
                 Button(
@@ -100,7 +109,9 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
                     colors = ButtonDefaults.buttonColors(
                         containerColor = LightBlue
                     ),
-                    modifier = Modifier.padding(top = 120.dp)
+                    modifier = Modifier
+                        .padding(top = 120.dp)
+                        .semantics { testTag = "auditLogsButton" }
                 ) {
                     Icon(
                         imageVector = Icons.Default.List,
@@ -113,22 +124,14 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
             }
             Spacer(modifier = Modifier.height(8.dp))
 
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                    modifier = Modifier.background(Gray)
-                ) {
-
-                }
-            }
-        }
-
-        usersData?.forEach{ user ->
-            //Add Conditional Statement for Coop Members Only not all Users
-            if (user != null) {
-                if (user.role == "CoopCoffee" || user.role == "CoopMeat") {
-                    users.add(user)
-                }
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier
+                    .background(Gray)
+                    .semantics { testTag = "roleDropdownMenu" }
+            ) {
+                // Dropdown items can be added here
             }
         }
 
@@ -136,23 +139,25 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
             users = users,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 200.dp),
+                .padding(top = 200.dp)
+                .semantics { testTag = "userTable" },
             onEditUserClick = { user ->
                 selectedUser = user
             }
         )
         Spacer(modifier = Modifier.height(100.dp))
 
-        selectedUser?.let { user ->
+        if(selectedUser != UserData()) {
             EditUser(
                 userViewModel = userViewModel,
-                userData = user,
+                userData = selectedUser,
                 onDismiss = {
-                    selectedUser = null
+                    selectedUser = UserData()
                 }
             )
         }
     }
+}
 
 fun DropdownMenuItem(onClick: () -> Unit, interactionSource: @Composable () -> Unit) {
 }
@@ -178,7 +183,7 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                     modifier = Modifier
                         .weight(2f)
                         .fillMaxWidth()
-                        .offset(x=5.dp),
+                        .offset(x = 5.dp),
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Start
                 )
@@ -240,7 +245,6 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit User",
                             modifier = Modifier
-
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))

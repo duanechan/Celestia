@@ -31,6 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LastBaseline
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -98,7 +101,8 @@ fun AdminInventory(
                     .border(1.dp, Color.White, RoundedCornerShape(10.dp))
                     .clip(RoundedCornerShape(10.dp))
                     .height(48.dp)
-                    .background(color = Color.White),
+                    .background(color = Color.White)
+                    .semantics { testTag = "ButtonRow" },
                 horizontalArrangement = Arrangement.Center
             ) {
                 Button(
@@ -115,11 +119,11 @@ fun AdminInventory(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
+                        .semantics { testTag = "CoffeeButton" }
                 ) {
                     Text(text = "COFFEE",
                         fontFamily = mintsansFontFamily,
                         fontWeight = if (selectedButton == "Coffee") FontWeight.Normal else FontWeight.Bold)
-
                 }
 
                 Button(
@@ -136,6 +140,7 @@ fun AdminInventory(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
+                        .semantics { testTag = "MeatButton" }
                 ) {
                     Text(text = "MEAT",
                         fontFamily = mintsansFontFamily,
@@ -146,18 +151,19 @@ fun AdminInventory(
 
             when (productState) {
                 is ProductState.LOADING -> {
-                    Text("Loading products...", color = Color.White)
+                    Text("Loading products...", color = Color.White, modifier = Modifier.semantics { testTag = "LoadingText" }) // Test tag for loading text
                 }
 
                 is ProductState.ERROR -> {
                     Text(
                         "Failed to load products: ${(productState as ProductState.ERROR).message}",
-                        color = Color.Red
+                        color = Color.Red,
+                        modifier = Modifier.semantics { testTag = "ErrorText" }
                     )
                 }
 
                 is ProductState.EMPTY -> {
-                    Text("No products available.", color = Color.White)
+                    Text("No products available.", color = Color.White, modifier = Modifier.semantics { testTag = "EmptyText" }) // Test tag for empty text
                 }
 
                 is ProductState.SUCCESS -> {
@@ -166,12 +172,12 @@ fun AdminInventory(
                     } else {
                         AdminMonthlyInventoryList(monthlyInventory)
                     }
-
                 }
             }
         }
     }
 }
+
 @Composable
 fun AdminItemList(itemList: List<ProductData>, productViewModel: ProductViewModel) {
     var selectedProduct by remember { mutableStateOf<ProductData?>(null) }
@@ -208,12 +214,13 @@ fun AdminMonthlyInventoryList(itemList: List<MonthlyInventory>) {
     if (itemList.isNotEmpty()) {
         itemList.forEach { item ->
             AdminItemCard(
-                item.productName,
-                item.remainingQuantity,
-                item.totalOrderedThisMonth,
-                item.priceKg,
-                "monthly",
-                onEditProductClick = {}
+                productName = item.productName,
+                quantity = item.remainingQuantity,
+                ordered = item.totalOrderedThisMonth,
+                price = item.priceKg,
+                identifier = "monthly",
+                onEditProductClick = {},
+                modifier = Modifier.testTag("MonthlyInventory_${item.productName}")
             )
             Spacer(modifier = Modifier.height(10.dp))
         }
@@ -228,9 +235,10 @@ fun AdminItemCard(
     ordered: Int,
     price: Double,
     identifier: String,
-    onEditProductClick: (ProductData) -> Unit
+    onEditProductClick: (ProductData) -> Unit,
+    modifier: Modifier = Modifier // Modifier added for customization
 ) {
-    Card(modifier = Modifier
+    Card(modifier = modifier
         .width(500.dp)
         .height(200.dp)
         .offset(x = (-16).dp, y = (-50).dp)
@@ -239,10 +247,9 @@ fun AdminItemCard(
             containerColor = Color.White
         )) {
         var expanded by remember { mutableStateOf(false) }
-        val productData = ProductData (
+        val productData = ProductData(
             name = productName,
             quantity = quantity,
-
         )
         Box(
             modifier = Modifier
@@ -337,14 +344,14 @@ fun AdminItemCard(
 
 @Composable
 fun TopBarInventory(onTabSelected: (String) -> Unit) {
-    var selectedOption  by remember { mutableIntStateOf(0) }
+    var selectedOption by remember { mutableIntStateOf(0) }
     Spacer(modifier = Modifier.height(35.dp))
     Column (
         modifier = Modifier
             .statusBarsPadding()
             .wrapContentHeight()
             .padding(vertical = 20.dp)
-    ){
+    ) {
         TabRow(
             selectedTabIndex = selectedOption,
             modifier = Modifier.wrapContentHeight()
@@ -365,7 +372,7 @@ fun TopBarInventory(onTabSelected: (String) -> Unit) {
                         selectedOption = index
                         onTabSelected(title)
                     },
-                    modifier = Modifier.padding(8.dp)
+                    modifier = Modifier.padding(8.dp).testTag("Tab_$title")
                 )
             }
         }

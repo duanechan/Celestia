@@ -18,12 +18,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.components.dialogs.ExitDialog
 import com.coco.celestia.viewmodel.UserViewModel
-
 
 @Composable
 fun AdminProfile(userViewModel: UserViewModel, navController: NavController) {
@@ -70,16 +71,17 @@ fun AdminProfile(userViewModel: UserViewModel, navController: NavController) {
             containerColor = Color.White,
             contentColor = Color.DarkGray
         ),
-        modifier = Modifier.padding(8.dp)
+        modifier = Modifier
+            .padding(8.dp)
+            .semantics { testTag = "logoutButton" } // Test tag for logout button
     ) {
         Icon(
             imageVector = Icons.Default.ExitToApp,
             contentDescription = "Logout",
             modifier = Modifier.size(24.dp)
+                .semantics { testTag = "logoutIcon" } // Test tag for logout icon
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Text("Logout")
+        Text("Logout", modifier = Modifier.semantics { testTag = "logoutText" }) // Test tag for logout text
     }
 }
-
-

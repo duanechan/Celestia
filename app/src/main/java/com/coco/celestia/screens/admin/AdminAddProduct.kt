@@ -32,6 +32,8 @@ import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.model.ProductData
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 
 @Composable
 fun AdminAddProduct(
@@ -43,13 +45,13 @@ fun AdminAddProduct(
     onPriceChanged: (String) -> Unit
 ) {
     val radioOptions = listOf("Coffee", "Meat")
-    val ( selectedOption, onOptionSelected) = remember{ mutableStateOf(radioOptions[0])}
+    val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[0]) }
 
     LaunchedEffect(Unit) {
         onTypeSelected(selectedOption)
     }
 
-    Column (
+    Column(
         modifier = Modifier
             .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -67,6 +69,7 @@ fun AdminAddProduct(
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
                     .padding(0.dp)
+                    .semantics { testTag = "BackButton" } // Added testTag
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
@@ -78,10 +81,11 @@ fun AdminAddProduct(
                 text = "Add Product",
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.align(Alignment.CenterVertically)
+                    .semantics { testTag = "AddProductTitle" } // Added testTag
             )
         }
 
-        OutlinedTextField (
+        OutlinedTextField(
             value = productName,
             onValueChange = { onProductNameChanged(it) },
             label = { Text(text = "Product Name") },
@@ -90,10 +94,11 @@ fun AdminAddProduct(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp)
+                .semantics { testTag = "ProductNameField" } // Added testTag
         )
 
         radioOptions.forEach { option ->
-            Row (
+            Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -112,16 +117,18 @@ fun AdminAddProduct(
                     onClick = {
                         onOptionSelected(option)
                         onTypeSelected(option)
-                    }
+                    },
+                    modifier = Modifier.semantics { testTag = "RadioButton_$option" } // Added testTag
                 )
 
                 Text(
-                    text = option
+                    text = option,
+                    modifier = Modifier.semantics { testTag = "RadioText_$option" } // Added testTag
                 )
             }
         }
 
-        OutlinedTextField (
+        OutlinedTextField(
             value = productPrice,
             onValueChange = { onPriceChanged(it) },
             label = { Text(text = "Price/Kg") },
@@ -130,6 +137,7 @@ fun AdminAddProduct(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp)
+                .semantics { testTag = "ProductPriceField" } // Added testTag
         )
     }
 }
@@ -144,7 +152,7 @@ fun ConfirmAddProduct(
     onToastEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val productState by productViewModel.productState.observeAsState()
-    val product = ProductData (
+    val product = ProductData(
         name = productName,
         quantity = 0,
         type = productType,
