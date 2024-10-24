@@ -1,7 +1,16 @@
 package com.coco.celestia.screens.coop
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,23 +20,33 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,18 +56,28 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.R
+import com.coco.celestia.components.dialogs.PendingOrderDialog
+import com.coco.celestia.components.dialogs.UpdateOrderStatusDialog
+import com.coco.celestia.components.toast.ToastStatus
+import com.coco.celestia.screens.client.OrderStatusTracker
+import com.coco.celestia.ui.theme.Cinnabar
 import com.coco.celestia.ui.theme.CompletedStatus
 import com.coco.celestia.ui.theme.DeliveringStatus
-import com.coco.celestia.viewmodel.model.OrderData
-import com.coco.celestia.viewmodel.model.TransactionData
+import com.coco.celestia.ui.theme.JadeGreen
 import com.coco.celestia.ui.theme.PendingStatus
 import com.coco.celestia.ui.theme.PreparingStatus
 import com.coco.celestia.ui.theme.mintsansFontFamily
@@ -56,15 +85,15 @@ import com.coco.celestia.util.formatDate
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
+import com.coco.celestia.viewmodel.model.OrderData
 import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderRequest(
-    navController: NavController,
     userRole: String,
     orderViewModel: OrderViewModel,
-    transactionViewModel: TransactionViewModel,
+    onUpdateOrder: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
@@ -177,14 +206,12 @@ fun OrderRequest(
                     itemsIndexed(orderData) { index, order ->
                         OrderItem(
                             order = order,
-                            auth = auth,
-                            navController = navController,
                             orderViewModel = orderViewModel,
-                            transactionViewModel = transactionViewModel,
-                            orderCount = index + 1
+                            orderCount = index + 1,
+                            onUpdateOrder = { onUpdateOrder(it) }
                         )
                     }
-                    item { Spacer(modifier = Modifier.height(100.dp)) }
+                    item { Spacer(modifier = Modifier.height(150.dp)) }
                 }
             }
         }
@@ -245,58 +272,11 @@ fun EmptyOrders() {
 fun OrderItem(
     order: OrderData,
     orderCount: Int,
-    auth: FirebaseAuth,
-    navController: NavController,
     orderViewModel: OrderViewModel,
-    transactionViewModel: TransactionViewModel,
+    onUpdateOrder: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
-    val uid = FirebaseAuth.getInstance().uid.toString()
     val orderStatus = order.status
-    when(orderStatus) {
-        "PENDING" -> {
-            PendingOrderItem(
-                navController = navController,
-                order = order,
-                onAccept = {
-                    orderViewModel.updateOrder(order.copy(status = "PREPARING"))
-                    transactionViewModel.recordTransaction(
-                        auth.currentUser?.uid.toString(),
-                        TransactionData(
-                            "TRNSCTN{${order.orderId}}",
-                            order.copy(status = "PREPARING")
-                        )
-                    )
-                }
-            )
-        }
-        "PREPARING" -> {
-            PreparingOrderItem(
-                order = order,
-                navController = navController,
-                orderViewModel = orderViewModel,
-                orderCount = orderCount
-            )
-        }
-        "DELIVERING" -> {
-            DeliveringOrderItem()
-        }
-    }
-}
-
-@Composable
-fun DeliveringOrderItem() {
-
-}
-
-@Composable
-fun PreparingOrderItem(
-    order: OrderData,
-    orderCount: Int,
-    navController: NavController,
-    orderViewModel: OrderViewModel,
-    modifier: Modifier = Modifier,
-) {
-    val orderId = order.orderId.substring(5,9).uppercase()
+    val orderId = order.orderId.substring(6,10).uppercase()
     val orderClient = order.client
 
     Column(
@@ -304,13 +284,14 @@ fun PreparingOrderItem(
             .fillMaxWidth()
             .background(Color.White)
             .padding(16.dp)
-            .semantics { testTag = "android:id/PreparingOrderItem_$orderCount" }
+            .semantics { testTag = "android:id/OrderItem_$orderCount" }
     ) {
         Card {
             Column(
                 modifier = Modifier
+                    .fillMaxSize()
                     .padding(16.dp)
-                    .animateContentSize(),
+                    .animateContentSize()
             ) {
                 Row {
                     Text(
@@ -321,164 +302,376 @@ fun PreparingOrderItem(
                         modifier = Modifier.padding(5.dp)
                     )
                     Column (modifier = Modifier.padding(16.dp)) {
-                        Text(text = "Order ID: $orderId",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold)
                         Text(
                             text = "${order.orderData.name}, ${order.orderData.quantity}kg",
-                            fontSize = 25.sp, fontWeight = FontWeight.Bold
+                            fontSize = 30.sp, fontWeight = FontWeight.Bold
                         )
                         Text(text = "Client Name: $orderClient",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold)
                     }
                 }
-                Box(
-                    modifier = Modifier
-                        .padding(start = 5.dp)
-                        .background(PreparingStatus, shape = RoundedCornerShape(8.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = order.status,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
+
+                StatusSelector(
+                    order = order,
+                    orderViewModel = orderViewModel,
+                    onUpdateOrder = { onUpdateOrder(it) }
+                )
+
+            }
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(text = "Order ID: $orderId")
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(text = "${order.street}, ${order.barangay}")
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = formatDate(order.orderDate).toString())
+                Text(text = formatDate(order.orderDate))
                 Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceAround,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(8.dp)
                 ) {
-                    OutlinedButton(
-                        onClick = {
-                            navController.navigate(Screen.CoopProcessOrder.createRoute(order.orderId))
-                        },
-                        colors = ButtonDefaults.buttonColors(contentColor = Color.DarkGray, containerColor = Color.Transparent)
-                    ) {
-                        Text("View Order")
+                    when (orderStatus) {
+                        "PENDING" -> PendingOrderActions(
+                            order = order,
+                            orderViewModel = orderViewModel,
+                            onUpdateOrder = { onUpdateOrder(it) }
+                        )
+                        "PREPARING" -> PreparingOrderActions(
+                            clientFirstname = orderClient.substringBefore(" "),
+                            order = order,
+                            orderViewModel = orderViewModel,
+                            onUpdateOrder = { onUpdateOrder(it) }
+                        )
+                        "DELIVERING" -> DeliveringOrderActions()
+                        "COMPLETED" -> CompletedOrderActions()
                     }
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StatusSelector(
+    order: OrderData,
+    orderViewModel: OrderViewModel,
+    onUpdateOrder: (Triple<ToastStatus, String, Long>) -> Unit
+) {
+    var statusExpanded by remember { mutableStateOf(false) }
+    var statusDialog by remember { mutableStateOf(false) }
+    var selectedStatus by remember { mutableStateOf("") }
+    val orderStatus = order.status
+    val color = when (orderStatus) {
+        "PENDING" -> PendingStatus
+        "PREPARING" -> PreparingStatus
+        "DELIVERING" -> DeliveringStatus
+        "COMPLETED" -> CompletedStatus
+        else -> Color.Gray
+    }
+
+    ExposedDropdownMenuBox(
+        expanded = statusExpanded,
+        onExpandedChange = {
+            if (orderStatus != "PENDING") {
+                statusExpanded = !statusExpanded
+            }
+        }
+    ) {
+        TextField(
+            readOnly = true,
+            value = orderStatus,
+            enabled = orderStatus != "PENDING",
+            onValueChange = {},
+            trailingIcon = {
+                if (orderStatus != "PENDING") {
+                    ExposedDropdownMenuDefaults.TrailingIcon(statusExpanded)
+                }
+            },
+            colors = TextFieldDefaults.colors(
+                unfocusedContainerColor = color,
+                focusedContainerColor = color,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedTrailingIconColor = Color.White,
+                focusedTrailingIconColor = Color.White,
+                disabledContainerColor = color,
+                disabledTrailingIconColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent
+            ),
+            textStyle = TextStyle(
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily,
+                color = Color.White,
+                textAlign = TextAlign.Center
+            ),
+            modifier = Modifier
+                .menuAnchor()
+                .clip(RoundedCornerShape(16.dp))
+                .width(175.dp)
+        )
+        ExposedDropdownMenu(
+            expanded = statusExpanded,
+            onDismissRequest = { statusExpanded = false }
+        ) {
+            listOf("Preparing", "Delivering", "Completed").forEach { status ->
+                DropdownMenuItem(
+                    text = { Text(text = status, fontFamily = mintsansFontFamily)  },
+                    onClick = {
+                        selectedStatus = status
+                        statusDialog = true
+                    }
+                )
+            }
+        }
+    }
+    if (statusDialog) {
+        UpdateOrderStatusDialog(
+            status = selectedStatus,
+            onDismiss = { statusDialog = false },
+            onAccept = {
+                orderViewModel.updateOrder(order.copy(status = selectedStatus.uppercase()))
+                onUpdateOrder(Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
+                statusDialog = false
+                statusExpanded = false
+            }
+        )
+    }
+}
+
+@Composable
+fun CompletedOrderActions() {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(CompletedStatus)
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Order successfully delivered.",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            modifier = Modifier.padding(8.dp, 0.dp)
+        )
+        Icon(
+            imageVector = Icons.Default.Check,
+            contentDescription = "Deliver",
+            tint = Color.White,
+            modifier = Modifier
+                .size(50.dp)
+                .padding(8.dp)
+        )
+    }
+}
+
+@Composable
+fun PreparingOrderActions(
+    clientFirstname: String,
+    order: OrderData,
+    orderViewModel: OrderViewModel,
+    onUpdateOrder: (Triple<ToastStatus, String, Long>) -> Unit
+) {
+    var statusDialog by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.LightGray)
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Ship this order to $clientFirstname?",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            modifier = Modifier.padding(8.dp, 0.dp)
+        )
+        IconButton(
+            onClick = { statusDialog = true },
+            modifier = Modifier
+                .size(50.dp)
+                .clip(RoundedCornerShape(50.dp))
+                .background(DeliveringStatus)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.deliveryicon),
+                contentDescription = "Deliver",
+                tint = Color.White,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp)
+            )
+        }
+    }
+
+    if (statusDialog) {
+        UpdateOrderStatusDialog(
+            status = "DELIVERING",
+            onDismiss = { statusDialog = false },
+            onAccept = {
+                orderViewModel.updateOrder(order.copy(status = "DELIVERING"))
+                onUpdateOrder(Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
+                statusDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun DeliveringOrderActions() {
+    var expanded by remember { mutableStateOf(false) }
+    val infiniteTransition = rememberInfiniteTransition(label = "Bouncing animation")
+    val bouncingAnimation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = -2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(200, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "Bouncing animation"
+    )
+    val fadeEffect by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = keyframes {
+                durationMillis = 3000
+                0.0f at 0 with LinearEasing
+                1.0f at 1000 with LinearEasing
+                1.0f at 2000 with LinearEasing
+                0.0f at 3000 with LinearEasing
+            },
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "Fade effect"
+    )
+
+    Column {
+        Row(
+            modifier = Modifier
+                .clickable { expanded = !expanded }
+                .fillMaxWidth()
+                .background(DeliveringStatus)
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Order is being delivered.",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier.padding(start = 8.dp)
+            )
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = "Deliver",
+                tint = Color.White,
+                modifier = Modifier
+                    .size(50.dp)
+                    .rotate(90f)
+                    .padding(8.dp)
+                    .offset(y = (-15).dp)
+                    .alpha(fadeEffect)
+            )
+            Icon(
+                painter = painterResource(id = R.drawable.deliveryicon),
+                contentDescription = "Deliver",
+                tint = Color.White,
+                modifier = Modifier
+                    .size(50.dp)
+                    .padding(8.dp)
+                    .offset(y = bouncingAnimation.dp)
+            )
+        }
+        AnimatedVisibility(expanded) {
+            OrderStatusTracker(status = "DELIVERING")
         }
     }
 }
 
 @Composable
-fun PendingOrderItem(
-    navController: NavController,
+fun PendingOrderActions(
     order: OrderData,
-    onAccept: () -> Unit,
-    modifier: Modifier = Modifier
+    orderViewModel: OrderViewModel,
+    onUpdateOrder: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var action by remember { mutableStateOf("") }
 
-    Column(
+    Row(
         modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .padding(16.dp)
-            .semantics { testTag = "android:id/PendingOrderItem_${order.orderId}" }
+            .fillMaxSize()
+            .background(Color.LightGray)
+            .padding(15.dp),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Card {
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .animateContentSize()
-            ) {
-                Text(text = "${order.orderData.name}, ${order.orderData.quantity}kg",
-                    fontSize = 30.sp, fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily)
-                Box(
-                    modifier = Modifier
-                        .padding(5.dp)
-                        .background(
-                            when (order.status) {
-                                "PENDING" -> PendingStatus
-                                else -> Color.Gray
-                            },
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = order.status,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-                Text(text = "${order.street}, ${order.barangay}")
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(text = order.orderDate)
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = {
-                            navController.navigate(Screen.CoopProcessOrder.createRoute(order.orderId))
-                        },
-                        colors = ButtonDefaults.buttonColors(contentColor = Color.DarkGray, containerColor = Color.Transparent)
-                    ) {
-                        Text("View Order")
-                    }
-                    Button(
-                        onClick = {
-                            action = "Accept"
-                            showDialog = true
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = CompletedStatus)
-                    ) {
-                        Text("Accept", fontFamily = mintsansFontFamily, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
+        IconButton(
+            onClick = {
+                showDialog = true
+                action = "Reject"
+            },
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(50.dp))
+                .background(Cinnabar)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Clear,
+                contentDescription = "Reject",
+                tint = Color.White,
+                modifier = Modifier.fillMaxSize()
+            )
         }
-        Spacer(modifier = Modifier.height(8.dp))
+        IconButton(
+            onClick = {
+                showDialog = true
+                action = "Accept"
+            },
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(50.dp))
+                .background(JadeGreen)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Check",
+                tint = Color.White,
+                modifier = Modifier.fillMaxSize()
+
+            )
+        }
     }
 
     if (showDialog) {
-        AlertDialog(
-            onDismissRequest = {
+        PendingOrderDialog(
+            order = order,
+            action = action,
+            onDismiss = { showDialog = false },
+            onAccept = {
+                if (action == "Accept") {
+                    orderViewModel.updateOrder(order.copy(status = "PREPARING"))
+                } else {
+                    orderViewModel.updateOrder(order.copy(status = "REJECTED"))
+                }
+                onUpdateOrder(Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
                 showDialog = false
-            },
-            title = {
-                Text(text = "Order ${order.orderId.substring(5,9).uppercase()}")
-            },
-            text = {
-                Text(text = "Are you sure you want to accept this order?")
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showDialog = false
-                        onAccept()
-                    }
-                ) {
-                    Text("Accept")
-                }
-            },
-            dismissButton = {
-                OutlinedButton(
-                    onClick = {
-                        showDialog = false
-                    }
-                ) {
-                    Text("Cancel")
-                }
-            },
-            modifier = Modifier.semantics { testTag = "android:id/OrderAcceptingDialog" }
+            }
         )
     }
 }
+
