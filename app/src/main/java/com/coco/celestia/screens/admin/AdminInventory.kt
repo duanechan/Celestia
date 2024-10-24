@@ -1,6 +1,5 @@
 package com.coco.celestia.screens.admin
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -47,7 +46,6 @@ import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.model.MonthlyInventory
-import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -56,7 +54,6 @@ fun AdminInventory(
     productViewModel: ProductViewModel,
     navController: NavController
 ) {
-    val uid = FirebaseAuth.getInstance().uid.toString()
     val productData by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
@@ -75,7 +72,7 @@ fun AdminInventory(
             "Admin"
         )
     }
-    LaunchedEffect(orderData, productData, productState) {
+    LaunchedEffect(orderData, productData) {
         monthlyInventory = calculateMonthlyInventory(orderData, productData)
     }
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {

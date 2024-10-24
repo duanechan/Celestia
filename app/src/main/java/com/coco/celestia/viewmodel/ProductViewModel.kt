@@ -203,9 +203,7 @@ class ProductViewModel : ViewModel() {
                 }
                 if (!productFound) {
                     _productState.value = ProductState.ERROR("Product not found")
-                } else {
-                    fetchProducts(filter = "", role = "Admin")
-                }
+                } 
             } catch (e: Exception) {
                 _productState.value = ProductState.ERROR(e.message ?: "Error updating product quantity")
             }
