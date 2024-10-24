@@ -186,4 +186,29 @@ class ProductViewModel : ViewModel() {
             }
         }
     }
+
+    fun updateProductPrice(productName: String, price: Double) {
+        viewModelScope.launch {
+            try {
+                val snapshot = database.get().await()
+                var productFound = false
+                for (product in snapshot.children) {
+                    val name = product.child("name").getValue(String::class.java)
+
+                    if (name == productName) {
+                        product.child("priceKg").ref.setValue(price).await()
+                        productFound = true
+                        break
+                    }
+                }
+                if (!productFound) {
+                    _productState.value = ProductState.ERROR("Product not found")
+                } else {
+                    fetchProducts(filter = "", role = "Admin")
+                }
+            } catch (e: Exception) {
+                _productState.value = ProductState.ERROR(e.message ?: "Error updating product quantity")
+            }
+        }
+    }
 }

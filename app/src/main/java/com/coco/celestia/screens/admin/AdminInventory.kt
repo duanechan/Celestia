@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.admin
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -46,6 +47,7 @@ import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.model.MonthlyInventory
+import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -73,7 +75,7 @@ fun AdminInventory(
             "Admin"
         )
     }
-    LaunchedEffect(orderData, productData) {
+    LaunchedEffect(orderData, productData, productState) {
         monthlyInventory = calculateMonthlyInventory(orderData, productData)
     }
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -163,7 +165,7 @@ fun AdminInventory(
 
                 is ProductState.SUCCESS -> {
                     if (selectedTab == "Current Inventory") {
-                        AdminItemList(productData)
+                        AdminItemList(productData, productViewModel)
                     } else {
                         AdminMonthlyInventoryList(monthlyInventory)
                     }
@@ -174,7 +176,8 @@ fun AdminInventory(
     }
 }
 @Composable
-fun AdminItemList(itemList: List<ProductData>) {
+fun AdminItemList(itemList: List<ProductData>, productViewModel: ProductViewModel) {
+    var selectedProduct by remember { mutableStateOf<ProductData?>(null) }
     if (itemList.isNotEmpty()) {
         itemList.forEach { item ->
             AdminItemCard(
@@ -183,11 +186,23 @@ fun AdminItemList(itemList: List<ProductData>) {
                 0,
                 item.priceKg,
                 "current",
-                onEditProductClick = {}
+                onEditProductClick = {
+                    selectedProduct = item
+                }
             )
             Spacer(modifier = Modifier.height(10.dp))
         }
         Spacer(modifier = Modifier.height(50.dp))
+
+        selectedProduct?.let { product ->
+            EditProduct(
+                productViewModel = productViewModel,
+                productData = product,
+                onDismiss = {
+                    selectedProduct = null
+                }
+            )
+        }
     }
 }
 
