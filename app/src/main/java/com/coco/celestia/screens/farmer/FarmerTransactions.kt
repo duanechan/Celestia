@@ -17,6 +17,8 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -49,22 +51,26 @@ fun FarmerTransactions(navController: NavController) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = BgColor),
+                    .background(color = BgColor)
+                    .semantics { testTag = "android:id/loadingBox" },
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color.Blue)
+                CircularProgressIndicator(color = Color.Blue,
+                    modifier = Modifier.semantics { testTag = "android:id/loadingIndicator" })
             }
         }
         is TransactionState.ERROR -> {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = BgColor),
+                    .background(color = BgColor)
+                    .semantics { testTag = "android:id/errorBox" },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "Failed to load transactions: ${(transactionState as TransactionState.ERROR).message}",
-                    color = Color.Red
+                    color = Color.Red,
+                    modifier = Modifier.semantics { testTag = "android:id/errorMessage" }
                 )
             }
         }
@@ -72,10 +78,11 @@ fun FarmerTransactions(navController: NavController) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = BgColor),
+                    .background(color = BgColor)
+                    .semantics { testTag = "android:id/emptyBox" },
                 contentAlignment = Alignment.Center
             ) {
-                Text("No transactions available.")
+                Text("No transactions available.", modifier = Modifier.semantics { testTag = "android:id/emptyMessage" })
             }
         }
         is TransactionState.SUCCESS -> {
@@ -83,16 +90,18 @@ fun FarmerTransactions(navController: NavController) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(color = BgColor),
+                        .background(color = BgColor)
+                        .semantics { testTag = "android:id/noTransactionsBox" },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No transactions found.")
+                    Text("No transactions found.", modifier = Modifier.semantics { testTag = "android:id/noTransactionsMessage" })
                 }
             } else {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(color = BgColor)
+                        .semantics { testTag = "android:id/transactionList" }
                 ) {
                     items(transactionData) { transaction ->
                         TransactionItem(transaction, navController)
@@ -114,6 +123,7 @@ fun TransactionItem(transaction: TransactionData, navController: NavController) 
         modifier = Modifier
             .padding(20.dp)
             .fillMaxWidth()
+            .semantics { testTag = "android:id/transactionCard" }
     ) {
         StyledText(transactionDate, productQuantity.toString(), productType, orderStatus)
     }
@@ -148,6 +158,8 @@ fun StyledText(transactionDate: String, productQuantity: String, productType: St
                 append(orderStatus)
             }
         },
-        modifier = Modifier.padding(20.dp)
+        modifier = Modifier
+            .padding(20.dp)
+            .semantics { testTag = "android:id/styledText" }
     )
 }

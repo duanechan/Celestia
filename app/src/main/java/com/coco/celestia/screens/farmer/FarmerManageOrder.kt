@@ -109,11 +109,13 @@ fun FarmerManageOrder(
                 .background(color = BgColor)
                 .padding(top = 100.dp, bottom = 25.dp)
                 .verticalScroll(rememberScrollState())
+                .semantics { testTag = "android:id/farmerManageOrderColumn" }
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .semantics { testTag = "android:id/farmerManageOrderSearchRow" },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextField(
