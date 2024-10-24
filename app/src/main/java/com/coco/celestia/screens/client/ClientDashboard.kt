@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.client
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,6 +28,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +51,8 @@ import com.coco.celestia.ui.theme.VeryDarkGreen
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.UserState
+import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
@@ -56,14 +60,13 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun ClientDashboard(
     navController: NavController,
-    userData: UserData?,
+    userViewModel: UserViewModel,
     productViewModel: ProductViewModel,
     orderViewModel: OrderViewModel
 ) {
-    val orderDataState = orderViewModel.orderData.observeAsState()
-    val orderStateState = orderViewModel.orderState.observeAsState()
-    val orderData = orderDataState.value ?: emptyList()
-    val orderState = orderStateState.value ?: OrderState.LOADING
+    val userData by userViewModel.userData.observeAsState(UserData())
+    val orderData by orderViewModel.orderData.observeAsState(emptyList())
+    val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
 
     LaunchedEffect(Unit) {
         orderViewModel.fetchAllOrders(
@@ -81,23 +84,22 @@ fun ClientDashboard(
             modifier = Modifier
                 .fillMaxHeight()
                 .padding(top = 75.dp)
-                .verticalScroll(rememberScrollState())
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                userData?.let { user ->
-                    Text(
-                        text = "Welcome, ${user.firstname} ${user.lastname}!",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = RavenBlack,
-                        modifier = Modifier.weight(1f)
-                    )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                        .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    userData.let { user ->
+                        Text(
+                            text = "Welcome, ${user.firstname} ${user.lastname}!",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = RavenBlack,
+                            modifier = Modifier.weight(1f)
+                        )
 
                     Button(
                         onClick = { /* Handle notification click */ },
@@ -116,16 +118,12 @@ fun ClientDashboard(
             BrowseCategories(navController)
 
             Spacer(modifier = Modifier.height(16.dp))
-
-//            // Ensure userData is non-null before passing it to OrderHistory
-//            userData?.let {
-//                OrderHistory(
-//                    orderData = orderData,
-//                    orderState = orderState,
-//                    userData = it,
-//                    navController = navController
-//                )
-//            }
+            OrderHistory(
+                orderData = orderData,
+                orderState = orderState,
+                userData = userData,
+                navController = navController
+            )
         }
     }
 }
@@ -235,162 +233,167 @@ fun CategoryBox(
 }
 
 ////TODO: top ordered products of all clients (?)
-//@Composable
-//fun FeaturedProducts() {
-//    Box(
-//        modifier = Modifier
-//            .background(VeryDarkGreen, shape = RoundedCornerShape(8.dp))
-//            .padding(horizontal = 16.dp, vertical = 8.dp)
-//    ) {
-//        Text(
-//            text = "Featured Products",
-//            fontSize = 20.sp,
-//            fontWeight = FontWeight.Bold,
-//            color = Color.White
-//        )
-//    }
-//}
+@Composable
+fun FeaturedProducts() {
+    Box(
+        modifier = Modifier
+            .background(VeryDarkGreen, shape = RoundedCornerShape(8.dp))
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = "Featured Products",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+    }
+}
 
 //TODO: show orders that are already delivered + Order history with buy again button
-//@Composable
-//fun OrderHistory(
-//    orderData: List<OrderData>,
-//    orderState: OrderState,
-//    userData: UserData,
-//    navController: NavController
-//) {
-//    Box(
-//        modifier = Modifier
-//            .background(VeryDarkGreen, shape = RoundedCornerShape(8.dp))
-//            .padding(horizontal = 16.dp, vertical = 8.dp)
-//    ) {
-//        Column {
-//            Text(
-//                text = "Order History",
-//                fontSize = 20.sp,
-//                fontWeight = FontWeight.Bold,
-//                color = Color.White
-//            )
-//
-//            Spacer(modifier = Modifier.height(16.dp))
-//
-//            when (orderState) {
-//                is OrderState.LOADING -> {
-//                    CircularProgressIndicator(color = Color.White)
-//                }
-//                is OrderState.ERROR -> {
-//                    Text(
-//                        text = "Error fetching orders: ${orderState.message}",
-//                        color = Color.Red
-//                    )
-//                }
-//                is OrderState.EMPTY -> {
-//                    Text(text = "No completed orders found.", color = Color.White)
-//                }
-//                is OrderState.SUCCESS -> {
-//                    if (orderData.isNotEmpty()) {
-//                        LazyColumn(modifier = Modifier.fillMaxSize()) {
-//                            items(orderData.size) { index ->
-//                                val order = orderData[index]
-//                                OrderCardDetails(
-//                                    orderCount = index + 1,
-//                                    order = order,
-//                                    user = userData,
-//                                    navController = navController
-//                                )
-//                            }
-//                        }
-//                    } else {
-//                        Text(
-//                            text = "No completed orders found.",
-//                            fontSize = 16.sp,
-//                            color = Color.White
-//                        )
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-//
-//@Composable
-//fun OrderCardDetails(
-//    orderCount: Int,
-//    order: OrderData,
-//    user: UserData,
-//    navController: NavController
-//) {
-//    val clientName = "${user.firstname} ${user.lastname}"
-//    val orderId = order.orderId.substring(6, 10).uppercase()
-//    val orderStatus = order.status
-//
-//    Row {
-//        Card(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .height(165.dp)
-//                .padding(top = 0.dp, bottom = 10.dp, start = 16.dp, end = 16.dp)
-//                .clickable {
-//                    navController.navigate("ClientOrderDetails/${order.orderId}/$orderCount")
-//                },
-//            colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
-//        ) {
-//            Column(
-//                Modifier
-//                    .padding(16.dp)
-//            ) {
-//                Row {
-//                    Box(
-//                        modifier = Modifier
-//                            .size(width = 50.dp, height = 150.dp)
-//                            .clip(RoundedCornerShape(10.dp))
-//                            .background(Color.White),
-//                        contentAlignment = Alignment.Center
-//                    ) {
-//                        Text(
-//                            text = orderCount.toString(),
-//                            fontSize = 50.sp,
-//                            fontWeight = FontWeight.Bold,
-//                            color = Color.Black,
-//                            modifier = Modifier.padding(5.dp)
-//                        )
-//                    }
-//
-//                    Column {
-//                        Text(
-//                            text = "Order ID: $orderId",
-//                            fontSize = 35.sp,
-//                            fontWeight = FontWeight.Bold,
-//                            color = Color.White,
-//                            modifier = Modifier.padding(top = 15.dp, start = 10.dp)
-//                        )
-//
-//                        Text(
-//                            text = "Client Name: $clientName",
-//                            fontSize = 15.sp,
-//                            fontWeight = FontWeight.Normal,
-//                            color = Color.White,
-//                            modifier = Modifier.padding(top = 0.dp, start = 10.dp)
-//                        )
-//
-//                        Text(
-//                            text = "Status: $orderStatus",
-//                            fontSize = 20.sp,
-//                            fontWeight = FontWeight.Bold,
-//                            color = LightOrange,
-//                            modifier = Modifier.padding(top = 0.dp, start = 10.dp)
-//                        )
-//
-//                        Button(
-//                            onClick = {
-//                                navController.navigate("Reorder/${order.orderId}")
-//                            },
-//                            modifier = Modifier.padding(top = 8.dp)
-//                        ) {
-//                            Text(text = "Buy Again")
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
+@Composable
+fun OrderHistory(
+    orderData: List<OrderData>,
+    orderState: OrderState,
+    userData: UserData,
+    navController: NavController
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(VeryDarkGreen, shape = RoundedCornerShape(8.dp))
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Text(
+                text = "Order History",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            when (orderState) {
+                is OrderState.LOADING -> {
+                    CircularProgressIndicator(color = Color.White)
+                }
+                is OrderState.ERROR -> {
+                    Text(
+                        text = "Error fetching orders: ${orderState.message}",
+                        color = Color.Red
+                    )
+                }
+                is OrderState.EMPTY -> {
+                    Text(text = "No completed orders found.", color = Color.White)
+                }
+                is OrderState.SUCCESS -> {
+                    if (orderData.isNotEmpty()) {
+                        LazyColumn {
+                            items(orderData.size) { index ->
+                                val order = orderData[index]
+                                OrderCardDetails(
+                                    orderCount = index + 1,
+                                    order = order,
+                                    user = userData,
+                                    navController = navController
+                                )
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = "No completed orders found.",
+                            fontSize = 16.sp,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun OrderCardDetails(
+    orderCount: Int,
+    order: OrderData,
+    user: UserData,
+    navController: NavController
+) {
+    val clientName = "${user.firstname} ${user.lastname}"
+    val orderId = order.orderId.substring(6, 10).uppercase()
+    val orderStatus = order.status
+
+    Row {
+        Card(
+            modifier = Modifier
+                .fillMaxSize()
+                .height(165.dp)
+                .padding(top = 0.dp, bottom = 10.dp, start = 16.dp, end = 16.dp)
+                .clickable {
+                    navController.navigate("ClientOrderDetails/${order.orderId}/$orderCount")
+                },
+            colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
+        ) {
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                Row {
+                    Box(
+                        modifier = Modifier
+                            .size(width = 50.dp, height = 150.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color.White),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = orderCount.toString(),
+                            fontSize = 50.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            modifier = Modifier.padding(5.dp)
+                        )
+                    }
+
+                    Column {
+                        Text(
+                            text = "Order ID: $orderId",
+                            fontSize = 35.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.padding(top = 15.dp, start = 10.dp)
+                        )
+
+                        Text(
+                            text = "Client Name: $clientName",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = Color.White,
+                            modifier = Modifier.padding(top = 0.dp, start = 10.dp)
+                        )
+
+                        Text(
+                            text = "Status: $orderStatus",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = LightOrange,
+                            modifier = Modifier.padding(top = 0.dp, start = 10.dp)
+                        )
+
+                        Button(
+                            onClick = {
+                                navController.navigate("Reorder/${order.orderId}")
+                            },
+                            modifier = Modifier.padding(top = 8.dp)
+                        ) {
+                            Text(text = "Buy Again")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

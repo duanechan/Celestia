@@ -33,11 +33,11 @@ sealed class UserState {
 class UserViewModel : ViewModel() {
     private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("users")
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-    private val _userData = MutableLiveData<UserData?>()
-    private val _usersData = MutableLiveData<List<UserData?>>()
+    private val _userData = MutableLiveData<UserData>()
+    private val _usersData = MutableLiveData<List<UserData>>()
     private val _userState = MutableLiveData<UserState>()
-    val userData: LiveData<UserData?> = _userData
-    val usersData: LiveData<List<UserData?>> = _usersData
+    val userData: LiveData<UserData> = _userData
+    val usersData: LiveData<List<UserData>> = _usersData
     val userState: LiveData<UserState> = _userState
 
     fun resetUserState() {
@@ -54,14 +54,14 @@ class UserViewModel : ViewModel() {
                 val snapshot = database.child(uid).get().await()
                 if (snapshot.exists()) {
                     val userInfo = snapshot.getValue(UserData::class.java)
-                    _userData.value = userInfo
+                    _userData.value = userInfo!!
                     _userState.value = UserState.SUCCESS
                 } else {
-                    _userData.value = null
+                    _userData.value = UserData()
                     _userState.value = UserState.EMPTY
                 }
             } catch (e: Exception) {
-                _userData.value = null
+                _userData.value = UserData()
                 _userState.value = UserState.ERROR(e.message ?: "Unknown error")
             }
         }
@@ -76,10 +76,10 @@ class UserViewModel : ViewModel() {
             try {
                 val snapshot = database.get().await()
                 if (snapshot.exists()) {
-                    val users = mutableListOf<UserData?>()
+                    val users = mutableListOf<UserData>()
                     for (userSnapshot in snapshot.children) {
                         val userInfo = userSnapshot.getValue(UserData::class.java)
-                        users.add(userInfo)
+                        users.add(userInfo!!)
                     }
                     _usersData.value = users
                     _userState.value = UserState.SUCCESS
@@ -321,7 +321,7 @@ class UserViewModel : ViewModel() {
             _userState.value = UserState.LOADING
             try {
                 auth.signOut()
-                _userData.value = null
+                _userData.value = UserData()
                 _userState.value = UserState.SUCCESS
             } catch (e: Exception) {
                 _userState.value = UserState.ERROR(e.message ?: "Unknown error")

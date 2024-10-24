@@ -1,5 +1,6 @@
 package com.coco.celestia.navigation
 
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -182,23 +183,13 @@ fun NavGraph(
 
         //TODO: Initial might change
         composable(route = Screen.Client.route) {
-            val userData by userViewModel.userData.observeAsState()
-            val orderData by orderViewModel.orderData.observeAsState(emptyList())
-            val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
-            val productViewModel: ProductViewModel = viewModel()
-            val orderViewModel: OrderViewModel = viewModel()
 
-            val selectedCategory = ""
-            val searchQuery = ""
-
-            userData?.let { user ->
-                ClientDashboard(
-                    navController = navController,
-                    userData = user,
-                    productViewModel = productViewModel,
-                    orderViewModel = orderViewModel
-                )
-            }
+            ClientDashboard(
+                navController = navController,
+                userViewModel = userViewModel,
+                productViewModel = productViewModel,
+                orderViewModel = orderViewModel
+            )
         }
         composable(route = Screen.ClientOrder.route) {
             onNavigate("Orders")
