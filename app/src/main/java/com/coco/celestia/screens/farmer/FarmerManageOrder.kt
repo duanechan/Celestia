@@ -42,6 +42,7 @@ import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -392,7 +393,7 @@ fun FarmerManageRequest(
 fun ManageOrderCards(
     navController: NavController,
     order: OrderData,
-    cardWidth: Dp = 250.dp,
+    cardWidth: Dp = 240.dp,
     cardHeight: Dp = 180.dp
 ) {
     val clientName = order.client
@@ -476,23 +477,28 @@ fun OrderStatusCard(
     orderStatus: String,
     orderId: String,
     cardWidth: Dp = 100.dp,
-    cardHeight: Dp = 180.dp
+    cardHeight: Dp = 180.dp,
+    showText: Boolean = true
 ) {
     val backgroundColor = when (orderStatus) {
         "PREPARING" -> Brown1
         "INCOMPLETE" -> GoldenYellow
         "REJECTED" -> Copper3
+        "DELIVERING" -> Tangerine
+        "COMPLETED" -> SageGreen
         else -> Color.Gray
     }
 
     val iconPainter: Painter? = when (orderStatus) {
         "PREPARING" -> painterResource(id = R.drawable.preparing)
         "INCOMPLETE" -> painterResource(id = R.drawable.incomplete)
+        "DELIVERING" -> painterResource(id = R.drawable.deliveryicon)
         else -> null
     }
 
     val iconVector: ImageVector? = when (orderStatus) {
         "REJECTED" -> Icons.Default.Clear
+        "COMPLETED" -> Icons.Default.CheckCircle
         else -> Icons.Default.Warning
     }
 
@@ -534,13 +540,15 @@ fun OrderStatusCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = orderStatus,
-                fontSize = 7.sp,
-                fontWeight = FontWeight.Bold,
-                color = Cocoa,
-                modifier = Modifier.semantics { testTag = "android:id/statusText_$orderId" }
-            )
+            if (showText) {
+                Text(
+                    text = orderStatus,
+                    fontSize = 7.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Cocoa,
+                    modifier = Modifier.semantics { testTag = "android:id/statusText_$orderId" }
+                )
+            }
         }
     }
 }

@@ -120,7 +120,7 @@ fun TopBar(title: String, navController: NavController, gradient: Brush) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(gradient)  // Apply the gradient background
+            .background(gradient)
     ) {
         TopAppBar(
             title = {
@@ -167,7 +167,6 @@ fun GradientTopBar(title: String, navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination?.route
 
-    // List of routes where the back button should be hidden
     val noBackButtonRoutes = listOf("farmer_dashboard", "farmer_manage_order", "farmer_items", "profile")
 
     Box(

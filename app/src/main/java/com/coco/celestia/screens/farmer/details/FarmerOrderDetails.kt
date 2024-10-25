@@ -24,6 +24,9 @@ import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.viewmodel.UserState
+import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.UserData
 
 @Composable
 fun FarmerOrderDetails(
@@ -31,8 +34,11 @@ fun FarmerOrderDetails(
     orderId: String
 ) {
     val orderViewModel: OrderViewModel = viewModel()
+    val userViewModel: UserViewModel = viewModel() // Add this line
     val allOrders by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
+    val usersData by userViewModel.usersData.observeAsState(emptyList())
+    val userState by userViewModel.userState.observeAsState(UserState.LOADING)
 
     LaunchedEffect(Unit) {
         if (allOrders.isEmpty()) {
@@ -40,6 +46,9 @@ fun FarmerOrderDetails(
                 filter = "",
                 role = "Farmer"
             )
+        }
+        if (usersData.isEmpty()) {
+            userViewModel.fetchUsers()
         }
     }
 
@@ -86,6 +95,12 @@ fun FarmerOrderDetails(
                     .semantics { testTag = "android:id/orderDetailsScreen" }
             ) {
                 OrderDetailsCard(orderData = orderData)
+                Spacer(modifier = Modifier.height(20.dp))
+
+                if (orderData.status != "REJECTED") {
+                    val fulfilledByList = orderData.fulfilledBy ?: emptyList()
+                    FulfilledBySection(fulfilledBy = fulfilledByList, allUsers = usersData)
+                }
             }
         }
     }
@@ -176,7 +191,7 @@ fun OrderDetailsCard(orderData: OrderData) {
                         .semantics { testTag = "android:id/targetDateLabel" }
                 )
                 Text(
-                    text = orderData.targetDate, // Assuming targetDate is a string
+                    text = orderData.targetDate,
                     fontSize = 15.sp,
                     color = Cocoa,
                     textAlign = TextAlign.Center,
@@ -286,4 +301,59 @@ fun OrderDetailsCard(orderData: OrderData) {
     }
 }
 
-//will add function for tracking orders
+@Composable
+fun FulfilledBySection(fulfilledBy: List<UserData>?, allUsers: List<UserData>) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 10.dp)
+            .semantics { testTag = "android:id/fulfilledByCard" },
+        shape = RoundedCornerShape(15.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = PaleGold
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+        ) {
+            Text(
+                text = "Fulfilled By:",
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = Cocoa,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { testTag = "android:id/fulfilledByLabel" }
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (fulfilledBy.isNullOrEmpty()) {
+                Text(
+                    text = "N/A",
+                    fontSize = 16.sp,
+                    color = Copper,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTag = "android:id/noFarmersMessage" }
+                )
+            } else {
+                fulfilledBy.forEach { farmer ->
+                    Text(
+                        text = "${farmer.firstname} ${farmer.lastname}",
+                        fontSize = 18.sp,
+                        color = Cocoa,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics { testTag = "android:id/fulfilledByName" }
+                    )
+                    Spacer(modifier = Modifier.height(5.dp))
+                }
+            }
+        }
+    }
+}

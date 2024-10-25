@@ -35,7 +35,10 @@ import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.ItemState
+import com.coco.celestia.viewmodel.UserState
+import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.ProductData
+import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -48,6 +51,7 @@ fun FarmerRequestDetails(
     val orderViewModel: OrderViewModel = viewModel()
     val productViewModel: ProductViewModel = viewModel()
     val farmerItemViewModel: FarmerItemViewModel = viewModel()
+    val userViewModel: UserViewModel = viewModel()  // Add UserViewModel
 
     val uid = FirebaseAuth.getInstance().uid.toString()
     val allOrders by orderViewModel.orderData.observeAsState(emptyList())
@@ -56,9 +60,16 @@ fun FarmerRequestDetails(
     val itemData by farmerItemViewModel.itemData.observeAsState(emptyList())
     val itemState by farmerItemViewModel.itemState.observeAsState(ItemState.LOADING)
 
-    LaunchedEffect(Unit, itemData) {
+    // Observe user data
+    val usersData by userViewModel.usersData.observeAsState(emptyList())
+    val userState by userViewModel.userState.observeAsState(UserState.LOADING)
+
+    LaunchedEffect(Unit, itemData, usersData) {
         if (allOrders.isEmpty()) {
             orderViewModel.fetchAllOrders(filter = "", role = "Farmer")
+        }
+        if (usersData.isEmpty()) {
+            userViewModel.fetchUsers()  // Fetch all users
         }
         productViewModel.fetchProductByType("Vegetable")
         farmerItemViewModel.getItems(uid = uid)
@@ -75,7 +86,7 @@ fun FarmerRequestDetails(
     var rejectionReason by remember { mutableStateOf<String?>(null) }
 
     when {
-        orderState == OrderState.LOADING || productState == ProductState.LOADING || itemState == ItemState.LOADING -> {
+        orderState == OrderState.LOADING || productState == ProductState.LOADING || itemState == ItemState.LOADING || userState == UserState.LOADING -> {
             LoadingIndicator()
         }
         orderData == null -> {
@@ -86,6 +97,7 @@ fun FarmerRequestDetails(
                 navController = navController,
                 orderData = orderData,
                 itemData = itemData,
+                usersData = usersData,
                 showDecisionDialog = showDecisionDialog,
                 setDecisionDialog = { showDecisionDialog = it },
                 decisionType = decisionType,
@@ -103,7 +115,6 @@ fun FarmerRequestDetails(
         }
     }
 }
-
 
 @Composable
 fun LoadingIndicator() {
@@ -141,6 +152,7 @@ fun OrderDetails(
     navController: NavController,
     orderData: OrderData,
     itemData: List<ProductData>,
+    usersData: List<UserData>,
     showDecisionDialog: Boolean,
     setDecisionDialog: (Boolean) -> Unit,
     decisionType: String?,
@@ -176,27 +188,30 @@ fun OrderDetails(
                 onReject = onReject
             )
         }
+        item {
+            FulfilledBySection(
+                fulfilledBy = orderData.fulfilledBy,
+                allUsers = usersData
+            )
+        }
     }
 
     if (showDecisionDialog && decisionType != null) {
         FarmerDecisionDialog(
-            decisionType = decisionType!!,
+            decisionType = decisionType,
             onConfirm = { selectedReason, isPartialFulfillment ->
                 setDecisionDialog(false)
                 if (decisionType == "ACCEPT") {
                     setOrderAccepted(true)
-                    // Determine whether it's full or partial fulfillment
                     val fulfillmentStatus = if (isPartialFulfillment == true) "INCOMPLETE" else "PREPARING"
-                    // Update order status accordingly
                     val updatedOrder = orderData.copy(status = fulfillmentStatus)
-                     orderViewModel.updateOrder(updatedOrder)
+                    orderViewModel.updateOrder(updatedOrder)
                     onAccept()
                 } else {
                     setOrderAccepted(false)
                     setRejectionReason(selectedReason)
-                    // Update order status to rejected with reason
                     val updatedOrder = orderData.copy(status = "REJECTED", rejectionReason = selectedReason)
-                     orderViewModel.updateOrder(updatedOrder)
+                    orderViewModel.updateOrder(updatedOrder)
                     onReject(selectedReason!!)
                 }
                 setConfirmationDialog(true)
