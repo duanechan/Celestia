@@ -37,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.LastBaseline
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -52,6 +53,7 @@ import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.CoopBackground
 import com.coco.celestia.ui.theme.DeliveredItem
+import com.coco.celestia.ui.theme.Gray
 import com.coco.celestia.ui.theme.GreenBeans
 import com.coco.celestia.ui.theme.Kiniing
 import com.coco.celestia.ui.theme.Ordered
@@ -262,27 +264,50 @@ fun CoopItemList(itemList: List<ProductData>) {
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
+                    .height(150.dp)
                     .padding(8.dp)
                     .semantics { testTag = "android:id/ProductCard_${product.name}" }
             ) {
                 Row(
                     modifier = Modifier
-                        .padding(16.dp)
+                        .padding(20.dp)
                 ) {
                     Text(
                         text = product.name,
                         fontSize = 25.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
-                        modifier = Modifier.padding(12.dp)
+                        modifier = Modifier
+                            .alignBy(LastBaseline)
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
-                        text = "${product.quantity}kg",
-                        fontSize = 35.sp,
+                        text = "₱ ${product.priceKg}",
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
+                        modifier = Modifier
+                            .alignBy(LastBaseline)
+                    )
+                }
+
+                Row (
+                    modifier = Modifier
+                        .padding(start = 20.dp, end = 20.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Inventory",
+                        fontSize = 20.sp,
+                        fontFamily = mintsansFontFamily,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "${product.quantity}kg",
+                        fontSize = 20.sp,
+                        fontFamily = mintsansFontFamily,
+                        color = Color.White
                     )
                 }
             }
@@ -308,26 +333,69 @@ fun CoopMonthlyItemList(itemList: List<MonthlyInventory>) {
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
+                    .height(170.dp)
                     .padding(8.dp)
             ) {
                 Row(
                     modifier = Modifier
-                        .padding(16.dp)
+                        .padding(20.dp)
                 ) {
                     Text(
                         text = product.productName,
                         fontSize = 25.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
-                        modifier = Modifier.padding(12.dp)
+                        modifier = Modifier
+                            .alignBy(LastBaseline)
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
-                        text = "${product.remainingQuantity}kg",
-                        fontSize = 35.sp,
+                        text = "₱ ${product.priceKg}",
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
+                        modifier = Modifier
+                            .alignBy(LastBaseline)
+                    )
+                }
+
+                Row (
+                    modifier = Modifier
+                        .padding(start = 20.dp, end = 20.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Inventory",
+                        fontSize = 20.sp,
+                        fontFamily = mintsansFontFamily,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "${product.remainingQuantity}kg",
+                        fontSize = 20.sp,
+                        fontFamily = mintsansFontFamily,
+                        color = Color.White
+                    )
+                }
+
+                Row (
+                    modifier = Modifier
+                        .padding(start = 20.dp, end = 20.dp, top = 15.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Ordered",
+                        fontSize = 20.sp,
+                        fontFamily = mintsansFontFamily,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "-${product.totalOrderedThisMonth}kg",
+                        fontSize = 20.sp,
+                        fontFamily = mintsansFontFamily,
+                        color = Color.White
                     )
                 }
             }
