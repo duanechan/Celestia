@@ -35,6 +35,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,20 +67,23 @@ fun ClientContact(contactViewModel: ContactViewModel) {
             .fillMaxSize()
             .padding(top = 75.dp)
             .verticalScroll(rememberScrollState())
+            .semantics { testTag = "ClientContactScreen" }
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(100.dp)
-                .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp)
+                .semantics { testTag = "ContactHeaderRow" },
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = Icons.Default.Phone,
                 contentDescription = "Contact Icon",
-                modifier = Modifier.size(30.dp)
+                modifier = Modifier
                     .size(35.dp)
-                    .align(Alignment.CenterVertically),
+                    .align(Alignment.CenterVertically)
+                    .semantics { testTag = "ContactIcon" },
                 tint = CoffeeBean
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -86,12 +91,16 @@ fun ClientContact(contactViewModel: ContactViewModel) {
                 text = "Contact Inquiry",
                 fontSize = 35.sp,
                 fontWeight = FontWeight.Bold,
-                color = RavenBlack
+                color = RavenBlack,
+                modifier = Modifier.semantics { testTag = "ContactHeaderText" }
             )
 
             Spacer(modifier = Modifier.weight(1f))
 
-            Button(onClick = { /* Handle notification click */ }) {
+            Button(
+                onClick = { /* Handle notification click */ },
+                modifier = Modifier.semantics { testTag = "NotificationButton" }
+            ) {
                 Image(
                     painter = painterResource(id = R.drawable.notification_icon),
                     contentDescription = "Notification Icon",
@@ -104,7 +113,8 @@ fun ClientContact(contactViewModel: ContactViewModel) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 10.dp, bottom = 15.dp, start = 25.dp, end = 16.dp),
+                .padding(top = 10.dp, bottom = 15.dp, start = 25.dp, end = 16.dp)
+                .semantics { testTag = "SearchBarRow" },
             verticalAlignment = Alignment.CenterVertically
         ) {
             SearchBar(
@@ -119,6 +129,7 @@ fun ClientContact(contactViewModel: ContactViewModel) {
                     .height(50.dp)
                     .offset(y = -13.dp)
                     .fillMaxWidth()
+                    .semantics { testTag = "ContactSearchBar" }
             ) {
             }
         }
@@ -127,16 +138,25 @@ fun ClientContact(contactViewModel: ContactViewModel) {
 
         when (contactState) {
             is ContactState.LOADING -> {
-                Text("Loading contacts...")
+                Text(
+                    text = "Loading contacts...",
+                    modifier = Modifier.semantics { testTag = "LoadingText" }
+                )
             }
             is ContactState.ERROR -> {
-                Text("Failed to load contacts: ${(contactState as ContactState.ERROR).message}")
+                Text(
+                    text = "Failed to load contacts: ${(contactState as ContactState.ERROR).message}",
+                    modifier = Modifier.semantics { testTag = "ErrorText" }
+                )
             }
             is ContactState.SUCCESS -> {
                 ContactList(contactData)
             }
             is ContactState.EMPTY -> {
-                Text("No contacts found.")
+                Text(
+                    text = "No contacts found.",
+                    modifier = Modifier.semantics { testTag = "EmptyText" }
+                )
             }
         }
         Spacer(modifier = Modifier.height(100.dp))
@@ -165,7 +185,8 @@ fun ItemCards(contact: ContactData) {
             .height(if (expanded) 260.dp else 200.dp)
             .offset(x = (-16).dp, y = 0.dp)
             .padding(top = 0.dp, bottom = 5.dp, start = 30.dp, end = 0.dp)
-            .clickable { expanded = !expanded },
+            .clickable { expanded = !expanded }
+            .semantics { testTag = "ContactCard_${contact.name}" },
         colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
     ) {
         Column(
@@ -177,14 +198,18 @@ fun ItemCards(contact: ContactData) {
                 fontSize = 35.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
-                modifier = Modifier.padding(top = 15.dp, start = 10.dp)
+                modifier = Modifier
+                    .padding(top = 15.dp, start = 10.dp)
+                    .semantics { testTag = "ContactName_${contact.name}" }
             )
             Text(
                 text = role,
                 fontSize = 25.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
-                modifier = Modifier.padding(top = 15.dp, start = 10.dp)
+                modifier = Modifier
+                    .padding(top = 15.dp, start = 10.dp)
+                    .semantics { testTag = "ContactRole_${contact.name}" }
             )
             if (expanded) {
                 Spacer(modifier = Modifier.height(10.dp))
@@ -192,20 +217,26 @@ fun ItemCards(contact: ContactData) {
                     text = "Contact Number: $contactNumber",
                     fontSize = 20.sp,
                     color = Color.White,
-                    modifier = Modifier.padding(top = 10.dp, start = 10.dp)
+                    modifier = Modifier
+                        .padding(top = 10.dp, start = 10.dp)
+                        .semantics { testTag = "ContactNumber_${contact.name}" }
                 )
                 Text(
                     text = "Email: $email",
                     fontSize = 20.sp,
                     color = Color.White,
-                    modifier = Modifier.padding(top = 5.dp, start = 10.dp)
+                    modifier = Modifier
+                        .padding(top = 5.dp, start = 10.dp)
+                        .semantics { testTag = "ContactEmail_${contact.name}" }
                 )
             }
             Text(
                 text = if (expanded) "Show Less" else "Show More",
                 fontSize = 16.sp,
                 color = Color.LightGray,
-                modifier = Modifier.padding(top = 10.dp, start = 10.dp)
+                modifier = Modifier
+                    .padding(top = 10.dp, start = 10.dp)
+                    .semantics { testTag = "ExpandText_${contact.name}" }
             )
         }
     }

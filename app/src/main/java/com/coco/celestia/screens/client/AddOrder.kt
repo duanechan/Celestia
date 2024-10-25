@@ -54,6 +54,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -91,6 +93,7 @@ fun AddOrderPanel(navController: NavController) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
+            .semantics { testTag = "AddOrderPanel" }
     ) {
         Text(text = "Add Order", fontSize = 25.sp)
         Spacer(modifier = Modifier.height(150.dp))
@@ -126,7 +129,8 @@ fun ProductCard(
             .height(150.dp)
             .clickable {
                 navController.navigate(Screen.OrderDetails.createRoute(product))
-            },
+            }
+            .semantics { testTag = "ProductCard_$product" },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
@@ -191,7 +195,8 @@ fun ProductTypeCard(
             .padding(vertical = 8.dp)
             .animateContentSize()
             .fillMaxWidth()
-            .clickable { expanded = !expanded },
+            .clickable { expanded = !expanded }
+            .semantics { testTag = "ProductTypeCard_${product.name}" },
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.elevatedCardElevation(5.dp)
     ) {
@@ -230,6 +235,7 @@ fun ProductTypeCard(
                         modifier = Modifier
                             .size(32.dp)
                             .padding(start = 8.dp)
+                            .semantics { testTag = "ShoppingCartIcon" }
                     )
                 }
                 AnimatedVisibility(visible = expanded) {
@@ -267,10 +273,12 @@ fun OrderDetailsPanel(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
+            .semantics { testTag = "OrderDetailsPanel" }
     ) {
         Text(
             text = type ?: "Unknown Product",
-            fontSize = 25.sp
+            fontSize = 25.sp,
+            modifier = Modifier.semantics { testTag = "ProductTypeTitle" }
         )
         Spacer(modifier = Modifier.height(150.dp))
         type?.let {
@@ -278,29 +286,39 @@ fun OrderDetailsPanel(
                 productViewModel.fetchProductByType(type)
             }
             when (productState) {
-                is ProductState.EMPTY -> Text("No products available.")
-                is ProductState.ERROR -> Text("Error: ${(productState as ProductState.ERROR).message}")
-                is ProductState.LOADING -> Text("Loading products...")
+                is ProductState.EMPTY -> Text(
+                    text = "No products available.",
+                    modifier = Modifier.semantics { testTag = "ProductStateEmpty" }
+                )
+                is ProductState.ERROR -> Text(
+                    text = "Error: ${(productState as ProductState.ERROR).message}",
+                    modifier = Modifier.semantics { testTag = "ProductStateError" }
+                )
+                is ProductState.LOADING -> Text(
+                    text = "Loading products...",
+                    modifier = Modifier.semantics { testTag = "ProductStateLoading" }
+                )
                 is ProductState.SUCCESS -> {
-                    LazyColumn {
+                    LazyColumn(modifier = Modifier.semantics { testTag = "ProductList" }) {
                         items(productData) { product ->
-                                ProductTypeCard(
-                                    product,
-                                    navController,
-                                    userViewModel = userViewModel,
-                                    onAddToCartEvent = { onAddToCartEvent(it) },
-                                    onOrder = { onOrder(it) }
-                                )
-                            }
+                            ProductTypeCard(
+                                product,
+                                navController,
+                                userViewModel = userViewModel,
+                                onAddToCartEvent = { onAddToCartEvent(it) },
+                                onOrder = { onOrder(it) }
+                            )
                         }
                     }
-                null -> Text("Unknown state")
+                }
+                null -> Text(
+                    text = "Unknown state",
+                    modifier = Modifier.semantics { testTag = "ProductStateUnknown" }
+                )
             }
         }
     }
 }
-
-typealias TargetDate = String
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -342,25 +360,30 @@ fun QuantitySelector(
             .fillMaxSize()
             .background(Color(0xFFFFF3E0), shape = RoundedCornerShape(24.dp))
             .padding(horizontal = 16.dp, vertical = 8.dp)
+            .semantics { testTag = "QuantitySelector" }
     ) {
         Slider(
             value = quantity.toFloat(),
             onValueChange = { quantity = it.toInt().coerceIn(1, maxQuantity) },
             valueRange = 1f..maxQuantity.toFloat(),
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier
+                .padding(bottom = 16.dp)
+                .semantics { testTag = "QuantitySlider" }
         )
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.semantics { testTag = "QuantityRow" }
         ) {
             Button(
                 onClick = { quantity -= 1 },
                 enabled = quantity > 1,
                 shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.semantics { testTag = "DecrementButton" }
             ) {
                 Icon(imageVector = Icons.Filled.KeyboardArrowLeft, contentDescription = "Decrement")
             }
-            OutlinedTextField( //align with circle size
+            OutlinedTextField(
                 value = quantity.toString(),
                 onValueChange = { quantity = it.toIntOrNull()?.coerceIn(1, maxQuantity) ?: quantity },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -369,16 +392,17 @@ fun QuantitySelector(
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 20.sp
                 ),
-//                suffix = { Text("kg", fontSize = 15.sp) },
                 modifier = Modifier
                     .width(150.dp)
-                    .padding(8.dp),
+                    .padding(8.dp)
+                    .semantics { testTag = "QuantityInputField" },
                 singleLine = true
             )
             Button(
                 onClick = { quantity += 1 },
                 enabled = quantity < maxQuantity,
                 shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.semantics { testTag = "IncrementButton" }
             ) {
                 Icon(imageVector = Icons.Filled.KeyboardArrowRight, contentDescription = "Increment")
             }
@@ -388,15 +412,19 @@ fun QuantitySelector(
             onClick = {
                 targetDateDialog = true
             },
-            modifier = Modifier.padding(top = 16.dp)
+            modifier = Modifier
+                .padding(top = 16.dp)
+                .semantics { testTag = "AddOrderButton" }
         ) {
-            Text("Add Order" , color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text("Add Order", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
         Text(
             text = "Qty of Order",
             fontSize = 14.sp,
             color = Color.Gray,
-            modifier = Modifier.padding(top = 8.dp)
+            modifier = Modifier
+                .padding(top = 8.dp)
+                .semantics { testTag = "QuantityLabel" }
         )
         if (targetDateDialog) {
             DatePickerDialog(
@@ -408,7 +436,8 @@ fun QuantitySelector(
                             onOrder(order)
                             navController.navigate(Screen.OrderConfirmation.route)
                             targetDateDialog = false
-                        }
+                        },
+                        modifier = Modifier.semantics { testTag = "ConfirmOrderButton" }
                     ) {
                         Text("Confirm Order")
                     }
@@ -423,6 +452,7 @@ fun QuantitySelector(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
+                        .semantics { testTag = "DatePickerDialogContent" }
                 ) {
                     Text(text = "Do you want to place this order?", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(8.dp))
@@ -439,26 +469,34 @@ fun QuantitySelector(
                         placeholder = { Text(selectedDate) },
                         readOnly = true,
                         trailingIcon = {
-                            IconButton(onClick = { showDatePicker = !showDatePicker }) {
+                            IconButton(
+                                onClick = { showDatePicker = !showDatePicker },
+                                modifier = Modifier.semantics { testTag = "DateIconButton" }
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.DateRange,
                                     contentDescription = ""
                                 )
                             }
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics { testTag = "TargetDateInput" }
                     )
                     AnimatedVisibility(visible = showDatePicker) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .offset(y = (-19).dp)
+                                .semantics { testTag = "DatePickerBox" }
                         ) {
                             DatePicker(
                                 state = datePickerState,
                                 showModeToggle = false,
                                 dateValidator = { it >= System.currentTimeMillis() },
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .semantics { testTag = "DatePicker" }
                             )
                         }
                     }
@@ -500,19 +538,54 @@ fun ConfirmOrderRequestPanel(
     }
     when (orderState) {
         is OrderState.LOADING -> {
-            onAddToCartEvent(Triple(ToastStatus.INFO, "Loading...", System.currentTimeMillis()))
+            onAddToCartEvent(
+                Triple(
+                    ToastStatus.INFO,
+                    "Loading...",
+                    System.currentTimeMillis()
+                )
+            )
+            Text(
+                text = "Loading...",
+                modifier = Modifier.semantics { testTag = "OrderStateLoading" }
+            )
         }
         is OrderState.ERROR -> {
-            onAddToCartEvent(Triple(ToastStatus.FAILED, "Error: ${(orderState as OrderState.ERROR).message}", System.currentTimeMillis()))
+            onAddToCartEvent(
+                Triple(
+                    ToastStatus.FAILED,
+                    "Error: ${(orderState as OrderState.ERROR).message}",
+                    System.currentTimeMillis()
+                )
+            )
+            Text(
+                text = "Error: ${(orderState as OrderState.ERROR).message}",
+                modifier = Modifier.semantics { testTag = "OrderStateError" }
+            )
         }
         is OrderState.SUCCESS -> {
-            onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Order placed.", System.currentTimeMillis()))
+            onAddToCartEvent(
+                Triple(
+                    ToastStatus.SUCCESSFUL,
+                    "Order placed.",
+                    System.currentTimeMillis()
+                )
+            )
             userData?.let {
                 navController.navigate(Screen.Client.route) {
                     popUpTo(Screen.Splash.route)
                 }
             }
+            Text(
+                text = "Order placed successfully.",
+                modifier = Modifier.semantics { testTag = "OrderStateSuccess" }
+            )
         }
-        else -> {}
+        else -> {
+            Text(
+                text = "Order state is unknown.",
+                modifier = Modifier.semantics { testTag = "OrderStateUnknown" }
+            )
+        }
     }
 }

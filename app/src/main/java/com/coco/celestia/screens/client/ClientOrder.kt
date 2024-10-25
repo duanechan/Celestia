@@ -44,6 +44,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -90,6 +92,7 @@ fun ClientOrder(
                 .fillMaxHeight()
                 .padding(top = 75.dp)
                 .verticalScroll(rememberScrollState())
+                .semantics { testTag = "ClientOrderColumn" }
         ) {
             Row(
                 modifier = Modifier
@@ -128,7 +131,7 @@ fun ClientOrder(
             var text by remember { mutableStateOf("") }
             var selectedStatus by remember { mutableStateOf("All") }
             var expanded by remember { mutableStateOf(false) }
-            val statuses = listOf("All", "Pending", "Preparing", "Rejected", "Delivering","Completed")
+            val statuses = listOf("All", "Pending", "Preparing", "Rejected", "Delivering", "Completed")
 
             Row(
                 modifier = Modifier
@@ -165,10 +168,10 @@ fun ClientOrder(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                Box (
+                Box(
                     modifier = Modifier
                         .weight(1f)
-                ){
+                ) {
                     Button(
                         onClick = { expanded = true },
                         modifier = Modifier
@@ -259,7 +262,8 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                 .padding(top = 0.dp, bottom = 10.dp, start = 16.dp, end = 16.dp)
                 .clickable {
                     navController.navigate("ClientOrderDetails/${order.orderId}/$orderCount")
-                },
+                }
+                .semantics { testTag = "OrderCard_$orderId" },
             colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
         ) {
             Column(

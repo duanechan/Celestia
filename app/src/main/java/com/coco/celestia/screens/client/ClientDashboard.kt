@@ -37,6 +37,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -79,31 +81,38 @@ fun ClientDashboard(
         modifier = Modifier
             .fillMaxSize()
             .background(LightGray)
+            .semantics { testTag = "ClientDashboardScreen" }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxHeight()
                 .padding(top = 75.dp)
+                .semantics { testTag = "ClientDashboardColumn" }
         ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp)
-                        .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    userData.let { user ->
-                        Text(
-                            text = "Welcome, ${user.firstname} ${user.lastname}!",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = RavenBlack,
-                            modifier = Modifier.weight(1f)
-                        )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp)
+                    .semantics { testTag = "DashboardHeaderRow" },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                userData.let { user ->
+                    Text(
+                        text = "Welcome, ${user.firstname} ${user.lastname}!",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = RavenBlack,
+                        modifier = Modifier
+                            .weight(1f)
+                            .semantics { testTag = "WelcomeText" }
+                    )
 
                     Button(
                         onClick = { /* Handle notification click */ },
-                        modifier = Modifier.align(Alignment.CenterVertically)
+                        modifier = Modifier
+                            .align(Alignment.CenterVertically)
+                            .semantics { testTag = "NotificationButton" }
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.notification_icon),
@@ -128,17 +137,19 @@ fun ClientDashboard(
     }
 }
 
-//TODO: adjust icon and text size 
 @Composable
 fun BrowseCategories(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
+            .semantics { testTag = "BrowseCategoriesSection" }
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier
+                .padding(bottom = 8.dp)
+                .semantics { testTag = "BrowseCategoriesHeader" }
         ) {
             Image(
                 painter = painterResource(id = R.drawable.browsecategories),
@@ -151,7 +162,8 @@ fun BrowseCategories(navController: NavController) {
                 text = "Browse Categories",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = RavenBlack
+                color = RavenBlack,
+                modifier = Modifier.semantics { testTag = "BrowseCategoriesText" }
             )
         }
         Column(
@@ -159,6 +171,7 @@ fun BrowseCategories(navController: NavController) {
                 .fillMaxWidth()
                 .background(VeryDarkGreen, shape = RoundedCornerShape(8.dp))
                 .padding(horizontal = 16.dp, vertical = 16.dp)
+                .semantics { testTag = "CategoriesContainer" }
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -171,7 +184,9 @@ fun BrowseCategories(navController: NavController) {
                     iconId = R.drawable.coffeeicon,
                     navController = navController,
                     iconColor = Color.White,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics { testTag = "Category_Coffee" }
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 CategoryBox(
@@ -179,7 +194,9 @@ fun BrowseCategories(navController: NavController) {
                     iconId = R.drawable.meaticon,
                     navController = navController,
                     iconColor = Color.White,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics { testTag = "Category_Meat" }
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 CategoryBox(
@@ -187,7 +204,9 @@ fun BrowseCategories(navController: NavController) {
                     iconId = R.drawable.vegetable,
                     navController = navController,
                     iconColor = Color.White,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics { testTag = "Category_Vegetable" }
                 )
             }
         }
@@ -228,6 +247,7 @@ fun CategoryBox(
             .clickable {
                 navController.navigate(Screen.OrderDetails.createRoute(productName))
             }
+            .semantics { testTag = "CategoryBox_$productName" }
     ) {
         Image(
             painter = painterResource(id = iconId),
@@ -243,7 +263,9 @@ fun CategoryBox(
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .semantics { testTag = "CategoryText_$productName" }
         )
     }
 }
@@ -265,7 +287,6 @@ fun CategoryBox(
 //    }
 //}
 
-//TODO:  Add buy again button, adjust spacer and icon/text sizes, and add design in error messages
 @Composable
 fun OrderHistory(
     orderData: List<OrderData>,
@@ -281,6 +302,7 @@ fun OrderHistory(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp, vertical = 8.dp)
+            .semantics { testTag = "OrderHistory" }
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -360,7 +382,8 @@ fun OrderCardDetails(
                 .padding(top = 0.dp, bottom = 10.dp, start = 16.dp, end = 16.dp)
                 .clickable {
                     navController.navigate("ClientOrderDetails/${order.orderId}/$orderCount")
-                },
+                }
+                .semantics { testTag = "OrderCard_$orderId" },
             colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
         ) {
             Column(
