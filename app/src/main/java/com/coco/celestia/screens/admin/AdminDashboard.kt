@@ -31,6 +31,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -50,7 +52,6 @@ import com.github.mikephil.charting.data.PieEntry
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-
 
 @Composable
 fun AdminDashboard(userData: UserData?) {
@@ -75,7 +76,9 @@ fun AdminDashboard(userData: UserData?) {
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Start,
                     fontFamily = mintsansFontFamily,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTag = "welcomeMessage" },
                     color = Color.White
                 )
             }
@@ -86,7 +89,9 @@ fun AdminDashboard(userData: UserData?) {
                 fontWeight = FontWeight.Light,
                 textAlign = TextAlign.Start,
                 fontFamily = mintsansFontFamily,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { testTag = "currentDate" },
                 color = Color.White
             )
             Spacer(modifier = Modifier.height(50.dp))
@@ -95,19 +100,24 @@ fun AdminDashboard(userData: UserData?) {
     }
 }
 
-
 @Composable
-fun SummaryDashboard(){
-    Box(modifier = Modifier
-        .padding(1.dp)
-        .fillMaxWidth()
-        .border(BorderStroke(3.dp, Color.White), shape = RoundedCornerShape(18.dp))
-        .clip(RoundedCornerShape(18.dp))
-        .background(Color.White)){
-        Text(text = "Overview Summary",
+fun SummaryDashboard() {
+    Box(
+        modifier = Modifier
+            .padding(1.dp)
+            .fillMaxWidth()
+            .border(BorderStroke(3.dp, Color.White), shape = RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color.White)
+    ) {
+        Text(
+            text = "Overview Summary",
             fontWeight = FontWeight.Bold,
             color = DarkBlue,
-            modifier = Modifier.padding(start = 8.dp, top = 8.dp))
+            modifier = Modifier
+                .padding(start = 8.dp, top = 8.dp)
+                .semantics { testTag = "overviewSummary" }
+        )
         Spacer(modifier = Modifier.height(5.dp))
         Row(modifier = Modifier.padding(5.dp)) {
             Column {
@@ -116,11 +126,10 @@ fun SummaryDashboard(){
             }
             TotalProductionVolumeLineChart(productionData)
         }
-
     }
 }
 
-//Sample Data
+// Sample Data
 val productionData = listOf(
     Entry(0f, 50f),
     Entry(1f, 60f),
@@ -146,6 +155,7 @@ fun TotalProductionVolumeLineChart(dataPoints: List<Entry>) {
             .padding(5.dp)
             .width(300.dp)
             .height(300.dp)
+            .semantics { testTag = "productionVolumeLineChart" }
     ) {
 
         AndroidView(
@@ -189,10 +199,12 @@ fun TotalProductionVolumeLineChart(dataPoints: List<Entry>) {
 
 @Composable
 fun InventoryPieChart(entries: List<PieEntry>) {
-
-    Box(modifier = Modifier
-        .width(160.dp)
-        .height(160.dp)){
+    Box(
+        modifier = Modifier
+            .width(160.dp)
+            .height(160.dp)
+            .semantics { testTag = "inventoryPieChart" }
+    ) {
 
         AndroidView(
             modifier = Modifier
@@ -216,7 +228,6 @@ fun InventoryPieChart(entries: List<PieEntry>) {
                         BrownCoffee.toArgb()
                     )
                     valueTextColor = android.graphics.Color.BLACK
-
                 }
                 pieChart.data = PieData(dataSet)
                 pieChart.invalidate()
@@ -242,6 +253,7 @@ fun TestAdminChart(averageTime: Float, maxTime: Float) {
         modifier = Modifier
             .padding(top = 15.dp)
             .size(150.dp)
+            .semantics { testTag = "adminChart" }
     ) {
         // Circular progress indicator
         CircularProgressIndicator(
@@ -270,4 +282,3 @@ fun TestAdminChart(averageTime: Float, maxTime: Float) {
         }
     }
 }
-

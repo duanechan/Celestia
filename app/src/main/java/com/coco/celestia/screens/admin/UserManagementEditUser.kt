@@ -19,6 +19,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.UserData
@@ -36,29 +38,36 @@ fun EditUser(
     var expanded by remember { mutableStateOf(false) }
     val content = LocalContext.current
 
+    // Map roles to more user-friendly names
     if (updatedRole == "CoopCoffee") {
         updatedRole = "Coffee"
-    } else if (updatedRole == "CoopMeat"){
+    } else if (updatedRole == "CoopMeat") {
         updatedRole = "Meat"
     }
 
     AlertDialog(
         onDismissRequest = { onDismiss() },
-        title = { Text(text = "Enter your input") },
+        title = { Text(text = "Enter your input", modifier = Modifier.semantics { testTag = "EditUserDialogTitle" }) }, // Added test tag
         text = {
-            Column {
-                //to be changed
+            Column(
+                modifier = Modifier.semantics { testTag = "EditUserForm" }
+            ) {
+                // Email Field
                 OutlinedTextField(
                     value = updatedEmail,
                     onValueChange = { updatedEmail = it },
                     label = { Text("Email") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTag = "EditUserEmailField" }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Role Dropdown
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded },
+                    modifier = Modifier.semantics { testTag = "EditUserRoleDropdownBox" }
                 ) {
                     OutlinedTextField(
                         readOnly = true,
@@ -70,11 +79,13 @@ fun EditUser(
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor()
+                            .semantics { testTag = "EditUserRoleField" }
                     )
 
                     ExposedDropdownMenu(
                         expanded = expanded,
-                        onDismissRequest = { expanded = false }
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.semantics { testTag = "EditUserRoleMenu" }
                     ) {
                         roles.forEach { roleItem ->
                             androidx.compose.material3.DropdownMenuItem(
@@ -82,25 +93,28 @@ fun EditUser(
                                 onClick = {
                                     updatedRole = roleItem
                                     expanded = false
-                                }
+                                },
+                                modifier = Modifier.semantics { testTag = "EditUserRoleItem_$roleItem" }
                             )
                         }
                     }
                 }
             }
         },
-
         confirmButton = {
             Button(
                 onClick = {
+                    // Ensure data updates before refreshing the list
                     userData.let {
                         userViewModel.getUserUidByEmail(it.email) { uid ->
                             if (uid != null) {
+                                // Convert role back to storage value
                                 updatedRole = if (updatedRole == "Coffee") {
                                     "CoopCoffee"
                                 } else {
                                     "CoopMeat"
                                 }
+                                // Perform the update
                                 userViewModel.updateUser(
                                     uid,
                                     it.copy(
@@ -108,18 +122,31 @@ fun EditUser(
                                         role = updatedRole
                                     )
                                 )
+                                // Reset the state after saving
+                                updatedEmail = ""
+                                updatedRole = roles.first()
                             } else {
                                 Toast.makeText(content, "User not found", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
-                    onDismiss()
-                }) {
+                    onDismiss() // Close the dialog
+                },
+                modifier = Modifier.semantics { testTag = "EditUserConfirmButton" }
+            ) {
                 Text("Save")
             }
         },
         dismissButton = {
-            Button(onClick = {onDismiss() }) {
+            Button(
+                onClick = {
+                    // Reset the form when dismissed
+                    updatedEmail = ""
+                    updatedRole = roles.first()
+                    onDismiss()
+                },
+                modifier = Modifier.semantics { testTag = "EditUserDismissButton" }
+            ) {
                 Text("Cancel")
             }
         }

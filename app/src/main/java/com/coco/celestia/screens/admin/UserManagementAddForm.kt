@@ -36,6 +36,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
@@ -107,7 +109,9 @@ fun AddUserForm(
             isError = !isValidEmail,
             singleLine = true,
             maxLines = 1,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { testTag = "emailInputField" }
         )
         Spacer(modifier = Modifier.height(2.dp))
 
@@ -130,7 +134,9 @@ fun AddUserForm(
             label = { Text(text = "First Name") },
             singleLine = true,
             maxLines = 1,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { testTag = "firstNameInputField" }
         )
         Spacer(modifier = Modifier.height(2.dp))
 
@@ -145,7 +151,9 @@ fun AddUserForm(
             label = { Text(text = "Last Name") },
             singleLine = true,
             maxLines = 1,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { testTag = "lastNameInputField" }
         )
         Spacer(modifier = Modifier.height(2.dp))
 
@@ -165,6 +173,7 @@ fun AddUserForm(
                 modifier = Modifier
                     .fillMaxWidth()
                     .menuAnchor()
+                    .semantics { testTag = "roleDropdownField" }
             )
 
             ExposedDropdownMenu(
@@ -236,7 +245,8 @@ fun CheckAddUser(
                         onValueChange = { passwordInput.value = it },
                         label = { Text("Password") },
                         visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        modifier = Modifier.semantics { testTag = "passwordInputField" }
                     )
                 },
                 confirmButton = {
@@ -249,7 +259,7 @@ fun CheckAddUser(
                         }
                         userViewModel.addAccount(email, firstname, lastname, placeholderPass, userRole, passwordInput.value)
                     }) {
-                        Text("Confirm")
+                        Text("Confirm", modifier = Modifier.semantics { testTag = "confirmButton" })
                     }
                 },
                 dismissButton = {
@@ -257,7 +267,7 @@ fun CheckAddUser(
                         setShowDialog(false)
                         navController.navigate(Screen.AdminUserManagement.route)
                     }) {
-                        Text("Cancel")
+                        Text("Cancel", modifier = Modifier.semantics { testTag = "cancelButton" })
                     }
                 }
             )

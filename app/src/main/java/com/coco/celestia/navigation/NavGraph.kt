@@ -299,10 +299,9 @@ fun NavGraph(
         composable(route = Screen.CoopOrder.route) {
             onNavigate("Orders")
             OrderRequest(
-                navController = navController,
                 userRole = userRole,
                 orderViewModel = orderViewModel,
-                transactionViewModel = transactionViewModel
+                onUpdateOrder = { onEvent(it) }
             )
         }
         composable(route = Screen.CoopInventory.route) {
