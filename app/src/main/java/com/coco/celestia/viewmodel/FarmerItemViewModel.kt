@@ -88,22 +88,18 @@ class FarmerItemViewModel : ViewModel() {
                 for (item in snapshot.children) {
                     val name = item.child("name").getValue(String::class.java)
 
-                    if (name.equals(itemName, ignoreCase = true)) {  // Case insensitive match
+                    if (name.equals(itemName, ignoreCase = true)) {
                         val currentQuantity = item.child("quantity").getValue(Int::class.java) ?: 0
                         val newQuantity = currentQuantity + quantity
 
-                        // Update the quantity in the database
                         item.child("quantity").ref.setValue(newQuantity).await()
 
-                        // Update the local LiveData with a new list
                         val updatedItem = item.getValue(ProductData::class.java)?.copy(quantity = newQuantity)
                         updatedItem?.let {
-                            // Create a new list to trigger recomposition
                             _itemData.value = _itemData.value?.map { existingItem ->
                                 if (existingItem.name.equals(itemName, ignoreCase = true)) updatedItem else existingItem
                             }?.toList()
                         }
-
                         itemFound = true
                         break
                     }
@@ -111,11 +107,43 @@ class FarmerItemViewModel : ViewModel() {
                 if (!itemFound) {
                     _itemState.value = ItemState.ERROR("Item not found")
                 } else {
-                    // Optionally, refresh items if needed
                     getItems(uid)
                 }
             } catch (e: Exception) {
                 _itemState.value = ItemState.ERROR(e.message ?: "Error updating item quantity")
+            }
+        }
+    }
+    fun updateItemPrice(itemName: String, newPrice: Double) {
+        viewModelScope.launch {
+            try {
+                _itemState.value = ItemState.LOADING
+                val uid = FirebaseAuth.getInstance().uid.toString()
+                val snapshot = database.child(uid).child("items").get().await()
+                var itemFound = false
+                for (item in snapshot.children) {
+                    val name = item.child("name").getValue(String::class.java)
+
+                    if (name.equals(itemName, ignoreCase = true)) {
+                        item.child("priceKg").ref.setValue(newPrice).await()
+
+                        val updatedItem = item.getValue(ProductData::class.java)?.copy(priceKg = newPrice)
+                        updatedItem?.let {
+                            _itemData.value = _itemData.value?.map { existingItem ->
+                                if (existingItem.name.equals(itemName, ignoreCase = true)) updatedItem else existingItem
+                            }?.toList()
+                        }
+                        itemFound = true
+                        break
+                    }
+                }
+                if (!itemFound) {
+                    _itemState.value = ItemState.ERROR("Item not found")
+                } else {
+                    getItems(uid)
+                }
+            } catch (e: Exception) {
+                _itemState.value = ItemState.ERROR(e.message ?: "Error updating item price")
             }
         }
     }

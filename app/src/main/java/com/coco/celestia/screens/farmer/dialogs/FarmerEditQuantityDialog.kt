@@ -18,22 +18,28 @@ import androidx.compose.ui.semantics.testTag
 fun EditQuantityDialog(
     productName: String,
     currentQuantity: Int,
+    currentPrice: Double,
     onDismiss: () -> Unit,
-    onConfirm: (newQuantity: Int) -> Unit
+    onConfirm: (newQuantity: Int, newPrice: Double) -> Unit
 ) {
     var quantityToEdit by remember { mutableStateOf(currentQuantity.toString()) }
+    var priceToEdit by remember { mutableStateOf(currentPrice.toString()) }
     var quantityError by remember { mutableStateOf(false) }
+    var priceError by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(onClick = {
                 val newQuantity = quantityToEdit.toIntOrNull()
-                if (newQuantity != null && newQuantity >= 0) {
-                    onConfirm(newQuantity)
+                val newPrice = priceToEdit.toDoubleOrNull()
+
+                if (newQuantity != null && newQuantity >= 0 && newPrice != null && newPrice >= 0) {
+                    onConfirm(newQuantity, newPrice)
                     onDismiss()
                 } else {
-                    quantityError = true
+                    quantityError = newQuantity == null || newQuantity < 0
+                    priceError = newPrice == null || newPrice < 0
                 }
             },
                 modifier = Modifier.semantics { testTag = "android:id/editQuantityConfirmButton" }) {
@@ -47,7 +53,7 @@ fun EditQuantityDialog(
                     modifier = Modifier.semantics { testTag = "android:id/editQuantityDismissButtonText" })
             }
         },
-        title = { Text(text = "Edit Quantity for $productName",
+        title = { Text(text = "Edit Details for $productName",
             modifier = Modifier.semantics { testTag = "android:id/editQuantityTitle" }
         ) },
         text = {
@@ -73,6 +79,32 @@ fun EditQuantityDialog(
                         color = Color.Red,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.semantics { testTag = "android:id/editQuantityErrorText" }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Text("Enter new price per kg:",
+                    modifier = Modifier.semantics { testTag = "android:id/editPriceLabel" })
+                Spacer(modifier = Modifier.height(10.dp))
+                TextField(
+                    value = priceToEdit,
+                    onValueChange = {
+                        priceToEdit = it
+                        priceError = false
+                    },
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal),
+                    placeholder = { Text(text = "Enter price per kg",
+                        modifier = Modifier.semantics { testTag = "android:id/editPricePlaceholder" }) },
+                    isError = priceError,
+                    modifier = Modifier.semantics { testTag = "android:id/editPriceTextField" }
+                )
+                if (priceError) {
+                    Text(
+                        text = "Please enter a valid non-negative number.",
+                        color = Color.Red,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.semantics { testTag = "android:id/editPriceErrorText" }
                     )
                 }
             }

@@ -44,7 +44,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
@@ -108,7 +107,7 @@ fun FarmerManageOrder(
             modifier = Modifier
                 .fillMaxHeight()
                 .background(color = BgColor)
-                .padding(top = 100.dp, bottom = 25.dp)
+                .padding(top = 100.dp, bottom = 50.dp)
                 .verticalScroll(rememberScrollState())
                 .semantics { testTag = "android:id/farmerManageOrderColumn" }
         ) {
@@ -190,7 +189,6 @@ fun FarmerManageOrder(
                         )
                     }
 
-                    // Dropdown Menu for Category Filtering
                     DropdownMenu(
                         expanded = filterMenuExpanded,
                         onDismissRequest = { filterMenuExpanded = false },
@@ -257,7 +255,6 @@ fun FarmerManageOrder(
             Spacer(modifier = Modifier.height(15.dp))
 
             if (isOrderStatusView) {
-                // Show Order Status View
                 when (orderState) {
                     is OrderState.LOADING -> {
                         Box(
@@ -333,7 +330,6 @@ fun FarmerManageOrder(
                     }
                 }
             } else {
-                // Show Order Requests View
                 FarmerManageRequest(
                     navController = navController,
                     userData = userData,
@@ -357,31 +353,36 @@ fun FarmerManageRequest(
     selectedCategory: String,
     searchQuery: String
 ) {
-    when (orderState) {
-        is OrderState.LOADING -> {
-            Text("Loading pending orders...")
-        }
-        is OrderState.ERROR -> {
-            Text("Failed to load orders: ${orderState.message}")
-        }
-        is OrderState.EMPTY -> {
-            Text("No pending orders available.")
-        }
-        is OrderState.SUCCESS -> {
-            val pendingOrders = orderData.filter { it.status == "PENDING" }
-            val filteredOrders = pendingOrders.filter { order ->
-                (selectedCategory.isEmpty() || order.orderData.name == selectedCategory) &&
-                        order.orderId.contains(searchQuery, ignoreCase = true)
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        when (orderState) {
+            is OrderState.LOADING -> {
+                Text("Loading pending orders...")
             }
-
-            if (filteredOrders.isEmpty()) {
+            is OrderState.ERROR -> {
+                Text("Failed to load orders: ${orderState.message}")
+            }
+            is OrderState.EMPTY -> {
                 Text("No pending orders available.")
-            } else {
-                filteredOrders.forEach { order ->
-                    if (userData == null) {
-                        CircularProgressIndicator()
-                    } else {
-                        RequestCards(navController, order)
+            }
+            is OrderState.SUCCESS -> {
+                val pendingOrders = orderData.filter { it.status == "PENDING" }
+                val filteredOrders = pendingOrders.filter { order ->
+                    (selectedCategory.isEmpty() || order.orderData.name == selectedCategory) &&
+                            order.orderId.contains(searchQuery, ignoreCase = true)
+                }
+
+                if (filteredOrders.isEmpty()) {
+                    Text("No pending orders available.")
+                } else {
+                    filteredOrders.forEach { order ->
+                        if (userData == null) {
+                            CircularProgressIndicator()
+                        } else {
+                            RequestCards(navController, order)
+                        }
                     }
                 }
             }

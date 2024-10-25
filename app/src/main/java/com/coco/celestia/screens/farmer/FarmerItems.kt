@@ -205,11 +205,18 @@ fun FarmerProductTypeInventory(
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.semantics { testTag = "android:id/productName_${product.name}" }
                     )
+                    Spacer(modifier = Modifier.height(5.dp))
                     Text(
                         text = "${product.quantity}kg",
                         fontSize = 25.sp,
                         color = Cocoa,
                         modifier = Modifier.semantics { testTag = "android:id/productQuantity_${product.name}" }
+                    )
+                    Spacer(modifier = Modifier.height(5.dp))
+                    Text(
+                        text = "₱ ${product.priceKg}",
+                        fontSize = 25.sp,
+                        color = Cocoa,
                     )
                 }
 

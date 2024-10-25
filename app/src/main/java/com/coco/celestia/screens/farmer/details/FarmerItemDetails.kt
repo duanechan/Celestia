@@ -56,9 +56,10 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     var showEditDialog by remember { mutableStateOf(false) }
     var productQuantity by remember { mutableStateOf(0) }
+    var productPricePerKg by remember { mutableStateOf(0.0) }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(Unit, itemData) {
+    LaunchedEffect(Unit) {
         farmerItemViewModel.getItems(uid = uid)
 
         if (productData.isEmpty()) {
@@ -69,6 +70,12 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
 
     LaunchedEffect(productName) {
         farmerProductViewModel.fetchProducts(filter = "", role = "Farmer")
+    }
+
+    LaunchedEffect(itemData) {
+        val availableProduct = itemData.find { it.name.equals(productName, ignoreCase = true) }
+        productQuantity = availableProduct?.quantity ?: 0
+        productPricePerKg = availableProduct?.priceKg ?: 0.0
     }
 
     Scaffold(
@@ -93,14 +100,11 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                 ProductState.SUCCESS -> {
                     val product = productData.find { it.name.equals(productName, ignoreCase = true) }
                     if (product != null) {
-                        // Get quantity from itemData
-                        val availableProduct = itemData.find { it.name.equals(productName, ignoreCase = true) }
-                        productQuantity = availableProduct?.quantity ?: 0
 
                         Column(
                             modifier = Modifier
                                 .fillMaxHeight()
-                                .padding(top = 30.dp)
+                                .padding(top = 10.dp)
                         ) {
                             Spacer(modifier = Modifier.height(20.dp))
 
@@ -121,53 +125,66 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                             )
                                         )
                                 ) {
-                                    Row(
+                                    Column(
                                         modifier = Modifier
-                                            .padding(top = 60.dp)
-                                            .fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
+                                            .fillMaxSize()
+                                            .padding(start = 16.dp, top = 60.dp, end = 16.dp)
                                     ) {
-                                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = product.name,
+                                            fontSize = 60.sp,
+                                            fontWeight = Bold,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .semantics { testTag = "android:id/productNameText" },
+                                            textAlign = TextAlign.Center,
+                                            color = Cocoa
+                                        )
+                                        Spacer(modifier = Modifier.height(10.dp))
+
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
                                             Text(
-                                                text = product.name,
-                                                fontSize = 60.sp,
+                                                text = "Quantity: $productQuantity kg",
+                                                fontSize = 20.sp,
                                                 fontWeight = Bold,
+                                                textAlign = TextAlign.Center,
+                                                color = Cocoa,
                                                 modifier = Modifier
                                                     .fillMaxWidth()
-                                                    .semantics { testTag = "android:id/productNameText" },
-                                                textAlign = TextAlign.Center,
-                                                color = Cocoa
+                                                    .semantics { testTag = "android:id/productQuantityText" }
                                             )
                                             Spacer(modifier = Modifier.height(10.dp))
+                                            Text(
+                                                text = "Price: ₱$productPricePerKg/kg",
+                                                fontSize = 20.sp,
+                                                fontWeight = Bold,
+                                                textAlign = TextAlign.Center,
+                                                color = Cocoa,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .semantics { testTag = "android:id/productPriceText" }
+                                            )
+                                        }
 
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.Center
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .padding(bottom = 16.dp),
+                                            contentAlignment = Alignment.BottomEnd
+                                        ) {
+                                            IconButton(
+                                                onClick = { showEditDialog = true },
+                                                modifier = Modifier
+                                                    .size(35.dp)
+                                                    .semantics { testTag = "android:id/editQuantityButton" }
                                             ) {
-                                                Text(
-                                                    text = "Quantity: $productQuantity kg",
-                                                    fontSize = 20.sp,
-                                                    fontWeight = Bold,
-                                                    textAlign = TextAlign.Center,
-                                                    color = Cocoa,
-                                                    modifier = Modifier.semantics { testTag = "android:id/productQuantityText" }
+                                                Icon(
+                                                    Icons.Filled.Edit,
+                                                    contentDescription = "Edit Quantity",
+                                                    tint = Cocoa
                                                 )
-
-                                                Spacer(modifier = Modifier.width(8.dp))
-
-                                                IconButton(
-                                                    onClick = { showEditDialog = true },
-                                                    modifier = Modifier
-                                                        .size(24.dp)
-                                                        .semantics { testTag = "android:id/editQuantityButton" }
-                                                ) {
-                                                    Icon(
-                                                        Icons.Filled.Edit,
-                                                        contentDescription = "Edit Quantity",
-                                                        tint = Cocoa
-                                                    )
-                                                }
                                             }
                                         }
                                     }
@@ -211,7 +228,17 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                         OrderTable(orders = filteredOrders)
                                     }
                                 }
-                                is OrderState.ERROR -> TODO()
+                                is OrderState.ERROR -> {
+                                    Text(
+                                        text = "Error loading orders",
+                                        fontSize = 16.sp,
+                                        color = Color.Red,
+                                        modifier = Modifier
+                                            .align(Alignment.CenterHorizontally)
+                                            .padding(16.dp)
+                                            .semantics { testTag = "android:id/orderErrorText" }
+                                    )
+                                }
                             }
                         }
                     } else {
@@ -256,11 +283,12 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
             EditQuantityDialog(
                 productName = productName,
                 currentQuantity = productQuantity,
+                currentPrice = productPricePerKg,
                 onDismiss = { showEditDialog = false },
-                onConfirm = { newQuantity ->
+                onConfirm = { newQuantity, newPrice ->
                     val quantityDifference = newQuantity - productQuantity
                     farmerItemViewModel.updateItemQuantity(productName, quantityDifference)
-                    productQuantity = newQuantity
+                    farmerItemViewModel.updateItemPrice(productName, newPrice)
                     showEditDialog = false
                 }
             )

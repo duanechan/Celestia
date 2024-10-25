@@ -3,30 +3,15 @@ package com.coco.celestia.screens.farmer
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -60,8 +45,11 @@ fun FarmerDashboard(
     val uid = FirebaseAuth.getInstance().uid.toString()
     val itemData by itemViewModel.itemData.observeAsState(emptyList())
     val itemState by itemViewModel.itemState.observeAsState(ItemState.LOADING)
+    val dateFormat = remember { SimpleDateFormat("EEEE, MMMM d yyyy", Locale.getDefault()) }
+    val today = dateFormat.format(Date())
+    val scrollState = rememberScrollState()
 
-    LaunchedEffect(Unit, itemData) {
+    LaunchedEffect(uid) {
         itemViewModel.getItems(uid = uid)
     }
 
@@ -75,123 +63,108 @@ fun FarmerDashboard(
             }
         }
         is ItemState.SUCCESS -> {
-            if (itemData.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("No items available", modifier = Modifier.padding(16.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(BgColor)
+                    .verticalScroll(scrollState)
+                    .padding(top = 120.dp, bottom = 150.dp)
+            ) {
+                Text(
+                    text = today,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, bottom = 10.dp),
+                    color = Cocoa
+                )
+
+                userData?.let { user ->
+                    Text(
+                        text = "Welcome, ${user.firstname} ${user.lastname}!",
+                        fontSize = 25.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, bottom = 16.dp),
+                        color = Cocoa
+                    )
                 }
-            } else {
+
+                // In Season Products section
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(BgColor)
-                        .padding(top = 110.dp)
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
+                        .background(LightApricot, shape = RoundedCornerShape(12.dp))
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(start = 20.dp, end = 10.dp)
-                    ) {
-                        val dateFormat = SimpleDateFormat("EEEE, MMMM d yyyy", Locale.getDefault())
-                        val today = dateFormat.format(Date())
-
+                    Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            text = today,
+                            text = "In Season Products",
                             fontSize = 16.sp,
-                            fontWeight = FontWeight.Normal,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
+                            fontWeight = FontWeight.Bold,
                             color = Cocoa
                         )
-                        Spacer(modifier = Modifier.height(5.dp))
+                        InSeasonCropsPlaceholder()
+                    }
+                }
 
-                        userData?.let { user ->
+                // Product Stock Levels section
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
+                        .background(LightApricot, shape = RoundedCornerShape(12.dp))
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Product Stock Levels",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Cocoa
+                        )
+                        StockLevelBarGraph(items = itemData)
+                    }
+                }
+
+                // Order Listings section
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
+                        .background(LightApricot, shape = RoundedCornerShape(12.dp))
+                ) {
+                    Column(modifier = Modifier.padding(start = 16.dp, top = 5.dp, end = 10.dp, bottom = 20.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Text(
-                                text = "Welcome, ${user.firstname} ${user.lastname}!",
-                                fontSize = 25.sp,
+                                text = "Order Listings",
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
                                 color = Cocoa
                             )
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-                        // In-Season Products section
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp)
-                                .background(LightApricot, shape = RoundedCornerShape(12.dp))
-                        ) {
-                            Column(modifier = Modifier.padding(20.dp)) {
+                            TextButton(onClick = { navController.navigate("farmer_manage_order") }) {
                                 Text(
-                                    text = "In Season Products",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Cocoa
-                                )
-                                InSeasonCropsPlaceholder()
-                            }
-                        }
-
-                        // Product Stock Levels
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp)
-                                .background(LightApricot, shape = RoundedCornerShape(12.dp))
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text(
-                                    text = "Product Stock Levels",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Cocoa
-                                )
-                                StockLevelBarGraph(items = itemData)
-                            }
-                        }
-
-                        // Order Listings
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp)
-                                .background(LightApricot, shape = RoundedCornerShape(12.dp))
-                        ) {
-                            Column(modifier = Modifier.padding(start = 16.dp, top = 5.dp, end = 10.dp, bottom = 12.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "Order Listings",
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Cocoa
-                                    )
-                                    TextButton(onClick = { navController.navigate("farmer_manage_order") }) {
-                                        Text(
-                                            text = "See All",
-                                            color = Cocoa,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-                                OrderStatusSection(
-                                    navController = navController,
-                                    userData = userData,
-                                    orderData = orderData,
-                                    orderState = orderState,
-                                    selectedCategory = selectedCategory,
-                                    searchQuery = searchQuery
+                                    text = "See All",
+                                    color = Cocoa,
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }
+                        OrderStatusSection(
+                            navController = navController,
+                            userData = userData,
+                            orderData = orderData,
+                            orderState = orderState,
+                            selectedCategory = selectedCategory,
+                            searchQuery = searchQuery
+                        )
                     }
                 }
             }
@@ -295,15 +268,26 @@ fun OrderStatusSection(
                     Text("No matching orders found.")
                 }
             } else {
-                LazyColumn {
-                    items(filteredOrders) { order ->
+                Column {
+                    filteredOrders.forEach { order ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 10.dp, end = 5.dp)
                         ) {
-                            ManageOrderCards(navController, order, cardWidth = 220.dp, cardHeight = 80.dp)
-                            OrderStatusCard(orderStatus = order.status, orderId = order.orderId, cardWidth = 400.dp, cardHeight = 80.dp, showText = false)
+                            ManageOrderCards(
+                                navController = navController,
+                                order = order,
+                                cardWidth = 220.dp,
+                                cardHeight = 80.dp
+                            )
+                            OrderStatusCard(
+                                orderStatus = order.status,
+                                orderId = order.orderId,
+                                cardWidth = 400.dp,
+                                cardHeight = 80.dp,
+                                showText = false
+                            )
                         }
                     }
                 }
@@ -314,56 +298,68 @@ fun OrderStatusSection(
 
 @Composable
 fun StockLevelBarGraph(items: List<ProductData>) {
-    val topItems = items.sortedByDescending { it.quantity }.take(4)
-    val maxQuantity = 5000
+    val topItems = items.sortedByDescending { it.quantity }.take(3)
+    val maxQuantity = 3000
+    val itemsToDisplay = topItems + List(3 - topItems.size) { ProductData(name = "Placeholder", quantity = 0) }
 
-    val itemsToDisplay = topItems + List(4 - topItems.size) { ProductData(name = "Placeholder", quantity = 0) }
-
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(10.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
+        horizontalAlignment = Alignment.Start
     ) {
         itemsToDisplay.forEach { item ->
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
             ) {
-                var animationPlayed by remember { mutableStateOf(false) }
-                val animatedHeight by animateDpAsState(
-                    targetValue = if (animationPlayed) (item.quantity.toFloat() / maxQuantity.toFloat() * 200).dp else 0.dp,
-                    animationSpec = tween(durationMillis = 1000)
-                )
-
-                LaunchedEffect(Unit) {
-                    animationPlayed = true
-                }
-
-                Box(
-                    modifier = Modifier
-                        .width(40.dp)
-                        .height(100.dp)
-                        .background(Color.Gray.copy(alpha = 0.2f), shape = RoundedCornerShape(10.dp)),
-                    contentAlignment = Alignment.BottomCenter
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(if (item.name == "Placeholder") 0.dp else animatedHeight)
-                            .background(
-                                if (item.name == "Placeholder") Color.LightGray else Copper3,
-                                shape = RoundedCornerShape(10.dp)
-                            )
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
                 Text(
                     text = if (item.name == "Placeholder") "No Product" else item.name.replaceFirstChar { it.uppercase() },
                     fontSize = 14.sp,
-                    color = if (item.name == "Placeholder") Color.Gray else Cocoa
+                    color = if (item.name == "Placeholder") Color.Gray else Cocoa,
+                    modifier = Modifier.padding(bottom = 2.dp)
                 )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    var animationPlayed by remember { mutableStateOf(false) }
+                    val animatedWidth by animateDpAsState(
+                        targetValue = if (animationPlayed) (item.quantity.toFloat() / maxQuantity.toFloat() * 200).dp else 0.dp,
+                        animationSpec = tween(durationMillis = 1000)
+                    )
+
+                    LaunchedEffect(Unit) {
+                        animationPlayed = true
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .width(if (item.name == "Placeholder") 0.dp else animatedWidth)
+                            .height(40.dp)
+                            .background(
+                                if (item.name == "Placeholder") Color.LightGray else Copper3,
+                                shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp)
+                            )
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp)
+                            .background(Color.Gray.copy(alpha = 0.2f), shape = RoundedCornerShape(topEnd = 10.dp, bottomEnd = 10.dp)),
+                        contentAlignment = Alignment.CenterEnd
+                    ) {
+                        Text(
+                            text = "${item.quantity}",
+                            fontSize = 14.sp,
+                            color = if (item.name == "Placeholder") Color.Gray else Cocoa,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                    }
+                }
             }
         }
     }
