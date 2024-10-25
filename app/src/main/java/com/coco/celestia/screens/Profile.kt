@@ -1,6 +1,9 @@
 package com.coco.celestia.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -48,6 +51,7 @@ import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -56,6 +60,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.PermissionChecker.checkSelfPermission
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -139,6 +144,7 @@ fun ProfileScreen(
     onProfileUpdateEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+    val context = LocalContext.current
     val userData by userViewModel.userData.observeAsState()
     val userState by userViewModel.userState.observeAsState()
     val locationData by locationViewModel.locationData.observeAsState()
@@ -154,6 +160,34 @@ fun ProfileScreen(
     var logoutDialog by remember { mutableStateOf(false) }
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
         updatedProfilePicture = it
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                galleryLauncher.launch("image/*")
+            } else {
+                onProfileUpdateEvent(Triple(ToastStatus.WARNING, "Grant app access to update your profile picture.", System.currentTimeMillis()))
+            }
+        }
+    )
+
+    fun openGallery() {
+        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+
+        when (checkSelfPermission(context, permission)) {
+            PackageManager.PERMISSION_GRANTED -> {
+                galleryLauncher.launch("image/*")
+            }
+            else -> {
+                permissionLauncher.launch(permission)
+            }
+        }
     }
 
     LaunchedEffect(userState) {
@@ -270,7 +304,7 @@ fun ProfileScreen(
                         .size(100.dp)
                         .clip(RoundedCornerShape(50.dp))
                         .background(Color.White)
-                        .clickable { galleryLauncher.launch("image/*") }
+                        .clickable { openGallery() }
                 )
 
                 Text(
