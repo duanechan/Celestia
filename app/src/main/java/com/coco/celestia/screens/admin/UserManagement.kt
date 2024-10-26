@@ -50,6 +50,7 @@ import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.UserData
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,7 +105,7 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
                 Spacer(modifier = Modifier.width(5.dp))
                 Button(
                     onClick = {
-
+                        // Navigate to UserManagementAuditLogs
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = LightBlue
