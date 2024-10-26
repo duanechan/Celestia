@@ -51,10 +51,11 @@ import com.coco.celestia.viewmodel.model.UserData
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.navigation.NavController
+import com.coco.celestia.screens.`object`.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminUserManagement(userViewModel: UserViewModel) {
+fun AdminUserManagement(navController: NavController, userViewModel: UserViewModel) {
     var text by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     var selectedUser by remember { mutableStateOf(UserData()) }
@@ -105,7 +106,7 @@ fun AdminUserManagement(userViewModel: UserViewModel) {
                 Spacer(modifier = Modifier.width(5.dp))
                 Button(
                     onClick = {
-                        // Navigate to UserManagementAuditLogs
+                        navController.navigate(Screen.AdminUserManagementAuditLogs.route)
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = LightBlue

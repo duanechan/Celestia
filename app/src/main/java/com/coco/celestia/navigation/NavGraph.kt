@@ -32,6 +32,7 @@ import com.coco.celestia.screens.admin.AdminInventory
 import com.coco.celestia.screens.admin.AdminUserManagement
 import com.coco.celestia.screens.admin.CheckAddUser
 import com.coco.celestia.screens.admin.ConfirmAddProduct
+import com.coco.celestia.screens.admin.UserManagementAuditLogs
 import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientDashboard
 import com.coco.celestia.screens.client.ClientOrder
@@ -230,7 +231,14 @@ fun NavGraph(
         composable(route = Screen.AdminUserManagement.route) {
             onNavigate("User Management")
             AdminUserManagement(
-                userViewModel = userViewModel
+                userViewModel = userViewModel,
+                navController = navController
+            )
+        }
+        composable(route = Screen.AdminUserManagementAuditLogs.route) {
+            onNavigate("User Management")
+            UserManagementAuditLogs(
+                navController = navController
             )
         }
         composable(route = Screen.AdminAddUserManagement.route) {
