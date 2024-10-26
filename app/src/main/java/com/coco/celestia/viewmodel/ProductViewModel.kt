@@ -29,6 +29,9 @@ class ProductViewModel : ViewModel() {
     val productName: LiveData<String> = _productName
     val from: LiveData<String> = _from
 
+    private val _featuredProducts = MutableLiveData<List<ProductData>>()
+    val featuredProducts: LiveData<List<ProductData>> = _featuredProducts
+
     fun onProductNameChange(newProductName: String) {
         _productName.value = newProductName
         _from.value = when (newProductName) {
@@ -203,9 +206,39 @@ class ProductViewModel : ViewModel() {
                 }
                 if (!productFound) {
                     _productState.value = ProductState.ERROR("Product not found")
-                } 
+                }
             } catch (e: Exception) {
                 _productState.value = ProductState.ERROR(e.message ?: "Error updating product quantity")
+            }
+        }
+    }
+
+    fun fetchFeaturedProducts() {
+        viewModelScope.launch {
+            _productState.value = ProductState.LOADING
+            try {
+                val snapshot = database.get().await()
+                val allProducts = snapshot.children.mapNotNull { it.getValue(ProductData::class.java) }
+
+                val meatProducts = allProducts.filter { it.type.equals("Meat", ignoreCase = true) }
+                val vegetableProducts = allProducts.filter { it.type.equals("Vegetable", ignoreCase = true) }
+                val coffeeProducts = allProducts.filter { it.type.equals("Coffee", ignoreCase = true) }
+
+                // Randomizer
+                val randomVegetables = vegetableProducts.shuffled().take(3)
+                val randomCoffee = coffeeProducts.shuffled().take(3)
+
+                // combine featured products
+                val featured = mutableListOf<ProductData>()
+                featured.addAll(meatProducts.take(2)) // meat has only 2 products
+                featured.addAll(randomVegetables)
+                featured.addAll(randomCoffee)
+
+                // Shuffle to randomize order and limit to 8 items
+                _featuredProducts.value = featured.shuffled().take(8)
+                _productState.value = if (featured.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
+            } catch (e: Exception) {
+                _productState.value = ProductState.ERROR(e.message ?: "Unknown error")
             }
         }
     }

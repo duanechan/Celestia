@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -18,6 +19,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -25,6 +29,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,10 +61,13 @@ import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 
+//TODO: add vertical scrolling and spacer at the end
+// + fix icons sizes of each methods
 @Composable
 fun ClientDashboard(
     navController: NavController,
@@ -70,11 +78,16 @@ fun ClientDashboard(
     val userData by userViewModel.userData.observeAsState(UserData())
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
+    val featuredProducts by productViewModel.featuredProducts.observeAsState(emptyList())
 
     LaunchedEffect(Unit) {
         orderViewModel.fetchAllOrders("", "Client")
         Log.d("OrderData", "Observed orders: ${orderData.size}")
         delay(1000)
+    }
+
+    LaunchedEffect(Unit) {
+        productViewModel.fetchFeaturedProducts()
     }
 
     Box(
@@ -125,6 +138,9 @@ fun ClientDashboard(
 
             Spacer(modifier = Modifier.height(16.dp))
             BrowseCategories(navController)
+
+            Spacer(modifier = Modifier.height(16.dp))
+            FeaturedProducts(featuredProducts)
 
             Spacer(modifier = Modifier.height(16.dp))
             OrderHistory(
@@ -270,22 +286,91 @@ fun CategoryBox(
     }
 }
 
-//top ordered products of all clients (?)
-//@Composable
-//fun FeaturedProducts() {
-//    Box(
-//        modifier = Modifier
-//            .background(VeryDarkGreen, shape = RoundedCornerShape(8.dp))
-//            .padding(horizontal = 16.dp, vertical = 8.dp)
-//    ) {
-//        Text(
-//            text = "Featured Products",
-//            fontSize = 20.sp,
-//            fontWeight = FontWeight.Bold,
-//            color = Color.White
+@Composable
+fun FeaturedProducts(featuredProducts: List<ProductData>) { // Pass featured products as a parameter
+    Box(
+        modifier = Modifier
+            .background(VeryDarkGreen, shape = RoundedCornerShape(8.dp))
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = "Featured Products",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            modifier = Modifier.padding(bottom = 8.dp) // Add some padding for spacing
+        )
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2), // Use 'columns' parameter instead of 'cells'
+            contentPadding = PaddingValues(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(featuredProducts) { product -> // Use 'items' function from 'lazyGrid'
+                ProductTypeCard(product)
+            }
+        }
+    }
+}
+
+//TODO: navigation when clicked - same with browse categories
+// + add gradient based on category/type and icons
+// + fix size and position and design
+@Composable
+fun ProductTypeCard(product: ProductData) {
+//    // Determine the gradient based on the product category
+//    val gradientBrush = when (product.category) { // Assuming 'category' is a property of ProductData
+//        "Coffee" -> Brush.linearGradient(
+//            colors = listOf(Color(0xFFB79276), Color(0xFF91684A))
+//        )
+//        "Meat" -> Brush.linearGradient(
+//            colors = listOf(Color(0xFFD45C5C), Color(0xFFAA3333))
+//        )
+//        "Vegetable" -> Brush.linearGradient(
+//            colors = listOf(Color(0xFF4CB05C), Color(0xFF4F8A45))
+//        )
+//        else -> Brush.linearGradient(
+//            colors = listOf(Color.Gray, Color.LightGray)
 //        )
 //    }
-//}
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp)
+            .clickable {
+                // Handle navigation to product details
+            },
+        elevation = CardDefaults.cardElevation(4.dp), // Use CardDefaults for elevation
+//        backgroundColor = Color.Transparent // Set to transparent to see the gradient
+    ) {
+        Box(
+            contentAlignment = Alignment.Center
+//            modifier = Modifier
+//                .background(gradientBrush) // Apply the gradient background
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(8.dp) // Add padding for inner content
+            ) {
+//                Image(
+//                    painter = painterResource(id = product.iconId), // Ensure this field exists in ProductData
+//                    contentDescription = "${product.name} icon",
+//                    modifier = Modifier.size(50.dp)
+//                )
+                Spacer(modifier = Modifier.height(4.dp)) // Add some spacing
+                Text(
+                    text = product.name,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
+        }
+    }
+}
 
 @Composable
 fun OrderHistory(
