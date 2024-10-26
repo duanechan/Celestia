@@ -18,6 +18,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -40,7 +42,8 @@ class ClientTransaction : ComponentActivity() {
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0xFFF2E3DB)) // Hex color))
+                        .background(Color(0xFFF2E3DB))
+                        .semantics { testTag = "TransactionSurface" }
                 ) {
                     TransactionPanel(transactionViewModel = viewModel())
                 }
@@ -59,21 +62,33 @@ fun TransactionPanel(transactionViewModel: TransactionViewModel) {
     LaunchedEffect(Unit) {
         transactionViewModel.fetchTransactions(uid, "")
     }
-    LazyColumn {
+
+    LazyColumn(
+        modifier = Modifier.semantics { testTag = "TransactionList" }
+    ) {
         when (transactionState) {
             is TransactionState.LOADING -> {
                 item {
-                    Text("Loading transactions...")
+                    Text(
+                        text = "Loading transactions...",
+                        modifier = Modifier.semantics { testTag = "LoadingText" }
+                    )
                 }
             }
             is TransactionState.ERROR -> {
                 item {
-                    Text("Failed to load transactions: ${(transactionState as TransactionState.ERROR).message}")
+                    Text(
+                        text = "Failed to load transactions: ${(transactionState as TransactionState.ERROR).message}",
+                        modifier = Modifier.semantics { testTag = "ErrorText" }
+                    )
                 }
             }
             is TransactionState.EMPTY -> {
                 item {
-                    Text("No transactions available.")
+                    Text(
+                        text = "No transactions available.",
+                        modifier = Modifier.semantics { testTag = "EmptyText" }
+                    )
                 }
             }
             is TransactionState.SUCCESS -> {
@@ -98,6 +113,7 @@ fun TransactionItem(transaction: TransactionData) {
         modifier = Modifier
             .padding(20.dp)
             .fillMaxWidth()
+            .semantics { testTag = "TransactionCard" }
     ) {
 //        StyledText(transactionDate, productQuantity.toString(), productType, orderStatus)
     }
@@ -129,6 +145,8 @@ fun StyledText(transactionDate: String, productQuantity: String, productType: St
                 append(orderStatus)
             }
         },
-        modifier = Modifier.padding(20.dp)
+        modifier = Modifier
+            .padding(20.dp)
+            .semantics { testTag = "StyledText" }
     )
 }

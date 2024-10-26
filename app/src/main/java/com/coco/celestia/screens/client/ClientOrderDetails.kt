@@ -35,6 +35,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -82,19 +84,20 @@ fun ClientOrderDetails(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = LightGray),
+                    .background(color = LightGray)
+                    .semantics { testTag = "LoadingIndicator" },
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
             }
         }
 
-
         orderData == null -> {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = White),
+                    .background(color = White)
+                    .semantics { testTag = "OrderNotFound" },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -118,7 +121,8 @@ fun ClientOrderDetails(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(520.dp), //adjust size of orange box here
+                        .height(520.dp) //adjust size of orange box here
+                        .semantics { testTag = "OrderDetailsCard" },
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = Color.Transparent
@@ -144,7 +148,9 @@ fun ClientOrderDetails(
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(bottom = 8.dp)
+                                modifier = Modifier
+                                    .padding(bottom = 8.dp)
+                                    .semantics { testTag = "OrderCountBox" }
                             ) {
                                 // white box order count
                                 Box(
@@ -176,6 +182,7 @@ fun ClientOrderDetails(
                                         },
                                         fontSize = 20.sp,
                                         color = White,
+                                        modifier = Modifier.semantics { testTag = "OrderID" }
                                     )
 
                                     Spacer(modifier = Modifier.height(4.dp))
@@ -191,6 +198,7 @@ fun ClientOrderDetails(
                                         },
                                         fontSize = 20.sp,
                                         color = White,
+                                        modifier = Modifier.semantics { testTag = "DeliveryAddress" }
                                     )
 
                                     Spacer(modifier = Modifier.height(4.dp))
@@ -206,6 +214,7 @@ fun ClientOrderDetails(
                                         },
                                         fontSize = 15.sp,
                                         color = White,
+                                        modifier = Modifier.semantics { testTag = "ETA" }
                                     )
                                 }
                             }
@@ -216,6 +225,7 @@ fun ClientOrderDetails(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(top = 16.dp)
+                                    .semantics { testTag = "OrderedProducts" }
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.ShoppingCart,
@@ -241,7 +251,9 @@ fun ClientOrderDetails(
                             // products list display
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics { testTag = "ProductList" }
                             ) {
                                     Card(
                                         modifier = Modifier
@@ -299,7 +311,8 @@ fun OrderStatusTracker(status: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(16.dp)
+            .semantics { testTag = "OrderStatusTracker" },
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -307,7 +320,8 @@ fun OrderStatusTracker(status: String) {
         ) {
             if (status in listOf("PREPARING", "DELIVERING", "COMPLETED")) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.semantics { testTag = "PreparingStatus" }
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.warehouse),
@@ -315,21 +329,23 @@ fun OrderStatusTracker(status: String) {
                         tint = Color(0xFF5A7F54),
                         modifier = Modifier
                             .size(50.dp)
-                            .clickable {
-                            }
+                            .clickable { }
+                            .semantics { testTag = "WarehouseIcon" }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "The product is being prepared in the warehouse.",
                         fontSize = 14.sp,
-                        color = Color.Gray
+                        color = Color.Gray,
+                        modifier = Modifier.semantics { testTag = "PreparingText" }
                     )
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
             if (status in listOf("DELIVERING", "COMPLETED")) {
                 Row(
-                    verticalAlignment = Alignment.Top
+                    verticalAlignment = Alignment.Top,
+                    modifier = Modifier.semantics { testTag = "DeliveryDivider" }
                 ) {
                     Spacer(modifier = Modifier.width(22.dp))
                     Divider(
@@ -337,12 +353,14 @@ fun OrderStatusTracker(status: String) {
                         modifier = Modifier
                             .width(2.dp)
                             .height(50.dp)
+                            .semantics { testTag = "DividerLine" }
                     )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.semantics { testTag = "DeliveringStatus" }
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.deliveryicon),
@@ -350,14 +368,15 @@ fun OrderStatusTracker(status: String) {
                         tint = Color(0xFF5A7F54),
                         modifier = Modifier
                             .size(50.dp)
-                            .clickable {
-                            }
+                            .clickable { }
+                            .semantics { testTag = "DeliveryTruckIcon" }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "The delivery is on the way.",
                         fontSize = 14.sp,
-                        color = Color.Gray
+                        color = Color.Gray,
+                        modifier = Modifier.semantics { testTag = "DeliveringText" }
                     )
                 }
             }
@@ -365,7 +384,8 @@ fun OrderStatusTracker(status: String) {
 
             if (status == "COMPLETED") {
                 Row(
-                    verticalAlignment = Alignment.Top
+                    verticalAlignment = Alignment.Top,
+                    modifier = Modifier.semantics { testTag = "CompletedDivider" }
                 ) {
                     Spacer(modifier = Modifier.width(22.dp))
                     Divider(
@@ -373,12 +393,14 @@ fun OrderStatusTracker(status: String) {
                         modifier = Modifier
                             .width(2.dp)
                             .height(50.dp)
+                            .semantics { testTag = "CompletedDividerLine" }
                     )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.semantics { testTag = "CompletedStatus" }
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
@@ -386,14 +408,15 @@ fun OrderStatusTracker(status: String) {
                         tint = Color(0xFFFFA500),
                         modifier = Modifier
                             .size(50.dp)
-                            .clickable {
-                            }
+                            .clickable { }
+                            .semantics { testTag = "LocationIcon" }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "The order has been received.",
                         fontSize = 14.sp,
-                        color = Color.Gray
+                        color = Color.Gray,
+                        modifier = Modifier.semantics { testTag = "CompletedText" }
                     )
                 }
             }

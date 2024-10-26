@@ -28,6 +28,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,7 +50,6 @@ fun OrderPanel() {
     val auth: FirebaseAuth = FirebaseAuth.getInstance()
     val uid = auth.currentUser?.uid.toString()
 
-
     LaunchedEffect(Unit) {
         orderViewModel.fetchOrders(
             uid = uid,
@@ -58,16 +59,27 @@ fun OrderPanel() {
 
     when (orderState) {
         is OrderState.LOADING -> {
-            Text("Loading orders...")
+            Text(
+                text = "Loading orders...",
+                modifier = Modifier.semantics { testTag = "LoadingOrdersText" }
+            )
         }
         is OrderState.ERROR -> {
-            Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}")
+            Text(
+                text = "Failed to load orders: ${(orderState as OrderState.ERROR).message}",
+                modifier = Modifier.semantics { testTag = "ErrorOrdersText" }
+            )
         }
         is OrderState.EMPTY -> {
-            Text("Mag-order ka na, man.")
+            Text(
+                text = "Mag-order ka na, man.",
+                modifier = Modifier.semantics { testTag = "EmptyOrdersText" }
+            )
         }
         is OrderState.SUCCESS -> {
-            LazyColumn {
+            LazyColumn(
+                modifier = Modifier.semantics { testTag = "OrdersLazyColumn" }
+            ) {
                 items(orderData) { order ->
                     OrderItem(order)
                 }
@@ -75,7 +87,6 @@ fun OrderPanel() {
         }
         else -> {}
     }
-
 }
 
 @Composable
@@ -88,8 +99,11 @@ fun OrderItem(order: OrderData) {
             .fillMaxWidth()
             .background(Color.White)
             .padding(16.dp)
+            .semantics { testTag = "OrderItemColumn" }
     ) {
-        Card {
+        Card(
+            modifier = Modifier.semantics { testTag = "OrderCard" }
+        ) {
             Column(
                 modifier = Modifier
                     .padding(16.dp)
@@ -100,18 +114,24 @@ fun OrderItem(order: OrderData) {
                 Text(text = "${order.status} ●", fontSize = 20.sp, fontWeight = FontWeight.Light, color = Orange)
                 Text(text = "${order.street}, ${order.barangay}")
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = order.orderDate)
+                Text(
+                    text = order.orderDate,
+                    modifier = Modifier.semantics { testTag = "OrderDateText" }
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
-                    horizontalArrangement = Arrangement.Absolute.Right,
-                    modifier = Modifier.fillMaxWidth()
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTag = "OrderActionsRow" }
                 ) {
                     OutlinedButton(
                         onClick = {
                             action = "Edit"
                             showDialog = true
                         },
-                        colors = ButtonDefaults.buttonColors(contentColor = Color.Gray, containerColor = Color.Transparent)
+                        colors = ButtonDefaults.buttonColors(contentColor = Color.Gray, containerColor = Color.Transparent),
+                        modifier = Modifier.semantics { testTag = "EditButton" }
                     ) {
                         Text("Edit")
                     }
