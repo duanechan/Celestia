@@ -41,7 +41,6 @@ import androidx.compose.ui.layout.LastBaseline
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -50,20 +49,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.ui.theme.BgColor
-import com.coco.celestia.ui.theme.CoopBackground
-import com.coco.celestia.ui.theme.DeliveredItem
-import com.coco.celestia.ui.theme.Gray
-import com.coco.celestia.ui.theme.GreenBeans
-import com.coco.celestia.ui.theme.Kiniing
-import com.coco.celestia.ui.theme.Ordered
-import com.coco.celestia.ui.theme.Packed
-import com.coco.celestia.ui.theme.RawMeat
-import com.coco.celestia.ui.theme.RoastedBeans
-import com.coco.celestia.ui.theme.Sorted
-import com.coco.celestia.ui.theme.mintsansFontFamily
+import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.calculateMonthlyInventory
-import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
@@ -407,7 +394,6 @@ fun CoopMonthlyItemList(itemList: List<MonthlyInventory>) {
 @Composable
 fun AddProductForm(
     userViewModel: UserViewModel,
-    itemViewModel: FarmerItemViewModel,
     productViewModel: ProductViewModel,
     quantity: Int,
     onProductNameChange: (String) -> Unit,
@@ -431,16 +417,12 @@ fun AddProductForm(
             if (role.contains("Coop")) {
                 productViewModel.fetchProducts("", "Coop")
             }
-            if (role == "Farmer") {
-                itemViewModel.getItems(uid)
-            }
         }
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = BgColor)
             .padding(top = 100.dp)
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -495,17 +477,6 @@ fun AddProductForm(
                     }
                 }
             }
-        }
-        if (role == "Farmer") {
-            OutlinedTextField(
-                value = productName,
-                onValueChange = onProductNameChange,
-                label = { Text("Product Name") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { testTag = "android:id/ProductNameField" },
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text)
-            )
         }
 
         // Quantity
