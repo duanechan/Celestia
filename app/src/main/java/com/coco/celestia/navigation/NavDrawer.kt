@@ -34,6 +34,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -169,7 +171,7 @@ fun GradientTopBar(title: String, navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination?.route
 
-    val noBackButtonRoutes = listOf("farmer_dashboard", "farmer_manage_order", "farmer_items", "profile")
+    val noBackButtonRoutes = listOf("farmer_dashboard", "farmer_manage_order", "farmer_items", "profile", "farmer_add_product")
 
     Box(
         modifier = Modifier
@@ -378,10 +380,9 @@ fun NavDrawerBottomBar(
                 )
             }
         }
-
         if (role == "Farmer" && currentDestination == Screen.FarmerItems.route) {
             FloatingActionButton(
-                onClick = { navController.navigate(Screen.AddProductInventory.route) },
+                onClick = { navController.navigate(Screen.FarmerAddProduct.route) },
                 shape = CircleShape,
                 containerColor = SageGreen,
                 modifier = Modifier
@@ -397,27 +398,6 @@ fun NavDrawerBottomBar(
                 )
             }
         }
-
-
-        if (role == "Farmer" && currentDestination == Screen.AddProductInventory.route) {
-            FloatingActionButton(
-                onClick = { navController.navigate(Screen.FarmerAddProductInventoryDB.route) },
-                shape = CircleShape,
-                containerColor = SageGreen,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .offset(y = (-30).dp)
-                    .semantics { testTag = "android:id/farmerAddProductButton" }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = "Save",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-
         if (role == "Admin" && currentDestination == Screen.AdminUserManagement.route) {
             FloatingActionButton(
                 onClick = { navController.navigate(Screen.AdminAddUserManagement.route) },

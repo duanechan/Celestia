@@ -25,21 +25,36 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import com.coco.celestia.components.toast.Toast
+import com.coco.celestia.components.toast.ToastStatus
+import com.coco.celestia.components.toast.toastDelay
+import com.coco.celestia.screens.farmer.dialogs.FarmerAddProductDialog
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.ItemState
+import com.coco.celestia.viewmodel.ProductViewModel
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.delay
 
 @Composable
 fun FarmerItems(navController: NavController) {
     val uid = FirebaseAuth.getInstance().uid.toString()
     val itemViewModel: FarmerItemViewModel = viewModel()
+    val productViewModel: ProductViewModel = viewModel()
     val itemData by itemViewModel.itemData.observeAsState(emptyList())
     val itemState by itemViewModel.itemState.observeAsState(ItemState.LOADING)
+    var isDialogOpen by remember { mutableStateOf(false) }
+    var showToast by remember { mutableStateOf(false) }
+    var toastMessage by remember { mutableStateOf("") }
+
 
     LaunchedEffect(navController.currentBackStackEntry) {
+        if (navController.currentBackStackEntry?.destination?.route == Screen.FarmerAddProduct.route) {
+            isDialogOpen = true
+            navController.popBackStack()
+        }
         itemViewModel.getItems(uid = uid)
     }
 
@@ -54,6 +69,39 @@ fun FarmerItems(navController: NavController) {
             is ItemState.ERROR -> ErrorFarmerProducts(message = (itemState as ItemState.ERROR).message)
             is ItemState.EMPTY -> EmptyFarmerProducts()
             is ItemState.SUCCESS -> FarmerItems(items = itemData, navController = navController)
+        }
+
+        if (isDialogOpen) {
+            FarmerAddProductDialog(
+                onDismiss = {
+                    isDialogOpen = false
+                },
+                onConfirm = { name, quantity, seasonStart, seasonEnd ->
+                    if (name.isNotEmpty() && quantity > 0 && seasonStart.isNotEmpty() && seasonEnd.isNotEmpty()) {
+                        val product = ProductData(
+                            name = name,
+                            quantity = quantity,
+                            type = "Vegetable",
+                            startSeason = seasonStart,
+                            endSeason = seasonEnd
+                        )
+                        itemViewModel.addItem(uid, product)
+                        productViewModel.addProduct(product)
+                        toastMessage = "$quantity kg of $name added successfully."
+                        showToast = true
+                        isDialogOpen = false
+                    }
+                }
+            )
+        }
+
+        Toast(message = toastMessage, status = ToastStatus.SUCCESSFUL, visibility = showToast)
+
+        LaunchedEffect(showToast) {
+            if (showToast) {
+                delay(toastDelay)
+                showToast = false
+            }
         }
     }
 }

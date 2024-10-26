@@ -53,6 +53,7 @@ import com.coco.celestia.screens.farmer.details.FarmerItemDetails
 import com.coco.celestia.screens.farmer.details.FarmerOrderDetails
 import com.coco.celestia.screens.farmer.details.FarmerRequestDetails
 import com.coco.celestia.screens.farmer.details.LoadingIndicator
+import com.coco.celestia.screens.farmer.dialogs.FarmerAddProductDialog
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.ContactViewModel
 import com.coco.celestia.viewmodel.FarmerItemViewModel
@@ -91,6 +92,8 @@ fun NavGraph(
     var firstname by remember { mutableStateOf("") }
     var lastname by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("") }
+    var seasonStart by remember { mutableStateOf("") } // Define these
+    var seasonEnd by remember { mutableStateOf("") }   // Define these
 
     NavHost(
         navController = navController,
@@ -180,6 +183,9 @@ fun NavGraph(
         composable(route = Screen.FarmerTransactions.route) {
             onNavigate("Transactions")
             FarmerTransactions(navController = navController)
+        }
+        composable(route = Screen.FarmerAddProduct.route) {
+            FarmerItems(navController = navController)
         }
 
         //TODO: Initial might change
@@ -380,39 +386,6 @@ fun NavGraph(
                         )
                     )
                     productViewModel.updateProductName("")
-                    quantityAmount = 0
-                    productType = ""
-                } else {
-                    onEvent(
-                        Triple(
-                            ToastStatus.WARNING,
-                            "Please fill in all fields",
-                            System.currentTimeMillis()
-                        )
-                    )
-                    navController.navigate(Screen.AddProductInventory.route)
-                }
-            }
-        }
-        composable(route = Screen.FarmerAddProductInventoryDB.route) {
-            LaunchedEffect(Unit) {
-                if (productName.isNotEmpty() &&
-                    quantityAmount > 0
-                ) {
-                    val product = ProductData(
-                        name = productName,
-                        quantity = quantityAmount,
-                        type = "Vegetable"
-                    )
-                    itemViewModel.addItem(uid, product)
-                    navController.navigate(Screen.FarmerItems.route)
-                    onEvent(
-                        Triple(
-                            ToastStatus.SUCCESSFUL,
-                            "${quantityAmount}kg of $productName added to your inventory.",
-                            System.currentTimeMillis()
-                        )
-                    )
                     quantityAmount = 0
                     productType = ""
                 } else {

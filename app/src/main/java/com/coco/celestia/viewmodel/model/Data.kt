@@ -31,7 +31,9 @@ data class ProductData(
     val name: String = "",
     val quantity: Int = 0,
     val type: String = "",
-    val priceKg: Double = 0.0
+    val priceKg: Double = 0.0,
+    val startSeason: String = "",
+    val endSeason: String = ""
 )
 
 data class TransactionData(
