@@ -92,8 +92,6 @@ fun NavGraph(
     var firstname by remember { mutableStateOf("") }
     var lastname by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("") }
-    var seasonStart by remember { mutableStateOf("") } // Define these
-    var seasonEnd by remember { mutableStateOf("") }   // Define these
 
     NavHost(
         navController = navController,
@@ -358,7 +356,6 @@ fun NavGraph(
 
             AddProductForm(
                 userViewModel = userViewModel,
-                itemViewModel = itemViewModel,
                 productViewModel = productViewModel,
                 quantity = quantityAmount,
                 onProductNameChange = { productViewModel.onProductNameChange(it) },
