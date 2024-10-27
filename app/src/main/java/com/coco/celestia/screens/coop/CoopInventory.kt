@@ -106,6 +106,18 @@ fun ProductTypeInventory(type: String?, userRole: String) {
     var monthlyInventory by remember { mutableStateOf<List<MonthlyInventory>>(emptyList()) }
     var selectedTab by remember { mutableStateOf("Current Inventory") }
 
+    val orderedQuantityAmount = orderData.filter { order ->
+        order.status == "PENDING"
+    }.fold(0) { accumulator, order ->
+        accumulator + order.orderData.quantity
+    }
+
+    val deliveredQuantityAmount = orderData.filter { order ->
+        order.status == "DELIVERING"
+    }.fold(0) { accumulator, order ->
+        accumulator + order.orderData.quantity
+    }
+
     val fontColor = when (type) {
         "Coffee" -> Color(0xFFB06520)
         else -> Color(0xFFE86A33)
@@ -185,7 +197,7 @@ fun ProductTypeInventory(type: String?, userRole: String) {
                     fontFamily = mintsansFontFamily,
                     fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.weight(1f))
-                Text(text = "kg",
+                Text(text = "${orderedQuantityAmount}kg",
                     fontSize = 35.sp,
                     color = Color.White,
                     fontFamily = mintsansFontFamily,
@@ -213,7 +225,7 @@ fun ProductTypeInventory(type: String?, userRole: String) {
                     fontFamily = mintsansFontFamily,
                     fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.weight(1f))
-                Text(text = "kg",
+                Text(text = "${deliveredQuantityAmount}kg",
                     fontSize = 35.sp,
                     color = Color.White,
                     fontFamily = mintsansFontFamily,
