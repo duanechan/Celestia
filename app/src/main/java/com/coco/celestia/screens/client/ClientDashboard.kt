@@ -24,10 +24,14 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.ui.theme.ContainerGray
 import com.coco.celestia.ui.theme.LightGray
 import com.coco.celestia.ui.theme.LightOrange
 import com.coco.celestia.ui.theme.RavenBlack
@@ -138,7 +143,7 @@ fun ClientDashboard(
             Spacer(modifier = Modifier.height(16.dp))
             FeaturedProducts(featuredProducts, navController)
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             OrderHistory(
                 orderData = orderData,
                 orderState = orderState,
@@ -181,7 +186,7 @@ fun BrowseCategories(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(VeryDarkGreen, shape = RoundedCornerShape(8.dp))
+                .background(ContainerGray, shape = RoundedCornerShape(8.dp))
                 .padding(horizontal = 16.dp, vertical = 16.dp)
                 .semantics { testTag = "CategoriesContainer" }
         ) {
@@ -311,7 +316,7 @@ fun FeaturedProducts(
         }
         Box(
             modifier = Modifier
-                .background(VeryDarkGreen, shape = RoundedCornerShape(8.dp))
+                .background(ContainerGray, shape = RoundedCornerShape(8.dp))
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             LazyVerticalGrid(
@@ -328,7 +333,6 @@ fun FeaturedProducts(
     }
 }
 
-//todo: fix navigation
 @Composable
 fun ProductTypeCard(
     product: ProductData,
@@ -346,7 +350,7 @@ fun ProductTypeCard(
             .fillMaxWidth()
             .height(100.dp)
             .clickable {
-                navController.navigate(Screen.OrderDetails.createRoute(product.name))
+                navController.navigate(Screen.OrderDetails.createRoute(product.type))
             },
         elevation = CardDefaults.cardElevation(4.dp),
     ) {
@@ -397,7 +401,7 @@ fun OrderHistory(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .semantics { testTag = "OrderHistory" }
     ) {
@@ -423,18 +427,9 @@ fun OrderHistory(
         Spacer(modifier = Modifier.height(16.dp))
 
         when (orderState) {
-            is OrderState.LOADING -> {
-                CircularProgressIndicator(color = Color.White)
-            }
-            is OrderState.ERROR -> {
-                Text(
-                    text = "Error fetching orders: ${orderState.message}",
-                    color = Color.Red
-                )
-            }
-            is OrderState.EMPTY -> {
-                Text(text = "No completed orders found.", color = Color.Red)
-            }
+            is OrderState.LOADING -> CircularProgressIndicator(color = Color.White)
+            is OrderState.ERROR -> Text(text = "Error fetching orders: ${orderState.message}", color = Color.Red)
+            is OrderState.EMPTY -> Text(text = "No completed orders found.", color = Color.Red)
             is OrderState.SUCCESS -> {
                 if (completedOrders.isNotEmpty()) {
                     LazyColumn {
@@ -460,7 +455,6 @@ fun OrderHistory(
     }
 }
 
-//todo: add buy again option (?)
 @Composable
 fun OrderCardDetails(
     orderCount: Int,
@@ -472,59 +466,90 @@ fun OrderCardDetails(
     val orderId = order.orderId.substring(6, 10).uppercase()
     val orderStatus = order.status
 
-    Row {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 2.dp)
+    ) {
         Card(
             modifier = Modifier
-                .fillMaxSize()
-                .height(165.dp)
-                .padding(top = 0.dp, bottom = 10.dp, start = 16.dp, end = 16.dp)
+                .weight(1f)
+                .height(140.dp)
                 .clickable {
                     navController.navigate("ClientOrderDetails/${order.orderId}/$orderCount")
                 }
+                .padding(end = 8.dp)
                 .semantics { testTag = "OrderCard_$orderId" },
             colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
         ) {
-            Column(
+            Row(
                 Modifier
                     .fillMaxSize()
-                    .padding(16.dp)
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row {
-                    Column {
-                        Text(
-                            text = "Order ID: $orderId",
-                            fontSize = 35.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.padding(top = 15.dp, start = 10.dp)
-                        )
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Order ID: $orderId",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
 
-                        Text(
-                            text = "Client Name: $clientName",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Normal,
-                            color = Color.White,
-                            modifier = Modifier.padding(top = 0.dp, start = 10.dp)
-                        )
+                    Text(
+                        text = "Client Name: $clientName",
+                        fontSize = 15.sp,
+                        color = Color.White,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
 
-                        Text(
-                            text = "Status: $orderStatus",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = LightOrange,
-                            modifier = Modifier.padding(top = 0.dp, start = 10.dp)
-                        )
-
-//                        Button(
-//                            onClick = {
-//                                navController.navigate("Reorder/${order.orderId}")
-//                            },
-//                            modifier = Modifier.padding(top = 8.dp)
-//                        ) {
-//                            Text(text = "Buy Again")
-//                        }
-                    }
+                    Text(
+                        text = "Status: $orderStatus",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = LightOrange,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
                 }
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowRight,
+                    contentDescription = "Navigate to Details",
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .height(140.dp)
+                .width(90.dp)
+                .background(LightOrange, shape = RoundedCornerShape(8.dp))
+                .padding(8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.buyagain),
+                    contentDescription = "Buy Again Icon",
+                    colorFilter = ColorFilter.tint(Color.White), // White icon color
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.height(6.dp)) // Space between icon and text
+                Text(
+                    text = "Buy Again",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+                //TODO: buy again function
             }
         }
     }
