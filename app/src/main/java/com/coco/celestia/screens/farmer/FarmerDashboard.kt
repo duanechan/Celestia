@@ -27,10 +27,14 @@ import com.coco.celestia.viewmodel.model.UserData
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.ItemState
+import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.Month
 import java.util.*
+import java.time.format.TextStyle
 
 @Composable
 fun FarmerDashboard(
@@ -40,25 +44,25 @@ fun FarmerDashboard(
     orderState: OrderState,
     selectedCategory: String,
     searchQuery: String,
-    itemViewModel: FarmerItemViewModel = viewModel()
+    itemViewModel: FarmerItemViewModel = viewModel(),
+    productViewModel: ProductViewModel = viewModel()
 ) {
     val uid = FirebaseAuth.getInstance().uid.toString()
     val itemData by itemViewModel.itemData.observeAsState(emptyList())
     val itemState by itemViewModel.itemState.observeAsState(ItemState.LOADING)
+    val products by productViewModel.productData.observeAsState(emptyList())
     val dateFormat = remember { SimpleDateFormat("EEEE, MMMM d yyyy", Locale.getDefault()) }
     val today = dateFormat.format(Date())
     val scrollState = rememberScrollState()
 
     LaunchedEffect(uid) {
         itemViewModel.getItems(uid = uid)
+        productViewModel.fetchProducts(filter = "", role = "Farmer")
     }
 
     when (itemState) {
         is ItemState.LOADING -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         }
@@ -75,9 +79,7 @@ fun FarmerDashboard(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Normal,
                     textAlign = TextAlign.Start,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, bottom = 10.dp),
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, bottom = 10.dp),
                     color = Cocoa
                 )
 
@@ -87,14 +89,12 @@ fun FarmerDashboard(
                         fontSize = 25.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Start,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 16.dp, bottom = 16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, bottom = 16.dp),
                         color = Cocoa
                     )
                 }
 
-                // In Season Products section
+                // In Season Products
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -108,11 +108,11 @@ fun FarmerDashboard(
                             fontWeight = FontWeight.Bold,
                             color = Cocoa
                         )
-                        InSeasonCropsPlaceholder()
+                        InSeasonProducts(products = products)
                     }
                 }
 
-                // Product Stock Levels section
+                // Product Stock Levels
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -130,7 +130,7 @@ fun FarmerDashboard(
                     }
                 }
 
-                // Order Listings section
+                // Order Listings
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -170,10 +170,7 @@ fun FarmerDashboard(
             }
         }
         is ItemState.ERROR -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
                     text = "Error loading item data: ${(itemState as ItemState.ERROR).message}",
                     color = Color.Red,
@@ -182,10 +179,7 @@ fun FarmerDashboard(
             }
         }
         is ItemState.EMPTY -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("No items available", modifier = Modifier.padding(16.dp))
             }
         }
@@ -193,27 +187,81 @@ fun FarmerDashboard(
 }
 
 @Composable
-fun InSeasonCropsPlaceholder() {
-    Row(
+fun InSeasonProducts(products: List<ProductData>) {
+    val currentMonth = LocalDate.now().month
+
+    val inSeasonProducts = products.filter { product ->
+        val sanitizedStartSeason = product.startSeason.trim().toUpperCase(Locale.ROOT)
+        val sanitizedEndSeason = product.endSeason.trim().toUpperCase(Locale.ROOT)
+
+        val startMonth = try {
+            Month.valueOf(sanitizedStartSeason)
+        } catch (e: IllegalArgumentException) { return@filter false }
+
+        val endMonth = try {
+            Month.valueOf(sanitizedEndSeason)
+        } catch (e: IllegalArgumentException) { return@filter false }
+
+        when {
+            startMonth.value <= endMonth.value -> {
+                currentMonth.value in startMonth.value..endMonth.value
+            }
+            else -> {
+                currentMonth.value >= startMonth.value || currentMonth.value <= endMonth.value
+            }
+        }
+    }
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 10.dp, top = 10.dp, end = 5.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        repeat(4) {
-            Box(
-                modifier = Modifier
-                    .size(65.dp)
-                    .background(PaleGold, shape = RoundedCornerShape(10.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "In Season",
-                    fontSize = 9.sp,
-                    color = Color.DarkGray
-                )
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            if (inSeasonProducts.isNotEmpty()) {
+                inSeasonProducts.take(4).forEach { product ->
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .background(color = PaleGold, shape = RoundedCornerShape(10.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = product.name,
+                            fontSize = 12.sp,
+                            color = Cocoa
+                        )
+                    }
+                }
+            } else {
+                repeat(3) {
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .background(color = PaleGold, shape = RoundedCornerShape(10.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "In Season",
+                            fontSize = 9.sp,
+                            color = Color.DarkGray
+                        )
+                    }
+                }
             }
         }
+
+        Text(
+            text = currentMonth.name,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = Cocoa,
+            modifier = Modifier.padding(top = 15.dp)
+        )
     }
 }
 

@@ -148,6 +148,7 @@ fun NavGraph(
             val userData by userViewModel.userData.observeAsState()
             val orderData by orderViewModel.orderData.observeAsState(emptyList())
             val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
+            val productData by productViewModel.productData.observeAsState(emptyList())
             val selectedCategory = ""
             val searchQuery = ""
 
@@ -161,7 +162,8 @@ fun NavGraph(
                     orderState = orderState,
                     selectedCategory = selectedCategory,
                     searchQuery = searchQuery,
-                    itemViewModel = viewModel()
+                    itemViewModel = viewModel(),
+                    productViewModel = viewModel()
                 )
             }
         }
