@@ -528,12 +528,15 @@ fun OrderCardDetails(
                 .height(140.dp)
                 .width(90.dp)
                 .background(LightOrange, shape = RoundedCornerShape(8.dp))
-                .padding(8.dp),
+                .padding(8.dp)
+                .clickable {
+                    navController.navigate(Screen.OrderDetails.createRoute(order.orderData.type))
+                },
             contentAlignment = Alignment.Center
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.buyagain),

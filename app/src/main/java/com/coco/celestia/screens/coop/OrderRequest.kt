@@ -68,7 +68,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.components.dialogs.PendingOrderDialog
 import com.coco.celestia.components.dialogs.UpdateOrderStatusDialog
@@ -84,7 +83,6 @@ import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.util.formatDate
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
-import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.google.firebase.auth.FirebaseAuth
 
@@ -344,7 +342,6 @@ fun OrderItem(
                             onUpdateOrder = { onUpdateOrder(it) }
                         )
                         "PREPARING" -> PreparingOrderActions(
-                            clientFirstname = orderClient.substringBefore(" "),
                             order = order,
                             orderViewModel = orderViewModel,
                             onUpdateOrder = { onUpdateOrder(it) }
@@ -477,7 +474,6 @@ fun CompletedOrderActions() {
 
 @Composable
 fun PreparingOrderActions(
-    clientFirstname: String,
     order: OrderData,
     orderViewModel: OrderViewModel,
     onUpdateOrder: (Triple<ToastStatus, String, Long>) -> Unit
@@ -493,7 +489,7 @@ fun PreparingOrderActions(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Ship this order to $clientFirstname?",
+            text = "Ship this order?",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
@@ -620,40 +616,52 @@ fun PendingOrderActions(
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(
-            onClick = {
-                showDialog = true
-                action = "Reject"
-            },
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(50.dp))
-                .background(Cinnabar)
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = Icons.Default.Clear,
-                contentDescription = "Reject",
-                tint = Color.White,
-                modifier = Modifier.fillMaxSize()
-            )
+            IconButton(
+                onClick = {
+                    showDialog = true
+                    action = "Reject"
+                },
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(50.dp))
+                    .background(Cinnabar)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Clear,
+                    contentDescription = "Reject",
+                    tint = Color.White,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            Text(text = "Reject", modifier = Modifier.padding(top = 16.dp))
         }
-        IconButton(
-            onClick = {
-                showDialog = true
-                action = "Accept"
-            },
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(50.dp))
-                .background(JadeGreen)
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = "Check",
-                tint = Color.White,
-                modifier = Modifier.fillMaxSize()
+            IconButton(
+                onClick = {
+                    showDialog = true
+                    action = "Accept"
+                },
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(50.dp))
+                    .background(JadeGreen)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Check",
+                    tint = Color.White,
+                    modifier = Modifier.fillMaxSize()
 
-            )
+                )
+            }
+            Text(text = "Accept", modifier = Modifier.padding(top = 16.dp))
         }
     }
 

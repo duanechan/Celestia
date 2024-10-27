@@ -185,12 +185,13 @@ fun NavGraph(
             FarmerTransactions(navController = navController)
         }
         composable(route = Screen.FarmerAddProduct.route) {
+            onNavigate("Add Product")
             FarmerItems(navController = navController)
         }
 
         //TODO: Initial might change
         composable(route = Screen.Client.route) {
-
+            onNavigate("Dashboard")
             ClientDashboard(
                 navController = navController,
                 userViewModel = userViewModel,
@@ -248,6 +249,7 @@ fun NavGraph(
             )
         }
         composable(route = Screen.AdminAddUserManagement.route) {
+            onNavigate("Add User")
             LaunchedEffect(Unit) {
                 emailSend = ""
                 firstname = ""
@@ -268,6 +270,7 @@ fun NavGraph(
             )
         }
         composable(route = Screen.AdminAddUserManagementDB.route) {
+            onNavigate("Add User")
             CheckAddUser(
                 userViewModel = userViewModel,
                 navController = navController,
@@ -279,6 +282,7 @@ fun NavGraph(
             )
         }
         composable(route = Screen.AdminAddProduct.route) {
+            onNavigate("Add Product")
             LaunchedEffect(Unit) {
                 productViewModel.updateProductName("")
                 productType = ""
@@ -295,6 +299,7 @@ fun NavGraph(
             )
         }
         composable(route = Screen.AdminConfirmAddProduct.route) {
+            onNavigate("Add Product")
             ConfirmAddProduct(
                 navController = navController,
                 productViewModel = productViewModel,
@@ -327,6 +332,7 @@ fun NavGraph(
             arguments = listOf(navArgument("orderId") { type = NavType.StringType })
         ) { backStack ->
             val orderId = backStack.arguments?.getString("orderId")
+            onNavigate("Orders")
             ProcessOrderPanel(
                 orderId = orderId.toString(),
                 orderViewModel = orderViewModel,
@@ -344,7 +350,7 @@ fun NavGraph(
             val type = backStack.arguments?.getString("type")
 
             productType = type ?: ""
-
+            onNavigate("Inventory")
             ProductTypeInventory(
                 type = productType,
                 userRole = userRole
@@ -356,7 +362,7 @@ fun NavGraph(
                 quantityAmount = 0
                 defectBeans = 0
             }
-
+            onNavigate("Add Product")
             AddProductForm(
                 userViewModel = userViewModel,
                 productViewModel = productViewModel,
@@ -368,6 +374,7 @@ fun NavGraph(
             )
         }
         composable(route = Screen.CoopAddProductInventoryDB.route) {
+            onNavigate("Add Product")
             CoopAddInventory(
                 navController = navController,
                 productViewModel = productViewModel,
@@ -394,7 +401,7 @@ fun NavGraph(
             val productName = backStackEntry.arguments?.getString("productName")
             val quantity = backStackEntry.arguments?.getInt("quantity")
             val product = ProductData(name = productName ?: "", quantity = quantity ?: 0)
-
+            onNavigate("Inventory")
             FarmerProductTypeInventory(product = product, navController = navController)
         }
         composable(
@@ -404,7 +411,7 @@ fun NavGraph(
             val productNameDetail = backStackEntry.arguments?.getString("productName")
             val productViewModel: ProductViewModel = viewModel()
             val productData by productViewModel.productData.observeAsState(emptyList())
-
+            onNavigate("Products")
             FarmerItemDetails(
                 navController = navController,
                 productName = productNameDetail ?: ""
@@ -445,6 +452,7 @@ fun NavGraph(
             arguments = listOf(navArgument("type") { type = NavType.StringType })
         ) { backStack ->
             val type = backStack.arguments?.getString("type")
+            onNavigate("Order Details")
             OrderDetailsPanel(
                 navController = navController,
                 type = type,
@@ -484,6 +492,7 @@ fun NavGraph(
         ) { backStackEntry ->
             val orderId = backStackEntry.arguments?.getString("orderId")
             val orderCount = backStackEntry.arguments?.getInt("orderCount") ?: 0
+            onNavigate("Order Details")
             orderId?.let {
                 ClientOrderDetails(navController, it, orderCount)
             }
