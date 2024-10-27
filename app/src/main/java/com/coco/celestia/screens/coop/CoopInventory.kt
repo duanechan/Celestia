@@ -107,13 +107,13 @@ fun ProductTypeInventory(type: String?, userRole: String) {
     var selectedTab by remember { mutableStateOf("Current Inventory") }
 
     val orderedQuantityAmount = orderData.filter { order ->
-        order.status == "PENDING"
+        order.status in listOf("PENDING", "PREPARING", "DELIVERING")
     }.fold(0) { accumulator, order ->
         accumulator + order.orderData.quantity
     }
 
     val deliveredQuantityAmount = orderData.filter { order ->
-        order.status == "DELIVERING"
+        order.status == "COMPLETED"
     }.fold(0) { accumulator, order ->
         accumulator + order.orderData.quantity
     }
