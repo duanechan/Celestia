@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,14 +23,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,7 +35,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -45,7 +42,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -58,15 +56,13 @@ import com.coco.celestia.ui.theme.VeryDarkGreen
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
-import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.UserData
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 
-//TODO: add vertical scrolling and spacer at the end
+//TODO: add vertical scrolling and spacer at the end for the scrolling
 // + fix icons sizes of each methods
 @Composable
 fun ClientDashboard(
@@ -140,7 +136,7 @@ fun ClientDashboard(
             BrowseCategories(navController)
 
             Spacer(modifier = Modifier.height(16.dp))
-            FeaturedProducts(featuredProducts)
+            FeaturedProducts(featuredProducts, navController)
 
             Spacer(modifier = Modifier.height(16.dp))
             OrderHistory(
@@ -287,85 +283,101 @@ fun CategoryBox(
 }
 
 @Composable
-fun FeaturedProducts(featuredProducts: List<ProductData>) { // Pass featured products as a parameter
-    Box(
+fun FeaturedProducts(
+    featuredProducts: List<ProductData>,
+    navController: NavController
+) {
+    Column(
         modifier = Modifier
-            .background(VeryDarkGreen, shape = RoundedCornerShape(8.dp))
+            .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Text(
-            text = "Featured Products",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier.padding(bottom = 8.dp) // Add some padding for spacing
-        )
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2), // Use 'columns' parameter instead of 'cells'
-            contentPadding = PaddingValues(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(bottom = 8.dp)
         ) {
-            items(featuredProducts) { product -> // Use 'items' function from 'lazyGrid'
-                ProductTypeCard(product)
+            Image(
+                painter = painterResource(id = R.drawable.featuredproducts),
+                contentDescription = "Featured Products Icon",
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Featured Products",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = VeryDarkGreen
+            )
+        }
+        Box(
+            modifier = Modifier
+                .background(VeryDarkGreen, shape = RoundedCornerShape(8.dp))
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                contentPadding = PaddingValues(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(featuredProducts) { product ->
+                    ProductTypeCard(product = product, navController = navController)
+                }
             }
         }
     }
 }
 
-//TODO: navigation when clicked - same with browse categories
-// + add gradient based on category/type and icons
-// + fix size and position and design
+//todo: fix navigation
 @Composable
-fun ProductTypeCard(product: ProductData) {
-//    // Determine the gradient based on the product category
-//    val gradientBrush = when (product.category) { // Assuming 'category' is a property of ProductData
-//        "Coffee" -> Brush.linearGradient(
-//            colors = listOf(Color(0xFFB79276), Color(0xFF91684A))
-//        )
-//        "Meat" -> Brush.linearGradient(
-//            colors = listOf(Color(0xFFD45C5C), Color(0xFFAA3333))
-//        )
-//        "Vegetable" -> Brush.linearGradient(
-//            colors = listOf(Color(0xFF4CB05C), Color(0xFF4F8A45))
-//        )
-//        else -> Brush.linearGradient(
-//            colors = listOf(Color.Gray, Color.LightGray)
-//        )
-//    }
+fun ProductTypeCard(
+    product: ProductData,
+    navController: NavController
+) {
+    val (iconId, gradientBrush) = when (product.type) {
+        "Meat" -> Pair(R.drawable.meaticon, Brush.linearGradient(colors = listOf(Color(0xFFD45C5C), Color(0xFFAA3333))))
+        "Coffee" -> Pair(R.drawable.coffeeicon, Brush.linearGradient(colors = listOf(Color(0xFFB79276), Color(0xFF91684A))))
+        "Vegetable" -> Pair(R.drawable.vegetable, Brush.linearGradient(colors = listOf(Color(0xFF4CB05C), Color(0xFF4F8A45))))
+        else -> Pair(R.drawable.incomplete, Brush.linearGradient(colors = listOf(Color.Gray, Color.LightGray)))
+    }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp)
             .clickable {
-                // Handle navigation to product details
+                navController.navigate(Screen.OrderDetails.createRoute(product.name))
             },
-        elevation = CardDefaults.cardElevation(4.dp), // Use CardDefaults for elevation
-//        backgroundColor = Color.Transparent // Set to transparent to see the gradient
+        elevation = CardDefaults.cardElevation(4.dp),
     ) {
         Box(
-            contentAlignment = Alignment.Center
-//            modifier = Modifier
-//                .background(gradientBrush) // Apply the gradient background
+            modifier = Modifier
+                .background(gradientBrush)
+                .fillMaxSize()
+                .padding(8.dp)
         ) {
             Column(
+                modifier = Modifier
+                    .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(8.dp) // Add padding for inner content
+                verticalArrangement = Arrangement.Center
             ) {
-//                Image(
-//                    painter = painterResource(id = product.iconId), // Ensure this field exists in ProductData
-//                    contentDescription = "${product.name} icon",
-//                    modifier = Modifier.size(50.dp)
-//                )
-                Spacer(modifier = Modifier.height(4.dp)) // Add some spacing
+                Image(
+                    painter = painterResource(id = iconId),
+                    contentDescription = "${product.name} icon",
+                    modifier = Modifier.size(40.dp)
+                )
                 Text(
                     text = product.name,
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .fillMaxWidth(),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
@@ -448,6 +460,7 @@ fun OrderHistory(
     }
 }
 
+//todo: add buy again option (?)
 @Composable
 fun OrderCardDetails(
     orderCount: Int,

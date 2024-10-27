@@ -19,7 +19,8 @@ sealed class ProductState {
 }
 
 class ProductViewModel : ViewModel() {
-    private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("products")
+    private val database: DatabaseReference =
+        FirebaseDatabase.getInstance().getReference("products")
     private val _productData = MutableLiveData<List<ProductData>>()
     private val _productState = MutableLiveData<ProductState>()
     private val _productName = MutableLiveData<String>()
@@ -61,8 +62,9 @@ class ProductViewModel : ViewModel() {
                     }
                 }
                 _productData.value = products
-                _productState.value = if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
-            } catch(e: Exception) {
+                _productState.value =
+                    if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
+            } catch (e: Exception) {
                 _productState.value = ProductState.ERROR(e.message ?: "Unknown error")
             }
         }
@@ -81,14 +83,16 @@ class ProductViewModel : ViewModel() {
             try {
                 val snapshot = database.orderByChild("type").equalTo(type).get().await()
                 if (snapshot.exists()) {
-                    val products = snapshot.children.mapNotNull { it.getValue(ProductData::class.java) }
+                    val products =
+                        snapshot.children.mapNotNull { it.getValue(ProductData::class.java) }
                     _productData.value = products
-                    _productState.value = if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
+                    _productState.value =
+                        if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
                 } else {
                     _productData.value = emptyList()
                     _productState.value = ProductState.EMPTY
                 }
-            } catch(e: Exception) {
+            } catch (e: Exception) {
                 _productState.value = ProductState.ERROR(e.message ?: "Unknown error")
             }
         }
@@ -132,12 +136,13 @@ class ProductViewModel : ViewModel() {
                         }
                     }
                     _productData.value = products
-                    _productState.value = if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
+                    _productState.value =
+                        if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
                 } else {
                     _productData.value = emptyList()
                     _productState.value = ProductState.EMPTY
                 }
-            } catch(e: Exception) {
+            } catch (e: Exception) {
                 _productState.value = ProductState.ERROR(e.message ?: "Unknown error")
             }
         }
@@ -152,7 +157,8 @@ class ProductViewModel : ViewModel() {
                     if (task.isSuccessful) {
                         _productState.value = ProductState.SUCCESS
                     } else {
-                        _productState.value = ProductState.ERROR(task.exception?.message ?: "Unknown error")
+                        _productState.value =
+                            ProductState.ERROR(task.exception?.message ?: "Unknown error")
                     }
                 }
                 .addOnFailureListener { exception ->
@@ -170,7 +176,8 @@ class ProductViewModel : ViewModel() {
                     val name = product.child("name").getValue(String::class.java)
 
                     if (name == productName) {
-                        val currentQuantity = product.child("quantity").getValue(Int::class.java) ?: 0
+                        val currentQuantity =
+                            product.child("quantity").getValue(Int::class.java) ?: 0
                         val newQuantity = currentQuantity + quantity
 
                         product.child("quantity").ref.setValue(newQuantity).await()
@@ -185,12 +192,13 @@ class ProductViewModel : ViewModel() {
                     fetchProducts(filter = "", role = "Farmer")
                 }
             } catch (e: Exception) {
-                _productState.value = ProductState.ERROR(e.message ?: "Error updating product quantity")
+                _productState.value =
+                    ProductState.ERROR(e.message ?: "Error updating product quantity")
             }
         }
     }
 
-    fun updateFromProduct (productName: String, quantity: Int, defectBeans: Int) {
+    fun updateFromProduct(productName: String, quantity: Int, defectBeans: Int) {
         viewModelScope.launch {
             try {
                 val snapshot = database.get().await()
@@ -199,7 +207,8 @@ class ProductViewModel : ViewModel() {
                     onProductNameChange(productName)
                     val name = product.child("name").getValue(String::class.java)
                     if (name == _from.value) {
-                        val fromCurrentQuantity = product.child("quantity").getValue(Int::class.java) ?: 0
+                        val fromCurrentQuantity =
+                            product.child("quantity").getValue(Int::class.java) ?: 0
                         val fromNewQuantity = if (productName == "Sorted Beans") {
                             fromCurrentQuantity - (quantity + defectBeans)
                         } else {
@@ -216,7 +225,8 @@ class ProductViewModel : ViewModel() {
                     fetchProducts(filter = "", role = "Farmer")
                 }
             } catch (e: Exception) {
-                _productState.value = ProductState.ERROR(e.message ?: "Error updating product quantity")
+                _productState.value =
+                    ProductState.ERROR(e.message ?: "Error updating product quantity")
             }
         }
     }
@@ -239,7 +249,8 @@ class ProductViewModel : ViewModel() {
                     _productState.value = ProductState.ERROR("Product not found")
                 }
             } catch (e: Exception) {
-                _productState.value = ProductState.ERROR(e.message ?: "Error updating product quantity")
+                _productState.value =
+                    ProductState.ERROR(e.message ?: "Error updating product quantity")
             }
         }
     }
@@ -249,15 +260,18 @@ class ProductViewModel : ViewModel() {
             _productState.value = ProductState.LOADING
             try {
                 val snapshot = database.get().await()
-                val allProducts = snapshot.children.mapNotNull { it.getValue(ProductData::class.java) }
+                val allProducts =
+                    snapshot.children.mapNotNull { it.getValue(ProductData::class.java) }
 
                 val meatProducts = allProducts.filter { it.type.equals("Meat", ignoreCase = true) }
-                val vegetableProducts = allProducts.filter { it.type.equals("Vegetable", ignoreCase = true) }
-                val coffeeProducts = allProducts.filter { it.type.equals("Coffee", ignoreCase = true) }
+                val vegetableProducts =
+                    allProducts.filter { it.type.equals("Vegetable", ignoreCase = true) }
+                val coffeeProducts =
+                    allProducts.filter { it.type.equals("Coffee", ignoreCase = true) }
 
-                // Randomizer
-                val randomVegetables = vegetableProducts.shuffled().take(3)
-                val randomCoffee = coffeeProducts.shuffled().take(3)
+                // Randomizer for coffee and vegetables, taking only 2 from each
+                val randomVegetables = vegetableProducts.shuffled().take(2)
+                val randomCoffee = coffeeProducts.shuffled().take(2)
 
                 // combine featured products
                 val featured = mutableListOf<ProductData>()
@@ -265,9 +279,10 @@ class ProductViewModel : ViewModel() {
                 featured.addAll(randomVegetables)
                 featured.addAll(randomCoffee)
 
-                // Shuffle to randomize order and limit to 8 items
-                _featuredProducts.value = featured.shuffled().take(8)
-                _productState.value = if (featured.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
+                // shuffle the final list to randomize order
+                _featuredProducts.value = featured.shuffled().take(6)
+                _productState.value =
+                    if (featured.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
             } catch (e: Exception) {
                 _productState.value = ProductState.ERROR(e.message ?: "Unknown error")
             }
