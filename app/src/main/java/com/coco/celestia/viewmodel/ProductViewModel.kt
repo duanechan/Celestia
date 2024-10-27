@@ -190,6 +190,37 @@ class ProductViewModel : ViewModel() {
         }
     }
 
+    fun updateFromProduct (productName: String, quantity: Int, defectBeans: Int) {
+        viewModelScope.launch {
+            try {
+                val snapshot = database.get().await()
+                var productFound = false
+                for (product in snapshot.children) {
+                    onProductNameChange(productName)
+                    val name = product.child("name").getValue(String::class.java)
+                    if (name == _from.value) {
+                        val fromCurrentQuantity = product.child("quantity").getValue(Int::class.java) ?: 0
+                        val fromNewQuantity = if (productName == "Sorted Beans") {
+                            fromCurrentQuantity - (quantity + defectBeans)
+                        } else {
+                            fromCurrentQuantity - quantity
+                        }
+                        product.child("quantity").ref.setValue(fromNewQuantity).await()
+                        productFound = true
+                        break
+                    }
+                }
+                if (!productFound) {
+                    _productState.value = ProductState.ERROR("Product not found")
+                } else {
+                    fetchProducts(filter = "", role = "Farmer")
+                }
+            } catch (e: Exception) {
+                _productState.value = ProductState.ERROR(e.message ?: "Error updating product quantity")
+            }
+        }
+    }
+
     fun updateProductPrice(productName: String, price: Double) {
         viewModelScope.launch {
             try {

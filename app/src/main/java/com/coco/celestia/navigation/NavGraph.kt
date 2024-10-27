@@ -1,6 +1,5 @@
 package com.coco.celestia.navigation
 
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,8 +36,8 @@ import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientDashboard
 import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.client.ClientOrderDetails
-import com.coco.celestia.screens.client.ProductTypeCard
 import com.coco.celestia.screens.coop.AddProductForm
+import com.coco.celestia.screens.coop.CoopAddInventory
 import com.coco.celestia.screens.coop.CoopDashboard
 import com.coco.celestia.screens.coop.CoopInventory
 import com.coco.celestia.screens.coop.OrderRequest
@@ -53,7 +52,6 @@ import com.coco.celestia.screens.farmer.details.FarmerItemDetails
 import com.coco.celestia.screens.farmer.details.FarmerOrderDetails
 import com.coco.celestia.screens.farmer.details.FarmerRequestDetails
 import com.coco.celestia.screens.farmer.details.LoadingIndicator
-import com.coco.celestia.screens.farmer.dialogs.FarmerAddProductDialog
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.ContactViewModel
 import com.coco.celestia.viewmodel.FarmerItemViewModel
@@ -86,12 +84,14 @@ fun NavGraph(
     val productName by productViewModel.productName.observeAsState("")
     var addressName by remember { mutableStateOf("") }
     var quantityAmount by remember { mutableIntStateOf(0) }
+    var defectBeans by remember { mutableIntStateOf(0) }
     var productType by remember { mutableStateOf("") }
     var productPrice by remember { mutableStateOf("") }
     var emailSend by remember { mutableStateOf("") }
     var firstname by remember { mutableStateOf("") }
     var lastname by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("") }
+    val from by productViewModel.from.observeAsState("")
 
     NavHost(
         navController = navController,
@@ -354,49 +354,34 @@ fun NavGraph(
             LaunchedEffect(Unit) {
                 productViewModel.updateProductName("")
                 quantityAmount = 0
+                defectBeans = 0
             }
 
             AddProductForm(
                 userViewModel = userViewModel,
                 productViewModel = productViewModel,
                 quantity = quantityAmount,
+                defectBeans = defectBeans,
                 onProductNameChange = { productViewModel.onProductNameChange(it) },
-                onQuantityChange = { newValue -> quantityAmount = newValue.toIntOrNull() ?: 0 }
+                onQuantityChange = { newValue -> quantityAmount = newValue.toIntOrNull() ?: 0 },
+                onDefectBeansChange = { newValue -> defectBeans = newValue.toIntOrNull() ?: 0}
             )
         }
-
         composable(route = Screen.CoopAddProductInventoryDB.route) {
+            CoopAddInventory(
+                navController = navController,
+                productViewModel = productViewModel,
+                productName = productName,
+                quantityAmount = quantityAmount,
+                productType = productType,
+                defectBeans = defectBeans,
+                onEvent = { onEvent(it) }
+            )
+
             LaunchedEffect(Unit) {
-                if (productName.isNotEmpty() &&
-                    quantityAmount > 0
-                ) {
-                    val product = ProductData(
-                        name = productName,
-                        quantity = quantityAmount,
-                        type = productType
-                    )
-                    productViewModel.updateProductQuantity(product.name, product.quantity)
-                    navController.navigate(Screen.CoopInventory.route)
-                    onEvent(
-                        Triple(
-                            ToastStatus.SUCCESSFUL,
-                            "${quantityAmount}kg of $productName added to $productType inventory.",
-                            System.currentTimeMillis()
-                        )
-                    )
-                    productViewModel.updateProductName("")
-                    quantityAmount = 0
-                    productType = ""
-                } else {
-                    onEvent(
-                        Triple(
-                            ToastStatus.WARNING,
-                            "Please fill in all fields",
-                            System.currentTimeMillis()
-                        )
-                    )
-                    navController.navigate(Screen.AddProductInventory.route)
-                }
+                productViewModel.updateProductName("")
+                quantityAmount = 0
+                productType = ""
             }
         }
         composable(

@@ -12,17 +12,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -42,7 +36,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -54,10 +47,8 @@ import com.coco.celestia.util.calculateMonthlyInventory
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
-import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.MonthlyInventory
 import com.coco.celestia.viewmodel.model.ProductData
-import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun CoopInventory(navController: NavController, role: String) {
@@ -387,109 +378,6 @@ fun CoopMonthlyItemList(itemList: List<MonthlyInventory>) {
                 }
             }
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AddProductForm(
-    userViewModel: UserViewModel,
-    productViewModel: ProductViewModel,
-    quantity: Int,
-    onProductNameChange: (String) -> Unit,
-    onQuantityChange: (String) -> Unit
-) {
-    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-    var expanded by remember { mutableStateOf(false) }
-    val userData by userViewModel.userData.observeAsState()
-    val productData by productViewModel.productData.observeAsState()
-    val productName by productViewModel.productName.observeAsState("")
-    val from by productViewModel.from.observeAsState("")
-    var role by remember { mutableStateOf("") }
-
-    LaunchedEffect(uid) {
-        userViewModel.fetchUser(uid)
-    }
-
-    LaunchedEffect(userData) {
-        userData?.let {
-            role = it.role
-            if (role.contains("Coop")) {
-                productViewModel.fetchProducts("", "Coop")
-            }
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 100.dp)
-            .padding(10.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Text(
-            text = "Add Product",
-            fontWeight = FontWeight.Bold,
-            fontSize = 22.sp,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
-        // From
-        OutlinedTextField(
-            value = from,
-            onValueChange = {},
-            label = { Text("From") },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = false
-        )
-
-        // Product Name
-        if (role.contains("Coop")) {
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded },
-                modifier = Modifier.semantics { testTag = "android:id/ProductDropdown" }
-            ) {
-                OutlinedTextField(
-                    readOnly = true,
-                    value = productName,
-                    onValueChange = {},
-                    placeholder = { Text("Select Product") },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded)
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
-                )
-
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    productData?.forEach { productItem ->
-                        androidx.compose.material3.DropdownMenuItem(
-                            text = { Text(productItem.name) },
-                            onClick = {
-                                onProductNameChange(productItem.name)
-                                expanded = false
-                            }
-                        )
-                    }
-                }
-            }
-        }
-
-        // Quantity
-        OutlinedTextField(
-            value = if (quantity == 0) "" else quantity.toString(),
-            onValueChange = onQuantityChange,
-            label = { Text("Quantity (kg)") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .semantics { testTag = "android:id/QuantityField" },
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
     }
 }
 
