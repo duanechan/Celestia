@@ -541,10 +541,10 @@ fun OrderCardDetails(
                 Image(
                     painter = painterResource(id = R.drawable.buyagain),
                     contentDescription = "Buy Again Icon",
-                    colorFilter = ColorFilter.tint(Color.White), // White icon color
+                    colorFilter = ColorFilter.tint(Color.White),
                     modifier = Modifier.size(24.dp)
                 )
-                Spacer(modifier = Modifier.height(6.dp)) // Space between icon and text
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = "Buy Again",
                     color = Color.White,
@@ -552,7 +552,6 @@ fun OrderCardDetails(
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
-                //TODO: buy again function
             }
         }
     }

@@ -2,6 +2,7 @@ package com.coco.celestia.screens.client
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +19,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -28,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,6 +83,8 @@ fun ClientOrderDetails(
         allOrders.find { it.orderId == orderId }
     }
 
+    val showCancelConfirmation = remember { mutableStateOf(false) }
+
     when {
         orderState == OrderState.LOADING -> {
             Box(
@@ -109,198 +115,239 @@ fun ClientOrderDetails(
             }
         }
 
-        // Display the order details when data is available
         else -> {
             val product = orderData.orderData
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+            Box(
+                modifier = Modifier.fillMaxSize()
             ) {
-                Card(
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(520.dp) //adjust size of orange box here
-                        .semantics { testTag = "OrderDetailsCard" },
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color.Transparent
-                    ),
-                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(bottom = 80.dp)
                 ) {
-                    Box(
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(650.dp)
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(LightOrange),
-                        contentAlignment = Alignment.TopStart,
+                            .height(520.dp)
+                            .semantics { testTag = "OrderDetailsCard" },
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
                     ) {
-                        Column(
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(
-                                    top = 90.dp,
-                                    start = 16.dp,
-                                    end = 16.dp
-                                )
+                                .height(520.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(LightOrange),
+                            contentAlignment = Alignment.TopStart,
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
+                            Column(
                                 modifier = Modifier
-                                    .padding(bottom = 8.dp)
-                                    .semantics { testTag = "OrderCountBox" }
+                                    .fillMaxWidth()
+                                    .padding(top = 90.dp, start = 16.dp, end = 16.dp)
                             ) {
-                                // white box order count
-                                Box(
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier
-                                        .size(width = 50.dp, height = 117.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(Color.White),
-                                    contentAlignment = Alignment.Center
+                                        .padding(bottom = 8.dp)
+                                        .semantics { testTag = "OrderCountBox" }
                                 ) {
-                                    Text(
-                                        text = orderCount.toString(),
-                                        fontSize = 50.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black,
-                                        modifier = Modifier.padding(5.dp)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Column {
-                                    Text(
-                                        text = buildAnnotatedString {
-                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                                append("Order ID")
-                                            }
-                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
-                                                append("#" + orderData.orderId.substring(5, 38))
-                                            }
-                                        },
-                                        fontSize = 20.sp,
-                                        color = White,
-                                        modifier = Modifier.semantics { testTag = "OrderID" }
-                                    )
-
-                                    Spacer(modifier = Modifier.height(4.dp))
-
-                                    Text(
-                                        text = buildAnnotatedString {
-                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                                append("Delivery Address: ")
-                                            }
-                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
-                                                append("${orderData.street}, ${orderData.barangay}")
-                                            }
-                                        },
-                                        fontSize = 20.sp,
-                                        color = White,
-                                        modifier = Modifier.semantics { testTag = "DeliveryAddress" }
-                                    )
-
-                                    Spacer(modifier = Modifier.height(4.dp))
-
-                                    Text(
-                                        text = buildAnnotatedString {
-                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                                append("Estimated Date of Arrival: ")
-                                            }
-                                            withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
-                                                append(formatDate(orderData.targetDate))
-                                            }
-                                        },
-                                        fontSize = 15.sp,
-                                        color = White,
-                                        modifier = Modifier.semantics { testTag = "ETA" }
-                                    )
-                                }
-                            }
-
-                            // display ordered products
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 16.dp)
-                                    .semantics { testTag = "OrderedProducts" }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ShoppingCart,
-                                    contentDescription = "Ordered Products Icon",
-                                    tint = White,
-                                    modifier = Modifier.size(24.dp)
-                                )
-
-                                Spacer(modifier = Modifier.width(8.dp))
-
-                                Text(
-                                    text = "Ordered Products",
-                                    color = (White),
-                                    textAlign = TextAlign.Start,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp,
-                                    modifier = Modifier.padding(start = 15.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(15.dp))
-
-                            // products list display
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .semantics { testTag = "ProductList" }
-                            ) {
-                                    Card(
+                                    Box(
                                         modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(100.dp),
-                                        shape = RoundedCornerShape(16.dp),
-                                        elevation = CardDefaults.elevatedCardElevation(
-                                            defaultElevation = 4.dp
-                                        )
+                                            .size(width = 50.dp, height = 117.dp)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(Color.White),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .background(TreeBark)
-                                                .height(25.dp)
-                                                .padding(start = 10.dp, end = 10.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth(),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    text = product.name,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 30.sp,
-                                                    color = (White),
-                                                )
-                                                Spacer(modifier = Modifier.weight(1f))
-                                                Text(
-                                                    text = "${product.quantity} kg",
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 40.sp,
-                                                    color = (White),
-                                                )
+                                        Text(
+                                            text = orderCount.toString(),
+                                            fontSize = 50.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.Black,
+                                            modifier = Modifier.padding(5.dp)
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column {
+                                        Text(
+                                            text = buildAnnotatedString {
+                                                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                                    append("Order ID ")
+                                                }
+                                                withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
+                                                    append("#" + orderData.orderId.substring(5, 38))
+                                                }
+                                            },
+                                            fontSize = 20.sp,
+                                            color = White,
+                                            modifier = Modifier.semantics { testTag = "OrderID" }
+                                        )
+
+                                        Spacer(modifier = Modifier.height(4.dp))
+
+                                        Text(
+                                            text = buildAnnotatedString {
+                                                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                                    append("Delivery Address: ")
+                                                }
+                                                withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
+                                                    append("${orderData.street}, ${orderData.barangay}")
+                                                }
+                                            },
+                                            fontSize = 20.sp,
+                                            color = White,
+                                            modifier = Modifier.semantics {
+                                                testTag = "DeliveryAddress"
                                             }
+                                        )
+
+                                        Spacer(modifier = Modifier.height(4.dp))
+
+                                        Text(
+                                            text = buildAnnotatedString {
+                                                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                                    append("Estimated Date of Arrival: ")
+                                                }
+                                                withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
+                                                    append(formatDate(orderData.targetDate))
+                                                }
+                                            },
+                                            fontSize = 15.sp,
+                                            color = White,
+                                            modifier = Modifier.semantics { testTag = "ETA" }
+                                        )
+                                    }
+                                }
+
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 16.dp)
+                                        .semantics { testTag = "OrderedProducts" }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ShoppingCart,
+                                        contentDescription = "Ordered Products Icon",
+                                        tint = White,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Ordered Products",
+                                        color = White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        modifier = Modifier.padding(start = 15.dp)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(100.dp),
+                                    shape = RoundedCornerShape(16.dp),
+                                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(TreeBark)
+                                            .padding(start = 10.dp, end = 10.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = product.name,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 30.sp,
+                                                color = White,
+                                            )
+                                            Spacer(modifier = Modifier.weight(1f))
+                                            Text(
+                                                text = "${product.quantity} kg",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 40.sp,
+                                                color = White,
+                                            )
                                         }
                                     }
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(end = 16.dp, bottom = 16.dp),
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    Button(
+                                        onClick = { showCancelConfirmation.value = true },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                                        modifier = Modifier
+                                            .height(40.dp)
+                                            .width(130.dp)
+                                    ) {
+                                        Text(text = "Cancel Order", color = Color.White)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    OrderStatusTracker(status = orderData.status)
+                    Spacer(modifier = Modifier.height(130.dp))
+                }
+                if (showCancelConfirmation.value) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.6f))
+                            .clickable { showCancelConfirmation.value = false }
+                    ) {
+                        Card(
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .padding(16.dp)
+                                .fillMaxWidth(0.8f),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "Are you sure you want to cancel this order?",
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceEvenly,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Button(onClick = {
+                                        showCancelConfirmation.value = false
+                                        // TODO: Add cancellation functionality here
+                                    }) {
+                                        Text("Yes")
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Button(onClick = { showCancelConfirmation.value = false }) {
+                                        Text("No")
+                                    }
+                                }
                             }
                         }
                     }
                 }
-
-                //TODO: add location function in the clickable icons
-                OrderStatusTracker(status = orderData.status)
-                Spacer(modifier = Modifier.height(130.dp))
             }
         }
     }
