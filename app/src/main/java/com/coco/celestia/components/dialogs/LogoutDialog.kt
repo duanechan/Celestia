@@ -9,6 +9,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.testTagsAsResourceId
 
 @Composable
 fun LogoutDialog(onDismiss: () -> Unit, onLogout: () -> Unit) {
@@ -23,10 +24,9 @@ fun LogoutDialog(onDismiss: () -> Unit, onLogout: () -> Unit) {
         confirmButton = {
             Button(
                 onClick = { onLogout() },
-//                modifier = Modifier.semantics { testTag = "android:id/confirmLogout" }
                 modifier = Modifier
-                    .testTag("android:id/confirmLogout")
-                    .semantics { contentDescription = "confirmLogoutCD" }
+                    .semantics { testTagsAsResourceId = true }
+                    .semantics { testTag = "android:id/confirmLogout" }
             ) {
                 Text(text = "Logout")
             }
@@ -34,10 +34,9 @@ fun LogoutDialog(onDismiss: () -> Unit, onLogout: () -> Unit) {
         dismissButton = {
             Button(
                 onClick = { onDismiss() },
-//                modifier = Modifier.semantics { testTag = "android:id/cancelLogout" }
                 modifier = Modifier
-                    .testTag("android:id/cancelLogout")
-                    .semantics { contentDescription = "cancelLogoutCD" }
+                    .semantics { testTagsAsResourceId = true }
+                    .semantics { testTag = "android:id/cancelLogout" }
             ) {
                 Text(text = "Cancel")
             }
