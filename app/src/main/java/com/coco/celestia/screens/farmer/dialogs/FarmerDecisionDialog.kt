@@ -21,7 +21,7 @@ fun FarmerDecisionDialog(
 ) {
     var selectedReason by remember { mutableStateOf<String?>(null) }
     var showReasonDropdown by remember { mutableStateOf(false) }
-    var isPartialFulfillment by remember { mutableStateOf<Boolean?>(null) } // State to track full or partial
+    var isPartialFulfillment by remember { mutableStateOf<Boolean?>(null) }
 
     val rejectionReasons = listOf("Out of stock", "Too Far", "Not Available")
 
@@ -46,7 +46,7 @@ fun FarmerDecisionDialog(
                 modifier = Modifier.semantics { testTag = "android:id/dialogTitle" })
         },
         text = {
-            Column (modifier = Modifier.semantics { testTag = "android:id/dialogContent" }){
+            Column(modifier = Modifier.semantics { testTag = "android:id/dialogContent" }) {
                 Text(text = message, fontSize = 16.sp, modifier = Modifier.semantics { testTag = "android:id/dialogMessage" })
 
                 if (decisionType == "REJECT") {
@@ -55,7 +55,7 @@ fun FarmerDecisionDialog(
                         fontSize = 20.sp,
                         modifier = Modifier.semantics { testTag = "android:id/dialogReasonLabel" })
 
-                    Box (modifier = Modifier.semantics { testTag = "android:id/dialogReasonBox" }) {
+                    Box(modifier = Modifier.semantics { testTag = "android:id/dialogReasonBox" }) {
                         OutlinedButton(
                             onClick = { showReasonDropdown = true },
                             modifier = Modifier
@@ -65,7 +65,7 @@ fun FarmerDecisionDialog(
                             Text(
                                 text = selectedReason ?: "Select reason",
                                 color = if (selectedReason == null) Color.Gray else Color.Black,
-                                modifier = Modifier.semantics { testTag = "android:id/SelectedReasonText"}
+                                modifier = Modifier.semantics { testTag = "android:id/SelectedReasonText" }
                             )
                         }
                         DropdownMenu(
@@ -101,14 +101,14 @@ fun FarmerDecisionDialog(
                     Text(text = "Fulfillment Type:", fontSize = 20.sp,
                         modifier = Modifier.semantics { testTag = "android:id/dialogFulfillmentLabel" })
 
-                    Column (modifier = Modifier.semantics { testTag = "android:id/dialogFulfillmentOptions" }) {
+                    Column(modifier = Modifier.semantics { testTag = "android:id/dialogFulfillmentOptions" }) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.semantics { testTag = "android:id/dialogFulfillmentOption" }
                         ) {
                             RadioButton(
                                 selected = isPartialFulfillment == false,
-                                onClick = { isPartialFulfillment = false},
+                                onClick = { isPartialFulfillment = false },
                                 modifier = Modifier.semantics { testTag = "android:id/dialogFulfillRadioButton" }
                             )
                             Spacer(modifier = Modifier.width(5.dp))
@@ -148,10 +148,10 @@ fun FarmerDecisionDialog(
                     if (decisionType == "REJECT" && selectedReason != null) {
                         onConfirm(selectedReason, null)
                     } else if (decisionType == "ACCEPT" && isPartialFulfillment != null) {
-                        onConfirm(null, isPartialFulfillment)
+                        onConfirm(null, isPartialFulfillment) // Pass fulfillment state
                     }
                 },
-                enabled = decisionType != "REJECT" || selectedReason != null,
+                enabled = (decisionType == "REJECT" && selectedReason != null) || (decisionType == "ACCEPT" && isPartialFulfillment != null),
                 modifier = Modifier.semantics { testTag = "android:id/dialogConfirmButton" }
             ) {
                 Text("Confirm", color = SageGreen, fontSize = 16.sp,

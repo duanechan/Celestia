@@ -37,6 +37,7 @@ import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.ItemState
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.ItemData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
@@ -51,7 +52,7 @@ fun FarmerRequestDetails(
     val orderViewModel: OrderViewModel = viewModel()
     val productViewModel: ProductViewModel = viewModel()
     val farmerItemViewModel: FarmerItemViewModel = viewModel()
-    val userViewModel: UserViewModel = viewModel()  // Add UserViewModel
+    val userViewModel: UserViewModel = viewModel()
 
     val uid = FirebaseAuth.getInstance().uid.toString()
     val allOrders by orderViewModel.orderData.observeAsState(emptyList())
@@ -69,7 +70,7 @@ fun FarmerRequestDetails(
             orderViewModel.fetchAllOrders(filter = "", role = "Farmer")
         }
         if (usersData.isEmpty()) {
-            userViewModel.fetchUsers()  // Fetch all users
+            userViewModel.fetchUsers()
         }
         productViewModel.fetchProductByType("Vegetable")
         farmerItemViewModel.getItems(uid = uid)
@@ -110,7 +111,9 @@ fun FarmerRequestDetails(
                 setRejectionReason = { rejectionReason = it },
                 onAccept = onAccept,
                 onReject = onReject,
-                orderViewModel = orderViewModel
+                orderViewModel = orderViewModel,
+                farmerItemViewModel = farmerItemViewModel,
+                totalFarmers = 2
             )
         }
     }
@@ -165,7 +168,9 @@ fun OrderDetails(
     setRejectionReason: (String?) -> Unit,
     onAccept: () -> Unit,
     onReject: (String) -> Unit,
-    orderViewModel: OrderViewModel
+    orderViewModel: OrderViewModel,
+    farmerItemViewModel: FarmerItemViewModel,
+    totalFarmers: Int
 ) {
     LazyColumn(
         modifier = Modifier
@@ -206,6 +211,16 @@ fun OrderDetails(
                     val fulfillmentStatus = if (isPartialFulfillment == true) "INCOMPLETE" else "PREPARING"
                     val updatedOrder = orderData.copy(status = fulfillmentStatus)
                     orderViewModel.updateOrder(updatedOrder)
+
+                    val itemData = ItemData(
+                        name = orderData.orderData.name,
+                        items = mutableListOf(orderData.orderData)
+                    )
+
+                    if (isPartialFulfillment != null) {
+                        farmerItemViewModel.reduceItemQuantity(itemData, totalFarmers)
+                    }
+
                     onAccept()
                 } else {
                     setOrderAccepted(false)

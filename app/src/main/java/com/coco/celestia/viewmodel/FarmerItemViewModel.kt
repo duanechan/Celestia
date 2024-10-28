@@ -1,5 +1,6 @@
 package com.coco.celestia.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -144,6 +145,58 @@ class FarmerItemViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 _itemState.value = ItemState.ERROR(e.message ?: "Error updating item price")
+            }
+        }
+    }
+    fun reduceItemQuantity(item: ItemData, totalFarmers: Int) {
+        viewModelScope.launch {
+            try {
+                _itemState.value = ItemState.LOADING
+
+                var itemFound = false
+                val uid = FirebaseAuth.getInstance().uid.toString()
+                val snapshot = database.child(uid).child("items").get().await()
+                val orderedQuantity = item.items.firstOrNull()?.quantity ?: 0
+                val baseReductionAmount = orderedQuantity / totalFarmers
+                val remainder = orderedQuantity % totalFarmers
+
+                for ((index, itemNode) in snapshot.children.withIndex()) {
+                    val name = itemNode.child("name").getValue(String::class.java)
+
+                    if (name?.equals(item.name, ignoreCase = true) == true) {
+                        val currentQuantity = itemNode.child("quantity").getValue(Int::class.java) ?: 0
+                        val reductionAmount = if (index == totalFarmers - 1) {
+                            baseReductionAmount + remainder
+                        } else {
+                            baseReductionAmount
+                        }
+
+                        val newQuantity = (currentQuantity - reductionAmount).coerceAtLeast(0)
+                        itemNode.child("quantity").ref.setValue(newQuantity).await()
+
+                        val updatedItem = itemNode.getValue(ProductData::class.java)?.copy(quantity = newQuantity)
+                        updatedItem?.let {
+                            _itemData.value = _itemData.value?.map { existingItem ->
+                                if (existingItem.name.equals(item.name, ignoreCase = true)) updatedItem else existingItem
+                            }?.toList()
+                        }
+
+                        itemFound = true
+                    }
+                }
+
+                if (!itemFound) {
+                    val availableItems = snapshot.children.mapNotNull {
+                        it.child("name").getValue(String::class.java)
+                    }.joinToString(", ")
+
+                    _itemState.value = ItemState.ERROR("Product ${item.name} not found in inventory")
+                } else {
+                    getItems(uid)
+                }
+
+            } catch (e: Exception) {
+                _itemState.value = ItemState.ERROR(e.message ?: "Failed to update inventory")
             }
         }
     }

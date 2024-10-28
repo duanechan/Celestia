@@ -223,7 +223,7 @@ fun InSeasonProducts(products: List<ProductData>) {
             modifier = Modifier.fillMaxWidth()
         ) {
             if (inSeasonProducts.isNotEmpty()) {
-                inSeasonProducts.take(4).forEach { product ->
+                inSeasonProducts.take(3).forEach { product ->
                     Box(
                         modifier = Modifier
                             .size(80.dp)

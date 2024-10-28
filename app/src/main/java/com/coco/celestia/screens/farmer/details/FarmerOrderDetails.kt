@@ -20,12 +20,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.coco.celestia.screens.farmer.dialogs.FarmerFulfillDialog
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.ItemData
 import com.coco.celestia.viewmodel.model.UserData
 
 @Composable
@@ -34,11 +37,13 @@ fun FarmerOrderDetails(
     orderId: String
 ) {
     val orderViewModel: OrderViewModel = viewModel()
-    val userViewModel: UserViewModel = viewModel() // Add this line
+    val userViewModel: UserViewModel = viewModel()
+    val farmerItemViewModel: FarmerItemViewModel = viewModel() // Add FarmerItemViewModel
     val allOrders by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     val usersData by userViewModel.usersData.observeAsState(emptyList())
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
+    var showFulfillDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         if (allOrders.isEmpty()) {
@@ -87,6 +92,10 @@ fun FarmerOrderDetails(
         }
 
         else -> {
+            if (orderData.status == "INCOMPLETE") {
+                showFulfillDialog = true
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -104,6 +113,50 @@ fun FarmerOrderDetails(
             }
         }
     }
+
+    if (showFulfillDialog && orderData != null) {
+        val totalFarmers = 2 // to change i think
+        DisplayFarmerFulfillDialog(
+            navController = navController,
+            onDismiss = { showFulfillDialog = false },
+            farmerItemViewModel = farmerItemViewModel,
+            orderViewModel = orderViewModel,
+            orderData = orderData,
+            item = ItemData(name = orderData.orderData.name, items = mutableListOf(orderData.orderData)),
+            totalFarmers = totalFarmers
+        )
+    }
+}
+
+@Composable
+fun DisplayFarmerFulfillDialog(
+    navController: NavController,
+    onDismiss: () -> Unit,
+    farmerItemViewModel: FarmerItemViewModel,
+    orderViewModel: OrderViewModel,
+    orderData: OrderData,
+    item: ItemData,
+    totalFarmers: Int
+) {
+    FarmerFulfillDialog(
+        navController = navController,
+        item = item,
+        orderViewModel = orderViewModel,
+        orderData = orderData,
+        farmerItemViewModel = farmerItemViewModel,
+        totalFarmers = totalFarmers,
+        onAccept = {
+            val updatedOrder = orderData.copy(status = "PREPARING")
+            orderViewModel.updateOrder(updatedOrder)
+
+            farmerItemViewModel.reduceItemQuantity(item, totalFarmers)
+            onDismiss()
+        },
+        onReject = {
+            onDismiss()
+        },
+        onDismiss = onDismiss
+    )
 }
 
 @Composable
