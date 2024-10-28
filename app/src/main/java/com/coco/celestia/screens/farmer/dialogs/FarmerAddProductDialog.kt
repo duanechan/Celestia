@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.TextField
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.window.DialogProperties
@@ -53,12 +56,18 @@ fun FarmerAddProductDialog(
                     onConfirm(name, quantityInt!!, seasonStart, seasonEnd)
                     onDismiss()
                 }
-            }) {
+            },
+                modifier = Modifier
+                    .semantics { testTagsAsResourceId = true }
+                    .semantics { testTag = "android:id/confirmButton" }) {
                 Text("Confirm", color = SageGreen)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(onClick = onDismiss,
+                modifier = Modifier
+                    .semantics { testTagsAsResourceId = true }
+                    .semantics { testTag = "android:id/dismissButton" }) {
                 Text("Cancel", color = Copper)
             }
         },
@@ -69,6 +78,8 @@ fun FarmerAddProductDialog(
                 textAlign = TextAlign.Center,
                 color = Cocoa,
                 modifier = Modifier.fillMaxWidth()
+                    .semantics { testTagsAsResourceId = true }
+                    .semantics { testTag = "android:id/addProductLabel" }
             )
         },
         text = {
@@ -87,7 +98,10 @@ fun FarmerAddProductDialog(
                     },
                     placeholder = { Text("Enter vegetable name", color = Color.Gray) },
                     isError = nameError,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTagsAsResourceId = true }
+                        .semantics { testTag = "android:id/enterVegetableName" },
                     colors = TextFieldDefaults.colors(
                         unfocusedContainerColor = Apricot,
                         focusedContainerColor = Apricot
@@ -97,14 +111,18 @@ fun FarmerAddProductDialog(
                     Text(
                         text = "Please enter a valid name.",
                         color = Color.Red,
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier
+                            .semantics { testTagsAsResourceId = true }
+                            .semantics { testTag = "vegNameError" }
                     )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Quantity Input
-                Text(text = "Enter Quantity", color = Cocoa, fontWeight = FontWeight.Bold)
+                Text(text = "Enter Quantity", color = Cocoa, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.semantics { testTag = "android:id/enterQuantity" })
                 TextField(
                     value = quantity,
                     onValueChange = {
@@ -112,9 +130,12 @@ fun FarmerAddProductDialog(
                         quantityError = false
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                    placeholder = { Text("Enter quantity", color = Color.Gray) },
+                    placeholder = { Text("Enter quantity", color = Color.Gray)},
                     isError = quantityError,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTagsAsResourceId = true }
+                        .semantics { testTag = "android:id/quantityError" },
                     colors = TextFieldDefaults.colors(
                         unfocusedContainerColor = Apricot,
                         focusedContainerColor = Apricot
@@ -139,7 +160,9 @@ fun FarmerAddProductDialog(
                     readOnly = true,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { isSeasonStartDropdownExpanded = true },
+                        .clickable { isSeasonStartDropdownExpanded = true }
+                        .semantics { testTagsAsResourceId = true }
+                        .semantics { testTag = "android:id/selectStartMonth" },
                     placeholder = { Text("Select start month") },
                     colors = OutlinedTextFieldDefaults.colors(
                         disabledContainerColor = Apricot,
@@ -147,7 +170,10 @@ fun FarmerAddProductDialog(
                 )
                 DropdownMenu(
                     expanded = isSeasonStartDropdownExpanded,
-                    onDismissRequest = { isSeasonStartDropdownExpanded = false }
+                    onDismissRequest = { isSeasonStartDropdownExpanded = false },
+                    modifier = Modifier
+                        .semantics { testTagsAsResourceId = true }
+                        .semantics { testTag = "android:id/seasonStartDropdown" }
                 ) {
                     months.forEach { month ->
                         DropdownMenuItem(
@@ -156,7 +182,10 @@ fun FarmerAddProductDialog(
                                 seasonStart = month
                                 seasonStartError = false
                                 isSeasonStartDropdownExpanded = false
-                            }
+                            },
+                            modifier = Modifier
+                                .semantics { testTagsAsResourceId = true }
+                                .semantics { testTag = "android:id/seasonStartOption_$month" }
                         )
                     }
                 }
@@ -164,7 +193,10 @@ fun FarmerAddProductDialog(
                     Text(
                         text = "Please select a start month.",
                         color = Color.Red,
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier
+                            .semantics { testTagsAsResourceId = true }
+                            .semantics { testTag = "android:id/seasonStartError" }
                     )
                 }
 
@@ -179,7 +211,9 @@ fun FarmerAddProductDialog(
                     readOnly = true,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { isSeasonEndDropdownExpanded = true },
+                        .clickable { isSeasonEndDropdownExpanded = true }
+                        .semantics { testTagsAsResourceId = true }
+                        .semantics { testTag = "android:id/seasonEndInput" },
                     placeholder = { Text("Select end month") },
                     colors = OutlinedTextFieldDefaults.colors(
                         disabledContainerColor = Apricot,
@@ -187,7 +221,10 @@ fun FarmerAddProductDialog(
                 )
                 DropdownMenu(
                     expanded = isSeasonEndDropdownExpanded,
-                    onDismissRequest = { isSeasonEndDropdownExpanded = false }
+                    onDismissRequest = { isSeasonEndDropdownExpanded = false },
+                    modifier = Modifier
+                        .semantics { testTagsAsResourceId = true }
+                        .semantics { testTag = "android:id/seasonEndDropdown" }
                 ) {
                     months.forEach { month ->
                         DropdownMenuItem(
@@ -196,7 +233,10 @@ fun FarmerAddProductDialog(
                                 seasonEnd = month
                                 seasonEndError = false
                                 isSeasonEndDropdownExpanded = false
-                            }
+                            },
+                            modifier = Modifier
+                                .semantics { testTagsAsResourceId = true }
+                                .semantics { testTag = "android:id/seasonEndOption_$month" }
                         )
                     }
                 }
@@ -204,7 +244,10 @@ fun FarmerAddProductDialog(
                     Text(
                         text = "Please select an end month.",
                         color = Color.Red,
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier
+                            .semantics { testTagsAsResourceId = true }
+                            .semantics { testTag = "seasonEndError" }
                     )
                 }
             }
