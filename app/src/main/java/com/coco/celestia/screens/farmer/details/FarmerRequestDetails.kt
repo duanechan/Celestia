@@ -193,12 +193,6 @@ fun OrderDetails(
                 onReject = onReject
             )
         }
-        item {
-            FulfilledBySection(
-                fulfilledBy = orderData.fulfilledBy,
-                allUsers = usersData
-            )
-        }
     }
 
     if (showDecisionDialog && decisionType != null) {
@@ -291,7 +285,7 @@ fun OrderDetailsCard(orderData: OrderData, navController: NavController) {
                             .semantics { testTag = "android:id/orderIdLabel" }
                     )
                     Text(
-                        text = orderData.orderId.substring(6, 38),
+                        text = orderData.orderId.substring(6, 10).uppercase(),
                         color = Cocoa,
                         textAlign = TextAlign.Center,
                         modifier = Modifier

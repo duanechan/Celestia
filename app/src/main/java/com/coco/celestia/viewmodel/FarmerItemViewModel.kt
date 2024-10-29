@@ -1,11 +1,9 @@
 package com.coco.celestia.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.coco.celestia.viewmodel.model.ContactData
 import com.coco.celestia.viewmodel.model.ItemData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.auth.FirebaseAuth

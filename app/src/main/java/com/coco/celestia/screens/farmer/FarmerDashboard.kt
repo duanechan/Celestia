@@ -2,9 +2,11 @@ package com.coco.celestia.screens.farmer
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
@@ -15,12 +17,15 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.coco.celestia.R
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.UserData
@@ -34,7 +39,6 @@ import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.Month
 import java.util.*
-import java.time.format.TextStyle
 
 @Composable
 fun FarmerDashboard(
@@ -191,8 +195,8 @@ fun InSeasonProducts(products: List<ProductData>) {
     val currentMonth = LocalDate.now().month
 
     val inSeasonProducts = products.filter { product ->
-        val sanitizedStartSeason = product.startSeason.trim().toUpperCase(Locale.ROOT)
-        val sanitizedEndSeason = product.endSeason.trim().toUpperCase(Locale.ROOT)
+        val sanitizedStartSeason = product.startSeason.trim().uppercase(Locale.ROOT)
+        val sanitizedEndSeason = product.endSeason.trim().uppercase(Locale.ROOT)
 
         val startMonth = try {
             Month.valueOf(sanitizedStartSeason)
@@ -224,29 +228,53 @@ fun InSeasonProducts(products: List<ProductData>) {
         ) {
             if (inSeasonProducts.isNotEmpty()) {
                 inSeasonProducts.take(3).forEach { product ->
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .background(color = PaleGold, shape = RoundedCornerShape(10.dp)),
-                        contentAlignment = Alignment.Center
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(5.dp)
                     ) {
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp)
+                                .background(color = SoftOrange, shape = CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.plant),
+                                contentDescription = "Plant Image",
+                                modifier = Modifier.size(50.dp),
+                                colorFilter = ColorFilter.tint(OliveGreen)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = product.name,
                             fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
                             color = Cocoa
                         )
                     }
                 }
             } else {
                 repeat(3) {
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .background(color = PaleGold, shape = RoundedCornerShape(10.dp)),
-                        contentAlignment = Alignment.Center
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(5.dp)
                     ) {
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp)
+                                .background(color = PaleGold, shape = CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.plant),
+                                contentDescription = "Crop",
+                                modifier = Modifier.size(50.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "In Season",
+                            text = "No Product",
                             fontSize = 9.sp,
                             color = Color.DarkGray
                         )
@@ -302,7 +330,7 @@ fun OrderStatusSection(
         }
         is OrderState.SUCCESS -> {
             val filteredOrders = orderData.filter { order ->
-                order.status != "PENDING" && order.status != "REJECTED" &&
+                order.status !in listOf("PENDING", "REJECTED", "COMPLETED") &&
                         order.orderId.contains(searchQuery, ignoreCase = true)
             }.take(2)
 

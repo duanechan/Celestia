@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.TextField
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.window.DialogProperties
 import com.coco.celestia.ui.theme.*
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun FarmerAddProductDialog(
     onDismiss: () -> Unit,
@@ -206,7 +208,7 @@ fun FarmerAddProductDialog(
                 Text(text = "Select Season End", color = Cocoa, fontWeight = FontWeight.Bold)
                 OutlinedTextField(
                     value = seasonEnd,
-                    onValueChange = {}, // No input changes directly
+                    onValueChange = {},
                     enabled = false,
                     readOnly = true,
                     modifier = Modifier

@@ -70,36 +70,24 @@ fun FarmerManageOrder(
     orderViewModel: OrderViewModel,
     productViewModel: ProductViewModel
 ) {
-    // Observing LiveData from ViewModels
     val userData by userViewModel.userData.observeAsState()
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     val productData by productViewModel.productData.observeAsState()
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
 
-    // State to track the active view (Order Status or Order Requests)
     var isOrderStatusView by remember { mutableStateOf(true) }
-
-    // Filter states
-    val categoryOptions = productData?.map { it.name } ?: emptyList()
+    var selectedStatus by remember { mutableStateOf("All") }
     var selectedCategory by remember { mutableStateOf("") }
     var filterMenuExpanded by remember { mutableStateOf(false) }
-
-    // Search bar state
     var searchQuery by remember { mutableStateOf("") }
 
-    // Fetch data when the composable is first launched
     LaunchedEffect(Unit) {
-        orderViewModel.fetchAllOrders(
-            filter = "",
-            role = "Farmer"
-        )
-        productViewModel.fetchProducts(
-            filter = "",
-            role = "Farmer"
-        )
+        orderViewModel.fetchAllOrders(filter = "", role = "Farmer")
+        productViewModel.fetchProducts(filter = "", role = "Farmer")
         userViewModel.fetchUser(uid)
     }
+
     Spacer(modifier = Modifier.width(30.dp))
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -124,14 +112,8 @@ fun FarmerManageOrder(
                     placeholder = { Text("Search orders...", color = Cocoa) },
                     modifier = Modifier
                         .weight(1f)
-                        .background(
-                            color = Apricot,
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        .border(
-                            BorderStroke(1.dp, color = Cocoa),
-                            shape = RoundedCornerShape(16.dp)
-                        )
+                        .background(color = Apricot, shape = RoundedCornerShape(16.dp))
+                        .border(BorderStroke(1.dp, color = Cocoa), shape = RoundedCornerShape(16.dp))
                         .semantics { testTag = "android:id/searchBar" },
                     singleLine = true,
                     colors = TextFieldDefaults.textFieldColors(
@@ -145,80 +127,66 @@ fun FarmerManageOrder(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // Transaction Icon Button
                 IconButton(
                     onClick = { navController.navigate(Screen.FarmerTransactions.route) },
                     modifier = Modifier
-                        .background(
-                            color = Apricot,
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        .border(
-                            BorderStroke(1.dp, color = Cocoa),
-                            shape = RoundedCornerShape(16.dp)
-                        )
+                        .background(color = Apricot, shape = RoundedCornerShape(16.dp))
+                        .border(BorderStroke(1.dp, color = Cocoa), shape = RoundedCornerShape(16.dp))
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.transactions),
-                        contentDescription = "Transactions",
-                        tint = Cocoa
-                    )
+                    Icon(painter = painterResource(id = R.drawable.transactions), contentDescription = "Transactions", tint = Cocoa)
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // Filter Icon Button
                 Box {
                     IconButton(
                         onClick = { filterMenuExpanded = true },
                         modifier = Modifier
-                            .background(
-                                color = Apricot,
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                            .border(
-                                BorderStroke(1. dp, color = Cocoa),
-                                shape = RoundedCornerShape(16.dp)
-                            )
+                            .background(color = Apricot, shape = RoundedCornerShape(16.dp))
+                            .border(BorderStroke(1.dp, color = Cocoa), shape = RoundedCornerShape(16.dp))
                             .semantics { testTag = "android:id/filterButton" }
                     ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.filter),
-                            contentDescription = "Filter",
-                            tint = Cocoa
-                        )
+                        Icon(painter = painterResource(id = R.drawable.filter), contentDescription = "Filter", tint = Cocoa)
                     }
 
                     DropdownMenu(
                         expanded = filterMenuExpanded,
                         onDismissRequest = { filterMenuExpanded = false },
-                        modifier = Modifier
-                            .background(color = LightApricot, shape = RoundedCornerShape(8.dp))
-                            .semantics { testTag = "android:id/filterMenu" }
+                        modifier = Modifier.background(color = LightApricot, shape = RoundedCornerShape(8.dp))
                     ) {
-                        DropdownMenuItem(
-                            text = { Text("All Categories", color = Cocoa) },
-                            onClick = {
-                                selectedCategory = ""
-                                filterMenuExpanded = false
-                            },
-                            modifier = Modifier.semantics { testTag = "android:id/filterAllCategories" }
-                        )
-                        categoryOptions.forEach { category ->
+                        if (isOrderStatusView) {
+                            listOf("All", "Preparing", "Incomplete", "Delivering", "Completed", "Rejected").forEach { status ->
+                                DropdownMenuItem(
+                                    text = { Text(status, color = Cocoa) },
+                                    onClick = {
+                                        selectedStatus = status
+                                        filterMenuExpanded = false
+                                    }
+                                )
+                            }
+                        } else {
+                            val categoryOptions = productData?.map { it.name } ?: emptyList()
                             DropdownMenuItem(
-                                text = { Text(category, color = Cocoa) },
+                                text = { Text("All Products", color = Cocoa) },
                                 onClick = {
-                                    selectedCategory = category
+                                    selectedCategory = ""
                                     filterMenuExpanded = false
-                                },
-                                modifier = Modifier.semantics { testTag = "android:id/filterCategory_$category" }
+                                }
                             )
+                            categoryOptions.forEach { category ->
+                                DropdownMenuItem(
+                                    text = { Text(category, color = Cocoa) },
+                                    onClick = {
+                                        selectedCategory = category
+                                        filterMenuExpanded = false
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            // Order Status and Order Requests
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -227,12 +195,8 @@ fun FarmerManageOrder(
             ) {
                 Button(
                     onClick = { isOrderStatusView = true },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isOrderStatusView) GoldenYellow else Brown1
-                    ),
-                    modifier = Modifier
-                        .weight(1f)
-                        .semantics { testTag = "android:id/orderStatusButton" }
+                    colors = ButtonDefaults.buttonColors(containerColor = if (isOrderStatusView) GoldenYellow else Brown1),
+                    modifier = Modifier.weight(1f).semantics { testTag = "android:id/orderStatusButton" }
                 ) {
                     Text("Order Status", color = Cocoa)
                 }
@@ -241,12 +205,8 @@ fun FarmerManageOrder(
 
                 Button(
                     onClick = { isOrderStatusView = false },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (!isOrderStatusView) GoldenYellow else Brown1
-                    ),
-                    modifier = Modifier
-                        .weight(1f)
-                        .semantics { testTag = "android:id/orderRequestButton" }
+                    colors = ButtonDefaults.buttonColors(containerColor = if (!isOrderStatusView) GoldenYellow else Brown1),
+                    modifier = Modifier.weight(1f).semantics { testTag = "android:id/orderRequestButton" }
                 ) {
                     Text("Order Requests", color = Cocoa)
                 }
@@ -257,70 +217,35 @@ fun FarmerManageOrder(
             if (isOrderStatusView) {
                 when (orderState) {
                     is OrderState.LOADING -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.semantics { testTag = "android:id/loadingIndicator" }
-                            )
+                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
                         }
                     }
                     is OrderState.ERROR -> {
-                        Text(
-                            "Failed to load orders: ${(orderState as OrderState.ERROR).message}",
-                            color = Color.Red,
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .semantics { testTag = "android:id/orderError" }
-                        )
+                        Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}", color = Color.Red, modifier = Modifier.padding(16.dp))
                     }
                     is OrderState.EMPTY -> {
-                        Text(
-                            "No orders available.",
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .semantics { testTag = "android:id/emptyOrdersText" }
-                        )
+                        Text("No orders available.", modifier = Modifier.padding(16.dp))
                     }
                     is OrderState.SUCCESS -> {
                         val filteredOrders = orderData.filter { order ->
-                            (selectedCategory.isEmpty() || order.orderData.name == selectedCategory) &&
-                                    order.orderId.contains(searchQuery, ignoreCase = true) &&
-                                    order.status.lowercase() != "pending"
+                            order.orderId.contains(searchQuery, ignoreCase = true) &&
+                                    (selectedStatus == "All" || order.status.equals(selectedStatus, ignoreCase = true)) &&
+                                    order.status != "PENDING"
                         }
 
                         if (filteredOrders.isEmpty()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("Waiting for approval of requests.",
-                                    modifier = Modifier.semantics { testTag = "android:id/noMatchingOrdersText" })
+                            Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                                Text("No matching orders available.")
                             }
                         } else {
                             filteredOrders.forEach { order ->
                                 if (userData == null) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.semantics { testTag = "android:id/userLoadingIndicator" }
-                                    )
+                                    CircularProgressIndicator()
                                 } else {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(8.dp)
-                                            .semantics { testTag = "android:id/orderCard_${order.orderId}" }
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
+                                    Box(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+                                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                                             ManageOrderCards(navController, order)
-
                                             OrderStatusCard(orderStatus = order.status, orderId = order.orderId)
                                         }
                                     }
@@ -335,8 +260,8 @@ fun FarmerManageOrder(
                     userData = userData,
                     orderData = orderData,
                     orderState = orderState,
-                    selectedCategory = selectedCategory,
-                    searchQuery = searchQuery
+                    searchQuery = searchQuery,
+                    selectedCategory = selectedCategory
                 )
             }
             Spacer(modifier = Modifier.height(90.dp))
@@ -350,8 +275,8 @@ fun FarmerManageRequest(
     userData: UserData?,
     orderData: List<OrderData>,
     orderState: OrderState,
-    selectedCategory: String,
-    searchQuery: String
+    searchQuery: String,
+    selectedCategory: String
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -368,20 +293,29 @@ fun FarmerManageRequest(
                 Text("No pending orders available.")
             }
             is OrderState.SUCCESS -> {
-                val pendingOrders = orderData.filter { it.status == "PENDING" }
-                val filteredOrders = pendingOrders.filter { order ->
-                    (selectedCategory.isEmpty() || order.orderData.name == selectedCategory) &&
-                            order.orderId.contains(searchQuery, ignoreCase = true)
-                }
+                val filteredOrders = orderData
+                    .filter { order ->
+                        order.status.equals("PENDING", ignoreCase = true)
+                    }
+                    .filter { order ->
+                        order.orderId.contains(searchQuery, ignoreCase = true) &&
+                                (selectedCategory.isEmpty() || order.orderData.name.equals(selectedCategory, ignoreCase = true))
+                    }
 
                 if (filteredOrders.isEmpty()) {
                     Text("No pending orders available.")
                 } else {
-                    filteredOrders.forEach { order ->
-                        if (userData == null) {
-                            CircularProgressIndicator()
-                        } else {
-                            RequestCards(navController, order)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        filteredOrders.forEach { order ->
+                            if (userData == null) {
+                                CircularProgressIndicator()
+                            } else {
+                                RequestCards(navController, order)
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
                         }
                     }
                 }
@@ -483,9 +417,9 @@ fun OrderStatusCard(
 ) {
     val backgroundColor = when (orderStatus) {
         "PREPARING" -> Brown1
-        "INCOMPLETE" -> GoldenYellow
+        "INCOMPLETE" -> Tangerine
         "REJECTED" -> Copper3
-        "DELIVERING" -> Tangerine
+        "DELIVERING" -> Blue
         "COMPLETED" -> SageGreen
         else -> Color.Gray
     }

@@ -1,9 +1,13 @@
 package com.coco.celestia.screens.farmer.details
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -12,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -20,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.coco.celestia.R
 import com.coco.celestia.screens.farmer.dialogs.FarmerFulfillDialog
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
@@ -29,7 +36,6 @@ import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.ItemData
-import com.coco.celestia.viewmodel.model.UserData
 
 @Composable
 fun FarmerOrderDetails(
@@ -38,7 +44,7 @@ fun FarmerOrderDetails(
 ) {
     val orderViewModel: OrderViewModel = viewModel()
     val userViewModel: UserViewModel = viewModel()
-    val farmerItemViewModel: FarmerItemViewModel = viewModel() // Add FarmerItemViewModel
+    val farmerItemViewModel: FarmerItemViewModel = viewModel()
     val allOrders by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     val usersData by userViewModel.usersData.observeAsState(emptyList())
@@ -106,16 +112,17 @@ fun FarmerOrderDetails(
                 OrderDetailsCard(orderData = orderData)
                 Spacer(modifier = Modifier.height(20.dp))
 
+                // Only show OrderStatusDropdown and OrderStatusUpdates if the status is not "REJECTED"
                 if (orderData.status != "REJECTED") {
-                    val fulfilledByList = orderData.fulfilledBy ?: emptyList()
-                    FulfilledBySection(fulfilledBy = fulfilledByList, allUsers = usersData)
+                    OrderStatusDropdown(orderData = orderData, orderViewModel = orderViewModel)
+                    OrderStatusUpdates(orderData = orderData)
                 }
             }
         }
     }
 
     if (showFulfillDialog && orderData != null) {
-        val totalFarmers = 2 // to change i think
+        val totalFarmers = 2 // to change
         DisplayFarmerFulfillDialog(
             navController = navController,
             onDismiss = { showFulfillDialog = false },
@@ -125,6 +132,118 @@ fun FarmerOrderDetails(
             item = ItemData(name = orderData.orderData.name, items = mutableListOf(orderData.orderData)),
             totalFarmers = totalFarmers
         )
+    }
+}
+
+@Composable
+fun OrderStatusDropdown(orderData: OrderData, orderViewModel: OrderViewModel) {
+    var expanded by remember { mutableStateOf(false) }
+    var selectedStatus by remember { mutableStateOf(orderData.status) }
+
+    val statusOptions = when (orderData.status) {
+        "PREPARING" -> listOf("DELIVERING")
+        "DELIVERING" -> listOf("COMPLETED")
+        "COMPLETED" -> emptyList()
+        else -> emptyList()
+    }
+
+    val statusColor = when (selectedStatus) {
+        "PREPARING" -> Brown1
+        "DELIVERING" -> Blue
+        "COMPLETED" -> SageGreen
+        else -> Color.Gray.copy(alpha = 0.3f)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+    ) {
+        Text(
+            text = "Order Tracking",
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
+            color = Cocoa
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 15.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Text(
+                text = "Current Status: ",
+                fontSize = 18.sp,
+                color = Cocoa
+            )
+
+            Spacer(modifier = Modifier.width(5.dp))
+
+            Box {
+                Box(
+                    modifier = Modifier
+                        .background(
+                            color = if (statusOptions.isEmpty()) OliveGreen.copy(alpha = 0.3f) else statusColor,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .clickable(enabled = statusOptions.isNotEmpty()) { expanded = true }
+                        .padding(horizontal = 8.dp, vertical = 5.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.width(IntrinsicSize.Max)
+                    ) {
+                        Text(
+                            text = selectedStatus,
+                            fontWeight = FontWeight.Bold,
+                            color = Cocoa,
+                            modifier = Modifier.padding(end = 4.dp)
+                        )
+                        if (statusOptions.isNotEmpty()) {
+                            Icon(
+                                imageVector = if (expanded)
+                                    Icons.Default.KeyboardArrowUp
+                                else
+                                    Icons.Default.KeyboardArrowDown,
+                                contentDescription = "Dropdown Arrow",
+                                tint = Cocoa
+                            )
+                        }
+                    }
+                }
+
+                if (statusOptions.isNotEmpty()) {
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier
+                            .width(150.dp)
+                            .background(Color.White)
+                            .align(Alignment.BottomStart)
+                    ) {
+                        statusOptions.forEach { status ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = status,
+                                        color = Cocoa,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                },
+                                onClick = {
+                                    selectedStatus = status
+                                    expanded = false
+                                    orderViewModel.updateOrder(orderData.copy(status = status))
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -200,7 +319,7 @@ fun OrderDetailsCard(orderData: OrderData) {
                         .semantics { testTag = "android:id/orderIdLabel" }
                 )
                 Text(
-                    text = orderData.orderId.substring(6, 38),
+                    text = orderData.orderId.substring(6, 10).uppercase(),
                     fontSize = 15.sp,
                     color = Cocoa,
                     textAlign = TextAlign.Center,
@@ -355,56 +474,96 @@ fun OrderDetailsCard(orderData: OrderData) {
 }
 
 @Composable
-fun FulfilledBySection(fulfilledBy: List<UserData>?, allUsers: List<UserData>) {
-    Card(
+fun OrderStatusUpdates(orderData: OrderData) {
+    val client = orderData.client
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 10.dp)
-            .semantics { testTag = "android:id/fulfilledByCard" },
-        shape = RoundedCornerShape(15.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = PaleGold
-        ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+            .padding(8.dp),
+        contentAlignment = Alignment.TopStart
     ) {
         Column(
-            modifier = Modifier
-                .padding(16.dp)
+            modifier = Modifier.padding(8.dp)
         ) {
-            Text(
-                text = "Fulfilled By:",
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                color = Cocoa,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { testTag = "android:id/fulfilledByLabel" }
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (fulfilledBy.isNullOrEmpty()) {
-                Text(
-                    text = "N/A",
-                    fontSize = 16.sp,
-                    color = Copper,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { testTag = "android:id/noFarmersMessage" }
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.preparing),
+                    contentDescription = "Preparing",
+                    modifier = Modifier.size(40.dp),
+                    colorFilter = ColorFilter.tint(Cocoa)
                 )
-            } else {
-                fulfilledBy.forEach { farmer ->
-                    Text(
-                        text = "${farmer.firstname} ${farmer.lastname}",
-                        fontSize = 18.sp,
-                        color = Cocoa,
-                        textAlign = TextAlign.Center,
+                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.height(50.dp))
+                Text(
+                    text = "Farmer is preparing the order",
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            }
+
+            if (orderData.status in listOf("DELIVERING", "COMPLETED")) {
+                Row(
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Spacer(modifier = Modifier.width(18.dp))
+                    Divider(
+                        color = GoldenYellow,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .semantics { testTag = "android:id/fulfilledByName" }
+                            .width(2.dp)
+                            .height(40.dp)
                     )
-                    Spacer(modifier = Modifier.height(5.dp))
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.deliveryicon),
+                        contentDescription = "Delivery",
+                        modifier = Modifier.size(40.dp),
+                        colorFilter = ColorFilter.tint(Cocoa)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "$client's order is out for delivery",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
+
+            if (orderData.status == "COMPLETED") {
+                Row(
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Spacer(modifier = Modifier.width(18.dp))
+                    Divider(
+                        color = GoldenYellow,
+                        modifier = Modifier
+                            .width(2.dp)
+                            .height(40.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.completed),
+                        contentDescription = "Completed",
+                        modifier = Modifier.size(30.dp).padding(start = 3.dp),
+                        colorFilter = ColorFilter.tint(OliveGreen)
+                    )
+                    Spacer(modifier = Modifier.width(20.dp))
+                    Text(
+                        text = "$client's order has been fulfilled",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
                 }
             }
         }
