@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.font.FontWeight
 import com.coco.celestia.ui.theme.mintsansFontFamily
 
@@ -18,12 +19,18 @@ fun UpdateOrderStatusDialog(status: String,onDismiss: () -> Unit, onAccept: () -
         title = { Text(text = "Update Order Status", fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily) },
         text = { Text(text = "Mark this status as ${status.lowercase()}?", fontFamily = mintsansFontFamily) },
         confirmButton = {
-            Button(onClick = { onAccept() }) {
+            Button(onClick = { onAccept() },
+                modifier = Modifier
+                    .semantics { testTagsAsResourceId = true }
+                    .semantics { testTag = "android:id/UpdateStatusConfirmButton" }) {
                 Text(text = "Save", fontFamily = mintsansFontFamily)
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = { onDismiss() }) {
+            OutlinedButton(onClick = { onDismiss() },
+                modifier = Modifier
+                    .semantics { testTagsAsResourceId = true }
+                    .semantics { testTag = "android:id/UpdateStatusDismissButton" }) {
                 Text(text = "Cancel", fontFamily = mintsansFontFamily)
             }
         },

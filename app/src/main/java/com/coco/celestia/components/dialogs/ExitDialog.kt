@@ -4,6 +4,9 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 
 @Composable
 fun ExitDialog(onDismiss: () -> Unit, onExit: () -> Unit) {
@@ -17,14 +20,16 @@ fun ExitDialog(onDismiss: () -> Unit, onExit: () -> Unit) {
         },
         confirmButton = {
             Button(
-                onClick = { onExit() }
+                onClick = { onExit() },
+                modifier = Modifier.semantics { testTag = "android:id/exitDialogConfirmButton" }
             ) {
                 Text(text = "Exit")
             }
         },
         dismissButton = {
             Button(
-                onClick = { onDismiss() }
+                onClick = { onDismiss() },
+                modifier = Modifier.semantics { testTag = "android:id/exitDialogDismissButton" }
             ) {
                 Text(text = "Cancel")
             }

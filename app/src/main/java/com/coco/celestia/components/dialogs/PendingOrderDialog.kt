@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.font.FontWeight
 import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.model.OrderData
@@ -19,12 +20,18 @@ fun PendingOrderDialog(order: OrderData, action: String, onDismiss: () -> Unit, 
         title = { Text(text = "Order ${order.orderId.substring(6,10).uppercase()}", fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily) },
         text = { Text(text = "Are you sure you want to ${action.lowercase()} this order?", fontFamily = mintsansFontFamily) },
         confirmButton = {
-            Button(onClick = { onAccept() }) {
+            Button(onClick = { onAccept() },
+                modifier = Modifier
+                    .semantics { testTagsAsResourceId = true }
+                    .semantics { testTag = "android:id/PendingOrderConfirmButton" }) {
                 Text(action)
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = { onDismiss() }) {
+            OutlinedButton(onClick = { onDismiss() },
+                modifier = Modifier
+                    .semantics { testTagsAsResourceId = true }
+                    .semantics { testTag = "android:id/PendingOrderDismissButton" }) {
                 Text("Cancel")
             }
         },

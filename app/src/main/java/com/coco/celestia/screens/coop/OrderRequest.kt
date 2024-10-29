@@ -629,6 +629,7 @@ fun PendingOrderActions(
                     .size(40.dp)
                     .clip(RoundedCornerShape(50.dp))
                     .background(Cinnabar)
+                    .semantics { testTag = "android:id/RejectButton" }
             ) {
                 Icon(
                     imageVector = Icons.Default.Clear,
@@ -652,6 +653,7 @@ fun PendingOrderActions(
                     .size(40.dp)
                     .clip(RoundedCornerShape(50.dp))
                     .background(JadeGreen)
+                    .semantics { testTag = "android:id/AcceptButton" }
             ) {
                 Icon(
                     imageVector = Icons.Default.Check,
