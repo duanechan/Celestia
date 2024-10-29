@@ -68,6 +68,7 @@ fun CoopInventory(navController: NavController, role: String) {
             .height(860.dp)
             .background(CoopBackground)
             .verticalScroll(rememberScrollState())
+            .semantics { testTag = "android:id/CoopInventoryColumn" }
     ){
         Spacer(modifier = Modifier.height(100.dp))
 
@@ -87,10 +88,8 @@ fun CoopInventory(navController: NavController, role: String) {
             is ProductState.SUCCESS -> {
                 if (role == "CoopCoffee") {
                     navController.navigate(Screen.CoopProductInventory.createRoute("Coffee"))
-                    Modifier.semantics { testTag = "android:id/NavigateToCoffeeInventory" }
                 } else {
                     navController.navigate(Screen.CoopProductInventory.createRoute("Meat"))
-                    Modifier.semantics { testTag = "NavigateToMeatInventory" }
                 }
             }
         }
@@ -142,7 +141,8 @@ fun ProductTypeInventory(type: String?, userRole: String) {
     Column(modifier = Modifier
         .fillMaxSize()
         .padding(top = 10.dp)
-        .verticalScroll(rememberScrollState()),
+        .verticalScroll(rememberScrollState())
+        .semantics { testTag = "android:id/ProductTypeInventoryColumn" },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         TopBarCoopInventory(
@@ -325,6 +325,7 @@ fun CoopMonthlyItemList(itemList: List<MonthlyInventory>) {
                     .fillMaxWidth()
                     .height(170.dp)
                     .padding(8.dp)
+                    .semantics { testTag = "android:id/MonthlyInventoryCard_${product.productName}" }
             ) {
                 Row(
                     modifier = Modifier
@@ -402,6 +403,7 @@ fun TopBarCoopInventory(onTabSelected: (String) -> Unit) {
             .statusBarsPadding()
             .wrapContentHeight()
             .padding(vertical = 20.dp)
+            .semantics { testTag = "android:id/TopBarCoopInventoryColumn" }
     ){
         TabRow(
             selectedTabIndex = selectedOption,

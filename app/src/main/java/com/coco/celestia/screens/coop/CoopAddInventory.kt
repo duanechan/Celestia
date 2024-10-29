@@ -70,7 +70,8 @@ fun AddProductForm(
         modifier = Modifier
             .fillMaxSize()
             .padding(top = 100.dp)
-            .padding(10.dp),
+            .padding(10.dp)
+            .semantics { testTag = "android:id/AddProductFormColumn" },
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
@@ -84,7 +85,9 @@ fun AddProductForm(
             value = from,
             onValueChange = {},
             label = { Text("From") },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { testTag = "android:id/FromField" },
             enabled = false
         )
 
@@ -117,7 +120,8 @@ fun AddProductForm(
                         onClick = {
                             onProductNameChange(productItem.name)
                             expanded = false
-                        }
+                        },
+                        modifier = Modifier.semantics { testTag = "android:id/DropdownItem_${productItem.name}" }
                     )
                 }
             }
@@ -141,7 +145,8 @@ fun AddProductForm(
                 onValueChange = onDefectBeansChange,
                 label = { Text("Defect Beans (kg)") },
                 modifier = Modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .semantics { testTag = "DefectBeansField" },
                 keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
             )
             Spacer(modifier = Modifier.width(12.dp))

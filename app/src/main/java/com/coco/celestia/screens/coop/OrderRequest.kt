@@ -414,6 +414,7 @@ fun StatusSelector(
                 .menuAnchor()
                 .clip(RoundedCornerShape(16.dp))
                 .width(175.dp)
+                .semantics { testTag = "android:id/StatusSelector" }
         )
         ExposedDropdownMenu(
             expanded = statusExpanded,
@@ -425,7 +426,8 @@ fun StatusSelector(
                     onClick = {
                         selectedStatus = status
                         statusDialog = true
-                    }
+                    },
+                    modifier = Modifier.semantics { testTag = "android:id/StatusDropdownItem_$status" }
                 )
             }
         }
@@ -450,7 +452,8 @@ fun CompletedOrderActions() {
         modifier = Modifier
             .fillMaxSize()
             .background(CompletedStatus)
-            .padding(8.dp),
+            .padding(8.dp)
+            .semantics { testTag = "android:id/CompletedOrderActions" },
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -484,7 +487,8 @@ fun PreparingOrderActions(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.LightGray)
-            .padding(8.dp),
+            .padding(8.dp)
+            .semantics { testTag = "android:id/PreparingOrderActions" },
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -501,6 +505,7 @@ fun PreparingOrderActions(
                 .size(50.dp)
                 .clip(RoundedCornerShape(50.dp))
                 .background(DeliveringStatus)
+                .semantics { testTag = "android:id/ShipOrderButton" }
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.deliveryicon),
@@ -561,7 +566,8 @@ fun DeliveringOrderActions() {
                 .clickable { expanded = !expanded }
                 .fillMaxWidth()
                 .background(DeliveringStatus)
-                .padding(8.dp),
+                .padding(8.dp)
+                .semantics { testTag = "android:id/DeliveringOrderActions" },
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -612,7 +618,8 @@ fun PendingOrderActions(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.LightGray)
-            .padding(15.dp),
+            .padding(15.dp)
+            .semantics { testTag = "android:id/PendingOrderActions" },
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ) {

@@ -8,6 +8,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.sp
 
 @Composable
@@ -15,7 +17,8 @@ fun CoopOrder(){
     Box(modifier = Modifier.fillMaxSize()){
         Column (modifier = Modifier
             .fillMaxSize()
-            .align(Alignment.Center),
+            .align(Alignment.Center)
+            .semantics { testTag = "android:id/CoopOrderColumn" },
             verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally){
             Text(text = " Supplier Order TEST", fontSize = 30.sp)
         }

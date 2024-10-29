@@ -44,6 +44,8 @@ import com.coco.celestia.viewmodel.OrderViewModel
 // Add these imports
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
@@ -72,7 +74,8 @@ fun CoopDashboard(
 
     Box(modifier = Modifier
         .background(GreenGradientBrush)
-        .fillMaxSize()) {
+        .fillMaxSize()
+        .semantics { testTag = "android:id/CoopDashboardBox" }) {
         Column {
             Spacer(modifier = Modifier.height(118.dp))
             OverviewSummaryBox(orderViewModel, productViewModel)
@@ -87,7 +90,8 @@ fun OverviewSummaryBox(orderViewModel: OrderViewModel, productViewModel: Product
         .fillMaxWidth()
         .border(BorderStroke(3.dp, Color.White), shape = RoundedCornerShape(18.dp))
         .clip(RoundedCornerShape(18.dp))
-        .background(Color.White)) {
+        .background(Color.White)
+        .semantics { testTag = "android:id/OverviewSummaryBox" }) {
         Column {
             Text(
                 text = "Overview Summary",
@@ -151,7 +155,9 @@ fun OrderStatusDonutChart(orderViewModel: OrderViewModel) {
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier
+            .padding(16.dp)
+            .semantics { testTag = "android:id/OrderStatusDonutChartColumn" }
     ) {
         Box(
             contentAlignment = Alignment.Center,
@@ -371,15 +377,3 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel) {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-

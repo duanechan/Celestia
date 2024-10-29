@@ -25,6 +25,8 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,6 +66,7 @@ fun ProcessOrderPanel(
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
+            .semantics { testTag = "android:id/ProcessOrderPanel" }
     ) {
         Spacer(modifier = Modifier.height(35.dp))
         when (orderState) {
@@ -79,7 +82,9 @@ fun ProcessOrderPanel(
 fun EmptyProcessOrder() {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .semantics { testTag = "android:id/EmptyProcessOrder" }
     ) {
         Text(
             text = "No order found.",
@@ -93,7 +98,9 @@ fun EmptyProcessOrder() {
 fun ProcessOrderError(errorMessage: String) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .semantics { testTag = "android:id/ProcessOrderError" }
     ) {
         Text(
             text = errorMessage,
@@ -114,6 +121,7 @@ fun ProcessOrder(order: OrderData) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 75.dp)
+            .semantics { testTag = "android:id/ProcessOrder" }
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             OrderItem(
@@ -126,7 +134,9 @@ fun ProcessOrder(order: OrderData) {
 
             // Delivery Info section
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { testTag = "android:id/DeliveryInfo" },
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
                 Column {
@@ -149,7 +159,8 @@ fun ProcessOrder(order: OrderData) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
+                    .padding(top = 8.dp)
+                    .semantics { testTag = "android:id/ChangeStatusButtons" },
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(
@@ -160,6 +171,7 @@ fun ProcessOrder(order: OrderData) {
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 8.dp)
+                        .semantics { testTag = "android:id/DeliveringButton" }
                 ) {
                     Text(text = "Delivering",
                         color = Color.White,
@@ -175,6 +187,7 @@ fun ProcessOrder(order: OrderData) {
                     modifier = Modifier
                         .weight(1f)
                         .padding(start = 8.dp)
+                        .semantics { testTag = "android:id/CompleteButton" }
                 ) {
                     Text(text = "Complete",
                         color = Color.White,
@@ -198,7 +211,8 @@ fun OrderItem(product: ProductData,
     Column(modifier = Modifier
         .fillMaxWidth()
         .background(Color.White)
-        .padding(16.dp)) {
+        .padding(16.dp)
+        .semantics { testTag = "android:id/OrderItem_$orderCount" }) {
 
         Card () {
             Column(
@@ -245,7 +259,8 @@ fun OrderItem(product: ProductData,
                             },
                             shape = RoundedCornerShape(50.dp)
                         )
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .semantics { testTag = "android:id/OrderStatusBox" },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -288,6 +303,7 @@ fun OrderItem(product: ProductData,
                             .fillMaxWidth()
                             .height(100.dp)
                             .padding(8.dp)
+                            .semantics { testTag = "android:id/ProductCard" }
                     ) {
                         Row(
                             modifier = Modifier
@@ -321,7 +337,9 @@ fun OrderItem(product: ProductData,
 fun LoadingProcessOrder() {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .semantics { testTag = "android:id/LoadingProcessOrder" }
     ) {
         CircularProgressIndicator()
     }
