@@ -452,7 +452,7 @@ fun NavGraph(
             arguments = listOf(navArgument("type") { type = NavType.StringType })
         ) { backStack ->
             val type = backStack.arguments?.getString("type")
-            onNavigate("Order Details")
+            onNavigate("Request Order")
             OrderDetailsPanel(
                 navController = navController,
                 type = type,

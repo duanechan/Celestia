@@ -13,21 +13,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
@@ -35,9 +31,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -51,19 +45,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.Popup
 import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
@@ -195,7 +184,6 @@ fun ProductTypeCard(
             .padding(vertical = 8.dp)
             .animateContentSize()
             .fillMaxWidth()
-            .clickable { expanded = !expanded }
             .semantics { testTag = "ProductTypeCard_${product.name}" },
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.elevatedCardElevation(5.dp)
@@ -221,12 +209,6 @@ fun ProductTypeCard(
                             color = Color.White,
                             modifier = Modifier.padding(8.dp)
                         )
-                        Text(
-                            text = "${productQuantity}kg",
-                            fontSize = 20.sp,
-                            color = Color.White,
-                            modifier = Modifier.padding(8.dp)
-                        )
                     }
                     Icon(
                         imageVector = Icons.Filled.ShoppingCart,
@@ -235,18 +217,20 @@ fun ProductTypeCard(
                         modifier = Modifier
                             .size(32.dp)
                             .padding(start = 8.dp)
+                            .clickable { expanded = !expanded }
                             .semantics { testTag = "ShoppingCartIcon" }
                     )
                 }
                 AnimatedVisibility(visible = expanded) {
-                    QuantitySelector(
+                    AddOrderForm (
                         navController = navController,
                         userViewModel = userViewModel,
                         productType = productType,
                         productName = productName,
                         maxQuantity = productQuantity,
                         onAddToCartEvent = { onAddToCartEvent(it) },
-                        onOrder = { onOrder(it) }
+                        onOrder = { onOrder(it) },
+                        onExpandedChange = { expanded = it }
                     )
                 }
             }
@@ -275,12 +259,16 @@ fun OrderDetailsPanel(
             .padding(16.dp)
             .semantics { testTag = "OrderDetailsPanel" }
     ) {
+        Spacer(modifier = Modifier.height(100.dp))
         Text(
             text = type ?: "Unknown Product",
             fontSize = 25.sp,
-            modifier = Modifier.semantics { testTag = "ProductTypeTitle" }
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            modifier = Modifier
+                .padding(bottom = 20.dp)
+                .semantics { testTag = "ProductTypeTitle" }
         )
-        Spacer(modifier = Modifier.height(150.dp))
         type?.let {
             LaunchedEffect(type) {
                 productViewModel.fetchProductByType(type)
@@ -322,23 +310,24 @@ fun OrderDetailsPanel(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QuantitySelector(
+fun AddOrderForm(
     navController: NavController,
     userViewModel: UserViewModel,
     productType: String?,
     productName: String?,
     maxQuantity: Int,
     onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit,
-    onOrder: (OrderData) -> Unit
+    onOrder: (OrderData) -> Unit,
+    onExpandedChange: (Boolean) -> Unit
 ) {
     val userData by userViewModel.userData.observeAsState()
     var showDatePicker by remember { mutableStateOf(false) }
-    var targetDateDialog by remember { mutableStateOf(false) }
+    var targetDateDialog by remember { mutableStateOf(true) }
     val datePickerState = rememberDatePickerState()
     val selectedDate = datePickerState.selectedDateMillis?.let {
         convertMillisToDate(it)
     } ?: ""
-    var quantity by remember { mutableIntStateOf(1) }
+    var quantity by remember { mutableIntStateOf(0) }
     val currentDateTime = LocalDateTime.now()
     val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
     val formattedDateTime = currentDateTime.format(formatter).toString()
@@ -354,151 +343,103 @@ fun QuantitySelector(
         street = userData?.streetNumber.toString()
     )
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFFFF3E0), shape = RoundedCornerShape(24.dp))
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .semantics { testTag = "QuantitySelector" }
-    ) {
-        Slider(
-            value = quantity.toFloat(),
-            onValueChange = { quantity = it.toInt().coerceIn(1, maxQuantity) },
-            valueRange = 1f..maxQuantity.toFloat(),
-            modifier = Modifier
-                .padding(bottom = 16.dp)
-                .semantics { testTag = "QuantitySlider" }
-        )
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.semantics { testTag = "QuantityRow" }
-        ) {
-            Button(
-                onClick = { quantity -= 1 },
-                enabled = quantity > 1,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.semantics { testTag = "DecrementButton" }
-            ) {
-                Icon(imageVector = Icons.Filled.KeyboardArrowLeft, contentDescription = "Decrement")
-            }
-            OutlinedTextField(
-                value = quantity.toString(),
-                onValueChange = { quantity = it.toIntOrNull()?.coerceIn(1, maxQuantity) ?: quantity },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                textStyle = TextStyle(
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 20.sp
-                ),
-                modifier = Modifier
-                    .width(150.dp)
-                    .padding(8.dp)
-                    .semantics { testTag = "QuantityInputField" },
-                singleLine = true
-            )
-            Button(
-                onClick = { quantity += 1 },
-                enabled = quantity < maxQuantity,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.semantics { testTag = "IncrementButton" }
-            ) {
-                Icon(imageVector = Icons.Filled.KeyboardArrowRight, contentDescription = "Increment")
-            }
-        }
-
-        Button(
-            onClick = {
-                targetDateDialog = true
+    if (targetDateDialog) {
+        DatePickerDialog(
+            onDismissRequest = {
+                targetDateDialog = false
+                onExpandedChange(false)
             },
-            modifier = Modifier
-                .padding(top = 16.dp)
-                .semantics { testTag = "AddOrderButton" }
-        ) {
-            Text("Add Order", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        }
-        Text(
-            text = "Qty of Order",
-            fontSize = 14.sp,
-            color = Color.Gray,
-            modifier = Modifier
-                .padding(top = 8.dp)
-                .semantics { testTag = "QuantityLabel" }
-        )
-        if (targetDateDialog) {
-            DatePickerDialog(
-                onDismissRequest = { targetDateDialog = false },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added order.", System.currentTimeMillis()))
-                            onOrder(order)
-                            navController.navigate(Screen.OrderConfirmation.route)
-                            targetDateDialog = false
-                        },
-                        modifier = Modifier.semantics { testTag = "ConfirmOrderButton" }
-                    ) {
-                        Text("Confirm Order")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { targetDateDialog = false }) {
-                        Text("Cancel")
-                    }
-                }
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .semantics { testTag = "DatePickerDialogContent" }
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added order.", System.currentTimeMillis()))
+                        onOrder(order)
+                        navController.navigate(Screen.OrderConfirmation.route)
+                        targetDateDialog = false
+                        onExpandedChange(false)
+                    },
+                    enabled = selectedDate.isNotEmpty() && quantity != 0,
+                    modifier = Modifier.semantics { testTag = "ConfirmOrderButton" }
                 ) {
-                    Text(text = "Do you want to place this order?", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "ID: ${order.orderId.substring(6, 10).uppercase()}")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "Product: ${productName.toString()}, ${quantity}kg")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "Order Date: ${order.orderDate}")
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = selectedDate,
-                        onValueChange = {},
-                        label = { Text("Target Date") },
-                        placeholder = { Text(selectedDate) },
-                        readOnly = true,
-                        trailingIcon = {
-                            IconButton(
-                                onClick = { showDatePicker = !showDatePicker },
-                                modifier = Modifier.semantics { testTag = "DateIconButton" }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.DateRange,
-                                    contentDescription = ""
-                                )
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .semantics { testTag = "TargetDateInput" }
-                    )
-                    AnimatedVisibility(visible = showDatePicker) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .offset(y = (-19).dp)
-                                .semantics { testTag = "DatePickerBox" }
+                    Text("Confirm Order")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    targetDateDialog = false
+                    onExpandedChange(false)
+                }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState())
+                    .semantics { testTag = "DatePickerDialogContent" }
+            ) {
+                Text(text = "Do you want to place this order?", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = "ID: ${order.orderId.substring(6, 10).uppercase()}")
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = "Product: ${productName.toString()}")
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = "Order Date: ${order.orderDate}")
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = if (quantity == 0) "" else quantity.toString(),
+                    onValueChange = { newValue ->
+                        val intValue = newValue.toIntOrNull()
+                        if (intValue != null) {
+                            quantity = intValue
+                        } else if (newValue.isEmpty()) {
+                            quantity = 0
+                        }
+                    },
+                    label = { Text("Enter weight (kg)") },
+                    placeholder = { Text("e.g. 10.5") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = selectedDate,
+                    onValueChange = {},
+                    label = { Text("Target Date") },
+                    placeholder = { Text(selectedDate) },
+                    readOnly = true,
+                    trailingIcon = {
+                        IconButton(
+                            onClick = { showDatePicker = !showDatePicker },
+                            modifier = Modifier.semantics { testTag = "DateIconButton" }
                         ) {
-                            DatePicker(
-                                state = datePickerState,
-                                showModeToggle = false,
-                                dateValidator = { it >= System.currentTimeMillis() },
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .semantics { testTag = "DatePicker" }
+                            Icon(
+                                imageVector = Icons.Default.DateRange,
+                                contentDescription = ""
                             )
                         }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTag = "TargetDateInput" }
+                )
+                AnimatedVisibility(visible = showDatePicker) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics { testTag = "DatePickerBox" }
+                    ) {
+                        DatePicker(
+                            state = datePickerState,
+                            showModeToggle = false,
+                            dateValidator = { it >= System.currentTimeMillis() },
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .semantics { testTag = "DatePicker" }
+                        )
                     }
                 }
             }
