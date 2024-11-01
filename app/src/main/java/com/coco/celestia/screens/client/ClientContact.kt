@@ -69,51 +69,11 @@ fun ClientContact(contactViewModel: ContactViewModel) {
             .verticalScroll(rememberScrollState())
             .semantics { testTag = "ClientContactScreen" }
     ) {
+        Spacer(modifier = Modifier.height(30.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(100.dp)
-                .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp)
-                .semantics { testTag = "ContactHeaderRow" },
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Phone,
-                contentDescription = "Contact Icon",
-                modifier = Modifier
-                    .size(35.dp)
-                    .align(Alignment.CenterVertically)
-                    .semantics { testTag = "ContactIcon" },
-                tint = CoffeeBean
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Contact Inquiry",
-                fontSize = 35.sp,
-                fontWeight = FontWeight.Bold,
-                color = RavenBlack,
-                modifier = Modifier.semantics { testTag = "ContactHeaderText" }
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Button(
-                onClick = { /* Handle notification click */ },
-                modifier = Modifier.semantics { testTag = "NotificationButton" }
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.notification_icon),
-                    contentDescription = "Notification Icon",
-                    modifier = Modifier.size(30.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 10.dp, bottom = 15.dp, start = 25.dp, end = 16.dp)
+                .padding(bottom = 15.dp, start = 25.dp, end = 16.dp)
                 .semantics { testTag = "SearchBarRow" },
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -134,7 +94,7 @@ fun ClientContact(contactViewModel: ContactViewModel) {
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         when (contactState) {
             is ContactState.LOADING -> {
@@ -182,7 +142,7 @@ fun ItemCards(contact: ContactData) {
     Card(
         modifier = Modifier
             .width(500.dp)
-            .height(if (expanded) 260.dp else 200.dp)
+            .height(if (expanded) 195.dp else 165.dp)
             .offset(x = (-16).dp, y = 0.dp)
             .padding(top = 0.dp, bottom = 5.dp, start = 30.dp, end = 0.dp)
             .clickable { expanded = !expanded }
@@ -195,7 +155,7 @@ fun ItemCards(contact: ContactData) {
         ) {
             Text(
                 text = name,
-                fontSize = 35.sp,
+                fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
                 modifier = Modifier
@@ -204,8 +164,8 @@ fun ItemCards(contact: ContactData) {
             )
             Text(
                 text = role,
-                fontSize = 25.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Medium,
                 color = Color.White,
                 modifier = Modifier
                     .padding(top = 15.dp, start = 10.dp)
