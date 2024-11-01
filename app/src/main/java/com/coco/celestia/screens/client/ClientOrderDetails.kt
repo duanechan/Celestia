@@ -288,14 +288,17 @@ fun ClientOrderDetails(
                                         .padding(end = 16.dp, bottom = 16.dp),
                                     horizontalArrangement = Arrangement.End
                                 ) {
-                                    Button(
-                                        onClick = { showCancelConfirmation.value = true },
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                                        modifier = Modifier
-                                            .height(40.dp)
-                                            .width(130.dp)
-                                    ) {
-                                        Text(text = "Cancel Order", color = Color.White)
+                                    // Check if the order status is "PENDING"
+                                    if (orderData.status == "PENDING") {
+                                        Button(
+                                            onClick = { showCancelConfirmation.value = true },
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                                            modifier = Modifier
+                                                .height(40.dp)
+                                                .width(130.dp)
+                                        ) {
+                                            Text(text = "Cancel Order", color = Color.White)
+                                        }
                                     }
                                 }
                             }
