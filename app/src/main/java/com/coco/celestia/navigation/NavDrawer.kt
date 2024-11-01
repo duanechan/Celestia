@@ -33,10 +33,13 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -45,6 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.coco.celestia.R
+import com.coco.celestia.screens.client.ClientHelpOverlay
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.routeHandler
@@ -58,6 +63,8 @@ fun NavDrawerTopBar(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination?.route
+    var isHelpOverlayVisible = remember { mutableStateOf(false) }
+
     when (role) {
         "Client" -> {
             TopAppBar(
@@ -68,6 +75,21 @@ fun NavDrawerTopBar(
                             .padding(end = 20.dp),
                         contentAlignment = Alignment.Center
                     ) {
+                        if (currentDestination == "${role.lowercase()}_dashboard") {
+                            IconButton(
+                                onClick = { isHelpOverlayVisible.value = true },
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                                    .padding(start = 8.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.help),
+                                    contentDescription = "Need Help",
+                                    tint = Color.White
+                                )
+                            }
+                        }
+
                         if (currentDestination != "${role.lowercase()}_dashboard") {
                             IconButton(
                                 onClick = { navController.navigateUp() },
@@ -81,12 +103,14 @@ fun NavDrawerTopBar(
                                 )
                             }
                         }
+
                         Text(
                             text = title,
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.align(Alignment.Center)
                         )
+
                         IconButton(
                             onClick = { navController.navigate(Screen.AddOrder.route) },
                             modifier = Modifier
@@ -106,6 +130,7 @@ fun NavDrawerTopBar(
                     navigationIconContentColor = Color.White
                 ),
             )
+            ClientHelpOverlay(isVisible = isHelpOverlayVisible)
         }
         "Admin" -> { TopBar(title = title, navController = navController, gradient = BlueGradientBrush) }
         "Farmer" -> { GradientTopBar(title = title, navController = navController) }

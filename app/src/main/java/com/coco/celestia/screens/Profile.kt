@@ -70,7 +70,6 @@ import com.coco.celestia.R
 import com.coco.celestia.components.dialogs.LogoutDialog
 import com.coco.celestia.components.dialogs.SaveInfoDialog
 import com.coco.celestia.components.toast.ToastStatus
-import com.coco.celestia.screens.client.ClientHelpOverlay
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.BlueGradientBrush
@@ -146,7 +145,6 @@ fun ProfileScreen(
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     val context = LocalContext.current
-    var isHelpOverlayVisible = remember { mutableStateOf(false) }
     val userData by userViewModel.userData.observeAsState()
     val userState by userViewModel.userState.observeAsState()
     val locationData by locationViewModel.locationData.observeAsState()
@@ -451,23 +449,8 @@ fun ProfileScreen(
                 )
                 Text("Logout")
             }
-            // Help button
-            if (role == "Client") {
-                Button(
-                    onClick = { isHelpOverlayVisible.value = true },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFFFA726),
-                        contentColor = Color.White
-                    ),
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    Text("Need Help?")
-                }
-            }
         }
     }
-    // Call the ClientHelpOverlay composable outside of Row to ensure it's placed correctly in the layout
-    ClientHelpOverlay(isVisible = isHelpOverlayVisible)
 }
 
 @Composable
