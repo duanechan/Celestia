@@ -311,7 +311,7 @@ fun FeaturedProducts(
                 text = "Featured Products",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = VeryDarkGreen
+                color = RavenBlack
             )
         }
         Box(
@@ -424,7 +424,7 @@ fun OrderHistory(
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(2.dp))
 
         when (orderState) {
             is OrderState.LOADING -> CircularProgressIndicator(color = Color.White)
@@ -432,9 +432,8 @@ fun OrderHistory(
             is OrderState.EMPTY -> Text(text = "No completed orders found.", color = Color.Red)
             is OrderState.SUCCESS -> {
                 if (completedOrders.isNotEmpty()) {
-                    LazyColumn {
-                        items(completedOrders.size) { index ->
-                            val order = completedOrders[index]
+                    Column {
+                        completedOrders.forEachIndexed { index, order ->
                             OrderCardDetails(
                                 orderCount = index + 1,
                                 order = order,
@@ -466,92 +465,99 @@ fun OrderCardDetails(
     val orderId = order.orderId.substring(6, 10).uppercase()
     val orderStatus = order.status
 
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 2.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .background(ContainerGray, shape = RoundedCornerShape(8.dp))
+            .padding(8.dp)
     ) {
-        Card(
-            modifier = Modifier
-                .weight(1f)
-                .height(140.dp)
-                .clickable {
-                    navController.navigate("ClientOrderDetails/${order.orderId}/$orderCount")
-                }
-                .padding(end = 8.dp)
-                .semantics { testTag = "OrderCard_$orderId" },
-            colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Card(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(140.dp)
+                    .clickable {
+                        navController.navigate("ClientOrderDetails/${order.orderId}/$orderCount")
+                    }
+                    .padding(end = 8.dp)
+                    .semantics { testTag = "OrderCard_$orderId" },
+                colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
+            ) {
+                Row(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Order ID: $orderId",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+
+                        Text(
+                            text = "Client Name: $clientName",
+                            fontSize = 15.sp,
+                            color = Color.White,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+
+                        Text(
+                            text = "$orderStatus",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = LightOrange,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowRight,
+                        contentDescription = "Navigate to Details",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .height(140.dp)
+                    .width(90.dp)
+                    .background(LightOrange, shape = RoundedCornerShape(8.dp))
+                    .padding(8.dp)
+                    .clickable {
+                        navController.navigate(Screen.OrderDetails.createRoute(order.orderData.type))
+                    },
+                contentAlignment = Alignment.Center
             ) {
                 Column(
-                    modifier = Modifier.weight(1f)
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
                 ) {
-                    Text(
-                        text = "Order ID: $orderId",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        modifier = Modifier.padding(bottom = 4.dp)
+                    Image(
+                        painter = painterResource(id = R.drawable.buyagain),
+                        contentDescription = "Buy Again Icon",
+                        colorFilter = ColorFilter.tint(Color.White),
+                        modifier = Modifier.size(24.dp)
                     )
-
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Client Name: $clientName",
-                        fontSize = 15.sp,
+                        text = "Buy Again",
                         color = Color.White,
-                        modifier = Modifier.padding(bottom = 4.dp)
-                    )
-
-                    Text(
-                        text = "Status: $orderStatus",
-                        fontSize = 15.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = LightOrange,
-                        modifier = Modifier.padding(bottom = 4.dp)
+                        textAlign = TextAlign.Center
                     )
                 }
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
-                    contentDescription = "Navigate to Details",
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .height(140.dp)
-                .width(90.dp)
-                .background(LightOrange, shape = RoundedCornerShape(8.dp))
-                .padding(8.dp)
-                .clickable {
-                    navController.navigate(Screen.OrderDetails.createRoute(order.orderData.type))
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.buyagain),
-                    contentDescription = "Buy Again Icon",
-                    colorFilter = ColorFilter.tint(Color.White),
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Buy Again",
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
             }
         }
     }

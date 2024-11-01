@@ -147,7 +147,7 @@ fun ClientOrderDetails(
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 90.dp, start = 16.dp, end = 16.dp)
+                                    .padding(top = 110.dp, start = 16.dp, end = 16.dp)
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -302,7 +302,7 @@ fun ClientOrderDetails(
                         }
                     }
                     OrderStatusTracker(status = orderData.status)
-                    Spacer(modifier = Modifier.height(130.dp))
+                    Spacer(modifier = Modifier.height(110.dp))
                 }
                 if (showCancelConfirmation.value) {
                     Box(

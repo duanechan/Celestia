@@ -20,6 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
@@ -216,76 +217,93 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
     val orderId = order.orderId.substring(6, 10).uppercase()
     val orderStatus = order.status
 
-    Row {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 10.dp, start = 16.dp, end = 16.dp)
+    ) {
         Card(
             modifier = Modifier
-                .fillMaxSize()
+                .weight(1f)
                 .height(165.dp)
-                .padding(top = 0.dp, bottom = 10.dp, start = 16.dp, end = 16.dp)
                 .clickable {
                     navController.navigate("ClientOrderDetails/${order.orderId}/$orderCount")
                 }
                 .semantics { testTag = "OrderCard_$orderId" },
             colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
         ) {
-            Column(
-                Modifier
-                    .padding(16.dp),
+            Box(
+                modifier = Modifier.padding(16.dp)
             ) {
-                Row (
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    verticalAlignment = Alignment.CenterVertically
-                ){
-                    Box(
-                        modifier = Modifier
-                            .size(width = 50.dp, height = 100.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color.White),
-                        contentAlignment = Alignment.Center,
+                // Main content in a Column
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = orderCount.toString(),
-                            fontSize = 30.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black,
+                        Box(
                             modifier = Modifier
-                                .padding(5.dp)
-                                .widthIn(max = 40.dp)
-                                .wrapContentSize(),
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                                .size(width = 50.dp, height = 100.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color.White),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = orderCount.toString(),
+                                fontSize = 30.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black,
+                                modifier = Modifier
+                                    .padding(5.dp)
+                                    .widthIn(max = 40.dp)
+                                    .wrapContentSize(),
+                                textAlign = TextAlign.Center
+                            )
+                        }
 
-                    Column (
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        verticalArrangement = Arrangement.Center
-                    ){
-                        Text(
-                            text = "Order ID: $orderId",
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.padding(start = 10.dp)
-                        )
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.Start // Align text to start
+                        ) {
+                            Text(
+                                text = "Order ID: $orderId",
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier.padding(start = 10.dp)
+                            )
 
-                        Text(
-                            text = "Client Name: $clientName",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Normal,
-                            color = Color.White,
-                            modifier = Modifier.padding(top = 5.dp, start = 10.dp)
-                        )
-                        Text(
-                            text = orderStatus,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = LightOrange,
-                            modifier = Modifier.padding(top = 5.dp, start = 10.dp)
-                        )
+                            Text(
+                                text = "Client Name: $clientName",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Color.White,
+                                modifier = Modifier.padding(top = 5.dp, start = 10.dp)
+                            )
+                            Text(
+                                text = orderStatus,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = LightOrange,
+                                modifier = Modifier.padding(top = 5.dp, start = 10.dp)
+                            )
+                        }
                     }
                 }
+
+                // Place the icon at the center-right
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowRight,
+                    contentDescription = "Navigate to Details",
+                    tint = Color.White,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .align(Alignment.CenterEnd) // Align to the center end of the Box
+                )
             }
         }
     }
