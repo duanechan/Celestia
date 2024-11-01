@@ -1,8 +1,8 @@
 package com.coco.celestia.screens.client
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,16 +12,16 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -43,17 +43,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.coco.celestia.R
-import com.coco.celestia.ui.theme.CoffeeBean
 import com.coco.celestia.ui.theme.LightOrange
-import com.coco.celestia.ui.theme.RavenBlack
 import com.coco.celestia.ui.theme.VeryDarkGreen
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
@@ -63,7 +60,6 @@ import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
-//@Preview
 @Composable
 fun ClientOrder(
     navController: NavController,
@@ -90,42 +86,10 @@ fun ClientOrder(
         Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(top = 75.dp)
+                .padding(top = 70.dp)
                 .verticalScroll(rememberScrollState())
                 .semantics { testTag = "ClientOrderColumn" }
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ShoppingCart,
-                    contentDescription = "Order Icon",
-                    modifier = Modifier.size(35.dp),
-                    tint = CoffeeBean
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = "Orders",
-                    fontSize = 35.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = RavenBlack
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Button(onClick = { /* Handle notification click */ }) {
-                    Image(
-                        painter = painterResource(id = R.drawable.notification_icon),
-                        contentDescription = "Notification Icon",
-                        modifier = Modifier.size(30.dp)
-                    )
-                }
-            }
-
             Spacer(modifier = Modifier.height(10.dp))
 
             var text by remember { mutableStateOf("") }
@@ -136,8 +100,9 @@ fun ClientOrder(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 10.dp, bottom = 15.dp, start = 25.dp, end = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(bottom = 15.dp, start = 25.dp, end = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 SearchBar(
                     query = text,
@@ -160,26 +125,23 @@ fun ClientOrder(
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .height(50.dp)
-                        .offset(y = -13.dp)
-                ) {
-
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
+                        .padding(end = 8.dp),
+                    content =  {}
+                )
 
                 Box(
                     modifier = Modifier
-                        .weight(1f)
+                        .padding(top = 40.dp)
                 ) {
                     Button(
                         onClick = { expanded = true },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
+                        modifier = Modifier,
                         contentPadding = PaddingValues(0.dp)
                     ) {
-                        Text(text = "Filter: $selectedStatus", fontSize = 15.sp, maxLines = 1)
+                        Icon(
+                            imageVector = Icons.Default.List,
+                            contentDescription = "Search Icon"
+                        )
                     }
 
                     DropdownMenu(
@@ -268,32 +230,44 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
         ) {
             Column(
                 Modifier
-                    .padding(16.dp)
+                    .padding(16.dp),
             ) {
-                Row {
+                Row (
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically
+                ){
                     Box(
                         modifier = Modifier
-                            .size(width = 50.dp, height = 150.dp)
+                            .size(width = 50.dp, height = 100.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(Color.White),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = orderCount.toString(),
-                            fontSize = 50.sp,
+                            fontSize = 30.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black,
-                            modifier = Modifier.padding(5.dp)
+                            modifier = Modifier
+                                .padding(5.dp)
+                                .widthIn(max = 40.dp)
+                                .wrapContentSize(),
+                            textAlign = TextAlign.Center
                         )
                     }
 
-                    Column {
+                    Column (
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        verticalArrangement = Arrangement.Center
+                    ){
                         Text(
                             text = "Order ID: $orderId",
-                            fontSize = 35.sp,
+                            fontSize = 28.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
-                            modifier = Modifier.padding(top = 15.dp, start = 10.dp)
+                            modifier = Modifier.padding(start = 10.dp)
                         )
 
                         Text(
@@ -301,14 +275,14 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Normal,
                             color = Color.White,
-                            modifier = Modifier.padding(top = 0.dp, start = 10.dp)
+                            modifier = Modifier.padding(top = 5.dp, start = 10.dp)
                         )
                         Text(
                             text = orderStatus,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = LightOrange,
-                            modifier = Modifier.padding(top = 0.dp, start = 10.dp)
+                            modifier = Modifier.padding(top = 5.dp, start = 10.dp)
                         )
                     }
                 }
