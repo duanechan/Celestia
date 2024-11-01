@@ -48,6 +48,7 @@ fun FarmerDashboard(
     orderState: OrderState,
     selectedCategory: String,
     searchQuery: String,
+    farmerName: String,
     itemViewModel: FarmerItemViewModel = viewModel(),
     productViewModel: ProductViewModel = viewModel()
 ) {
@@ -62,6 +63,7 @@ fun FarmerDashboard(
     LaunchedEffect(uid) {
         itemViewModel.getItems(uid = uid)
         productViewModel.fetchProducts(filter = "", role = "Farmer")
+        itemViewModel.fetchFarmerName(uid)
     }
 
     when (itemState) {
@@ -167,7 +169,8 @@ fun FarmerDashboard(
                             orderData = orderData,
                             orderState = orderState,
                             selectedCategory = selectedCategory,
-                            searchQuery = searchQuery
+                            searchQuery = searchQuery,
+                            farmerName = farmerName
                         )
                     }
                 }
@@ -300,7 +303,8 @@ fun OrderStatusSection(
     orderData: List<OrderData>,
     orderState: OrderState,
     selectedCategory: String,
-    searchQuery: String
+    searchQuery: String,
+    farmerName: String // Add farmerName parameter
 ) {
     when (orderState) {
         is OrderState.LOADING -> {

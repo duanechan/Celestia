@@ -152,6 +152,14 @@ fun NavGraph(
             val selectedCategory = ""
             val searchQuery = ""
 
+            var farmerName by remember { mutableStateOf("") }
+
+            LaunchedEffect(userData) {
+                if (userData != null) {
+                    farmerName = itemViewModel.fetchFarmerName(uid)
+                }
+            }
+
             if (userData == null || orderState == OrderState.LOADING) {
                 LoadingIndicator()
             } else {
@@ -162,6 +170,7 @@ fun NavGraph(
                     orderState = orderState,
                     selectedCategory = selectedCategory,
                     searchQuery = searchQuery,
+                    farmerName = farmerName,
                     itemViewModel = viewModel(),
                     productViewModel = viewModel()
                 )
@@ -435,7 +444,9 @@ fun NavGraph(
         }
         composable(
             route = Screen.FarmerOrderDetails.route,
-            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("orderId") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
             val orderId = backStackEntry.arguments?.getString("orderId")
 

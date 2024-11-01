@@ -16,6 +16,7 @@ import androidx.compose.ui.semantics.testTag
 @Composable
 fun FarmerDecisionDialog(
     decisionType: String,
+    farmerName: String,
     onConfirm: (String?, Boolean?) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -23,7 +24,7 @@ fun FarmerDecisionDialog(
     var showReasonDropdown by remember { mutableStateOf(false) }
     var isPartialFulfillment by remember { mutableStateOf<Boolean?>(null) }
 
-    val rejectionReasons = listOf("Out of stock", "Too Far", "Not Available")
+    val rejectionReasons = listOf("Not in season", "Too Far", "Not Available")
 
     val title = when (decisionType) {
         "ACCEPT" -> "Accept Order"
@@ -40,20 +41,40 @@ fun FarmerDecisionDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = title,
+            Text(
+                text = title,
                 fontSize = 20.sp,
                 color = Color(0xFF6D4A26),
-                modifier = Modifier.semantics { testTag = "android:id/dialogTitle" })
+                modifier = Modifier.semantics { testTag = "android:id/dialogTitle" }
+            )
         },
         text = {
             Column(modifier = Modifier.semantics { testTag = "android:id/dialogContent" }) {
-                Text(text = message, fontSize = 16.sp, modifier = Modifier.semantics { testTag = "android:id/dialogMessage" })
+                Text(
+                    text = message,
+                    fontSize = 16.sp,
+                    modifier = Modifier.semantics { testTag = "android:id/dialogMessage" }
+                )
+
+                // Display Farmer Name as a non-editable TextField
+                Spacer(modifier = Modifier.height(16.dp))
+                TextField(
+                    value = farmerName,
+                    onValueChange = {},
+                    label = { Text("Farmer Name") },
+                    enabled = false,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTag = "android:id/farmerNameTextField" }
+                )
 
                 if (decisionType == "REJECT") {
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text(text = "Reason:",
+                    Text(
+                        text = "Reason:",
                         fontSize = 20.sp,
-                        modifier = Modifier.semantics { testTag = "android:id/dialogReasonLabel" })
+                        modifier = Modifier.semantics { testTag = "android:id/dialogReasonLabel" }
+                    )
 
                     Box(modifier = Modifier.semantics { testTag = "android:id/dialogReasonBox" }) {
                         OutlinedButton(
@@ -96,10 +117,12 @@ fun FarmerDecisionDialog(
                         )
                     }
                 } else if (decisionType == "ACCEPT") {
-                    // Full or partial fulfillment options
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text(text = "Fulfillment Type:", fontSize = 20.sp,
-                        modifier = Modifier.semantics { testTag = "android:id/dialogFulfillmentLabel" })
+                    Text(
+                        text = "Fulfillment Type:",
+                        fontSize = 20.sp,
+                        modifier = Modifier.semantics { testTag = "android:id/dialogFulfillmentLabel" }
+                    )
 
                     Column(modifier = Modifier.semantics { testTag = "android:id/dialogFulfillmentOptions" }) {
                         Row(
@@ -109,11 +132,13 @@ fun FarmerDecisionDialog(
                             RadioButton(
                                 selected = isPartialFulfillment == false,
                                 onClick = { isPartialFulfillment = false },
-                                modifier = Modifier.semantics { testTag = "android:id/dialogFulfillRadioButton" }
+                                modifier = Modifier.semantics { testTag = "android:id/dialogFullFulfillRadioButton" }
                             )
                             Spacer(modifier = Modifier.width(5.dp))
-                            Text(text = "Full Fulfill",
-                                modifier = Modifier.semantics { testTag = "android:id/dialogFullFulfillText" })
+                            Text(
+                                text = "Full Fulfill",
+                                modifier = Modifier.semantics { testTag = "android:id/dialogFullFulfillText" }
+                            )
                         }
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -125,8 +150,10 @@ fun FarmerDecisionDialog(
                                 modifier = Modifier.semantics { testTag = "android:id/dialogPartialFulfillRadioButton" }
                             )
                             Spacer(modifier = Modifier.width(5.dp))
-                            Text(text = "Partial Fulfill",
-                                modifier = Modifier.semantics { testTag = "android:id/dialogPartialFulfillText" })
+                            Text(
+                                text = "Partial Fulfill",
+                                modifier = Modifier.semantics { testTag = "android:id/dialogPartialFulfillText" }
+                            )
                         }
                     }
 
@@ -148,14 +175,18 @@ fun FarmerDecisionDialog(
                     if (decisionType == "REJECT" && selectedReason != null) {
                         onConfirm(selectedReason, null)
                     } else if (decisionType == "ACCEPT" && isPartialFulfillment != null) {
-                        onConfirm(null, isPartialFulfillment) // Pass fulfillment state
+                        onConfirm(null, isPartialFulfillment)
                     }
                 },
                 enabled = (decisionType == "REJECT" && selectedReason != null) || (decisionType == "ACCEPT" && isPartialFulfillment != null),
                 modifier = Modifier.semantics { testTag = "android:id/dialogConfirmButton" }
             ) {
-                Text("Confirm", color = SageGreen, fontSize = 16.sp,
-                    modifier = Modifier.semantics { testTag = "android:id/dialogConfirmButtonText" })
+                Text(
+                    "Confirm",
+                    color = SageGreen,
+                    fontSize = 16.sp,
+                    modifier = Modifier.semantics { testTag = "android:id/dialogConfirmButtonText" }
+                )
             }
         },
         dismissButton = {
@@ -163,8 +194,12 @@ fun FarmerDecisionDialog(
                 onClick = onDismiss,
                 modifier = Modifier.semantics { testTag = "android:id/dialogDismissButton" }
             ) {
-                Text("Cancel", color = Copper, fontSize = 16.sp,
-                    modifier = Modifier.semantics { testTag = "android:id/dialogDismissButtonText" })
+                Text(
+                    "Cancel",
+                    color = Copper,
+                    fontSize = 16.sp,
+                    modifier = Modifier.semantics { testTag = "android:id/dialogDismissButtonText" }
+                )
             }
         },
         shape = RoundedCornerShape(16.dp),

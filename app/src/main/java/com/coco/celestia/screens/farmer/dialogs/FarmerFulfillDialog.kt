@@ -29,6 +29,7 @@ fun FarmerFulfillDialog(
     orderData: OrderData,
     farmerItemViewModel: FarmerItemViewModel,
     totalFarmers: Int,
+    farmerName: String,
     onAccept: () -> Unit,
     onReject: () -> Unit,
     onDismiss: () -> Unit
@@ -90,7 +91,7 @@ fun FarmerFulfillDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    val updatedOrder = orderData.copy(status = "PREPARING")
+                    val updatedOrder = orderData.copy(status = "PREPARING", fulfilledBy = orderData.fulfilledBy + farmerName)
                     orderViewModel.updateOrder(updatedOrder)
                     farmerItemViewModel.reduceItemQuantity(item, totalFarmers)
 

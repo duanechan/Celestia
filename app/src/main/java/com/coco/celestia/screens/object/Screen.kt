@@ -62,6 +62,6 @@ sealed class Screen(val route: String) {
         fun createRoute(type: String) = "farmer_request_details/$type"
     }
     data object FarmerOrderDetails : Screen(route = "farmer_order_details/{orderId}") {
-        fun createRoute(type: String) = "farmer_order_details/$type"
+        fun createRoute(orderId: String) = "farmer_order_details/$orderId"
     }
 }

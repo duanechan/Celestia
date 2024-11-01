@@ -24,7 +24,7 @@ data class OrderData(
     val barangay: String = "",
     val street: String = "",
     val rejectionReason: String? = null,
-    val fulfilledBy: List<UserData>? = null
+    val fulfilledBy: List<String> = emptyList()
 )
 
 data class ProductData(
@@ -54,7 +54,11 @@ data class LocationData(
     val barangay: String = ""
 )
 
-data class ItemData(val name: String = "", val items: MutableList<ProductData> = mutableListOf())
+data class ItemData(
+    val name: String = "",
+    val farmerName: String = "",
+    val items: MutableList<ProductData> = mutableListOf()
+)
 
 data class CalendarUIState(
     val yearMonth: YearMonth,

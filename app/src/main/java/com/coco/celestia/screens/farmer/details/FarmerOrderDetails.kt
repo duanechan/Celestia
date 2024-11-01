@@ -33,23 +33,25 @@ import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FarmerItemViewModel
-import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.ItemData
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun FarmerOrderDetails(
     navController: NavController,
     orderId: String
 ) {
+    val uid = FirebaseAuth.getInstance().uid.toString()
     val orderViewModel: OrderViewModel = viewModel()
     val userViewModel: UserViewModel = viewModel()
     val farmerItemViewModel: FarmerItemViewModel = viewModel()
     val allOrders by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     val usersData by userViewModel.usersData.observeAsState(emptyList())
-    val userState by userViewModel.userState.observeAsState(UserState.LOADING)
     var showFulfillDialog by remember { mutableStateOf(false) }
+
+    var farmerName by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         if (allOrders.isEmpty()) {
@@ -60,6 +62,9 @@ fun FarmerOrderDetails(
         }
         if (usersData.isEmpty()) {
             userViewModel.fetchUsers()
+        }
+        if (uid.isNotEmpty()) {
+            farmerName = farmerItemViewModel.fetchFarmerName(uid)
         }
     }
 
@@ -112,8 +117,18 @@ fun FarmerOrderDetails(
                 OrderDetailsCard(orderData = orderData)
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Only show OrderStatusDropdown and OrderStatusUpdates if the status is not "REJECTED"
-                if (orderData.status != "REJECTED") {
+                if (orderData.status == "REJECTED") {
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        text = "Rejection Reason: ${orderData.rejectionReason}",
+                        color = Copper,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                } else {
                     OrderStatusDropdown(orderData = orderData, orderViewModel = orderViewModel)
                     OrderStatusUpdates(orderData = orderData)
                 }
@@ -130,7 +145,8 @@ fun FarmerOrderDetails(
             orderViewModel = orderViewModel,
             orderData = orderData,
             item = ItemData(name = orderData.orderData.name, items = mutableListOf(orderData.orderData)),
-            totalFarmers = totalFarmers
+            totalFarmers = totalFarmers,
+            farmerName = farmerName
         )
     }
 }
@@ -255,17 +271,19 @@ fun DisplayFarmerFulfillDialog(
     orderViewModel: OrderViewModel,
     orderData: OrderData,
     item: ItemData,
-    totalFarmers: Int
+    totalFarmers: Int,
+    farmerName: String
 ) {
     FarmerFulfillDialog(
         navController = navController,
+        farmerName = farmerName,
         item = item,
         orderViewModel = orderViewModel,
         orderData = orderData,
         farmerItemViewModel = farmerItemViewModel,
         totalFarmers = totalFarmers,
         onAccept = {
-            val updatedOrder = orderData.copy(status = "PREPARING")
+            val updatedOrder = orderData.copy(status = "PREPARING", fulfilledBy = orderData.fulfilledBy + farmerName)
             orderViewModel.updateOrder(updatedOrder)
 
             farmerItemViewModel.reduceItemQuantity(item, totalFarmers)
@@ -285,7 +303,7 @@ fun OrderDetailsCard(orderData: OrderData) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(385.dp)
+            .height(380.dp)
             .semantics { testTag = "android:id/orderDetailsCard" },
         shape = RoundedCornerShape(15.dp),
         colors = CardDefaults.cardColors(
@@ -303,83 +321,124 @@ fun OrderDetailsCard(orderData: OrderData) {
                 )
         ) {
             Column(
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier.padding(30.dp)
             ) {
                 Spacer(modifier = Modifier.height(5.dp))
 
-                // Order ID
-                Text(
-                    text = "Order ID",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    color = Cocoa,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { testTag = "android:id/orderIdLabel" }
-                )
-                Text(
-                    text = orderData.orderId.substring(6, 10).uppercase(),
-                    fontSize = 15.sp,
-                    color = Cocoa,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { testTag = "android:id/orderIdText" }
-                )
-                Spacer(modifier = Modifier.height(20.dp))
+                // Order ID and Delivery Address
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.Start,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Order ID",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            color = Cocoa,
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.semantics { testTag = "android:id/orderIdLabel" }
+                        )
+                        Text(
+                            text = orderData.orderId.substring(6, 10).uppercase(),
+                            fontSize = 15.sp,
+                            color = Cocoa,
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.semantics { testTag = "android:id/orderIdText" }
+                        )
+                    }
 
-                // Delivery Address
-                Text(
-                    text = "Delivery Address",
-                    fontSize = 20.sp,
-                    color = Cocoa,
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { testTag = "android:id/deliveryAddressLabel" }
-                )
-                Text(
-                    text = "${orderData.street}, ${orderData.barangay}",
-                    fontSize = 15.sp,
-                    color = Cocoa,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { testTag = "android:id/deliveryAddressText" }
-                )
+                    Spacer(modifier = Modifier.width(20.dp))
 
-                // Target Date
-                Spacer(modifier = Modifier.height(20.dp))
-                Text(
-                    text = "Target Date",
-                    fontSize = 20.sp,
-                    color = Cocoa,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { testTag = "android:id/targetDateLabel" }
-                )
-                Text(
-                    text = orderData.targetDate,
-                    fontSize = 15.sp,
-                    color = Cocoa,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { testTag = "android:id/targetDateText" }
-                )
+                    Column(
+                        horizontalAlignment = Alignment.Start,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Delivery Address",
+                            fontSize = 20.sp,
+                            color = Cocoa,
+                            textAlign = TextAlign.Start,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.semantics { testTag = "android:id/deliveryAddressLabel" }
+                        )
+                        Text(
+                            text = "${orderData.street}, ${orderData.barangay}",
+                            fontSize = 15.sp,
+                            color = Cocoa,
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.semantics { testTag = "android:id/deliveryAddressText" }
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(20.dp))
+
+                // Target Date and Fulfilled By
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.Start,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Target Date",
+                            fontSize = 20.sp,
+                            color = Cocoa,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.semantics { testTag = "android:id/targetDateLabel" }
+                        )
+                        Text(
+                            text = orderData.targetDate,
+                            fontSize = 15.sp,
+                            color = Cocoa,
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.semantics { testTag = "android:id/targetDateText" }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(20.dp))
+
+                    Column(
+                        horizontalAlignment = Alignment.Start,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "Fulfilled By",
+                            fontSize = 20.sp,
+                            color = Cocoa,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.semantics { testTag = "android:id/fulfilledByLabel" }
+                        )
+                        Text(
+                            text = if (orderData.fulfilledBy.isNotEmpty()) {
+                                orderData.fulfilledBy.joinToString(", ")
+                            } else {
+                                "None"
+                            },
+                            fontSize = 15.sp,
+                            color = Cocoa,
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.semantics { testTag = "android:id/fulfilledByText" }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(30.dp))
 
                 // Product Info
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 90.dp)
+                        .padding(start = 75.dp)
                         .semantics { testTag = "android:id/orderedProductRow" }
                 ) {
                     Icon(
@@ -400,7 +459,7 @@ fun OrderDetailsCard(orderData: OrderData) {
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
                         modifier = Modifier
-                            .padding(start = 15.dp)
+                            .padding(start = 5.dp)
                             .semantics { testTag = "android:id/orderedProductLabel" }
                     )
                 }
@@ -425,12 +484,9 @@ fun OrderDetailsCard(orderData: OrderData) {
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 20.dp, end = 50.dp)
+                                .padding(start = 10.dp, end = 50.dp)
                                 .semantics { testTag = "android:id/productCard" },
-                            shape = RoundedCornerShape(16.dp),
-                            elevation = CardDefaults.elevatedCardElevation(
-                                defaultElevation = 4.dp
-                            )
+                            shape = RoundedCornerShape(16.dp)
                         ) {
                             Box(
                                 modifier = Modifier
@@ -459,7 +515,7 @@ fun OrderDetailsCard(orderData: OrderData) {
                                     Text(
                                         text = "${product.quantity} kg",
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 40.sp,
+                                        fontSize = 35.sp,
                                         color = Cocoa,
                                         modifier = Modifier.semantics { testTag = "android:id/productQuantityText" }
                                     )
@@ -496,8 +552,18 @@ fun OrderStatusUpdates(orderData: OrderData) {
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Spacer(modifier = Modifier.height(50.dp))
+
                 Text(
-                    text = "Farmer is preparing the order",
+                    text = when {
+                        orderData.fulfilledBy.isEmpty() -> "No farmers are preparing the order"
+                        orderData.fulfilledBy.size == 1 -> "${orderData.fulfilledBy.first()} is preparing the order"
+                        orderData.fulfilledBy.size == 2 -> "${orderData.fulfilledBy.joinToString(" and ")} are preparing the order"
+                        else -> {
+                            val lastFarmer = orderData.fulfilledBy.last()
+                            val otherFarmers = orderData.fulfilledBy.dropLast(1).joinToString(", ")
+                            "$otherFarmers and $lastFarmer are preparing the order"
+                        }
+                    },
                     fontSize = 12.sp,
                     color = Color.Gray
                 )

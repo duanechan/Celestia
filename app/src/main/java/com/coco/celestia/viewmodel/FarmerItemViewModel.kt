@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.viewmodel.model.ItemData
 import com.coco.celestia.viewmodel.model.ProductData
+import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -24,21 +25,38 @@ sealed class ItemState {
 
 class FarmerItemViewModel : ViewModel() {
     private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("farmer_items")
+    private val usersDatabase: DatabaseReference = FirebaseDatabase.getInstance().getReference("users")
     private val _itemData = MutableLiveData<List<ProductData>>()
     private val _itemState = MutableLiveData<ItemState>()
     val itemData: LiveData<List<ProductData>> = _itemData
     val itemState: LiveData<ItemState> = _itemState
 
+    suspend fun fetchFarmerName(uid: String): String {
+        val userSnapshot = usersDatabase.child(uid).get().await()
+        return if (userSnapshot.exists()) {
+            val userData = userSnapshot.getValue(UserData::class.java)
+            userData?.let { "${it.firstname} ${it.lastname}" } ?: ""
+        } else {
+            ""
+        }
+    }
+
     fun getItems(uid: String) {
         viewModelScope.launch {
             try {
                 _itemState.value = ItemState.LOADING
-                 val snapshot = database.child(uid).child("items").get().await()
-                if (snapshot.exists()) {
+
+                val farmerName = fetchFarmerName(uid)
+                println("Fetching items for farmer: $farmerName")
+
+                val itemsSnapshot = database.child(uid).child("items").get().await()
+                if (itemsSnapshot.exists()) {
                     val list = mutableListOf<ProductData>()
-                    for (item in snapshot.children) {
+                    for (item in itemsSnapshot.children) {
                         val itemData = item.getValue(ProductData::class.java)
-                        list.add(itemData!!)
+                        if (itemData != null) {
+                            list.add(itemData)
+                        }
                     }
                     _itemData.value = list
                     _itemState.value = ItemState.SUCCESS
@@ -56,14 +74,29 @@ class FarmerItemViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 _itemState.value = ItemState.LOADING
-                val query = database.child(uid).child("items").child(product.name.lowercase())
-                query.addListenerForSingleValueEvent(object: ValueEventListener {
+
+                val farmerName = fetchFarmerName(uid)
+
+                val productRef = database.child(uid).child("items").child(product.name.lowercase())
+
+                productRef.addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
-                        val item = snapshot.getValue(ProductData::class.java)
-                        if (item == null) {
-                            query.setValue(product)
+                        val existingItem = snapshot.getValue(ProductData::class.java)
+
+                        if (existingItem == null) {
+                            val itemData = hashMapOf(
+                                "farmerName" to farmerName,
+                                "endSeason" to product.endSeason,
+                                "name" to product.name,
+                                "priceKg" to product.priceKg,
+                                "quantity" to product.quantity,
+                                "startSeason" to product.startSeason,
+                                "type" to product.type
+                            )
+                            productRef.setValue(itemData)
                         } else {
-                            query.child("quantity").setValue(item.quantity + product.quantity)
+                            val newQuantity = existingItem.quantity + product.quantity
+                            productRef.child("quantity").setValue(newQuantity)
                         }
                         _itemState.value = ItemState.SUCCESS
                     }
@@ -77,6 +110,7 @@ class FarmerItemViewModel : ViewModel() {
             }
         }
     }
+
     fun updateItemQuantity(itemName: String, quantity: Int) {
         viewModelScope.launch {
             try {

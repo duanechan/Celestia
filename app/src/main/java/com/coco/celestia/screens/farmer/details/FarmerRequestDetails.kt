@@ -46,7 +46,7 @@ import com.google.firebase.auth.FirebaseAuth
 fun FarmerRequestDetails(
     navController: NavController,
     orderId: String,
-    onAccept: () -> Unit,
+    onAccept: (String) -> Unit,
     onReject: (String) -> Unit
 ) {
     val orderViewModel: OrderViewModel = viewModel()
@@ -65,7 +65,9 @@ fun FarmerRequestDetails(
     val usersData by userViewModel.usersData.observeAsState(emptyList())
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
 
-    LaunchedEffect(Unit, itemData, usersData) {
+    var farmerName by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
         if (allOrders.isEmpty()) {
             orderViewModel.fetchAllOrders(filter = "", role = "Farmer")
         }
@@ -74,6 +76,10 @@ fun FarmerRequestDetails(
         }
         productViewModel.fetchProductByType("Vegetable")
         farmerItemViewModel.getItems(uid = uid)
+
+        if (uid.isNotEmpty()) {
+            farmerName = farmerItemViewModel.fetchFarmerName(uid)
+        }
     }
 
     val orderData: OrderData? = remember(orderId, allOrders) {
@@ -109,11 +115,12 @@ fun FarmerRequestDetails(
                 setOrderAccepted = { isOrderAccepted = it },
                 rejectionReason = rejectionReason,
                 setRejectionReason = { rejectionReason = it },
-                onAccept = onAccept,
+                onAccept = { onAccept(farmerName) },
                 onReject = onReject,
                 orderViewModel = orderViewModel,
                 farmerItemViewModel = farmerItemViewModel,
-                totalFarmers = 2
+                totalFarmers = 2,
+                farmerName = farmerName
             )
         }
     }
@@ -166,11 +173,12 @@ fun OrderDetails(
     setOrderAccepted: (Boolean) -> Unit,
     rejectionReason: String?,
     setRejectionReason: (String?) -> Unit,
-    onAccept: () -> Unit,
+    onAccept: (String) -> Unit,
     onReject: (String) -> Unit,
     orderViewModel: OrderViewModel,
     farmerItemViewModel: FarmerItemViewModel,
-    totalFarmers: Int
+    totalFarmers: Int,
+    farmerName: String
 ) {
     LazyColumn(
         modifier = Modifier
@@ -189,7 +197,7 @@ fun OrderDetails(
                 setDecisionType = setDecisionType,
                 setDecisionDialog = setDecisionDialog,
                 orderViewModel = orderViewModel,
-                onAccept = onAccept,
+                onAccept = { onAccept(farmerName) },
                 onReject = onReject
             )
         }
@@ -198,12 +206,16 @@ fun OrderDetails(
     if (showDecisionDialog && decisionType != null) {
         FarmerDecisionDialog(
             decisionType = decisionType,
+            farmerName = farmerName,
             onConfirm = { selectedReason, isPartialFulfillment ->
                 setDecisionDialog(false)
                 if (decisionType == "ACCEPT") {
                     setOrderAccepted(true)
                     val fulfillmentStatus = if (isPartialFulfillment == true) "INCOMPLETE" else "PREPARING"
-                    val updatedOrder = orderData.copy(status = fulfillmentStatus)
+                    val updatedOrder = orderData.copy(
+                        status = fulfillmentStatus,
+                        fulfilledBy = orderData.fulfilledBy + farmerName
+                    )
                     orderViewModel.updateOrder(updatedOrder)
 
                     val itemData = ItemData(
@@ -215,7 +227,7 @@ fun OrderDetails(
                         farmerItemViewModel.reduceItemQuantity(itemData, totalFarmers)
                     }
 
-                    onAccept()
+                    onAccept(farmerName)
                 } else {
                     setOrderAccepted(false)
                     setRejectionReason(selectedReason)

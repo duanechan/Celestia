@@ -22,6 +22,7 @@ import com.coco.celestia.ui.theme.*
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun FarmerAddProductDialog(
+    farmerName: String,
     onDismiss: () -> Unit,
     onConfirm: (name: String, quantity: Int, seasonStart: String, seasonEnd: String) -> Unit
 ) {
@@ -90,6 +91,24 @@ fun FarmerAddProductDialog(
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
+                // Farmer's Name (read-only)
+                Text(text = "Farmer's Name", color = Cocoa, fontWeight = FontWeight.Bold)
+                TextField(
+                    value = farmerName,
+                    onValueChange = {},
+                    enabled = false,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTagsAsResourceId = true }
+                        .semantics { testTag = "android:id/farmersName" },
+                    colors = TextFieldDefaults.colors(
+                        unfocusedContainerColor = Apricot,
+                        focusedContainerColor = Apricot
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 // Product Name Input
                 Text(text = "Enter Product Name", color = Cocoa, fontWeight = FontWeight.Bold)
                 TextField(
@@ -132,7 +151,7 @@ fun FarmerAddProductDialog(
                         quantityError = false
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                    placeholder = { Text("Enter quantity", color = Color.Gray)},
+                    placeholder = { Text("Enter quantity", color = Color.Gray) },
                     isError = quantityError,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -254,7 +273,6 @@ fun FarmerAddProductDialog(
                 }
             }
         },
-        properties = DialogProperties(dismissOnClickOutside = true),
-        containerColor = BgColor
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     )
 }

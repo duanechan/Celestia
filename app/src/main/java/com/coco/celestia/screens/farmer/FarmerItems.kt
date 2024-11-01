@@ -48,7 +48,11 @@ fun FarmerItems(navController: NavController) {
     var isDialogOpen by remember { mutableStateOf(false) }
     var showToast by remember { mutableStateOf(false) }
     var toastMessage by remember { mutableStateOf("") }
+    var farmerName by remember { mutableStateOf("") }
 
+    LaunchedEffect(uid) {
+        farmerName = itemViewModel.fetchFarmerName(uid)
+    }
 
     LaunchedEffect(navController.currentBackStackEntry) {
         if (navController.currentBackStackEntry?.destination?.route == Screen.FarmerAddProduct.route) {
@@ -73,6 +77,7 @@ fun FarmerItems(navController: NavController) {
 
         if (isDialogOpen) {
             FarmerAddProductDialog(
+                farmerName = farmerName,
                 onDismiss = {
                     isDialogOpen = false
                 },
@@ -106,7 +111,6 @@ fun FarmerItems(navController: NavController) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FarmerItems(items: List<ProductData>, navController: NavController) {
     var query by remember { mutableStateOf("") }
@@ -129,7 +133,6 @@ fun FarmerItems(items: List<ProductData>, navController: NavController) {
                 ) {
                 }
             }
-            // Use itemsIndexed to get the index and the product data
             itemsIndexed(items.sortedByDescending { it.quantity }) { index, product ->
                 FarmerProductTypeInventory(
                     product = product,
