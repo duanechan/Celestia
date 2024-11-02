@@ -2,13 +2,13 @@ package com.coco.celestia.screens.farmer.details
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -122,7 +122,7 @@ fun FarmerOrderDetails(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp),
-                        text = "Rejection Reason: ${orderData.rejectionReason}",
+                        text = "Rejection Reason\n ${orderData.rejectionReason}",
                         color = Copper,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
@@ -303,7 +303,7 @@ fun OrderDetailsCard(orderData: OrderData) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(380.dp)
+            .height(400.dp)
             .semantics { testTag = "android:id/orderDetailsCard" },
         shape = RoundedCornerShape(15.dp),
         colors = CardDefaults.cardColors(
@@ -325,202 +325,217 @@ fun OrderDetailsCard(orderData: OrderData) {
             ) {
                 Spacer(modifier = Modifier.height(5.dp))
 
-                // Order ID and Delivery Address
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
                         horizontalAlignment = Alignment.Start,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f) // Adjusted weight
+                            .border(1.dp, Cocoa, RoundedCornerShape(5.dp))
+                            .background(Sand2, shape = RoundedCornerShape(5.dp))
+                            .padding(top = 8.dp, start = 8.dp, bottom = 30.dp)
                     ) {
                         Text(
                             text = "Order ID",
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
                             color = Cocoa,
-                            textAlign = TextAlign.Start,
-                            modifier = Modifier.semantics { testTag = "android:id/orderIdLabel" }
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/orderIdLabel" }
                         )
+                        Spacer(modifier = Modifier.height(15.dp))
                         Text(
                             text = orderData.orderId.substring(6, 10).uppercase(),
-                            fontSize = 15.sp,
+                            fontSize = 30.sp,
                             color = Cocoa,
-                            textAlign = TextAlign.Start,
-                            modifier = Modifier.semantics { testTag = "android:id/orderIdText" }
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/orderIdText" }
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(20.dp))
+                    Spacer(modifier = Modifier.width(15.dp))
 
                     Column(
                         horizontalAlignment = Alignment.Start,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .border(1.dp, Cocoa, RoundedCornerShape(5.dp))
+                            .background(Sand2, shape = RoundedCornerShape(5.dp))
+                            .padding(top = 8.dp, start = 8.dp, bottom = 30.dp)
                     ) {
                         Text(
-                            text = "Delivery Address",
+                            text = "Address",
                             fontSize = 20.sp,
                             color = Cocoa,
-                            textAlign = TextAlign.Start,
+                            textAlign = TextAlign.Center,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.semantics { testTag = "android:id/deliveryAddressLabel" }
+                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/deliveryAddressLabel" }
                         )
+                        Spacer(modifier = Modifier.height(10.dp))
                         Text(
                             text = "${orderData.street}, ${orderData.barangay}",
                             fontSize = 15.sp,
                             color = Cocoa,
-                            textAlign = TextAlign.Start,
-                            modifier = Modifier.semantics { testTag = "android:id/deliveryAddressText" }
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/deliveryAddressText" }
                         )
                     }
-                }
-
-                Spacer(modifier = Modifier.height(20.dp))
-
-                // Target Date and Fulfilled By
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.Start,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = "Target Date",
-                            fontSize = 20.sp,
-                            color = Cocoa,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Start,
-                            modifier = Modifier.semantics { testTag = "android:id/targetDateLabel" }
-                        )
-                        Text(
-                            text = orderData.targetDate,
-                            fontSize = 15.sp,
-                            color = Cocoa,
-                            textAlign = TextAlign.Start,
-                            modifier = Modifier.semantics { testTag = "android:id/targetDateText" }
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(20.dp))
-
-                    Column(
-                        horizontalAlignment = Alignment.Start,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = "Fulfilled By",
-                            fontSize = 20.sp,
-                            color = Cocoa,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Start,
-                            modifier = Modifier.semantics { testTag = "android:id/fulfilledByLabel" }
-                        )
-                        Text(
-                            text = if (orderData.fulfilledBy.isNotEmpty()) {
-                                orderData.fulfilledBy.joinToString(", ")
-                            } else {
-                                "None"
-                            },
-                            fontSize = 15.sp,
-                            color = Cocoa,
-                            textAlign = TextAlign.Start,
-                            modifier = Modifier.semantics { testTag = "android:id/fulfilledByText" }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(30.dp))
-
-                // Product Info
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 75.dp)
-                        .semantics { testTag = "android:id/orderedProductRow" }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ShoppingCart,
-                        contentDescription = "Ordered Products Icon",
-                        tint = Cocoa,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .semantics { testTag = "android:id/shoppingCartIcon" }
-                    )
-
-                    Spacer(modifier = Modifier.width(1.dp))
-
-                    Text(
-                        text = "Ordered Product",
-                        color = Cocoa,
-                        textAlign = TextAlign.Start,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        modifier = Modifier
-                            .padding(start = 5.dp)
-                            .semantics { testTag = "android:id/orderedProductLabel" }
-                    )
                 }
 
                 Spacer(modifier = Modifier.height(15.dp))
 
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { testTag = "android:id/productInfoRow" }
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Spacer(modifier = Modifier.width(50.dp))
                     Column(
-                        verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.Start,
                         modifier = Modifier
                             .weight(1f)
-                            .semantics { testTag = "android:id/productInfoColumn" }
+                            .border(1.dp, Cocoa, RoundedCornerShape(5.dp))
+                            .background(Sand2, shape = RoundedCornerShape(5.dp))
+                            .padding(top = 8.dp, start = 8.dp, bottom = 25.dp)
                     ) {
-                        Card(
+                        Text(
+                            text = "Target Date",
+                            fontSize = 20.sp,
+                            color = Cocoa,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/targetDateLabel" }
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = orderData.targetDate,
+                            fontSize = 15.sp,
+                            color = Cocoa,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/targetDateText" }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(15.dp))
+
+                    Column(
+                        horizontalAlignment = Alignment.Start,
+                        modifier = Modifier
+                            .weight(1f)
+                            .border(1.dp, Cocoa, RoundedCornerShape(5.dp))
+                            .background(Sand2, shape = RoundedCornerShape(5.dp))
+                            .padding(top = 8.dp, start = 8.dp, bottom = 25.dp)
+                    ) {
+                        Text(
+                            text = "Client Name",
+                            fontSize = 20.sp,
+                            color = Cocoa,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/clientNameLabel" }
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = orderData.client,
+                            fontSize = 15.sp,
+                            color = Cocoa,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/clientNameText" }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(15.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.Start,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(1f)
+                            .border(1.dp, Cocoa, RoundedCornerShape(5.dp))
+                            .background(Sand2, shape = RoundedCornerShape(5.dp))
+                            .padding(8.dp)
+                            .semantics { testTag = "android:id/orderedProductSection" }
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 10.dp, end = 50.dp)
-                                .semantics { testTag = "android:id/productCard" },
-                            shape = RoundedCornerShape(16.dp)
                         ) {
-                            Box(
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Item",
+                                color = Cocoa,
+                                textAlign = TextAlign.Center,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp,
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(
-                                        Brush.verticalGradient(
-                                            colors = listOf(Apricot2, Copper)
-                                        )
-                                    )
-                            ) {
-                                Column(
+                                    .fillMaxWidth()
+                                    .semantics { testTag = "android:id/orderedProductLabel" }
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = product.name,
+                            fontSize = 18.sp,
+                            color = Cocoa,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/productNameText" }
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = "${product.quantity} kg",
+                            fontSize = 18.sp,
+                            color = Cocoa,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/productQuantityText" }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(15.dp))
+
+                    Column(
+                        horizontalAlignment = Alignment.Start,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(1f)
+                            .border(1.dp, Cocoa, RoundedCornerShape(5.dp))
+                            .background(Sand2, shape = RoundedCornerShape(5.dp))
+                            .padding(8.dp)
+                    ) {
+                        Text(
+                            text = "Fulfilled By",
+                            fontSize = 20.sp,
+                            color = Cocoa,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/fulfilledByLabel" }
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        if (orderData.fulfilledBy.isNotEmpty()) {
+                            orderData.fulfilledBy.forEach { name ->
+                                Text(
+                                    text = name,
+                                    fontSize = 15.sp,
+                                    color = Cocoa,
+                                    textAlign = TextAlign.Center,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(15.dp)
-                                        .semantics { testTag = "android:id/productColumn" },
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = product.name,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 30.sp,
-                                        color = Cocoa,
-                                        modifier = Modifier.semantics { testTag = "android:id/productNameText" }
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = "${product.quantity} kg",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 35.sp,
-                                        color = Cocoa,
-                                        modifier = Modifier.semantics { testTag = "android:id/productQuantityText" }
-                                    )
-                                }
+                                        .semantics { testTag = "android:id/fulfilledByText" }
+                                        .padding(vertical = 2.dp)
+                                )
                             }
+                        } else {
+                            Text(
+                                text = "None",
+                                fontSize = 15.sp,
+                                color = Cocoa,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/fulfilledByText" }
+                            )
                         }
                     }
                 }
@@ -578,7 +593,7 @@ fun OrderStatusUpdates(orderData: OrderData) {
                         color = GoldenYellow,
                         modifier = Modifier
                             .width(2.dp)
-                            .height(40.dp)
+                            .height(30.dp)
                     )
                 }
 
@@ -610,7 +625,7 @@ fun OrderStatusUpdates(orderData: OrderData) {
                         color = GoldenYellow,
                         modifier = Modifier
                             .width(2.dp)
-                            .height(40.dp)
+                            .height(30.dp)
                     )
                 }
 

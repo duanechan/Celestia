@@ -55,6 +55,7 @@ val Apricot2 = Color(0xFFE9C276)
 val Tangerine = Color(0xFFe9b986)
 val OliveGreen = Color(0xFF8d8d5f)
 val Blue = Color(0xFFb9cecf)
+val Sand2 = Color(0xFFd6af74)
 
 // Coop WhiteBG
 val CoopBackground = Color(0xFFF4F4F4)
