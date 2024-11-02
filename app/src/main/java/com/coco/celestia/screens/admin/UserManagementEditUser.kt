@@ -47,10 +47,10 @@ fun EditUser(
 
     AlertDialog(
         onDismissRequest = { onDismiss() },
-        title = { Text(text = "Enter your input", modifier = Modifier.semantics { testTag = "EditUserDialogTitle" }) }, // Added test tag
+        title = { Text(text = "Enter your input", modifier = Modifier.semantics { testTag = "android:id/EditUserDialogTitle" }) }, // Added test tag
         text = {
             Column(
-                modifier = Modifier.semantics { testTag = "EditUserForm" }
+                modifier = Modifier.semantics { testTag = "android:id/EditUserForm" }
             ) {
                 // Email Field
                 OutlinedTextField(
@@ -59,7 +59,7 @@ fun EditUser(
                     label = { Text("Email") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .semantics { testTag = "EditUserEmailField" }
+                        .semantics { testTag = "android:id/EditUserEmailField" }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -67,7 +67,7 @@ fun EditUser(
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded },
-                    modifier = Modifier.semantics { testTag = "EditUserRoleDropdownBox" }
+                    modifier = Modifier.semantics { testTag = "android:id/EditUserRoleDropdownBox" }
                 ) {
                     OutlinedTextField(
                         readOnly = true,
@@ -79,13 +79,13 @@ fun EditUser(
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor()
-                            .semantics { testTag = "EditUserRoleField" }
+                            .semantics { testTag = "android:id/EditUserRoleField" }
                     )
 
                     ExposedDropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
-                        modifier = Modifier.semantics { testTag = "EditUserRoleMenu" }
+                        modifier = Modifier.semantics { testTag = "android:id/EditUserRoleMenu" }
                     ) {
                         roles.forEach { roleItem ->
                             androidx.compose.material3.DropdownMenuItem(
@@ -94,7 +94,7 @@ fun EditUser(
                                     updatedRole = roleItem
                                     expanded = false
                                 },
-                                modifier = Modifier.semantics { testTag = "EditUserRoleItem_$roleItem" }
+                                modifier = Modifier.semantics { testTag = "android:id/EditUserRoleItem_$roleItem" }
                             )
                         }
                     }
@@ -132,7 +132,7 @@ fun EditUser(
                     }
                     onDismiss() // Close the dialog
                 },
-                modifier = Modifier.semantics { testTag = "EditUserConfirmButton" }
+                modifier = Modifier.semantics { testTag = "android:id/EditUserConfirmButton" }
             ) {
                 Text("Save")
             }
@@ -145,7 +145,7 @@ fun EditUser(
                     updatedRole = roles.first()
                     onDismiss()
                 },
-                modifier = Modifier.semantics { testTag = "EditUserDismissButton" }
+                modifier = Modifier.semantics { testTag = "android:id/EditUserDismissButton" }
             ) {
                 Text("Cancel")
             }

@@ -13,6 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -26,14 +28,16 @@ fun UserManagementAuditLogs(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxHeight()
-            .background(BlueGradientBrush),
+            .background(BlueGradientBrush)
+            .semantics { testTag = "android:id/AuditLogsScreen" },
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Spacer(modifier = Modifier.height(80.dp))
 
         Row(
             modifier = Modifier
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .semantics { testTag = "android:id/HeaderRow" },
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Back Button
@@ -42,6 +46,7 @@ fun UserManagementAuditLogs(navController: NavController) {
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
                     .padding(top = 5.dp)
+                    .semantics { testTag = "android:id/BackButton" }
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
@@ -59,6 +64,7 @@ fun UserManagementAuditLogs(navController: NavController) {
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
                     .padding(top = 5.dp)
+                    .semantics { testTag = "android:id/AuditLogsTitle" }
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -67,6 +73,7 @@ fun UserManagementAuditLogs(navController: NavController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color.White)
+                .semantics { testTag = "android:id/AuditLogsList" }
         ) {
             // Sticky Header
             stickyHeader {
@@ -75,20 +82,27 @@ fun UserManagementAuditLogs(navController: NavController) {
                         .fillMaxWidth()
                         .background(Color.White)
                         .padding(13.dp)
+                        .semantics { testTag = "android:id/AuditLogsHeader" }
                 ) {
                     Text(
                         text = "DATE",
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .semantics { testTag = "android:id/DateHeader" },
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "USER",
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .semantics { testTag = "android:id/UserHeader" },
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "ACTION",
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .semantics { testTag = "android:id/ActionHeader" },
                         fontWeight = FontWeight.Bold
                     )
                 }

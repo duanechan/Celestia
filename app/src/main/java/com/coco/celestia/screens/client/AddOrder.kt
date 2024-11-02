@@ -82,7 +82,7 @@ fun AddOrderPanel(navController: NavController) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .semantics { testTag = "AddOrderPanel" }
+            .semantics { testTag = "android:id/AddOrderPanel" }
     ) {
         Text(text = "Add Order", fontSize = 25.sp)
         Spacer(modifier = Modifier.height(150.dp))
@@ -119,7 +119,7 @@ fun ProductCard(
             .clickable {
                 navController.navigate(Screen.OrderDetails.createRoute(product))
             }
-            .semantics { testTag = "ProductCard_$product" },
+            .semantics { testTag = "android:id/ProductCard_$product" },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
@@ -184,7 +184,7 @@ fun ProductTypeCard(
             .padding(vertical = 8.dp)
             .animateContentSize()
             .fillMaxWidth()
-            .semantics { testTag = "ProductTypeCard_${product.name}" },
+            .semantics { testTag = "android:id/ProductTypeCard_${product.name}" },
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.elevatedCardElevation(5.dp)
     ) {
@@ -218,7 +218,7 @@ fun ProductTypeCard(
                             .size(32.dp)
                             .padding(start = 8.dp)
                             .clickable { expanded = !expanded }
-                            .semantics { testTag = "ShoppingCartIcon" }
+                            .semantics { testTag = "android:id/ShoppingCartIcon" }
                     )
                 }
                 AnimatedVisibility(visible = expanded) {
@@ -257,7 +257,7 @@ fun OrderDetailsPanel(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .semantics { testTag = "OrderDetailsPanel" }
+            .semantics { testTag = "android:id/OrderDetailsPanel" }
     ) {
         Spacer(modifier = Modifier.height(100.dp))
         Text(
@@ -267,7 +267,7 @@ fun OrderDetailsPanel(
             color = Color.Black,
             modifier = Modifier
                 .padding(bottom = 20.dp)
-                .semantics { testTag = "ProductTypeTitle" }
+                .semantics { testTag = "android:id/ProductTypeTitle" }
         )
         type?.let {
             LaunchedEffect(type) {
@@ -276,18 +276,18 @@ fun OrderDetailsPanel(
             when (productState) {
                 is ProductState.EMPTY -> Text(
                     text = "No products available.",
-                    modifier = Modifier.semantics { testTag = "ProductStateEmpty" }
+                    modifier = Modifier.semantics { testTag = "android:id/ProductStateEmpty" }
                 )
                 is ProductState.ERROR -> Text(
                     text = "Error: ${(productState as ProductState.ERROR).message}",
-                    modifier = Modifier.semantics { testTag = "ProductStateError" }
+                    modifier = Modifier.semantics { testTag = "android:id/ProductStateError" }
                 )
                 is ProductState.LOADING -> Text(
                     text = "Loading products...",
-                    modifier = Modifier.semantics { testTag = "ProductStateLoading" }
+                    modifier = Modifier.semantics { testTag = "android:id/ProductStateLoading" }
                 )
                 is ProductState.SUCCESS -> {
-                    LazyColumn(modifier = Modifier.semantics { testTag = "ProductList" }) {
+                    LazyColumn(modifier = Modifier.semantics { testTag = "android:id/ProductList" }) {
                         items(productData) { product ->
                             ProductTypeCard(
                                 product,
@@ -301,7 +301,7 @@ fun OrderDetailsPanel(
                 }
                 null -> Text(
                     text = "Unknown state",
-                    modifier = Modifier.semantics { testTag = "ProductStateUnknown" }
+                    modifier = Modifier.semantics { testTag = "android:id/ProductStateUnknown" }
                 )
             }
         }
@@ -359,7 +359,7 @@ fun AddOrderForm(
                         onExpandedChange(false)
                     },
                     enabled = selectedDate.isNotEmpty() && quantity != 0,
-                    modifier = Modifier.semantics { testTag = "ConfirmOrderButton" }
+                    modifier = Modifier.semantics { testTag = "android:id/ConfirmOrderButton" }
                 ) {
                     Text("Confirm Order")
                 }
@@ -378,7 +378,7 @@ fun AddOrderForm(
                     .fillMaxWidth()
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState())
-                    .semantics { testTag = "DatePickerDialogContent" }
+                    .semantics { testTag = "android:id/DatePickerDialogContent" }
             ) {
                 Text(text = "Do you want to place this order?", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
@@ -414,7 +414,7 @@ fun AddOrderForm(
                     trailingIcon = {
                         IconButton(
                             onClick = { showDatePicker = !showDatePicker },
-                            modifier = Modifier.semantics { testTag = "DateIconButton" }
+                            modifier = Modifier.semantics { testTag = "android:id/DateIconButton" }
                         ) {
                             Icon(
                                 imageVector = Icons.Default.DateRange,
@@ -424,13 +424,13 @@ fun AddOrderForm(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .semantics { testTag = "TargetDateInput" }
+                        .semantics { testTag = "android:id/TargetDateInput" }
                 )
                 AnimatedVisibility(visible = showDatePicker) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .semantics { testTag = "DatePickerBox" }
+                            .semantics { testTag = "android:id/DatePickerBox" }
                     ) {
                         DatePicker(
                             state = datePickerState,
@@ -438,7 +438,7 @@ fun AddOrderForm(
                             dateValidator = { it >= System.currentTimeMillis() },
                             modifier = Modifier
                                 .fillMaxSize()
-                                .semantics { testTag = "DatePicker" }
+                                .semantics { testTag = "android:id/DatePicker" }
                         )
                     }
                 }
@@ -488,7 +488,7 @@ fun ConfirmOrderRequestPanel(
             )
             Text(
                 text = "Loading...",
-                modifier = Modifier.semantics { testTag = "OrderStateLoading" }
+                modifier = Modifier.semantics { testTag = "android:id/OrderStateLoading" }
             )
         }
         is OrderState.ERROR -> {
@@ -501,7 +501,7 @@ fun ConfirmOrderRequestPanel(
             )
             Text(
                 text = "Error: ${(orderState as OrderState.ERROR).message}",
-                modifier = Modifier.semantics { testTag = "OrderStateError" }
+                modifier = Modifier.semantics { testTag = "android:id/OrderStateError" }
             )
         }
         is OrderState.SUCCESS -> {
@@ -519,13 +519,13 @@ fun ConfirmOrderRequestPanel(
             }
             Text(
                 text = "Order placed successfully.",
-                modifier = Modifier.semantics { testTag = "OrderStateSuccess" }
+                modifier = Modifier.semantics { testTag = "android:id/OrderStateSuccess" }
             )
         }
         else -> {
             Text(
                 text = "Order state is unknown.",
-                modifier = Modifier.semantics { testTag = "OrderStateUnknown" }
+                modifier = Modifier.semantics { testTag = "android:id/OrderStateUnknown" }
             )
         }
     }

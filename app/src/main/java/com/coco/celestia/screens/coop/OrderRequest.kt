@@ -81,6 +81,7 @@ import com.coco.celestia.ui.theme.PendingStatus
 import com.coco.celestia.ui.theme.PreparingStatus
 import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.util.formatDate
+import com.coco.celestia.util.orderStatusConfig
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.model.OrderData
@@ -291,34 +292,38 @@ fun OrderItem(
                     .padding(16.dp)
                     .animateContentSize()
             ) {
-                Row {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
                     Text(
                         text = orderCount.toString(),
                         fontSize = 80.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black,
                         modifier = Modifier.padding(5.dp)
                     )
                     Column (modifier = Modifier.padding(16.dp)) {
+                        Text(text = "Order ID: $orderId")
                         Text(
                             text = "${order.orderData.name}, ${order.orderData.quantity}kg",
-                            fontSize = 30.sp, fontWeight = FontWeight.Bold
+                            fontSize = 25.sp, fontWeight = FontWeight.Bold
                         )
-                        Text(text = "Client Name: $orderClient",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold)
+                        Text(text = orderClient, fontSize = 15.sp)
                     }
                 }
 
-                StatusSelector(
-                    order = order,
-                    orderViewModel = orderViewModel,
-                    onUpdateOrder = { onUpdateOrder(it) }
+                Text(
+                    text = orderStatus.lowercase().replaceFirstChar { it.uppercase() },
+                    color = orderStatusConfig(orderStatus)
                 )
+//                StatusSelector(
+//                    order = order,
+//                    orderViewModel = orderViewModel,
+//                    onUpdateOrder = { onUpdateOrder(it) }
+//                )
 
             }
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(text = "Order ID: $orderId")
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(text = "${order.street}, ${order.barangay}")
                 Spacer(modifier = Modifier.height(8.dp))

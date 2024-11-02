@@ -23,6 +23,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -36,18 +38,21 @@ fun ClientHelpOverlay(isVisible: MutableState<Boolean>) {
                 .fillMaxSize()
                 .background(Color(0xAA000000))
                 .clickable { isVisible.value = false }
+                .semantics { testTag = "android:id/HelpOverlay" }
         ) {
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
                     .padding(16.dp)
                     .background(Color.White, shape = RoundedCornerShape(12.dp))
+                    .semantics { testTag = "android:id/HelpDialogBox" }
             ) {
                 Column(
                     modifier = Modifier
                         .padding(16.dp)
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
+                        .verticalScroll(rememberScrollState())
+                        .semantics { testTag = "android:id/HelpDialogContent" },
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -58,13 +63,17 @@ fun ClientHelpOverlay(isVisible: MutableState<Boolean>) {
                         },
                         fontSize = 18.sp,
                         color = Color.Black,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        modifier = Modifier
+                            .padding(bottom = 8.dp)
+                            .semantics { testTag = "android:id/HelpDialogTitle" }
                     )
                     Text(
                         text = "${currentPage.value} / 2",
                         fontSize = 14.sp,
                         color = Color.Gray,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        modifier = Modifier
+                            .padding(bottom = 8.dp)
+                            .semantics { testTag = "android:id/PageIndicator" }
                     )
 
                     // Page Content
@@ -84,36 +93,46 @@ fun ClientHelpOverlay(isVisible: MutableState<Boolean>) {
                         },
                         fontSize = 14.sp,
                         color = Color.DarkGray,
-                        modifier = Modifier.padding(vertical = 8.dp)
+                        modifier = Modifier
+                            .padding(vertical = 8.dp)
+                            .semantics { testTag = "android:id/HelpDialogContentText" }
                     )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            if (currentPage.value == 2) {
-                                Button(
-                                    onClick = { currentPage.value = 1 },
-                                    modifier = Modifier.size(width = 100.dp, height = 48.dp)
-                                ) {
-                                    Text("Back")
-                                }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics { testTag = "android:id/NavigationButtonsRow" },
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        if (currentPage.value == 2) {
+                            Button(
+                                onClick = { currentPage.value = 1 },
+                                modifier = Modifier
+                                    .size(width = 100.dp, height = 48.dp)
+                                    .semantics { testTag = "android:id/BackButton" }
+                            ) {
+                                Text("Back")
                             }
-                            if (currentPage.value == 1) {
-                                Button(
-                                    onClick = { currentPage.value = 2 },
-                                    modifier = Modifier.size(width = 100.dp, height = 48.dp)
-                                ) {
-                                    Text("Next")
-                                }
-                            } else {
-                                Button(
-                                    onClick = { isVisible.value = false },
-                                    modifier = Modifier.size(width = 100.dp, height = 48.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFFFFA726),
-                                        contentColor = Color.White
-                                    ),
-                                ) {
+                        }
+                        if (currentPage.value == 1) {
+                            Button(
+                                onClick = { currentPage.value = 2 },
+                                modifier = Modifier
+                                    .size(width = 100.dp, height = 48.dp)
+                                    .semantics { testTag = "android:id/NextButton" }
+                            ) {
+                                Text("Next")
+                            }
+                        } else {
+                            Button(
+                                onClick = { isVisible.value = false },
+                                modifier = Modifier
+                                    .size(width = 100.dp, height = 48.dp)
+                                    .semantics { testTag = "android:id/GotItButton" },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFFFA726),
+                                    contentColor = Color.White
+                                ),
+                            ) {
                                     Text("Got it")
                                 }
                             }

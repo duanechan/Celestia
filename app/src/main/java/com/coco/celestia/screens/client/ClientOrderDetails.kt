@@ -91,7 +91,7 @@ fun ClientOrderDetails(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(color = LightGray)
-                    .semantics { testTag = "LoadingIndicator" },
+                    .semantics { testTag = "android:id/LoadingIndicator" },
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
@@ -103,7 +103,7 @@ fun ClientOrderDetails(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(color = White)
-                    .semantics { testTag = "OrderNotFound" },
+                    .semantics { testTag = "android:id/OrderNotFound" },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -131,7 +131,7 @@ fun ClientOrderDetails(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(520.dp)
-                            .semantics { testTag = "OrderDetailsCard" },
+                            .semantics { testTag = "android:id/OrderDetailsCard" },
                         shape = RoundedCornerShape(20.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
@@ -153,7 +153,7 @@ fun ClientOrderDetails(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier
                                         .padding(bottom = 8.dp)
-                                        .semantics { testTag = "OrderCountBox" }
+                                        .semantics { testTag = "android:id/OrderCountBox" }
                                 ) {
                                     Box(
                                         modifier = Modifier
@@ -184,7 +184,7 @@ fun ClientOrderDetails(
                                             },
                                             fontSize = 20.sp,
                                             color = White,
-                                            modifier = Modifier.semantics { testTag = "OrderID" }
+                                            modifier = Modifier.semantics { testTag = "android:id/OrderID" }
                                         )
 
                                         Spacer(modifier = Modifier.height(4.dp))
@@ -201,7 +201,7 @@ fun ClientOrderDetails(
                                             fontSize = 20.sp,
                                             color = White,
                                             modifier = Modifier.semantics {
-                                                testTag = "DeliveryAddress"
+                                                testTag = "android:id/DeliveryAddress"
                                             }
                                         )
 
@@ -218,7 +218,7 @@ fun ClientOrderDetails(
                                             },
                                             fontSize = 15.sp,
                                             color = White,
-                                            modifier = Modifier.semantics { testTag = "ETA" }
+                                            modifier = Modifier.semantics { testTag = "android:id/ETA" }
                                         )
                                     }
                                 }
@@ -228,7 +228,7 @@ fun ClientOrderDetails(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(top = 16.dp)
-                                        .semantics { testTag = "OrderedProducts" }
+                                        .semantics { testTag = "android:id/OrderedProducts" }
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.ShoppingCart,
@@ -362,7 +362,7 @@ fun OrderStatusTracker(status: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .semantics { testTag = "OrderStatusTracker" },
+            .semantics { testTag = "android:id/OrderStatusTracker" },
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -371,7 +371,7 @@ fun OrderStatusTracker(status: String) {
             if (status in listOf("PREPARING", "DELIVERING", "COMPLETED")) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.semantics { testTag = "PreparingStatus" }
+                    modifier = Modifier.semantics { testTag = "android:id/PreparingStatus" }
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.warehouse),
@@ -380,14 +380,14 @@ fun OrderStatusTracker(status: String) {
                         modifier = Modifier
                             .size(50.dp)
                             .clickable { }
-                            .semantics { testTag = "WarehouseIcon" }
+                            .semantics { testTag = "android:id/WarehouseIcon" }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "The product is being prepared in the warehouse.",
                         fontSize = 14.sp,
                         color = Color.Gray,
-                        modifier = Modifier.semantics { testTag = "PreparingText" }
+                        modifier = Modifier.semantics { testTag = "android:id/PreparingText" }
                     )
                 }
             }
@@ -395,7 +395,7 @@ fun OrderStatusTracker(status: String) {
             if (status in listOf("DELIVERING", "COMPLETED")) {
                 Row(
                     verticalAlignment = Alignment.Top,
-                    modifier = Modifier.semantics { testTag = "DeliveryDivider" }
+                    modifier = Modifier.semantics { testTag = "android:id/DeliveryDivider" }
                 ) {
                     Spacer(modifier = Modifier.width(22.dp))
                     Divider(
@@ -403,14 +403,14 @@ fun OrderStatusTracker(status: String) {
                         modifier = Modifier
                             .width(2.dp)
                             .height(50.dp)
-                            .semantics { testTag = "DividerLine" }
+                            .semantics { testTag = "android:id/DividerLine" }
                     )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.semantics { testTag = "DeliveringStatus" }
+                    modifier = Modifier.semantics { testTag = "android:id/DeliveringStatus" }
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.deliveryicon),
@@ -419,14 +419,14 @@ fun OrderStatusTracker(status: String) {
                         modifier = Modifier
                             .size(50.dp)
                             .clickable { }
-                            .semantics { testTag = "DeliveryTruckIcon" }
+                            .semantics { testTag = "android:id/DeliveryTruckIcon" }
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "The delivery is on the way.",
                         fontSize = 14.sp,
                         color = Color.Gray,
-                        modifier = Modifier.semantics { testTag = "DeliveringText" }
+                        modifier = Modifier.semantics { testTag = "android:id/DeliveringText" }
                     )
                 }
             }
@@ -435,7 +435,7 @@ fun OrderStatusTracker(status: String) {
             if (status == "COMPLETED") {
                 Row(
                     verticalAlignment = Alignment.Top,
-                    modifier = Modifier.semantics { testTag = "CompletedDivider" }
+                    modifier = Modifier.semantics { testTag = "android:id/CompletedDivider" }
                 ) {
                     Spacer(modifier = Modifier.width(22.dp))
                     Divider(
@@ -443,14 +443,14 @@ fun OrderStatusTracker(status: String) {
                         modifier = Modifier
                             .width(2.dp)
                             .height(50.dp)
-                            .semantics { testTag = "CompletedDividerLine" }
+                            .semantics { testTag = "android:id/CompletedDividerLine" }
                     )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.semantics { testTag = "CompletedStatus" }
+                    modifier = Modifier.semantics { testTag = "android:id/CompletedStatus" }
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
@@ -466,7 +466,7 @@ fun OrderStatusTracker(status: String) {
                         text = "The order has been received.",
                         fontSize = 14.sp,
                         color = Color.Gray,
-                        modifier = Modifier.semantics { testTag = "CompletedText" }
+                        modifier = Modifier.semantics { testTag = "android:id/CompletedText" }
                     )
                 }
             }

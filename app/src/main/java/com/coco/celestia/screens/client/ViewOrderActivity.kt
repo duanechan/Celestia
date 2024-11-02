@@ -61,24 +61,24 @@ fun OrderPanel() {
         is OrderState.LOADING -> {
             Text(
                 text = "Loading orders...",
-                modifier = Modifier.semantics { testTag = "LoadingOrdersText" }
+                modifier = Modifier.semantics { testTag = "android:id/LoadingOrdersText" }
             )
         }
         is OrderState.ERROR -> {
             Text(
                 text = "Failed to load orders: ${(orderState as OrderState.ERROR).message}",
-                modifier = Modifier.semantics { testTag = "ErrorOrdersText" }
+                modifier = Modifier.semantics { testTag = "android:id/ErrorOrdersText" }
             )
         }
         is OrderState.EMPTY -> {
             Text(
                 text = "Mag-order ka na, man.",
-                modifier = Modifier.semantics { testTag = "EmptyOrdersText" }
+                modifier = Modifier.semantics { testTag = "android:id/EmptyOrdersText" }
             )
         }
         is OrderState.SUCCESS -> {
             LazyColumn(
-                modifier = Modifier.semantics { testTag = "OrdersLazyColumn" }
+                modifier = Modifier.semantics { testTag = "android:id/OrdersLazyColumn" }
             ) {
                 items(orderData) { order ->
                     OrderItem(order)
@@ -99,10 +99,10 @@ fun OrderItem(order: OrderData) {
             .fillMaxWidth()
             .background(Color.White)
             .padding(16.dp)
-            .semantics { testTag = "OrderItemColumn" }
+            .semantics { testTag = "android:id/OrderItemColumn" }
     ) {
         Card(
-            modifier = Modifier.semantics { testTag = "OrderCard" }
+            modifier = Modifier.semantics { testTag = "android:id/OrderCard" }
         ) {
             Column(
                 modifier = Modifier
@@ -116,14 +116,14 @@ fun OrderItem(order: OrderData) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = order.orderDate,
-                    modifier = Modifier.semantics { testTag = "OrderDateText" }
+                    modifier = Modifier.semantics { testTag = "android:id/OrderDateText" }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     horizontalArrangement = Arrangement.End,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .semantics { testTag = "OrderActionsRow" }
+                        .semantics { testTag = "android:id/OrderActionsRow" }
                 ) {
                     OutlinedButton(
                         onClick = {
@@ -131,7 +131,7 @@ fun OrderItem(order: OrderData) {
                             showDialog = true
                         },
                         colors = ButtonDefaults.buttonColors(contentColor = Color.Gray, containerColor = Color.Transparent),
-                        modifier = Modifier.semantics { testTag = "EditButton" }
+                        modifier = Modifier.semantics { testTag = "android:id/EditButton" }
                     ) {
                         Text("Edit")
                     }

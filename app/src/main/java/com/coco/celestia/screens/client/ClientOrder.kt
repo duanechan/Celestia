@@ -89,7 +89,7 @@ fun ClientOrder(
                 .fillMaxHeight()
                 .padding(top = 70.dp)
                 .verticalScroll(rememberScrollState())
-                .semantics { testTag = "ClientOrderColumn" }
+                .semantics { testTag = "android:id/ClientOrderColumn" }
         ) {
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -229,7 +229,7 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                 .clickable {
                     navController.navigate("ClientOrderDetails/${order.orderId}/$orderCount")
                 }
-                .semantics { testTag = "OrderCard_$orderId" },
+                .semantics { testTag = "android:id/OrderCard_$orderId" },
             colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
         ) {
             Box(

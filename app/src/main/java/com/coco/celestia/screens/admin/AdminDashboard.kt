@@ -78,7 +78,7 @@ fun AdminDashboard(userData: UserData?) {
                     fontFamily = mintsansFontFamily,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .semantics { testTag = "welcomeMessage" },
+                        .semantics { testTag = "android:id/welcomeMessage" },
                     color = Color.White
                 )
             }
@@ -91,7 +91,7 @@ fun AdminDashboard(userData: UserData?) {
                 fontFamily = mintsansFontFamily,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .semantics { testTag = "currentDate" },
+                    .semantics { testTag = "android:id/currentDate" },
                 color = Color.White
             )
             Spacer(modifier = Modifier.height(50.dp))
@@ -116,7 +116,7 @@ fun SummaryDashboard() {
             color = DarkBlue,
             modifier = Modifier
                 .padding(start = 8.dp, top = 8.dp)
-                .semantics { testTag = "overviewSummary" }
+                .semantics { testTag = "android:id/overviewSummary" }
         )
         Spacer(modifier = Modifier.height(5.dp))
         Row(modifier = Modifier.padding(5.dp)) {
@@ -155,7 +155,7 @@ fun TotalProductionVolumeLineChart(dataPoints: List<Entry>) {
             .padding(5.dp)
             .width(300.dp)
             .height(300.dp)
-            .semantics { testTag = "productionVolumeLineChart" }
+            .semantics { testTag = "android:id/productionVolumeLineChart" }
     ) {
 
         AndroidView(
@@ -203,7 +203,7 @@ fun InventoryPieChart(entries: List<PieEntry>) {
         modifier = Modifier
             .width(160.dp)
             .height(160.dp)
-            .semantics { testTag = "inventoryPieChart" }
+            .semantics { testTag = "android:id/inventoryPieChart" }
     ) {
 
         AndroidView(

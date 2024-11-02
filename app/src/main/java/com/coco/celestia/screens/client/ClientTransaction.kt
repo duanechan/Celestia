@@ -43,7 +43,7 @@ class ClientTransaction : ComponentActivity() {
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color(0xFFF2E3DB))
-                        .semantics { testTag = "TransactionSurface" }
+                        .semantics { testTag = "android:id/TransactionSurface" }
                 ) {
                     TransactionPanel(transactionViewModel = viewModel())
                 }
@@ -64,14 +64,14 @@ fun TransactionPanel(transactionViewModel: TransactionViewModel) {
     }
 
     LazyColumn(
-        modifier = Modifier.semantics { testTag = "TransactionList" }
+        modifier = Modifier.semantics { testTag = "android:id/TransactionList" }
     ) {
         when (transactionState) {
             is TransactionState.LOADING -> {
                 item {
                     Text(
                         text = "Loading transactions...",
-                        modifier = Modifier.semantics { testTag = "LoadingText" }
+                        modifier = Modifier.semantics { testTag = "android:id/LoadingText" }
                     )
                 }
             }
@@ -79,7 +79,7 @@ fun TransactionPanel(transactionViewModel: TransactionViewModel) {
                 item {
                     Text(
                         text = "Failed to load transactions: ${(transactionState as TransactionState.ERROR).message}",
-                        modifier = Modifier.semantics { testTag = "ErrorText" }
+                        modifier = Modifier.semantics { testTag = "android:id/ErrorText" }
                     )
                 }
             }
@@ -87,7 +87,7 @@ fun TransactionPanel(transactionViewModel: TransactionViewModel) {
                 item {
                     Text(
                         text = "No transactions available.",
-                        modifier = Modifier.semantics { testTag = "EmptyText" }
+                        modifier = Modifier.semantics { testTag = "android:id/EmptyText" }
                     )
                 }
             }
@@ -113,7 +113,7 @@ fun TransactionItem(transaction: TransactionData) {
         modifier = Modifier
             .padding(20.dp)
             .fillMaxWidth()
-            .semantics { testTag = "TransactionCard" }
+            .semantics { testTag = "android:id/TransactionCard" }
     ) {
 //        StyledText(transactionDate, productQuantity.toString(), productType, orderStatus)
     }
@@ -147,6 +147,6 @@ fun StyledText(transactionDate: String, productQuantity: String, productType: St
         },
         modifier = Modifier
             .padding(20.dp)
-            .semantics { testTag = "StyledText" }
+            .semantics { testTag = "android:id/StyledText" }
     )
 }

@@ -69,7 +69,7 @@ fun AdminAddProduct(
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
                     .padding(0.dp)
-                    .semantics { testTag = "BackButton" } // Added testTag
+                    .semantics { testTag = "android:id/BackButton" }
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
@@ -81,7 +81,7 @@ fun AdminAddProduct(
                 text = "Add Product",
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.align(Alignment.CenterVertically)
-                    .semantics { testTag = "AddProductTitle" } // Added testTag
+                    .semantics { testTag = "android:id/AddProductTitle" }
             )
         }
 
@@ -94,7 +94,7 @@ fun AdminAddProduct(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp)
-                .semantics { testTag = "ProductNameField" } // Added testTag
+                .semantics { testTag = "android:id/ProductNameField" }
         )
 
         radioOptions.forEach { option ->
@@ -118,12 +118,12 @@ fun AdminAddProduct(
                         onOptionSelected(option)
                         onTypeSelected(option)
                     },
-                    modifier = Modifier.semantics { testTag = "RadioButton_$option" } // Added testTag
+                    modifier = Modifier.semantics { testTag = "android:id/RadioButton_$option" }
                 )
 
                 Text(
                     text = option,
-                    modifier = Modifier.semantics { testTag = "RadioText_$option" } // Added testTag
+                    modifier = Modifier.semantics { testTag = "android:id/RadioText_$option" }
                 )
             }
         }
@@ -137,7 +137,7 @@ fun AdminAddProduct(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp)
-                .semantics { testTag = "ProductPriceField" } // Added testTag
+                .semantics { testTag = "android:id/ProductPriceField" }
         )
     }
 }

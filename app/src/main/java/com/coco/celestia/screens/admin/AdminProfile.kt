@@ -73,15 +73,15 @@ fun AdminProfile(userViewModel: UserViewModel, navController: NavController) {
         ),
         modifier = Modifier
             .padding(8.dp)
-            .semantics { testTag = "logoutButton" } // Test tag for logout button
+            .semantics { testTag = "android:id/logoutButton" }
     ) {
         Icon(
             imageVector = Icons.Default.ExitToApp,
             contentDescription = "Logout",
             modifier = Modifier.size(24.dp)
-                .semantics { testTag = "logoutIcon" } // Test tag for logout icon
+                .semantics { testTag = "android:id/logoutIcon" }
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Text("Logout", modifier = Modifier.semantics { testTag = "logoutText" }) // Test tag for logout text
+        Text("Logout", modifier = Modifier.semantics { testTag = "android:id/logoutText" })
     }
 }

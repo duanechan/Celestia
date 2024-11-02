@@ -5,6 +5,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -12,6 +13,7 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.font.FontWeight
 import com.coco.celestia.ui.theme.mintsansFontFamily
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun UpdateOrderStatusDialog(status: String,onDismiss: () -> Unit, onAccept: () -> Unit) {
     AlertDialog(

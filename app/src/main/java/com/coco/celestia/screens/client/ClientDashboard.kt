@@ -95,20 +95,20 @@ fun ClientDashboard(
         modifier = Modifier
             .fillMaxSize()
             .background(LightGray)
-            .semantics { testTag = "ClientDashboardScreen" }
+            .semantics { testTag = "android:id/ClientDashboardScreen" }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxHeight()
                 .padding(top = 75.dp)
-                .semantics { testTag = "ClientDashboardColumn" }
+                .semantics { testTag = "android:id/ClientDashboardColumn" }
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
                     .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp)
-                    .semantics { testTag = "DashboardHeaderRow" },
+                    .semantics { testTag = "android:id/DashboardHeaderRow" },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 userData.let { user ->
@@ -119,14 +119,14 @@ fun ClientDashboard(
                         color = RavenBlack,
                         modifier = Modifier
                             .weight(1f)
-                            .semantics { testTag = "WelcomeText" }
+                            .semantics { testTag = "android:id/WelcomeText" }
                     )
 
                     Button(
                         onClick = { /* Handle notification click */ },
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
-                            .semantics { testTag = "NotificationButton" }
+                            .semantics { testTag = "android:id/NotificationButton" }
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.notification_icon),
@@ -160,13 +160,13 @@ fun BrowseCategories(navController: NavController) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .semantics { testTag = "BrowseCategoriesSection" }
+            .semantics { testTag = "android:id/BrowseCategoriesSection" }
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .padding(bottom = 8.dp)
-                .semantics { testTag = "BrowseCategoriesHeader" }
+                .semantics { testTag = "android:id/BrowseCategoriesHeader" }
         ) {
             Image(
                 painter = painterResource(id = R.drawable.browsecategories),
@@ -180,7 +180,7 @@ fun BrowseCategories(navController: NavController) {
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = RavenBlack,
-                modifier = Modifier.semantics { testTag = "BrowseCategoriesText" }
+                modifier = Modifier.semantics { testTag = "android:id/BrowseCategoriesText" }
             )
         }
         Column(
@@ -188,7 +188,7 @@ fun BrowseCategories(navController: NavController) {
                 .fillMaxWidth()
                 .background(ContainerGray, shape = RoundedCornerShape(8.dp))
                 .padding(horizontal = 16.dp, vertical = 16.dp)
-                .semantics { testTag = "CategoriesContainer" }
+                .semantics { testTag = "android:id/CategoriesContainer" }
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -203,7 +203,7 @@ fun BrowseCategories(navController: NavController) {
                     iconColor = Color.White,
                     modifier = Modifier
                         .weight(1f)
-                        .semantics { testTag = "Category_Coffee" }
+                        .semantics { testTag = "android:id/Category_Coffee" }
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 CategoryBox(
@@ -213,7 +213,7 @@ fun BrowseCategories(navController: NavController) {
                     iconColor = Color.White,
                     modifier = Modifier
                         .weight(1f)
-                        .semantics { testTag = "Category_Meat" }
+                        .semantics { testTag = "android:id/Category_Meat" }
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 CategoryBox(
@@ -223,7 +223,7 @@ fun BrowseCategories(navController: NavController) {
                     iconColor = Color.White,
                     modifier = Modifier
                         .weight(1f)
-                        .semantics { testTag = "Category_Vegetable" }
+                        .semantics { testTag = "android:id/Category_Vegetable" }
                 )
             }
         }
@@ -264,7 +264,7 @@ fun CategoryBox(
             .clickable {
                 navController.navigate(Screen.OrderDetails.createRoute(productName))
             }
-            .semantics { testTag = "CategoryBox_$productName" }
+            .semantics { testTag = "android:id/CategoryBox_$productName" }
     ) {
         Image(
             painter = painterResource(id = iconId),
@@ -282,7 +282,7 @@ fun CategoryBox(
             color = Color.White,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
-                .semantics { testTag = "CategoryText_$productName" }
+                .semantics { testTag = "android:id/CategoryText_$productName" }
         )
     }
 }
@@ -403,7 +403,7 @@ fun OrderHistory(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .semantics { testTag = "OrderHistory" }
+            .semantics { testTag = "android:id/OrderHistory" }
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -484,7 +484,7 @@ fun OrderCardDetails(
                         navController.navigate("ClientOrderDetails/${order.orderId}/$orderCount")
                     }
                     .padding(end = 8.dp)
-                    .semantics { testTag = "OrderCard_$orderId" },
+                    .semantics { testTag = "android:id/OrderCard_$orderId" },
                 colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
             ) {
                 Row(
