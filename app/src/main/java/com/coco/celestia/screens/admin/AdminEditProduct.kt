@@ -40,7 +40,7 @@ fun EditProduct(
                     label = { Text("Price/Kg") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .semantics { testTag = "priceInputField" }
+                        .semantics { testTag = "android:id/priceInputField" }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -52,12 +52,12 @@ fun EditProduct(
                     productViewModel.updateProductPrice(productName, updatedPrice.toDouble())
                     onDismiss()
                 }) {
-                Text("Save", modifier = Modifier.semantics { testTag = "saveButton" })
+                Text("Save", modifier = Modifier.semantics { testTag = "android:id/saveButton" })
             }
         },
         dismissButton = {
             Button(onClick = { onDismiss() }) {
-                Text("Cancel", modifier = Modifier.semantics { testTag = "cancelButton" })
+                Text("Cancel", modifier = Modifier.semantics { testTag = "android:id/cancelButton" })
             }
         }
     )

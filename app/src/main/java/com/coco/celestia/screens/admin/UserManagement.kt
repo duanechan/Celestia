@@ -101,7 +101,7 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
                     modifier = Modifier
                         .width(screenWidth * 0.75f)
                         .offset(y = 75.dp)
-                        .semantics { testTag = "searchBar" }
+                        .semantics { testTag = "android:id/searchBar" }
                 ) {}
                 Spacer(modifier = Modifier.width(5.dp))
                 Button(
@@ -113,7 +113,7 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
                     ),
                     modifier = Modifier
                         .padding(top = 120.dp)
-                        .semantics { testTag = "auditLogsButton" }
+                        .semantics { testTag = "android:id/auditLogsButton" }
                 ) {
                     Icon(
                         imageVector = Icons.Default.List,
@@ -131,7 +131,7 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
                 onDismissRequest = { expanded = false },
                 modifier = Modifier
                     .background(Gray)
-                    .semantics { testTag = "roleDropdownMenu" }
+                    .semantics { testTag = "android:id/roleDropdownMenu" }
             ) {
                 // Dropdown items can be added here
             }
@@ -142,7 +142,7 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 200.dp)
-                .semantics { testTag = "userTable" },
+                .semantics { testTag = "android:id/userTable" },
             onEditUserClick = { user ->
                 selectedUser = user
             }

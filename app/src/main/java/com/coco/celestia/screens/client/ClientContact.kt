@@ -67,14 +67,14 @@ fun ClientContact(contactViewModel: ContactViewModel) {
             .fillMaxSize()
             .padding(top = 75.dp)
             .verticalScroll(rememberScrollState())
-            .semantics { testTag = "ClientContactScreen" }
+            .semantics { testTag = "android:id/ClientContactScreen" }
     ) {
         Spacer(modifier = Modifier.height(30.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 15.dp, start = 25.dp, end = 16.dp)
-                .semantics { testTag = "SearchBarRow" },
+                .semantics { testTag = "android:id/SearchBarRow" },
             verticalAlignment = Alignment.CenterVertically
         ) {
             SearchBar(
@@ -89,7 +89,7 @@ fun ClientContact(contactViewModel: ContactViewModel) {
                     .height(50.dp)
                     .offset(y = -13.dp)
                     .fillMaxWidth()
-                    .semantics { testTag = "ContactSearchBar" }
+                    .semantics { testTag = "android:id/ContactSearchBar" }
             ) {
             }
         }
@@ -100,13 +100,13 @@ fun ClientContact(contactViewModel: ContactViewModel) {
             is ContactState.LOADING -> {
                 Text(
                     text = "Loading contacts...",
-                    modifier = Modifier.semantics { testTag = "LoadingText" }
+                    modifier = Modifier.semantics { testTag = "android:id/LoadingText" }
                 )
             }
             is ContactState.ERROR -> {
                 Text(
                     text = "Failed to load contacts: ${(contactState as ContactState.ERROR).message}",
-                    modifier = Modifier.semantics { testTag = "ErrorText" }
+                    modifier = Modifier.semantics { testTag = "android:id/ErrorText" }
                 )
             }
             is ContactState.SUCCESS -> {
@@ -115,7 +115,7 @@ fun ClientContact(contactViewModel: ContactViewModel) {
             is ContactState.EMPTY -> {
                 Text(
                     text = "No contacts found.",
-                    modifier = Modifier.semantics { testTag = "EmptyText" }
+                    modifier = Modifier.semantics { testTag = "android:id/EmptyText" }
                 )
             }
         }
@@ -146,7 +146,7 @@ fun ItemCards(contact: ContactData) {
             .offset(x = (-16).dp, y = 0.dp)
             .padding(top = 0.dp, bottom = 5.dp, start = 30.dp, end = 0.dp)
             .clickable { expanded = !expanded }
-            .semantics { testTag = "ContactCard_${contact.name}" },
+            .semantics { testTag = "android:id/ContactCard_${contact.name}" },
         colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
     ) {
         Column(
@@ -160,7 +160,7 @@ fun ItemCards(contact: ContactData) {
                 color = Color.White,
                 modifier = Modifier
                     .padding(top = 15.dp, start = 10.dp)
-                    .semantics { testTag = "ContactName_${contact.name}" }
+                    .semantics { testTag = "android:id/ContactName_${contact.name}" }
             )
             Text(
                 text = role,
@@ -169,7 +169,7 @@ fun ItemCards(contact: ContactData) {
                 color = Color.White,
                 modifier = Modifier
                     .padding(top = 15.dp, start = 10.dp)
-                    .semantics { testTag = "ContactRole_${contact.name}" }
+                    .semantics { testTag = "android:id/ContactRole_${contact.name}" }
             )
             if (expanded) {
                 Spacer(modifier = Modifier.height(10.dp))
@@ -179,7 +179,7 @@ fun ItemCards(contact: ContactData) {
                     color = Color.White,
                     modifier = Modifier
                         .padding(top = 10.dp, start = 10.dp)
-                        .semantics { testTag = "ContactNumber_${contact.name}" }
+                        .semantics { testTag = "android:id/ContactNumber_${contact.name}" }
                 )
                 Text(
                     text = "Email: $email",
@@ -187,7 +187,7 @@ fun ItemCards(contact: ContactData) {
                     color = Color.White,
                     modifier = Modifier
                         .padding(top = 5.dp, start = 10.dp)
-                        .semantics { testTag = "ContactEmail_${contact.name}" }
+                        .semantics { testTag = "android:id/ContactEmail_${contact.name}" }
                 )
             }
             Text(
@@ -196,7 +196,7 @@ fun ItemCards(contact: ContactData) {
                 color = Color.LightGray,
                 modifier = Modifier
                     .padding(top = 10.dp, start = 10.dp)
-                    .semantics { testTag = "ExpandText_${contact.name}" }
+                    .semantics { testTag = "android:id/ExpandText_${contact.name}" }
             )
         }
     }

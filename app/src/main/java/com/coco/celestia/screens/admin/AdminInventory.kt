@@ -102,7 +102,7 @@ fun AdminInventory(
                     .clip(RoundedCornerShape(10.dp))
                     .height(48.dp)
                     .background(color = Color.White)
-                    .semantics { testTag = "ButtonRow" },
+                    .semantics { testTag = "android:id/ButtonRow" },
                 horizontalArrangement = Arrangement.Center
             ) {
                 Button(
@@ -119,7 +119,7 @@ fun AdminInventory(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .semantics { testTag = "CoffeeButton" }
+                        .semantics { testTag = "android:id/CoffeeButton" }
                 ) {
                     Text(text = "COFFEE",
                         fontFamily = mintsansFontFamily,
@@ -140,7 +140,7 @@ fun AdminInventory(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
-                        .semantics { testTag = "MeatButton" }
+                        .semantics { testTag = "android:id/MeatButton" }
                 ) {
                     Text(text = "MEAT",
                         fontFamily = mintsansFontFamily,
@@ -158,7 +158,7 @@ fun AdminInventory(
                     Text(
                         "Failed to load products: ${(productState as ProductState.ERROR).message}",
                         color = Color.Red,
-                        modifier = Modifier.semantics { testTag = "ErrorText" }
+                        modifier = Modifier.semantics { testTag = "android:id/ErrorText" }
                     )
                 }
 
@@ -372,7 +372,7 @@ fun TopBarInventory(onTabSelected: (String) -> Unit) {
                         selectedOption = index
                         onTabSelected(title)
                     },
-                    modifier = Modifier.padding(8.dp).testTag("Tab_$title")
+                    modifier = Modifier.padding(8.dp).testTag("android:id/Tab_$title")
                 )
             }
         }

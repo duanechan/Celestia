@@ -111,7 +111,7 @@ fun AddUserForm(
             maxLines = 1,
             modifier = Modifier
                 .fillMaxWidth()
-                .semantics { testTag = "emailInputField" }
+                .semantics { testTag = "android:id/emailInputField" }
         )
         Spacer(modifier = Modifier.height(2.dp))
 
@@ -136,7 +136,7 @@ fun AddUserForm(
             maxLines = 1,
             modifier = Modifier
                 .fillMaxWidth()
-                .semantics { testTag = "firstNameInputField" }
+                .semantics { testTag = "android:id/firstNameInputField" }
         )
         Spacer(modifier = Modifier.height(2.dp))
 
@@ -153,7 +153,7 @@ fun AddUserForm(
             maxLines = 1,
             modifier = Modifier
                 .fillMaxWidth()
-                .semantics { testTag = "lastNameInputField" }
+                .semantics { testTag = "android:id/lastNameInputField" }
         )
         Spacer(modifier = Modifier.height(2.dp))
 
@@ -173,7 +173,7 @@ fun AddUserForm(
                 modifier = Modifier
                     .fillMaxWidth()
                     .menuAnchor()
-                    .semantics { testTag = "roleDropdownField" }
+                    .semantics { testTag = "android:id/roleDropdownField" }
             )
 
             ExposedDropdownMenu(
@@ -246,7 +246,7 @@ fun CheckAddUser(
                         label = { Text("Password") },
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        modifier = Modifier.semantics { testTag = "passwordInputField" }
+                        modifier = Modifier.semantics { testTag = "android:id/passwordInputField" }
                     )
                 },
                 confirmButton = {
@@ -259,7 +259,7 @@ fun CheckAddUser(
                         }
                         userViewModel.addAccount(email, firstname, lastname, placeholderPass, userRole, passwordInput.value)
                     }) {
-                        Text("Confirm", modifier = Modifier.semantics { testTag = "confirmButton" })
+                        Text("Confirm", modifier = Modifier.semantics { testTag = "android:id/confirmButton" })
                     }
                 },
                 dismissButton = {
@@ -267,7 +267,7 @@ fun CheckAddUser(
                         setShowDialog(false)
                         navController.navigate(Screen.AdminUserManagement.route)
                     }) {
-                        Text("Cancel", modifier = Modifier.semantics { testTag = "cancelButton" })
+                        Text("Cancel", modifier = Modifier.semantics { testTag = "android:id/cancelButton" })
                     }
                 }
             )
