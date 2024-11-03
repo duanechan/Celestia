@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidthIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -45,6 +47,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.semantics
@@ -307,7 +310,6 @@ fun OrderDetailsPanel(
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddOrderForm(
@@ -324,9 +326,7 @@ fun AddOrderForm(
     var showDatePicker by remember { mutableStateOf(false) }
     var targetDateDialog by remember { mutableStateOf(true) }
     val datePickerState = rememberDatePickerState()
-    val selectedDate = datePickerState.selectedDateMillis?.let {
-        convertMillisToDate(it)
-    } ?: ""
+    var selectedDate by remember { mutableStateOf("") } // Track the selected date
     var quantity by remember { mutableIntStateOf(0) }
     val currentDateTime = LocalDateTime.now()
     val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
@@ -430,16 +430,27 @@ fun AddOrderForm(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .padding(10.dp)
                             .semantics { testTag = "android:id/DatePickerBox" }
                     ) {
-                        DatePicker(
-                            state = datePickerState,
-                            showModeToggle = false,
-                            dateValidator = { it >= System.currentTimeMillis() },
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .semantics { testTag = "android:id/DatePicker" }
-                        )
+                        BoxWithConstraints {
+                            val scale = remember(this.maxWidth) { if (this.maxWidth > 360.dp) 1f else (this.maxWidth / 360.dp) }
+                            Box(modifier = Modifier.requiredWidthIn(min = 360.dp)) {
+                                DatePicker(
+                                    modifier = Modifier.scale(scale).fillMaxSize(),
+                                    state = datePickerState,
+                                    showModeToggle = false,
+                                    dateValidator = { it >= System.currentTimeMillis() }
+                                )
+                            }
+                        }
+                    }
+                }
+                // Inside your LaunchedEffect or wherever you are using selectedDateMillis
+                LaunchedEffect(datePickerState.selectedDateMillis) {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        selectedDate = convertMillisToDate(millis)
+                        showDatePicker = false
                     }
                 }
             }
