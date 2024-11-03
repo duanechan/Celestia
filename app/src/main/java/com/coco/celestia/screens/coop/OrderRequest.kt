@@ -508,7 +508,9 @@ fun PreparingOrderActions(
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
-            modifier = Modifier.padding(8.dp, 0.dp)
+            modifier = Modifier
+                .padding(8.dp, 0.dp)
+                .semantics { testTag = "android:id/ShipOrderText" }
         )
         IconButton(
             onClick = { statusDialog = true },
@@ -587,7 +589,9 @@ fun DeliveringOrderActions() {
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .semantics { testTag = "android:id/OrderDeliveryText" }
             )
             Icon(
                 imageVector = Icons.Default.MoreVert,
