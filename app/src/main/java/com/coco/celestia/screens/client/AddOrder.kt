@@ -184,7 +184,8 @@ fun ProductTypeCard(
             .padding(vertical = 8.dp)
             .animateContentSize()
             .fillMaxWidth()
-            .semantics { testTag = "android:id/ProductTypeCard_${product.name}" },
+            .semantics { testTag = "android:id/ProductTypeCard_${product.name}" }
+            .clickable { expanded = !expanded },
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.elevatedCardElevation(5.dp)
     ) {
@@ -222,7 +223,7 @@ fun ProductTypeCard(
                     )
                 }
                 AnimatedVisibility(visible = expanded) {
-                    AddOrderForm (
+                    AddOrderForm(
                         navController = navController,
                         userViewModel = userViewModel,
                         productType = productType,
@@ -382,11 +383,11 @@ fun AddOrderForm(
             ) {
                 Text(text = "Do you want to place this order?", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "ID: ${order.orderId.substring(6, 10).uppercase()}")
+                Text(text = "ID: ${order.orderId.substring(6, 10).uppercase()}", modifier = Modifier.semantics { testTag = "android:id/OrderIdText" })
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "Product: ${productName.toString()}")
+                Text(text = "Product: ${productName.toString()}", modifier = Modifier.semantics { testTag = "android:id/ProductNameText" })
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "Order Date: ${order.orderDate}")
+                Text(text = "Order Date: ${order.orderDate}", modifier = Modifier.semantics { testTag = "android:id/OrderDateText" })
                 Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
@@ -402,7 +403,7 @@ fun AddOrderForm(
                     label = { Text("Enter weight (kg)") },
                     placeholder = { Text("e.g. 10.5") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/QuantityInput" }
                 )
 
                 OutlinedTextField(
