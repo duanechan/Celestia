@@ -300,21 +300,27 @@ fun OrderItem(
                         text = orderCount.toString(),
                         fontSize = 80.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(5.dp)
+                        modifier = Modifier
+                            .padding(5.dp)
+                            .semantics { testTag = "android:id/OrderID_$orderCount" }
                     )
                     Column (modifier = Modifier.padding(16.dp)) {
-                        Text(text = "Order ID: $orderId")
+                        Text(text = "Order ID: $orderId",
+                            modifier = Modifier.semantics { testTag = "android:id/OrderIdText_$orderCount" }) //testing
                         Text(
                             text = "${order.orderData.name}, ${order.orderData.quantity}kg",
-                            fontSize = 25.sp, fontWeight = FontWeight.Bold
+                            fontSize = 25.sp, fontWeight = FontWeight.Bold,
+                            modifier = Modifier.semantics { testTag = "android:id/OrderDetailsText_$orderCount" } //testing
                         )
-                        Text(text = orderClient, fontSize = 15.sp)
+                        Text(text = orderClient, fontSize = 15.sp,
+                            modifier = Modifier.semantics { testTag = "android:id/ClientName_$orderCount" }) //testing
                     }
                 }
 
                 Text(
                     text = orderStatus.lowercase().replaceFirstChar { it.uppercase() },
-                    color = orderStatusConfig(orderStatus)
+                    color = orderStatusConfig(orderStatus),
+                    modifier = Modifier.semantics { testTag = "android:id/OrderStatus_$orderCount" }
                 )
 //                StatusSelector(
 //                    order = order,
@@ -325,9 +331,9 @@ fun OrderItem(
             }
             Column(modifier = Modifier.padding(16.dp)) {
                 Spacer(modifier = Modifier.height(10.dp))
-                Text(text = "${order.street}, ${order.barangay}")
+                Text(text = "${order.street}, ${order.barangay}", modifier = Modifier.semantics { testTag = "android:id/OrderAddress_$orderCount" })
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = formatDate(order.orderDate))
+                Text(text = "Date Ordered: ${formatDate(order.orderDate)}", modifier = Modifier.semantics { testTag = "android:id/OrderDate_$orderCount" })
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
