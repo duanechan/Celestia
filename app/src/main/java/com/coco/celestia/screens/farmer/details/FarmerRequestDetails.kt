@@ -39,7 +39,6 @@ import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.ItemData
 import com.coco.celestia.viewmodel.model.ProductData
-import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -104,7 +103,6 @@ fun FarmerRequestDetails(
                 navController = navController,
                 orderData = orderData,
                 itemData = itemData,
-                usersData = usersData,
                 showDecisionDialog = showDecisionDialog,
                 setDecisionDialog = { showDecisionDialog = it },
                 decisionType = decisionType,
@@ -162,7 +160,6 @@ fun OrderDetails(
     navController: NavController,
     orderData: OrderData,
     itemData: List<ProductData>,
-    usersData: List<UserData>,
     showDecisionDialog: Boolean,
     setDecisionDialog: (Boolean) -> Unit,
     decisionType: String?,
@@ -195,10 +192,7 @@ fun OrderDetails(
                 orderData = orderData,
                 itemData = itemData,
                 setDecisionType = setDecisionType,
-                setDecisionDialog = setDecisionDialog,
-                orderViewModel = orderViewModel,
-                onAccept = { onAccept(farmerName) },
-                onReject = onReject
+                setDecisionDialog = setDecisionDialog
             )
         }
     }
@@ -339,12 +333,12 @@ fun OrderDetailsCard(orderData: OrderData, navController: NavController) {
                             .semantics { testTag = "android:id/orderDateLabel" }
                     )
                     Text(
-                        text = orderData.targetDate,
+                        text = orderData.targetDate.ifEmpty { "Not Specified" },
                         color = Cocoa,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .semantics { testTag = "android:id/oderDateText" }
+                            .semantics { testTag = "android:id/orderDateText" }
                     )
                     Spacer(modifier = Modifier.height(20.dp))
 
@@ -440,12 +434,15 @@ fun InventoryCheckCard(
     orderData: OrderData,
     itemData: List<ProductData>,
     setDecisionType: (String?) -> Unit,
-    setDecisionDialog: (Boolean) -> Unit,
-    orderViewModel: OrderViewModel,
-    onAccept: () -> Unit,
-    onReject: (String) -> Unit
+    setDecisionDialog: (Boolean) -> Unit
 ) {
     Spacer(modifier = Modifier.height(30.dp))
+
+    val availableProduct = itemData.find {
+        it.name.equals(orderData.orderData.name, ignoreCase = true)
+    }
+    val isInsufficient = (availableProduct?.quantity ?: 0) < orderData.orderData.quantity
+
     Card(
         shape = RoundedCornerShape(20.dp),
         modifier = Modifier
@@ -499,10 +496,6 @@ fun InventoryCheckCard(
                                 .fillMaxSize()
                                 .semantics { testTag = "android:id/inventoryCheckProductColumn" }
                         ) {
-                            // Use itemData to find available quantity
-                            val availableProduct = itemData.find {
-                                it.name.equals(orderData.orderData.name, ignoreCase = true)
-                            }
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier.fillMaxWidth()
@@ -516,11 +509,16 @@ fun InventoryCheckCard(
                                     modifier = Modifier.semantics { testTag = "android:id/inventoryProductNameText" }
                                 )
                                 Spacer(modifier = Modifier.height(20.dp))
+
                                 Text(
-                                    text = "${availableProduct?.quantity ?: "N/A"} kg",
+                                    text = if (availableProduct != null) {
+                                        "${availableProduct.quantity} kg"
+                                    } else {
+                                        "N/A"
+                                    },
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 30.sp,
-                                    color = Cocoa,
+                                    color = if (isInsufficient) Cinnabar else GreenBeans,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier.semantics { testTag = "android:id/inventoryProductQuantityText" }
                                 )
@@ -531,76 +529,88 @@ fun InventoryCheckCard(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
+                val statusMessage = when {
+                    availableProduct == null -> "You do not have this product!"
+                    isInsufficient -> "Insufficient quantity available!"
+                    else -> "Sufficient quantity available."
+                }
+
                 Text(
-                    text = "Check the inventory for more details",
-                    color = Cocoa,
+                    text = statusMessage,
+                    color = when {
+                        availableProduct == null -> Cinnabar
+                        isInsufficient -> Cinnabar
+                        else -> GreenBeans
+                    },
                     fontSize = 14.sp,
                     modifier = Modifier
                         .padding(bottom = 5.dp)
-                        .semantics { testTag = "android:id/inventoryCheckHint" }
+                        .semantics { testTag = "android:id/inventoryCheckStatus" }
                 )
 
                 Spacer(modifier = Modifier.height(15.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    // Accept button
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                if (availableProduct != null) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        IconButton(
-                            onClick = {
-                                setDecisionType("ACCEPT")
-                                setDecisionDialog(true)
-                            },
-                            modifier = Modifier
-                                .size(60.dp)
-                                .clip(CircleShape)
-                                .background(color = SageGreen)
-                                .semantics { testTag = "android:id/acceptButton" }
+                        // Accept button
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Accept Order",
-                                tint = Cocoa
+                            IconButton(
+                                onClick = {
+                                    setDecisionType("ACCEPT")
+                                    setDecisionDialog(true)
+                                },
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(CircleShape)
+                                    .background(color = SageGreen)
+                                    .semantics { testTag = "android:id/acceptButton" }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Accept Order",
+                                    tint = Cocoa
+                                )
+                            }
+                            Text(
+                                text = "Accept",
+                                fontWeight = FontWeight.Bold,
+                                color = Cocoa,
+                                fontSize = 14.sp
                             )
                         }
-                        Text(
-                            text = "Accept",
-                            fontWeight = FontWeight.Bold,
-                            color = Cocoa,
-                            fontSize = 14.sp
-                        )
-                    }
-                    // Reject button
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        IconButton(
-                            onClick = {
-                                setDecisionType("REJECT")
-                                setDecisionDialog(true)
-                            },
-                            modifier = Modifier
-                                .size(60.dp)
-                                .clip(CircleShape)
-                                .background(color = Copper)
-                                .semantics { testTag = "android:id/rejectButton" }
+                        // Reject button
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Reject Order",
-                                tint = Cocoa
+                            IconButton(
+                                onClick = {
+                                    setDecisionType("REJECT")
+                                    setDecisionDialog(true)
+                                },
+                                modifier = Modifier
+                                    .size(60.dp)
+                                    .clip(CircleShape)
+                                    .background(color = Copper)
+                                    .semantics { testTag = "android:id/rejectButton" }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Reject Order",
+                                    tint = Cocoa
+                                )
+                            }
+                            Text(
+                                text = "Reject",
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF6D4A26),
+                                fontSize = 14.sp
                             )
                         }
-                        Text(
-                            text = "Reject",
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF6D4A26),
-                            fontSize = 14.sp
-                        )
                     }
                 }
             }

@@ -453,7 +453,7 @@ fun ContentItem(
         date.isSelected -> MaterialTheme.colorScheme.secondaryContainer
         targetDates.any { it == date.fullDate.toString() } -> {
             if (userRole == "Admin") MaterialTheme.colorScheme.primary
-            else Sand
+            else Sand2
         }
         else -> Color.Transparent
     }
