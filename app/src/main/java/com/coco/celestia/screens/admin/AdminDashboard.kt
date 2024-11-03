@@ -17,7 +17,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.semantics.semantics
@@ -94,7 +98,7 @@ fun AdminDashboard(userData: UserData?) {
                     .semantics { testTag = "android:id/currentDate" },
                 color = Color.White
             )
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.height(30.dp))
             SummaryDashboard()
         }
     }
@@ -102,29 +106,66 @@ fun AdminDashboard(userData: UserData?) {
 
 @Composable
 fun SummaryDashboard() {
-    Box(
+    LazyColumn(
         modifier = Modifier
-            .padding(1.dp)
-            .fillMaxWidth()
-            .border(BorderStroke(3.dp, Color.White), shape = RoundedCornerShape(18.dp))
-            .clip(RoundedCornerShape(18.dp))
-            .background(Color.White)
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)
     ) {
-        Text(
-            text = "Overview Summary",
-            fontWeight = FontWeight.Bold,
-            color = DarkBlue,
+        item{
+        Box(
             modifier = Modifier
-                .padding(start = 8.dp, top = 8.dp)
-                .semantics { testTag = "android:id/overviewSummary" }
+                .padding(1.dp)
+                .fillMaxWidth()
+                .border(BorderStroke(3.dp, Color.White), shape = RoundedCornerShape(15.dp))
+                .clip(RoundedCornerShape(18.dp))
+                .background(Color.White)
         )
-        Spacer(modifier = Modifier.height(5.dp))
-        Row(modifier = Modifier.padding(5.dp)) {
-            Column {
-                TestAdminChart(avgTimeToMarket, maxTimeToMarket)
-                InventoryPieChart(PieChartItem)
+        Spacer(modifier = Modifier.height(20.dp))
+        Box(
+            modifier = Modifier
+                .padding(1.dp)
+                .fillMaxWidth()
+                .border(BorderStroke(3.dp, Color.White), shape = RoundedCornerShape(15.dp))
+                .clip(RoundedCornerShape(18.dp))
+                .background(Color.White)
+        ) {
+            Text(
+                text = "Inventory Overview",
+                fontWeight = FontWeight.Bold,
+                color = DarkBlue,
+                modifier = Modifier
+                    .padding(start = 20.dp, top =15.dp)
+            )
+            Spacer(modifier = Modifier.height(5.dp))
+            Row(modifier = Modifier.padding(5.dp)) {
+                Column {
+                    InventoryPieChart(PieChartItem)
+                    }
+                }
             }
-            TotalProductionVolumeLineChart(productionData)
+            Spacer(modifier = Modifier.height(20.dp))
+            Box(
+                modifier = Modifier
+                    .padding(1.dp)
+                    .fillMaxWidth()
+                    .border(BorderStroke(3.dp, Color.White), shape = RoundedCornerShape(15.dp))
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Color.White)
+            ) {
+                Text(
+                    text = "User Management Overview",
+                    fontWeight = FontWeight.Bold,
+                    color = DarkBlue,
+                    modifier = Modifier
+                        .padding(start = 20.dp, top = 15.dp)
+                )
+                Row(modifier = Modifier.padding(5.dp)) {
+                    Column {
+                        UserManagementDashboard()
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }
@@ -144,141 +185,125 @@ val PieChartItem = listOf(
     PieEntry(30f, "Coffee"),
 )
 
-// Example usage
-val avgTimeToMarket = 7f
-val maxTimeToMarket = 10f
-
-@Composable
-fun TotalProductionVolumeLineChart(dataPoints: List<Entry>) {
-    Box(
-        modifier = Modifier
-            .padding(5.dp)
-            .width(300.dp)
-            .height(300.dp)
-            .semantics { testTag = "android:id/productionVolumeLineChart" }
-    ) {
-
-        AndroidView(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp),
-            factory = { context ->
-                LineChart(context).apply {
-                    description.isEnabled = false
-                    xAxis.position = XAxis.XAxisPosition.BOTTOM
-                    axisRight.isEnabled = false
-                    legend.isEnabled = true
-
-                    val boldTypeface = Typeface.DEFAULT_BOLD
-                    xAxis.typeface = boldTypeface
-                    axisLeft.typeface = boldTypeface
-
-                    axisLeft.setDrawGridLines(true)
-                    axisLeft.gridLineWidth = 2f
-                    axisRight.isEnabled = false
-
-                    // Legend
-                    legend.isEnabled = true
-                }
-            },
-            update = { lineChart ->
-                val dataSet = LineDataSet(dataPoints, "Production Volume").apply {
-                    color = DarkBlue.toArgb()
-                    valueTextColor = android.graphics.Color.BLACK
-                    lineWidth = 4f
-                    circleRadius = 6f
-
-                    setDrawCircleHole(false)
-                }
-                lineChart.data = LineData(dataSet)
-                lineChart.invalidate()
-            }
-        )
-    }
-}
 
 @Composable
 fun InventoryPieChart(entries: List<PieEntry>) {
-    Box(
+    Spacer(modifier = Modifier.height(20.dp))
+    Column(
         modifier = Modifier
-            .width(160.dp)
-            .height(160.dp)
-            .semantics { testTag = "android:id/inventoryPieChart" }
+            .fillMaxSize()
+            .padding(16.dp)
     ) {
-
-        AndroidView(
+        // Total Inventory Information
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(500.dp),
-            factory = { context ->
-                PieChart(context).apply {
-                    description.isEnabled = false
-                    isDrawHoleEnabled = false
-                    setUsePercentValues(true)
-                    legend.isEnabled = true
-                    legend.textColor = android.graphics.Color.BLACK
-                    legend.textSize = 12f
-                }
-            },
-
-            update = { pieChart ->
-                val dataSet = PieDataSet(entries, "Inventory this month").apply {
-                    setColors(
-                        RedMeat.toArgb(),
-                        BrownCoffee.toArgb()
-                    )
-                    valueTextColor = android.graphics.Color.BLACK
-                }
-                pieChart.data = PieData(dataSet)
-                pieChart.invalidate()
-            }
-        )
-    }
-}
-
-@Composable
-fun TestAdminChart(averageTime: Float, maxTime: Float) {
-    var targetProgress by remember { mutableStateOf(0f) }
-
-    LaunchedEffect(Unit) {
-        targetProgress = (averageTime / maxTime) * 100
-    }
-
-    val animatedProgress by animateFloatAsState(
-        targetValue = targetProgress,
-        animationSpec = tween(durationMillis = 1000)
-    )
-
-    Box(
-        modifier = Modifier
-            .padding(top = 15.dp)
-            .size(150.dp)
-            .semantics { testTag = "adminChart" }
-    ) {
-        // Circular progress indicator
-        CircularProgressIndicator(
-            progress = animatedProgress / 100f, // Normalize to [0, 1]
-            modifier = Modifier
-                .size(150.dp)
-                .padding(16.dp),
-            color = DarkBlue,
-            strokeWidth = 15.dp
-        )
-
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(vertical = 8.dp),
         ) {
-            Text(
-                text = "Time to Market:",
-                fontSize = 10.sp,
-            )
-            Text(
-                text = "${averageTime.toInt()} Days", // Display average time as integer
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
+        }
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+        ) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Alerts", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("• Green beans: 15 kg left", fontSize = 14.sp, color = Color.Red)
+                Text("• Kiniing: 5 kg left", fontSize = 14.sp, color = Color.Red)
+            }
+        }
+
+        // Inventory Pie Chart for Coffee and Meat
+        Spacer(modifier = Modifier.height(16.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp)
+                .semantics { testTag = "android:id/inventoryPieChart" },
+            contentAlignment = Alignment.Center
+        ) {
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(500.dp),
+                factory = { context ->
+                    PieChart(context).apply {
+                        description.isEnabled = false
+                        isDrawHoleEnabled = false
+                        setUsePercentValues(true)
+                        legend.isEnabled = true
+                        legend.textColor = android.graphics.Color.BLACK
+                        legend.textSize = 15f
+                    }
+                },
+                update = { pieChart ->
+                    val dataSet = PieDataSet(entries, "Inventory Breakdown").apply {
+                        setColors(
+                            BrownCoffee.toArgb(),
+                            RedMeat.toArgb()
+                        )
+                        valueTextColor = android.graphics.Color.BLACK
+                    }
+                    pieChart.data = PieData(dataSet)
+                    pieChart.invalidate()
+                }
             )
         }
     }
 }
+
+
+@Composable
+fun UserManagementDashboard() {
+    Spacer(modifier = Modifier.height(20.dp))
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        // Might be changed
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+        ) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Total Users", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("20", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+            }
+        }
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+        ) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Active Users", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("7", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.Green)
+            }
+        }
+
+        // for Audit Logs, will be changed
+        Text(
+            text = "Recent Activity",
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp)
+        ) {
+            Text("• User A updated inventory - 2 mins ago", fontSize = 14.sp)
+            Text("• User B added a new order - 10 mins ago", fontSize = 14.sp)
+            Text("• User C logged in - 30 mins ago", fontSize = 14.sp)
+        }
+    }
+}
+
+

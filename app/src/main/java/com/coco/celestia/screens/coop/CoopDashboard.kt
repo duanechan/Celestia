@@ -107,7 +107,6 @@ fun OverviewSummaryBox(orderViewModel: OrderViewModel, productViewModel: Product
                 ) {
                     ProductStockTrendsChart(productViewModel)
                     OrderStatusDonutChart(orderViewModel)
-                    // call the productrends
                 }
             }
         }
@@ -307,6 +306,13 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel) {
                     .background(Color.White, RoundedCornerShape(16.dp))
                     .border(1.dp, Color.LightGray, RoundedCornerShape(16.dp))
             ) {
+                Text(
+                    text = "Product Stock Trends",
+                    fontWeight = FontWeight.Bold,
+                    color = DarkGreen,
+                    modifier = Modifier.padding(start = 15.dp, top = 5.dp),
+                    fontSize = 10.sp
+                )
                 AndroidView(
                     modifier = Modifier
                         .fillMaxWidth()
