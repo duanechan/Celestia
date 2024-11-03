@@ -192,7 +192,6 @@ fun TopBar(title: String, navController: NavController, gradient: Brush) {
 fun GradientTopBar(title: String, navController: NavController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination?.route
-
     val noBackButtonRoutes = listOf("farmer_dashboard", "farmer_manage_order", "farmer_items", "profile", "farmer_add_product")
 
     Box(
@@ -232,6 +231,21 @@ fun GradientTopBar(title: String, navController: NavController) {
                     }
                 } else {
                     Box(modifier = Modifier.width(48.dp))
+                }
+            },
+            actions = {
+                if (currentDestination == "farmer_items" || currentDestination == "farmer_manage_order") {
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        tint = Cocoa,
+                        contentDescription = "Calendar Icon",
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .size(30.dp)
+                            .clickable {
+                                navController.navigate(Screen.Calendar.route)
+                            }
+                    )
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(

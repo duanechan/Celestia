@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,7 +49,7 @@ import com.coco.celestia.viewmodel.model.OrderData
 import java.text.SimpleDateFormat
 import java.time.YearMonth
 import java.util.Locale
-
+import com.coco.celestia.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,14 +71,15 @@ fun Calendar(
             userRole
         )
     }
-    Scaffold (
+
+    Scaffold(
         topBar = {
             TopAppBar(
                 title = {}
             )
         }
     ) { padding ->
-        LazyColumn (
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
@@ -90,19 +93,24 @@ fun Calendar(
                     onPreviousMonthButtonClicked = { prevMonth ->
                         viewModel.toPreviousMonth(prevMonth)
                     },
-                    onNextMonthButtonClicked =  { nextMonth ->
+                    onNextMonthButtonClicked = { nextMonth ->
                         viewModel.toNextMonth(nextMonth)
                     },
                     onDateClickListener = { selectedDate ->
                         targetDate = selectedDate.fullDate.toString()
-                    }
+                    },
+                    userRole = userRole
                 )
             }
 
             item {
-                Row (
+                val textColor = if (userRole == "Admin") Color.White else Cocoa
+                val backgroundColor = if (userRole == "Admin") MaterialTheme.colorScheme.primary.copy(alpha = 1f) else Sand2
+                Row(
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .background(backgroundColor)
+                        .padding(top = 15.dp, start = 16.dp, bottom = 15.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
@@ -110,9 +118,10 @@ fun Calendar(
                         modifier = Modifier
                             .weight(2f)
                             .fillMaxWidth()
-                            .offset(x=5.dp),
+                            .offset(x = 5.dp),
                         fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Start
+                        textAlign = TextAlign.Start,
+                        color = textColor
                     )
                     Text(
                         text = "Quantity",
@@ -120,9 +129,11 @@ fun Calendar(
                             .weight(2f)
                             .fillMaxWidth(),
                         fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        color = textColor
                     )
                 }
+                Divider(color = textColor, thickness = 2.dp)
             }
 
             when (orderState) {
@@ -131,6 +142,7 @@ fun Calendar(
                         CircularProgressIndicator()
                     }
                 }
+
                 is OrderState.SUCCESS -> {
                     val sameDate = orderData.filter { order ->
                         val targetDates = order.targetDate
@@ -143,34 +155,30 @@ fun Calendar(
                         }
                     }
                     if (sameDate.isNotEmpty()) {
-                        itemsIndexed(sameDate) { _, order ->
-                            OrderItem(order = order)
+                        itemsIndexed(sameDate) { index, order ->
+                            OrderItem(
+                                order = order,
+                                rowIndex = index,
+                                userRole = userRole,
+                                totalItems = sameDate.size
+                            )
                         }
                     } else {
                         item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(16.dp)
-                            ) {
-                                Text(
-                                    text = "No orders found for this date.",
-                                    modifier = Modifier
-                                        .align(Alignment.CenterStart)
-                                )
-                            }
+                            EmptyOrderState(userRole = userRole)
                         }
                     }
-
                 }
+
                 OrderState.EMPTY -> {
                     item {
-                        Text("No orders found for this date.")
+                        EmptyOrderState(userRole = userRole)
                     }
                 }
+
                 is OrderState.ERROR -> {
                     item {
-                        Text("Error: ${(orderState as OrderState.ERROR).message}")
+                        ErrorOrderState(userRole = userRole, message = (orderState as OrderState.ERROR).message)
                     }
                 }
             }
@@ -179,40 +187,142 @@ fun Calendar(
 }
 
 @Composable
-fun OrderItem(order: OrderData) {
-    Row (
+fun EmptyOrderState(userRole: String) {
+    val textColor = if (userRole == "Admin") Color.White else Cocoa
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp),
+            .fillMaxHeight()
+            .background(
+                color = if (userRole == "Admin") MaterialTheme.colorScheme.primary.copy(alpha = 1f) else Sand
+            )
+            .padding(bottom = 500.dp, top = 40.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "No orders found for this date.",
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+            color = textColor
+        )
+    }
+}
+
+@Composable
+fun ErrorOrderState(userRole: String, message: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = if (userRole == "Admin") MaterialTheme.colorScheme.primary.copy(alpha = 1f) else Sand
+            )
+            .padding(vertical = 30.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = order.orderData.name,
-            modifier = Modifier
-                .weight(2f)
-                .fillMaxWidth(),
+            text = "Error: $message",
+            modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Start,
+            color = if (userRole == "Admin") Color.White else Cocoa
         )
-        Text(
-            text = "${order.orderData.quantity}",
+    }
+}
+
+@Composable
+fun OrderItem(
+    order: OrderData,
+    rowIndex: Int,
+    userRole: String,
+    totalItems: Int
+) {
+    @Composable
+    fun getBackgroundColor(index: Int): Color {
+        return when {
+            index % 2 == 0 -> {
+                if (userRole == "Admin") MaterialTheme.colorScheme.primary.copy(alpha = 1f)
+                else Sand
+            }
+            else -> {
+                if (userRole == "Admin") MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                else Sand2
+            }
+        }
+    }
+
+    val textColor = if (userRole == "Admin") Color.White else Cocoa
+    val backgroundColor = getBackgroundColor(rowIndex)
+
+    Column {
+        Row(
             modifier = Modifier
-                .weight(2f)
-                .fillMaxWidth(),
-            textAlign = TextAlign.Center,
-        )
-        //Add Price
+                .fillMaxWidth()
+                .background(color = backgroundColor)
+                .padding(vertical = 30.dp, horizontal = 20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = order.orderData.name,
+                color = textColor,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .weight(2f)
+                    .fillMaxWidth(),
+                textAlign = TextAlign.Start,
+            )
+            Text(
+                text = "${order.orderData.quantity}",
+                color = textColor,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .weight(2f)
+                    .fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
+        }
+
+        if (rowIndex == totalItems - 1) {
+            val remainingToNextMultipleOf5 = (5 - (totalItems % 5)) % 5
+            if (remainingToNextMultipleOf5 > 0) {
+                repeat(remainingToNextMultipleOf5) { placeholderIndex ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(color = getBackgroundColor(totalItems + placeholderIndex))
+                            .padding(vertical = 30.dp, horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "",
+                            modifier = Modifier
+                                .weight(2f)
+                                .fillMaxWidth(),
+                            textAlign = TextAlign.Start,
+                        )
+                        Text(
+                            text = "",
+                            modifier = Modifier
+                                .weight(2f)
+                                .fillMaxWidth(),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
 fun CalendarWidget(
     orderViewModel: OrderViewModel,
-    days:Array<String>,
+    days: Array<String>,
     yearMonth: YearMonth,
     dates: List<CalendarUIState.Date>,
     onPreviousMonthButtonClicked: (YearMonth) -> Unit,
     onNextMonthButtonClicked: (YearMonth) -> Unit,
-    onDateClickListener: (CalendarUIState.Date) -> Unit
+    onDateClickListener: (CalendarUIState.Date) -> Unit,
+    userRole: String
 ) {
     Column(
         modifier = Modifier
@@ -233,7 +343,8 @@ fun CalendarWidget(
         Content(
             orderViewModel = orderViewModel,
             dates = dates,
-            onDateClickListener = onDateClickListener
+            onDateClickListener = onDateClickListener,
+            userRole = userRole
         )
     }
 }
@@ -290,19 +401,21 @@ fun DayItem(day: String, modifier: Modifier = Modifier) {
 fun Content(
     orderViewModel: OrderViewModel,
     dates: List<CalendarUIState.Date>,
-    onDateClickListener: (CalendarUIState.Date) -> Unit
+    onDateClickListener: (CalendarUIState.Date) -> Unit,
+    userRole: String
 ) {
     Column {
         var index = 0
         repeat(6) {
             if (index >= dates.size) return@repeat
             Row {
-                repeat(7){
+                repeat(7) {
                     val item = if (index < dates.size) dates[index] else CalendarUIState.Date.Empty
                     ContentItem(
                         orderViewModel = orderViewModel,
                         date = item,
                         onClickListener = onDateClickListener,
+                        userRole = userRole,
                         modifier = Modifier.weight(2f)
                     )
                     index++
@@ -317,6 +430,7 @@ fun ContentItem(
     orderViewModel: OrderViewModel,
     date: CalendarUIState.Date,
     onClickListener: (CalendarUIState.Date) -> Unit,
+    userRole: String,
     modifier: Modifier = Modifier
 ) {
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
@@ -324,30 +438,30 @@ fun ContentItem(
     val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     LaunchedEffect(Unit) {
-        orderViewModel.fetchAllOrders("", "Admin")
+        orderViewModel.fetchAllOrders("", userRole)
     }
 
     val targetDates = orderData
         .filter { it.status != "PENDING" }
-        .map { order ->
+        .mapNotNull { order ->
             val parsedDate = inputFormat.parse(order.targetDate)
-            val formattedDate = parsedDate?.let { outputFormat.format(it) }
-            formattedDate
+            parsedDate?.let { outputFormat.format(it) }
         }
         .distinct()
 
-    Row (
+    val backgroundColor = when {
+        date.isSelected -> MaterialTheme.colorScheme.secondaryContainer
+        targetDates.any { it == date.fullDate.toString() } -> {
+            if (userRole == "Admin") MaterialTheme.colorScheme.primary
+            else Sand
+        }
+        else -> Color.Transparent
+    }
+
+    Row(
         modifier = modifier
-            .background(
-                color = when {
-                    date.isSelected -> MaterialTheme.colorScheme.secondaryContainer
-                    targetDates.any { it == date.fullDate.toString() } -> MaterialTheme.colorScheme.primary
-                    else -> Color.Transparent
-                }
-            )
-            .clickable {
-                onClickListener(date)
-            },
+            .background(color = backgroundColor)
+            .clickable { onClickListener(date) },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
