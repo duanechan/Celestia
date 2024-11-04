@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -194,18 +195,11 @@ fun InventoryPieChart(entries: List<PieEntry>) {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Total Inventory Information
+        // Alerts Information
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
-        ) {
-        }
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
+                .padding(vertical = 8.dp)
         ) {
             Column(Modifier.padding(16.dp)) {
                 Text("Alerts", fontWeight = FontWeight.Bold, fontSize = 18.sp)
@@ -215,8 +209,7 @@ fun InventoryPieChart(entries: List<PieEntry>) {
             }
         }
 
-        // Inventory Pie Chart for Coffee and Meat
-        Spacer(modifier = Modifier.height(16.dp))
+        // Inventory Pie Chart
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -227,29 +220,66 @@ fun InventoryPieChart(entries: List<PieEntry>) {
             AndroidView(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(500.dp),
+                    .height(200.dp),
                 factory = { context ->
                     PieChart(context).apply {
                         description.isEnabled = false
                         isDrawHoleEnabled = false
                         setUsePercentValues(true)
-                        legend.isEnabled = true
-                        legend.textColor = android.graphics.Color.BLACK
-                        legend.textSize = 15f
+                        legend.isEnabled = false
                     }
                 },
                 update = { pieChart ->
-                    val dataSet = PieDataSet(entries, "Inventory Breakdown").apply {
+                    val dataSet = PieDataSet(entries, "").apply {
                         setColors(
-                            BrownCoffee.toArgb(),
-                            RedMeat.toArgb()
+                            RedMeat.toArgb(),
+                            BrownCoffee.toArgb()
                         )
-                        valueTextColor = android.graphics.Color.BLACK
+                        valueTextColor = android.graphics.Color.WHITE
+                        valueTextSize = 12f
                     }
                     pieChart.data = PieData(dataSet)
                     pieChart.invalidate()
                 }
             )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .background(BrownCoffee)
+                )
+                Text(
+                    text = " Coffee",
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .background(RedMeat)
+                )
+                Text(
+                    text = " Meat",
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .padding(start = 4.dp)
+                )
+            }
         }
     }
 }
