@@ -69,7 +69,7 @@ fun ClientOrderDetails(
     val orderViewModel: OrderViewModel = viewModel()
     val allOrders by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
-
+    val orderIdSub = orderId.substring(6, 10).uppercase()
     LaunchedEffect(Unit) {
         if (allOrders.isEmpty()) {
             orderViewModel.fetchAllOrders(
@@ -176,10 +176,10 @@ fun ClientOrderDetails(
                                         Text(
                                             text = buildAnnotatedString {
                                                 withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                                    append("Order ID ")
+                                                    append("Order ID: ")
                                                 }
                                                 withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
-                                                    append("#" + orderData.orderId.substring(5, 38))
+                                                    append("#$orderIdSub")
                                                 }
                                             },
                                             fontSize = 20.sp,

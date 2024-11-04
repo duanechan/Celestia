@@ -111,16 +111,18 @@ fun NavDrawerTopBar(
                             modifier = Modifier.align(Alignment.Center)
                         )
 
-                        IconButton(
-                            onClick = { navController.navigate(Screen.AddOrder.route) },
-                            modifier = Modifier
-                                .align(Alignment.CenterEnd)
-                                .semantics { testTag = "android:id/addOrderButton" }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ShoppingCart,
-                                contentDescription = "Add order"
-                            )
+                        if (currentDestination != Screen.AddOrder.route && currentDestination != Screen.OrderDetails.route) {
+                            IconButton(
+                                onClick = { navController.navigate(Screen.AddOrder.route) },
+                                modifier = Modifier
+                                    .align(Alignment.CenterEnd)
+                                    .semantics { testTag = "android:id/addOrderButton" }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ShoppingCart,
+                                    contentDescription = "Add order"
+                                )
+                            }
                         }
                     }
                 },
