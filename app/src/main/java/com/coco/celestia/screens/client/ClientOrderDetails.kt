@@ -26,6 +26,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.Copper
 import com.coco.celestia.ui.theme.LightGray
 import com.coco.celestia.ui.theme.LightOrange
@@ -84,6 +87,8 @@ fun ClientOrderDetails(
     }
 
     val showCancelConfirmation = remember { mutableStateOf(false) }
+    val showCanceledSnackbar = remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     when {
         orderState == OrderState.LOADING -> {
@@ -184,7 +189,9 @@ fun ClientOrderDetails(
                                             },
                                             fontSize = 20.sp,
                                             color = White,
-                                            modifier = Modifier.semantics { testTag = "android:id/OrderID" }
+                                            modifier = Modifier.semantics {
+                                                testTag = "android:id/OrderID"
+                                            }
                                         )
 
                                         Spacer(modifier = Modifier.height(4.dp))
@@ -218,7 +225,9 @@ fun ClientOrderDetails(
                                             },
                                             fontSize = 15.sp,
                                             color = White,
-                                            modifier = Modifier.semantics { testTag = "android:id/ETA" }
+                                            modifier = Modifier.semantics {
+                                                testTag = "android:id/ETA"
+                                            }
                                         )
                                     }
                                 }
@@ -288,7 +297,6 @@ fun ClientOrderDetails(
                                         .padding(end = 16.dp, bottom = 16.dp),
                                     horizontalArrangement = Arrangement.End
                                 ) {
-                                    // Check if the order status is "PENDING"
                                     if (orderData.status == "PENDING") {
                                         Button(
                                             onClick = { showCancelConfirmation.value = true },
@@ -338,7 +346,9 @@ fun ClientOrderDetails(
                                 ) {
                                     Button(onClick = {
                                         showCancelConfirmation.value = false
-                                        // TODO: Add cancellation functionality here
+                                        showCanceledSnackbar.value =
+                                            true
+                                        orderViewModel.cancelOrder(orderData.orderId)
                                     }) {
                                         Text("Yes")
                                     }
@@ -350,6 +360,23 @@ fun ClientOrderDetails(
                             }
                         }
                     }
+                }
+            }
+            if (showCanceledSnackbar.value) {
+                LaunchedEffect(showCanceledSnackbar.value) {
+                    kotlinx.coroutines.delay(500L)
+                    showCanceledSnackbar.value = false
+                    navController.navigate(Screen.ClientOrder.route)
+                }
+
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.BottomCenter
+                ) {
+                    SnackbarHost(
+                        hostState = snackbarHostState,
+                        modifier = Modifier.padding(16.dp)
+                    )
                 }
             }
         }
