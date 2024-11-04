@@ -41,11 +41,20 @@ import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import com.coco.celestia.screens.farmer.dialogs.EditQuantityDialog
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FarmerItemViewModel
+import com.coco.celestia.viewmodel.TransactionViewModel
+import com.coco.celestia.viewmodel.model.TransactionData
 import com.google.firebase.auth.FirebaseAuth
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 @Composable
 fun FarmerItemDetails(navController: NavController, productName: String) {
     val uid = FirebaseAuth.getInstance().uid.toString()
+    val currentDateTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    val formattedDateTime = currentDateTime.format(formatter).toString()
+    val transactionViewModel: TransactionViewModel = viewModel()
     val farmerProductViewModel: ProductViewModel = viewModel()
     val farmerItemViewModel: FarmerItemViewModel = viewModel()
     val productData by farmerProductViewModel.productData.observeAsState(emptyList())
@@ -289,6 +298,24 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                     val quantityDifference = newQuantity - productQuantity
                     farmerItemViewModel.updateItemQuantity(productName, quantityDifference)
                     farmerItemViewModel.updateItemPrice(productName, newPrice)
+                    transactionViewModel.recordTransaction(
+                        uid = uid,
+                        transaction = TransactionData(
+                            transactionId = "Transaction-${UUID.randomUUID()}",
+                            type = "ProductUpdated",
+                            date = formattedDateTime,
+                            description = "$productName quantity updated to ${quantityDifference}kg."
+                        )
+                    )
+                    transactionViewModel.recordTransaction(
+                        uid = uid,
+                        transaction = TransactionData(
+                            transactionId = "Transaction-${UUID.randomUUID()}",
+                            type = "ProductUpdated",
+                            date = formattedDateTime,
+                            description = "$productName price updated to ₱$newPrice."
+                        )
+                    )
                     showEditDialog = false
                 }
             )

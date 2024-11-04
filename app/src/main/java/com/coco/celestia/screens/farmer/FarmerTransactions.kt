@@ -114,10 +114,10 @@ fun FarmerTransactions(navController: NavController) {
 
 @Composable
 fun TransactionItem(transaction: TransactionData, navController: NavController) {
-    val transactionDate = formatDate(transaction.order.orderDate).toString()
-    val orderStatus = transaction.order.status
-    val productType = transaction.order.orderData.type
-    val productQuantity = transaction.order.orderData.quantity
+//    val transactionDate = formatDate(transaction.order.orderDate).toString()
+//    val orderStatus = transaction.order.status
+//    val productType = transaction.order.orderData.type
+//    val productQuantity = transaction.order.orderData.quantity
 
     Card(
         modifier = Modifier
@@ -125,7 +125,7 @@ fun TransactionItem(transaction: TransactionData, navController: NavController) 
             .fillMaxWidth()
             .semantics { testTag = "android:id/transactionCard" }
     ) {
-        StyledText(transactionDate, productQuantity.toString(), productType, orderStatus)
+//        StyledText(transactionDate, productQuantity.toString(), productType, orderStatus)
     }
 }
 

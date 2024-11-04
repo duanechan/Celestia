@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
@@ -32,9 +33,14 @@ import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.ProductData
+import com.coco.celestia.viewmodel.model.TransactionData
 import com.google.firebase.auth.FirebaseAuth
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -115,7 +121,7 @@ fun AddProductForm(
                 onDismissRequest = { expanded = false }
             ) {
                 productData?.forEach { productItem ->
-                    androidx.compose.material3.DropdownMenuItem(
+                    DropdownMenuItem(
                         text = { Text(productItem.name) },
                         onClick = {
                             onProductNameChange(productItem.name)
@@ -158,12 +164,17 @@ fun AddProductForm(
 fun CoopAddInventory(
     navController: NavController,
     productViewModel: ProductViewModel,
+    transactionViewModel: TransactionViewModel,
     productName: String,
     quantityAmount: Int,
     productType: String,
     defectBeans: Int,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
+    val uid = FirebaseAuth.getInstance().uid.toString()
+    val currentDateTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    val formattedDateTime = currentDateTime.format(formatter).toString()
     val productData by productViewModel.productData.observeAsState()
     val from by productViewModel.from.observeAsState("")
 
@@ -180,6 +191,15 @@ fun CoopAddInventory(
 
             if (((productData?.get(0)?.quantity ?: 0) - (product.quantity + defectBeans)) >= 0 ||
                 productName == "Green Beans") {
+                transactionViewModel.recordTransaction(
+                    uid = uid,
+                    transaction = TransactionData(
+                        transactionId = "Transaction-${UUID.randomUUID()}",
+                        type = "ProductAdded",
+                        date = formattedDateTime,
+                        description = "Added ${product.quantity}kg of ${product.name}."
+                    )
+                )
                 productViewModel.updateProductQuantity(product.name, product.quantity)
                 productViewModel.updateFromProduct(product.name, product.quantity, defectBeans)
                 navController.navigate(Screen.CoopInventory.route)

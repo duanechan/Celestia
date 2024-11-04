@@ -43,8 +43,14 @@ import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.util.isValidEmail
 import com.coco.celestia.util.sendEmail
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.TransactionData
+import com.google.firebase.auth.FirebaseAuth
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -197,6 +203,7 @@ fun AddUserForm(
 @Composable
 fun CheckAddUser(
     userViewModel: UserViewModel,
+    transactionViewModel: TransactionViewModel,
     navController: NavController,
     email: (String),
     firstname: (String),
@@ -206,6 +213,9 @@ fun CheckAddUser(
 ) {
     val userState by userViewModel.userState.observeAsState("")
     var userRole by remember { mutableStateOf("") }
+    val currentDateTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    val formattedDateTime = currentDateTime.format(formatter).toString()
     val subject = "Welcome to Coco: Coop Connects"
     val placeholderPass = "Coco123"
     val body = """
@@ -258,6 +268,15 @@ fun CheckAddUser(
                             "CoopMeat"
                         }
                         userViewModel.addAccount(email, firstname, lastname, placeholderPass, userRole, passwordInput.value)
+                        transactionViewModel.recordTransaction(
+                            uid = FirebaseAuth.getInstance().uid.toString(),
+                            transaction = TransactionData(
+                                transactionId = "Transaction-${UUID.randomUUID()}",
+                                type = "UserAdded",
+                                date = formattedDateTime,
+                                description = "Added $firstname $lastname's account ($email)."
+                            )
+                        )
                     }) {
                         Text("Confirm", modifier = Modifier.semantics { testTag = "android:id/confirmButton" })
                     }

@@ -30,6 +30,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
@@ -37,16 +38,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -63,9 +59,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coco.celestia.R
@@ -84,16 +78,26 @@ import com.coco.celestia.util.formatDate
 import com.coco.celestia.util.orderStatusConfig
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.TransactionData
 import com.google.firebase.auth.FirebaseAuth
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderRequest(
     userRole: String,
     orderViewModel: OrderViewModel,
+    transactionViewModel: TransactionViewModel,
     onUpdateOrder: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
+    val uid = FirebaseAuth.getInstance().uid.toString()
+    val currentDateTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    val formattedDateTime = currentDateTime.format(formatter).toString()
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -206,8 +210,28 @@ fun OrderRequest(
                         OrderItem(
                             order = order,
                             orderViewModel = orderViewModel,
+                            transactionViewModel = transactionViewModel,
                             orderCount = index + 1,
-                            onUpdateOrder = { onUpdateOrder(it) }
+                            onUpdateOrder = {
+                                onUpdateOrder(it)
+                                transactionViewModel.recordTransaction(
+                                    uid = uid,
+                                    transaction = TransactionData(
+                                        transactionId = "Transaction-${UUID.randomUUID()}",
+                                        type = "OrderUpdated",
+                                        date = formattedDateTime,
+                                        description = "Order#${order.orderId.substring(6, 11).uppercase()} status updated to ${
+                                            when(order.status) {
+                                                "PENDING" -> "preparing"
+                                                "PREPARING" -> "delivering"
+                                                "DELIVERING" -> "completed"
+                                                "COMPLETED" -> "completed"
+                                                else -> "unknown"
+                                            }
+                                        }.",
+                                    )
+                                )
+                            }
                         )
                     }
                     item { Spacer(modifier = Modifier.height(150.dp)) }
@@ -272,6 +296,7 @@ fun OrderItem(
     order: OrderData,
     orderCount: Int,
     orderViewModel: OrderViewModel,
+    transactionViewModel: TransactionViewModel,
     onUpdateOrder: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val orderStatus = order.status
@@ -322,11 +347,6 @@ fun OrderItem(
                     color = orderStatusConfig(orderStatus),
                     modifier = Modifier.semantics { testTag = "android:id/OrderStatus_$orderCount" }
                 )
-//                StatusSelector(
-//                    order = order,
-//                    orderViewModel = orderViewModel,
-//                    onUpdateOrder = { onUpdateOrder(it) }
-//                )
 
             }
             Column(modifier = Modifier.padding(16.dp)) {
@@ -357,103 +377,16 @@ fun OrderItem(
                             orderViewModel = orderViewModel,
                             onUpdateOrder = { onUpdateOrder(it) }
                         )
-                        "DELIVERING" -> DeliveringOrderActions()
+                        "DELIVERING" -> DeliveringOrderActions(
+                            order = order,
+                            orderViewModel = orderViewModel,
+                            onUpdateOrder = { onUpdateOrder(it) }
+                        )
                         "COMPLETED" -> CompletedOrderActions()
                     }
                 }
             }
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun StatusSelector(
-    order: OrderData,
-    orderViewModel: OrderViewModel,
-    onUpdateOrder: (Triple<ToastStatus, String, Long>) -> Unit
-) {
-    var statusExpanded by remember { mutableStateOf(false) }
-    var statusDialog by remember { mutableStateOf(false) }
-    var selectedStatus by remember { mutableStateOf("") }
-    val orderStatus = order.status
-    val color = when (orderStatus) {
-        "PENDING" -> PendingStatus
-        "PREPARING" -> PreparingStatus
-        "DELIVERING" -> DeliveringStatus
-        "COMPLETED" -> CompletedStatus
-        else -> Color.Gray
-    }
-
-    ExposedDropdownMenuBox(
-        expanded = statusExpanded,
-        onExpandedChange = {
-            if (orderStatus != "PENDING") {
-                statusExpanded = !statusExpanded
-            }
-        }
-    ) {
-        TextField(
-            readOnly = true,
-            value = orderStatus,
-            enabled = orderStatus != "PENDING",
-            onValueChange = {},
-            trailingIcon = {
-                if (orderStatus != "PENDING") {
-                    ExposedDropdownMenuDefaults.TrailingIcon(statusExpanded)
-                }
-            },
-            colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = color,
-                focusedContainerColor = color,
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedTrailingIconColor = Color.White,
-                focusedTrailingIconColor = Color.White,
-                disabledContainerColor = color,
-                disabledTrailingIconColor = Color.Transparent,
-                disabledIndicatorColor = Color.Transparent
-            ),
-            textStyle = TextStyle(
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = mintsansFontFamily,
-                color = Color.White,
-                textAlign = TextAlign.Center
-            ),
-            modifier = Modifier
-                .menuAnchor()
-                .clip(RoundedCornerShape(16.dp))
-                .width(175.dp)
-                .semantics { testTag = "android:id/StatusSelector" }
-        )
-        ExposedDropdownMenu(
-            expanded = statusExpanded,
-            onDismissRequest = { statusExpanded = false }
-        ) {
-            listOf("Preparing", "Delivering", "Completed").forEach { status ->
-                DropdownMenuItem(
-                    text = { Text(text = status, fontFamily = mintsansFontFamily)  },
-                    onClick = {
-                        selectedStatus = status
-                        statusDialog = true
-                    },
-                    modifier = Modifier.semantics { testTag = "android:id/StatusDropdownItem_$status" }
-                )
-            }
-        }
-    }
-    if (statusDialog) {
-        UpdateOrderStatusDialog(
-            status = selectedStatus,
-            onDismiss = { statusDialog = false },
-            onAccept = {
-                orderViewModel.updateOrder(order.copy(status = selectedStatus.uppercase()))
-                onUpdateOrder(Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
-                statusDialog = false
-                statusExpanded = false
-            }
-        )
     }
 }
 
@@ -545,7 +478,12 @@ fun PreparingOrderActions(
 }
 
 @Composable
-fun DeliveringOrderActions() {
+fun DeliveringOrderActions(
+    order: OrderData,
+    orderViewModel: OrderViewModel,
+    onUpdateOrder: (Triple<ToastStatus, String, Long>) -> Unit
+) {
+    var statusDialog by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
     val infiniteTransition = rememberInfiniteTransition(label = "Bouncing animation")
     val bouncingAnimation by infiniteTransition.animateFloat(
@@ -612,11 +550,36 @@ fun DeliveringOrderActions() {
                     .size(50.dp)
                     .padding(8.dp)
                     .offset(y = bouncingAnimation.dp)
+                    .clickable { statusDialog = true }
             )
         }
         AnimatedVisibility(expanded) {
-            OrderStatusTracker(status = "DELIVERING")
+            Column {
+                OrderStatusTracker(status = "DELIVERING")
+                Button(
+                    onClick = { statusDialog = true },
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = JadeGreen),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                ) {
+                    Text(text = "Finish Delivery", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+            }
         }
+    }
+
+    if (statusDialog) {
+        UpdateOrderStatusDialog(
+            status = "COMPLETED",
+            onDismiss = { statusDialog = false },
+            onAccept = {
+                orderViewModel.updateOrder(order.copy(status = "COMPLETED"))
+                onUpdateOrder(Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
+                statusDialog = false
+            }
+        )
     }
 }
 

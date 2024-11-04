@@ -52,10 +52,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.navigation.NavController
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.viewmodel.TransactionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminUserManagement(navController: NavController, userViewModel: UserViewModel) {
+fun AdminUserManagement(navController: NavController, userViewModel: UserViewModel, transactionViewModel: TransactionViewModel) {
     var text by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     var selectedUser by remember { mutableStateOf(UserData()) }
@@ -152,6 +153,7 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
         if(selectedUser != UserData()) {
             EditUser(
                 userViewModel = userViewModel,
+                transactionViewModel = transactionViewModel,
                 userData = selectedUser,
                 onDismiss = {
                     selectedUser = UserData()
@@ -159,9 +161,6 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
             )
         }
     }
-}
-
-fun DropdownMenuItem(onClick: () -> Unit, interactionSource: @Composable () -> Unit) {
 }
 
 @OptIn(ExperimentalFoundationApi::class)

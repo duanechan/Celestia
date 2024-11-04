@@ -22,17 +22,28 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.viewmodel.model.UserData
+import com.google.firebase.auth.FirebaseAuth
+import com.sun.mail.imap.protocol.UID
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditUser(
     userViewModel: UserViewModel,
+    transactionViewModel: TransactionViewModel,
     userData: UserData,
     onDismiss: () -> Unit
 ) {
     val roles = listOf("Coffee", "Meat")
+    val currentDateTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    val formattedDateTime = currentDateTime.format(formatter).toString()
     var updatedEmail by remember { mutableStateOf(userData.email) }
     var updatedRole by remember { mutableStateOf(userData.role) }
     var expanded by remember { mutableStateOf(false) }
@@ -122,6 +133,28 @@ fun EditUser(
                                         role = updatedRole
                                     )
                                 )
+                                if(it.email != updatedEmail) {
+                                    transactionViewModel.recordTransaction(
+                                        uid = FirebaseAuth.getInstance().uid.toString(),
+                                        transaction = TransactionData(
+                                            transactionId = "Transaction-${UUID.randomUUID()}",
+                                            type = "UserUpdated",
+                                            date = formattedDateTime,
+                                            description = "User ${it.firstname}'s email updated to $updatedEmail"
+                                        )
+                                    )
+                                }
+                                if(it.role != updatedRole) {
+                                    transactionViewModel.recordTransaction(
+                                        uid = FirebaseAuth.getInstance().uid.toString(),
+                                        transaction = TransactionData(
+                                            transactionId = "Transaction-${UUID.randomUUID()}",
+                                            type = "UserUpdated",
+                                            date = formattedDateTime,
+                                            description = "${it.firstname} ${it.lastname}'s role updated to $updatedRole"
+                                        )
+                                    )
+                                }
                                 // Reset the state after saving
                                 updatedEmail = ""
                                 updatedRole = roles.first()
@@ -129,6 +162,7 @@ fun EditUser(
                                 Toast.makeText(content, "User not found", Toast.LENGTH_SHORT).show()
                             }
                         }
+
                     }
                     onDismiss() // Close the dialog
                 },

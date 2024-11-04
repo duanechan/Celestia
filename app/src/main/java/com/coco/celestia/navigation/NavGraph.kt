@@ -41,7 +41,6 @@ import com.coco.celestia.screens.coop.CoopAddInventory
 import com.coco.celestia.screens.coop.CoopDashboard
 import com.coco.celestia.screens.coop.CoopInventory
 import com.coco.celestia.screens.coop.OrderRequest
-import com.coco.celestia.screens.coop.ProcessOrderPanel
 import com.coco.celestia.screens.coop.ProductTypeInventory
 import com.coco.celestia.screens.farmer.FarmerDashboard
 import com.coco.celestia.screens.farmer.FarmerItems
@@ -241,6 +240,7 @@ fun NavGraph(
             AdminInventory(
                 orderViewModel = orderViewModel,
                 productViewModel = productViewModel,
+                transactionViewModel = transactionViewModel,
                 navController = navController
             )
         }
@@ -248,6 +248,7 @@ fun NavGraph(
             onNavigate("User Management")
             AdminUserManagement(
                 userViewModel = userViewModel,
+                transactionViewModel = transactionViewModel,
                 navController = navController
             )
         }
@@ -282,6 +283,7 @@ fun NavGraph(
             onNavigate("Add User")
             CheckAddUser(
                 userViewModel = userViewModel,
+                transactionViewModel = transactionViewModel,
                 navController = navController,
                 email = emailSend,
                 firstname = firstname,
@@ -312,6 +314,7 @@ fun NavGraph(
             ConfirmAddProduct(
                 navController = navController,
                 productViewModel = productViewModel,
+                transactionViewModel = transactionViewModel,
                 productName = productName,
                 productType = productType,
                 productPrice = productPrice,
@@ -329,23 +332,13 @@ fun NavGraph(
             OrderRequest(
                 userRole = userRole,
                 orderViewModel = orderViewModel,
+                transactionViewModel = transactionViewModel,
                 onUpdateOrder = { onEvent(it) }
             )
         }
         composable(route = Screen.CoopInventory.route) {
             onNavigate("Inventory")
             CoopInventory(navController = navController, role = userRole)
-        }
-        composable(
-            route = Screen.CoopProcessOrder.route,
-            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
-        ) { backStack ->
-            val orderId = backStack.arguments?.getString("orderId")
-            onNavigate("Orders")
-            ProcessOrderPanel(
-                orderId = orderId.toString(),
-                orderViewModel = orderViewModel,
-            )
         }
         composable(route = Screen.AddOrder.route) {
             onNavigate("Add Order")
@@ -387,6 +380,7 @@ fun NavGraph(
             CoopAddInventory(
                 navController = navController,
                 productViewModel = productViewModel,
+                transactionViewModel = transactionViewModel,
                 productName = productName,
                 quantityAmount = quantityAmount,
                 productType = productType,

@@ -65,6 +65,7 @@ import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.util.convertMillisToDate
+import com.coco.celestia.util.formatDate
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
@@ -458,6 +459,7 @@ fun AddOrderForm(
                 navController.navigate(Screen.OrderConfirmation.route)
                 targetDateDialog = false
             },
+            enabled = quantity != 0 && selectedDate.isNotEmpty(),
             modifier = Modifier.semantics { testTag = "ConfirmOrderButton" }
         ) {
             Text("Confirm Order")
@@ -488,8 +490,10 @@ fun ConfirmOrderRequestPanel(
             }
         } else {
             val transaction = TransactionData(
-                "Transaction-${UUID.randomUUID()}",
-                order
+                transactionId = "Transaction-${UUID.randomUUID()}",
+                type = "OrderPlaced",
+                date = order.orderDate,
+                description = "Ordered ${order.orderData.quantity}kg of ${order.orderData.name} due in ${order.targetDate}"
             )
             orderViewModel.placeOrder(uid, order)
             transactionViewModel.recordTransaction(uid, transaction)

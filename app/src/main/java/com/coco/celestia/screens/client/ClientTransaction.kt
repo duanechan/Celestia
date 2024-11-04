@@ -104,10 +104,10 @@ fun TransactionPanel(transactionViewModel: TransactionViewModel) {
 
 @Composable
 fun TransactionItem(transaction: TransactionData) {
-    val transactionDate = formatDate(transaction.order.orderDate).toString()
+//    val transactionDate = formatDate(transaction.order.orderDate).toString()
 //    val productType = transaction.order.orderData.type
 //    val productQuantity = transaction.order.orderData.quantity
-    val orderStatus = transaction.order.status
+//    val orderStatus = transaction.order.status
 
     Card(
         modifier = Modifier

@@ -48,6 +48,7 @@ import com.coco.celestia.util.calculateMonthlyInventory
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.MonthlyInventory
 import com.google.firebase.auth.FirebaseAuth
 
@@ -55,6 +56,7 @@ import com.google.firebase.auth.FirebaseAuth
 fun AdminInventory(
     orderViewModel: OrderViewModel,
     productViewModel: ProductViewModel,
+    transactionViewModel: TransactionViewModel,
     navController: NavController
 ) {
     val productData by productViewModel.productData.observeAsState(emptyList())
@@ -168,7 +170,7 @@ fun AdminInventory(
 
                 is ProductState.SUCCESS -> {
                     if (selectedTab == "Current Inventory") {
-                        AdminItemList(productData, productViewModel)
+                        AdminItemList(productData, productViewModel, transactionViewModel)
                     } else {
                         AdminMonthlyInventoryList(monthlyInventory)
                     }
@@ -179,7 +181,7 @@ fun AdminInventory(
 }
 
 @Composable
-fun AdminItemList(itemList: List<ProductData>, productViewModel: ProductViewModel) {
+fun AdminItemList(itemList: List<ProductData>, productViewModel: ProductViewModel, transactionViewModel: TransactionViewModel) {
     var selectedProduct by remember { mutableStateOf<ProductData?>(null) }
     if (itemList.isNotEmpty()) {
         itemList.forEach { item ->
@@ -200,6 +202,7 @@ fun AdminItemList(itemList: List<ProductData>, productViewModel: ProductViewMode
         selectedProduct?.let { product ->
             EditProduct(
                 productViewModel = productViewModel,
+                transactionViewModel = transactionViewModel,
                 productData = product,
                 onDismiss = {
                     selectedProduct = null

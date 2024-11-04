@@ -38,7 +38,9 @@ data class ProductData(
 
 data class TransactionData(
     val transactionId: String = "",
-    val order: OrderData = OrderData()
+    val type: String = "",
+    val date: String = "",
+    val description: String = ""
 )
 
 data class ContactData(

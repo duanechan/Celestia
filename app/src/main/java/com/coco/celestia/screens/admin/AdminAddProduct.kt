@@ -34,6 +34,12 @@ import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.model.ProductData
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import com.coco.celestia.viewmodel.TransactionViewModel
+import com.coco.celestia.viewmodel.model.TransactionData
+import com.google.firebase.auth.FirebaseAuth
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 @Composable
 fun AdminAddProduct(
@@ -146,11 +152,17 @@ fun AdminAddProduct(
 fun ConfirmAddProduct(
     navController: NavController,
     productViewModel: ProductViewModel,
+    transactionViewModel: TransactionViewModel,
     productName: String,
     productType: String,
     productPrice: String,
     onToastEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
+    val uid = FirebaseAuth.getInstance().uid.toString()
+    val currentDateTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    val formattedDateTime = currentDateTime.format(formatter).toString()
+    val transactionRecorded = remember { mutableStateOf(false) }
     val productState by productViewModel.productState.observeAsState()
     val product = ProductData(
         name = productName,
@@ -165,6 +177,18 @@ fun ConfirmAddProduct(
                 onToastEvent(Triple(ToastStatus.FAILED, (productState as ProductState.ERROR).message, System.currentTimeMillis()))
             }
             is ProductState.SUCCESS -> {
+                if (!transactionRecorded.value) {
+                    transactionViewModel.recordTransaction(
+                        uid = uid,
+                        transaction = TransactionData(
+                            transactionId = "Transaction-${UUID.randomUUID()}",
+                            type = "ProductAdded",
+                            date = formattedDateTime,
+                            description = "${product.name} product added to the inventory."
+                        )
+                    )
+                    transactionRecorded.value = true
+                }
                 onToastEvent(Triple(ToastStatus.SUCCESSFUL, "Product Added Successfully", System.currentTimeMillis()))
                 navController.navigate(Screen.AdminInventory.route)
             }

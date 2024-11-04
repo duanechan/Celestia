@@ -18,14 +18,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.ProductData
+import com.coco.celestia.viewmodel.model.TransactionData
+import com.google.firebase.auth.FirebaseAuth
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 @Composable
 fun EditProduct(
     productViewModel: ProductViewModel,
+    transactionViewModel: TransactionViewModel,
     productData: ProductData,
     onDismiss: () -> Unit
 ) {
+    val uid = FirebaseAuth.getInstance().uid.toString()
+    val currentDateTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    val formattedDateTime = currentDateTime.format(formatter).toString()
     val productName by remember { mutableStateOf(productData.name) }
     var updatedPrice by remember { mutableStateOf(productData.priceKg.toString()) }
 
@@ -49,6 +60,15 @@ fun EditProduct(
         confirmButton = {
             Button(
                 onClick = {
+                    transactionViewModel.recordTransaction(
+                        uid = uid,
+                        transaction = TransactionData(
+                            transactionId = "Transaction-${UUID.randomUUID()}",
+                            type = "ProductUpdated",
+                            date = formattedDateTime,
+                            description = "$productName price updated to ₱${updatedPrice.toDouble()}."
+                        )
+                    )
                     productViewModel.updateProductPrice(productName, updatedPrice.toDouble())
                     onDismiss()
                 }) {

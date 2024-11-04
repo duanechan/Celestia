@@ -35,12 +35,21 @@ import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.ItemState
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.TransactionViewModel
+import com.coco.celestia.viewmodel.model.TransactionData
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 @Composable
 fun FarmerItems(navController: NavController) {
     val uid = FirebaseAuth.getInstance().uid.toString()
+    val currentDateTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    val formattedDateTime = currentDateTime.format(formatter).toString()
+    val transactionViewModel: TransactionViewModel = viewModel()
     val itemViewModel: FarmerItemViewModel = viewModel()
     val productViewModel: ProductViewModel = viewModel()
     val itemData by itemViewModel.itemData.observeAsState(emptyList())
@@ -89,6 +98,15 @@ fun FarmerItems(navController: NavController) {
                             type = "Vegetable",
                             startSeason = seasonStart,
                             endSeason = seasonEnd
+                        )
+                        transactionViewModel.recordTransaction(
+                            uid = uid,
+                            transaction = TransactionData(
+                                transactionId = "Transaction-${UUID.randomUUID()}",
+                                type = "ProductAdded",
+                                date = formattedDateTime,
+                                description = "${product.quantity}kg of ${product.name} added."
+                            )
                         )
                         itemViewModel.addItem(uid, product)
                         productViewModel.addProduct(product)
