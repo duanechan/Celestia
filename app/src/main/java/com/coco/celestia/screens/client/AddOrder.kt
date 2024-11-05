@@ -252,9 +252,8 @@ fun ProductTypeCard(
     var orderData by remember { mutableStateOf(OrderData()) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var orderConfirmed by remember { mutableStateOf(false) }
-    var isSheetOpen by rememberSaveable {
-        mutableStateOf(false)
-    }
+    var isSheetOpen by rememberSaveable { mutableStateOf(false) }
+
     val gradientBrush = when (productType.lowercase()) {
         "coffee" -> Brush.linearGradient(
             colors = listOf(Color(0xFFB79276), Color(0xFF91684A))
@@ -275,6 +274,7 @@ fun ProductTypeCard(
             .padding(vertical = 8.dp)
             .animateContentSize()
             .fillMaxWidth()
+            .clickable { isSheetOpen = true }
             .semantics { testTag = "android:id/ProductTypeCard_${product.name}" },
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.elevatedCardElevation(5.dp)
@@ -290,9 +290,7 @@ fun ProductTypeCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = productName,
                             fontSize = 20.sp,
@@ -308,29 +306,20 @@ fun ProductTypeCard(
                         modifier = Modifier
                             .size(32.dp)
                             .padding(start = 8.dp)
-                            .clickable {
-                                isSheetOpen = true
-                            }
+                            .clickable { isSheetOpen = true }
                             .semantics { testTag = "android:id/ShoppingCartIcon" }
                     )
                 }
+
                 if (isSheetOpen) {
-                    LaunchedEffect(Unit) {
-                        sheetState.expand()
-                    }
                     ModalBottomSheet(
                         sheetState = sheetState,
-                        onDismissRequest = {
-                            isSheetOpen = false
-                        },
+                        onDismissRequest = { isSheetOpen = false },
                     ) {
                         Column {
                             TopAppBar(
-                                title = {
-                                    Text(text = "Order Summary")
-                                }
+                                title = { Text(text = "Order Summary") }
                             )
-
                             AddOrderForm(
                                 userViewModel = userViewModel,
                                 productType = productType,
@@ -340,7 +329,7 @@ fun ProductTypeCard(
                                     onOrder(it)
                                     orderData = it
                                 },
-                                onSheetChanged = { isSheetOpen = it},
+                                onSheetChanged = { isSheetOpen = it },
                                 onOrderConfirmed = { orderConfirmed = it }
                             )
                         }
@@ -352,7 +341,7 @@ fun ProductTypeCard(
                         navController = navController,
                         order = orderData,
                         userViewModel = userViewModel,
-                        onAddToCartEvent = { onAddToCartEvent(it) },
+                        onAddToCartEvent = { onAddToCartEvent(it) }
                     )
                 }
             }
@@ -428,7 +417,7 @@ fun AddOrderForm(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 12.dp)
-                .semantics { testTag = "android:id/QuantityInput" }
+                .semantics { testTag = "android:id/QuantityInputField" }
         )
 
         OutlinedTextField(
