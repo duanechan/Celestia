@@ -2,14 +2,31 @@ package com.coco.celestia.screens.admin
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -17,14 +34,29 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.BlueGradientBrush
 import com.coco.celestia.ui.theme.mintsansFontFamily
+import com.coco.celestia.util.UserIdentifier
+import com.coco.celestia.viewmodel.TransactionState
+import com.coco.celestia.viewmodel.TransactionViewModel
+import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.TransactionData
+import com.coco.celestia.viewmodel.model.UserData
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
-fun UserManagementAuditLogs(navController: NavController) {
+fun UserManagementAuditLogs(navController: NavController, transactionViewModel: TransactionViewModel) {
+    val transactionData by transactionViewModel.transactionData.observeAsState(hashMapOf())
+    val transactionState by transactionViewModel.transactionState.observeAsState(TransactionState.LOADING)
+
+    LaunchedEffect(Unit) {
+        transactionViewModel.fetchAllTransactions() // Put filter keyword here if search functionality exists
+    }
+
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -106,8 +138,63 @@ fun UserManagementAuditLogs(navController: NavController) {
                         fontWeight = FontWeight.Bold
                     )
                 }
+                Divider()
             }
             // Rows for audit logs
+            when (transactionState) {
+                TransactionState.EMPTY -> {
+                    item { Text("Empty logs.") }
+                }
+                is TransactionState.ERROR -> {
+                    item { Text("Error loading logs.") }
+                }
+                TransactionState.LOADING -> {
+                    item { Text("Loading logs...") }
+                }
+                TransactionState.SUCCESS -> {
+                    transactionData.entries.forEach { (userId, transactions) ->
+
+                        items(transactions) { transaction ->
+                            LogItem(userId, transaction)
+                            Divider()
+                        }
+                    }
+                }
+            }
         }
+    }
+}
+
+@Composable
+fun LogItem(uid: String, transaction: TransactionData) {
+    var userData by remember { mutableStateOf<UserData?>(null) }
+
+    LaunchedEffect(uid) {
+        UserIdentifier.getUserData(uid) { result ->
+            userData = result
+        }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(13.dp)
+            .semantics { testTag = "android:id/LogItem" }
+    ) {
+        Text(
+            text = transaction.date,
+            fontSize = 14.sp,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = if (userData != null) "${userData?.firstname} ${userData?.lastname}" else "Unknown",
+            fontSize = 14.sp,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = transaction.type,
+            fontSize = 14.sp,
+            modifier = Modifier.weight(1f)
+        )
     }
 }

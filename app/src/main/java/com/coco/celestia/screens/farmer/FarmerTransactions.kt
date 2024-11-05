@@ -37,7 +37,7 @@ import com.google.firebase.auth.FirebaseAuth
 fun FarmerTransactions(navController: NavController) {
     val uid = FirebaseAuth.getInstance().uid.toString()
     val transactionViewModel: TransactionViewModel = viewModel()
-    val transactionData by transactionViewModel.transactionData.observeAsState(emptyList())
+    val transactionData by transactionViewModel.transactionData.observeAsState(hashMapOf())
     val transactionState by transactionViewModel.transactionState.observeAsState(TransactionState.LOADING)
 
     LaunchedEffect(Unit, transactionData) {
@@ -103,7 +103,7 @@ fun FarmerTransactions(navController: NavController) {
                         .background(color = BgColor)
                         .semantics { testTag = "android:id/transactionList" }
                 ) {
-                    items(transactionData) { transaction ->
+                    items(transactionData[uid]!!) { transaction ->
                         TransactionItem(transaction, navController)
                     }
                 }

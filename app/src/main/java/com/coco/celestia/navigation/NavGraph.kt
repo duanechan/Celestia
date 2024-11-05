@@ -255,6 +255,7 @@ fun NavGraph(
         composable(route = Screen.AdminUserManagementAuditLogs.route) {
             onNavigate("User Management")
             UserManagementAuditLogs(
+                transactionViewModel = transactionViewModel,
                 navController = navController
             )
         }

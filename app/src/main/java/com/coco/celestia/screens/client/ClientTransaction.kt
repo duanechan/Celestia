@@ -56,8 +56,9 @@ class ClientTransaction : ComponentActivity() {
 fun TransactionPanel(transactionViewModel: TransactionViewModel) {
     val auth = FirebaseAuth.getInstance()
     val uid = auth.currentUser?.uid.toString()
-    val transactionData by transactionViewModel.transactionData.observeAsState(emptyList())
+    val transactionData by transactionViewModel.transactionData.observeAsState(hashMapOf())
     val transactionState by transactionViewModel.transactionState.observeAsState(TransactionState.LOADING)
+    val transactionList = transactionData[uid]
 
     LaunchedEffect(Unit) {
         transactionViewModel.fetchTransactions(uid, "")
@@ -92,7 +93,7 @@ fun TransactionPanel(transactionViewModel: TransactionViewModel) {
                 }
             }
             is TransactionState.SUCCESS -> {
-                items(transactionData) { transaction ->
+                items(transactionList!!) { transaction ->
                     TransactionItem(transaction)
                 }
             }
