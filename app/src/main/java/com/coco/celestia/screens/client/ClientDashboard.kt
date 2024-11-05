@@ -1,6 +1,7 @@
 package com.coco.celestia.screens.client
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -27,21 +28,26 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -61,6 +67,7 @@ import com.coco.celestia.ui.theme.VeryDarkGreen
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
@@ -74,12 +81,16 @@ fun ClientDashboard(
     navController: NavController,
     userViewModel: UserViewModel,
     productViewModel: ProductViewModel,
-    orderViewModel: OrderViewModel
+    orderViewModel: OrderViewModel,
+    transactionViewModel: TransactionViewModel
 ) {
     val userData by userViewModel.userData.observeAsState(UserData())
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     val featuredProducts by productViewModel.featuredProducts.observeAsState(emptyList())
+    val notifications by transactionViewModel.notifications.observeAsState(emptyList())
+    val context = LocalContext.current
+    val showDialog = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         orderViewModel.fetchAllOrders("", "Client")
@@ -123,7 +134,15 @@ fun ClientDashboard(
                     )
 
                     Button(
-                        onClick = { /* Handle notification click */ },
+                        onClick = {
+                            if (notifications.isNotEmpty()) {
+                                // Show the dialog if there are notifications
+                                showDialog.value = true
+                            } else {
+                                // Show a message if there are no notifications
+                                Toast.makeText(context, "No new notifications", Toast.LENGTH_SHORT).show()
+                            }
+                        },
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
                             .semantics { testTag = "android:id/NotificationButton" }
@@ -151,7 +170,34 @@ fun ClientDashboard(
                 navController = navController
             )
         }
+
+        // Show the notifications dialog if showDialog is true
+        if (showDialog.value) {
+            showNotificationsDialog(notifications) {
+                showDialog.value = false // Dismiss the dialog
+            }
+        }
     }
+}
+
+@Composable
+fun showNotificationsDialog(notifications: List<String>, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        title = { Text(text = "Notifications") },
+        text = {
+            Column {
+                notifications.forEach { notification ->
+                    Text(text = notification)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onDismiss() }) {
+                Text("OK")
+            }
+        }
+    )
 }
 
 @Composable
