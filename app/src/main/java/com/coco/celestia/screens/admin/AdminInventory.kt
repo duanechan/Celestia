@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.coco.celestia.ui.theme.BlueGradientBrush
 import com.coco.celestia.ui.theme.BrownCoffee
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.ui.theme.DarkBlue
@@ -84,7 +85,7 @@ fun AdminInventory(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(DarkBlue)
+                .background(BlueGradientBrush)
                 .padding(top = 7.dp)
                 .verticalScroll(rememberScrollState())
         ) {

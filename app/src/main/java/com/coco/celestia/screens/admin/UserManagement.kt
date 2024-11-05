@@ -41,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -51,6 +52,7 @@ import com.coco.celestia.viewmodel.model.UserData
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.navigation.NavController
+import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.TransactionViewModel
 
@@ -117,11 +119,11 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
                         .semantics { testTag = "android:id/auditLogsButton" }
                 ) {
                     Icon(
-                        imageVector = Icons.Default.List,
+                        painter = painterResource(R.drawable.auditlogicon),
                         tint = Color.White,
                         contentDescription = "Audit Logs",
                         modifier = Modifier
-                            .size(35.dp)
+                            .size(30.dp)
                     )
                 }
             }

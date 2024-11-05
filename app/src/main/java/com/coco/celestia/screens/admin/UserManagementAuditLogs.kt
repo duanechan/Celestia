@@ -9,12 +9,18 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -30,15 +36,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.BlueGradientBrush
+import com.coco.celestia.ui.theme.DarkBlue
+import com.coco.celestia.ui.theme.PaleBlue
 import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.util.UserIdentifier
 import com.coco.celestia.viewmodel.TransactionState
@@ -99,7 +110,6 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                     .semantics { testTag = "android:id/AuditLogsTitle" }
             )
         }
-        Spacer(modifier = Modifier.height(16.dp))
 
         LazyColumn(
             modifier = Modifier
@@ -121,21 +131,25 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                         modifier = Modifier
                             .weight(1f)
                             .semantics { testTag = "android:id/DateHeader" },
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Start
                     )
                     Text(
                         text = "USER",
                         modifier = Modifier
                             .weight(1f)
                             .semantics { testTag = "android:id/UserHeader" },
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Start
                     )
                     Text(
                         text = "ACTION",
                         modifier = Modifier
                             .weight(1f)
+                            .offset(x = (-15).dp)
                             .semantics { testTag = "android:id/ActionHeader" },
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Start
                     )
                 }
                 Divider()
@@ -153,9 +167,8 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                 }
                 TransactionState.SUCCESS -> {
                     transactionData.entries.forEach { (userId, transactions) ->
-
                         items(transactions) { transaction ->
-                            LogItem(userId, transaction)
+                            LogItem(userId, transaction, isEvenRow = transactions.indexOf(transaction) % 2 == 0)
                             Divider()
                         }
                     }
@@ -166,8 +179,9 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
 }
 
 @Composable
-fun LogItem(uid: String, transaction: TransactionData) {
+fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
     var userData by remember { mutableStateOf<UserData?>(null) }
+    var showDescriptionDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(uid) {
         UserIdentifier.getUserData(uid) { result ->
@@ -178,23 +192,61 @@ fun LogItem(uid: String, transaction: TransactionData) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .background(if (isEvenRow) PaleBlue else Color.White)
             .padding(13.dp)
             .semantics { testTag = "android:id/LogItem" }
     ) {
         Text(
             text = transaction.date,
             fontSize = 14.sp,
+            fontFamily = mintsansFontFamily,
             modifier = Modifier.weight(1f)
         )
         Text(
             text = if (userData != null) "${userData?.firstname} ${userData?.lastname}" else "Unknown",
             fontSize = 14.sp,
+            fontFamily = mintsansFontFamily,
             modifier = Modifier.weight(1f)
         )
         Text(
             text = transaction.type,
             fontSize = 14.sp,
+            fontFamily = mintsansFontFamily,
             modifier = Modifier.weight(1f)
         )
+
+        IconButton(
+            onClick = { showDescriptionDialog = true },
+            modifier = Modifier.weight(0.5f)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.viewmore),
+                contentDescription = "Show Description",
+                tint = DarkBlue,
+                modifier = Modifier
+                    .size(25.dp)
+
+            )
+        }
+
+        if (showDescriptionDialog) {
+            AlertDialog(
+                onDismissRequest = { showDescriptionDialog = false },
+                title = {
+                    Text(text = "Transaction Details", fontFamily = mintsansFontFamily,)
+                },
+                text = {
+                    Text(text = transaction.description)
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { showDescriptionDialog = false }
+                    ) {
+                        Text("Close", fontFamily = mintsansFontFamily)
+                    }
+                }
+            )
+        }
     }
 }
+
