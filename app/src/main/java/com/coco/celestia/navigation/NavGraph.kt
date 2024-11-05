@@ -201,7 +201,8 @@ fun NavGraph(
                 navController = navController,
                 userViewModel = userViewModel,
                 productViewModel = productViewModel,
-                orderViewModel = orderViewModel
+                orderViewModel = orderViewModel,
+                transactionViewModel = transactionViewModel
             )
         }
         composable(route = Screen.ClientOrder.route) {
