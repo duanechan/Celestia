@@ -422,6 +422,7 @@ fun OrderStatusCard(
         "REJECTED" -> Copper3
         "DELIVERING" -> Blue
         "COMPLETED" -> SageGreen
+        "CANCELLED" -> Copper3
         else -> Color.Gray
     }
 
@@ -435,6 +436,7 @@ fun OrderStatusCard(
     val iconVector: ImageVector? = when (orderStatus) {
         "REJECTED" -> Icons.Default.Clear
         "COMPLETED" -> Icons.Default.CheckCircle
+        "CANCELLED" -> Icons.Default.Clear
         else -> Icons.Default.Warning
     }
 

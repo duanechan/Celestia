@@ -146,7 +146,8 @@ fun Calendar(
                 is OrderState.SUCCESS -> {
                     val sameDate = orderData.filter { order ->
                         val targetDates = order.targetDate
-                        if (targetDate.isNotEmpty() && order.status != "PENDING") {
+                        if (targetDate.isNotEmpty() && order.status != "PENDING" &&
+                            order.status != "CANCELLED") {
                             val parsedDate = inputFormat.parse(targetDates)
                             val formattedDate = parsedDate?.let { outputFormat.format(it) }
                             formattedDate == targetDate
@@ -442,7 +443,7 @@ fun ContentItem(
     }
 
     val targetDates = orderData
-        .filter { it.status != "PENDING" }
+        .filter { it.status != "PENDING" && it.status != "CANCELLED" }
         .mapNotNull { order ->
             val parsedDate = inputFormat.parse(order.targetDate)
             parsedDate?.let { outputFormat.format(it) }

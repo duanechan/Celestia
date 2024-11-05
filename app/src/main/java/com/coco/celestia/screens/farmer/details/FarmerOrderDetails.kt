@@ -128,6 +128,17 @@ fun FarmerOrderDetails(
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
+                } else if (orderData.status == "CANCELLED") {
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        text = "${orderData.client} cancelled the order",
+                        color = Copper,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
                 } else {
                     OrderStatusDropdown(orderData = orderData, orderViewModel = orderViewModel)
                     OrderStatusUpdates(orderData = orderData)
