@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.farmer.details
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -7,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,26 +37,30 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
+import com.coco.celestia.R
 import com.coco.celestia.screens.farmer.dialogs.EditQuantityDialog
+import com.coco.celestia.screens.farmer.dialogs.FarmerPlanHarvestDialog
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FarmerItemViewModel
+import com.coco.celestia.viewmodel.model.CustomDurationUnit
+import com.coco.celestia.viewmodel.model.ItemData
+import com.google.firebase.auth.FirebaseAuth
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.LocalDateTime
+import java.util.UUID
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.TransactionData
-import com.google.firebase.auth.FirebaseAuth
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.UUID
+
 
 @Composable
 fun FarmerItemDetails(navController: NavController, productName: String) {
     val uid = FirebaseAuth.getInstance().uid.toString()
-    val currentDateTime = LocalDateTime.now()
-    val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
-    val formattedDateTime = currentDateTime.format(formatter).toString()
-    val transactionViewModel: TransactionViewModel = viewModel()
     val farmerProductViewModel: ProductViewModel = viewModel()
     val farmerItemViewModel: FarmerItemViewModel = viewModel()
     val productData by farmerProductViewModel.productData.observeAsState(emptyList())
@@ -64,17 +70,27 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
     val allOrders by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     var showEditDialog by remember { mutableStateOf(false) }
-    var productQuantity by remember { mutableStateOf(0) }
-    var productPricePerKg by remember { mutableStateOf(0.0) }
+    var productQuantity by remember { mutableIntStateOf(0) }
+    var productPricePerKg by remember { mutableDoubleStateOf(0.0) }
+    var isLowStock by remember { mutableStateOf(false) }
+    var dynamicLowStockThreshold by remember { mutableIntStateOf(0) }
     val snackbarHostState = remember { SnackbarHostState() }
+    var farmerName by remember { mutableStateOf("") }
+    val currentDateTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    val formattedDateTime = currentDateTime.format(formatter).toString()
+    val transactionViewModel: TransactionViewModel = viewModel()
 
     LaunchedEffect(Unit) {
         farmerItemViewModel.getItems(uid = uid)
-
         if (productData.isEmpty()) {
             farmerProductViewModel.fetchProducts(filter = "", role = "Farmer")
         }
         orderViewModel.fetchAllOrders(filter = "", role = "Farmer")
+
+        if (uid.isNotEmpty()) {
+            farmerName = farmerItemViewModel.fetchFarmerName(uid)
+        }
     }
 
     LaunchedEffect(productName) {
@@ -82,9 +98,13 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
     }
 
     LaunchedEffect(itemData) {
-        val availableProduct = itemData.find { it.name.equals(productName, ignoreCase = true) }
-        productQuantity = availableProduct?.quantity ?: 0
-        productPricePerKg = availableProduct?.priceKg ?: 0.0
+        val availableItem = itemData.find { it.name.equals(productName, ignoreCase = true) }
+        productQuantity = availableItem?.quantity ?: 0
+        productPricePerKg = availableItem?.priceKg ?: 0.0
+
+        val (threshold, lowStock) = calculateStockThreshold(productQuantity)
+        dynamicLowStockThreshold = threshold
+        isLowStock = lowStock
     }
 
     Scaffold(
@@ -108,8 +128,18 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                 }
                 ProductState.SUCCESS -> {
                     val product = productData.find { it.name.equals(productName, ignoreCase = true) }
-                    if (product != null) {
+                    val selectedItemData = itemData.find { it.name.equals(productName, ignoreCase = true) }
 
+                    // Convert ProductData to ItemData
+                    val selectedItemAsItemData = selectedItemData?.let {
+                        ItemData(
+                            name = it.name,
+                            farmerName = farmerName,
+                            items = listOf(it).toMutableList()
+                        )
+                    }
+
+                    if (product != null && selectedItemAsItemData != null) {
                         Column(
                             modifier = Modifier
                                 .fillMaxHeight()
@@ -117,88 +147,16 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                         ) {
                             Spacer(modifier = Modifier.height(20.dp))
 
-                            Card(
-                                shape = RoundedCornerShape(16.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(270.dp)
-                                    .semantics { testTag = "android:id/productCard_${product.name}" },
-                                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .background(
-                                            Brush.verticalGradient(
-                                                colors = listOf(Yellow4, Sand)
-                                            )
-                                        )
-                                ) {
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .padding(start = 16.dp, top = 60.dp, end = 16.dp)
-                                    ) {
-                                        Text(
-                                            text = product.name,
-                                            fontSize = 60.sp,
-                                            fontWeight = Bold,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .semantics { testTag = "android:id/productNameText" },
-                                            textAlign = TextAlign.Center,
-                                            color = Cocoa
-                                        )
-                                        Spacer(modifier = Modifier.height(10.dp))
-
-                                        Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            Text(
-                                                text = "Quantity: $productQuantity kg",
-                                                fontSize = 20.sp,
-                                                fontWeight = Bold,
-                                                textAlign = TextAlign.Center,
-                                                color = Cocoa,
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .semantics { testTag = "android:id/productQuantityText" }
-                                            )
-                                            Spacer(modifier = Modifier.height(10.dp))
-                                            Text(
-                                                text = "Price: ₱$productPricePerKg/kg",
-                                                fontSize = 20.sp,
-                                                fontWeight = Bold,
-                                                textAlign = TextAlign.Center,
-                                                color = Cocoa,
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .semantics { testTag = "android:id/productPriceText" }
-                                            )
-                                        }
-
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .padding(bottom = 16.dp),
-                                            contentAlignment = Alignment.BottomEnd
-                                        ) {
-                                            IconButton(
-                                                onClick = { showEditDialog = true },
-                                                modifier = Modifier
-                                                    .size(35.dp)
-                                                    .semantics { testTag = "android:id/editQuantityButton" }
-                                            ) {
-                                                Icon(
-                                                    Icons.Filled.Edit,
-                                                    contentDescription = "Edit Quantity",
-                                                    tint = Cocoa
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            ProductDetailsCard(
+                                itemData = selectedItemAsItemData,
+                                productQuantity = productQuantity,
+                                productPricePerKg = productPricePerKg,
+                                isLowStock = isLowStock,
+                                onEditClick = { showEditDialog = true },
+                                uid = uid,
+                                farmerItemViewModel = farmerItemViewModel,
+                                farmerName = farmerName
+                            )
 
                             when (orderState) {
                                 OrderState.LOADING -> {
@@ -221,7 +179,9 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                     )
                                 }
                                 OrderState.SUCCESS -> {
-                                    val filteredOrders = allOrders.filter { it.orderData.name.equals(productName, ignoreCase = true) }
+                                    val filteredOrders = allOrders.filter {
+                                        it.orderData.name.equals(productName, ignoreCase = true)
+                                    }
 
                                     if (filteredOrders.isEmpty()) {
                                         Text(
@@ -270,24 +230,22 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                         fontWeight = Bold,
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .semantics { testTag = "noProductsText" }
+                            .semantics { testTag = "android:id/noProductsText" }
                     )
                 }
                 is ProductState.ERROR -> {
                     Text(
                         text = "Error loading products",
                         fontSize = 16.sp,
-                        fontWeight = Bold,
                         color = Color.Red,
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .semantics { testTag = "android:id/errorLoadingProductsText" }
+                            .semantics { testTag = "android:id/productErrorText" }
                     )
                 }
             }
         }
 
-        // Edit Quantity Dialog
         if (showEditDialog) {
             EditQuantityDialog(
                 productName = productName,
@@ -320,6 +278,191 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                 }
             )
         }
+    }
+}
+
+@Composable
+fun ProductDetailsCard(
+    itemData: ItemData,
+    productQuantity: Int,
+    productPricePerKg: Double,
+    isLowStock: Boolean,
+    onEditClick: () -> Unit,
+    farmerItemViewModel: FarmerItemViewModel,
+    uid: String,
+    farmerName: String,
+    modifier: Modifier = Modifier
+) {
+    var showHarvestDialog by remember { mutableStateOf(false) }
+    val firstProduct = itemData.items.firstOrNull()
+    val estimatedHarvestTime = firstProduct?.let { product ->
+        if (product.plantingDate.isNotEmpty() && product.duration > 0) {
+            computeEstimatedHarvestTime(
+                plantingDate = product.plantingDate,
+                duration = product.duration,
+                durationUnit = product.durationUnit
+            )
+        } else {
+            "N/A"
+        }
+    } ?: "N/A"
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(310.dp)
+    ) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { testTag = "android:id/productCard_${itemData.name}" },
+            colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Yellow4, Sand)
+                        )
+                    )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(start = 16.dp, top = 60.dp, end = 16.dp)
+                ) {
+                    Text(
+                        text = itemData.name,
+                        fontSize = 60.sp,
+                        fontWeight = Bold,
+                        textAlign = TextAlign.Center,
+                        color = Cocoa,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .semantics { testTag = "android:id/productNameText" }
+                    )
+
+                    if (isLowStock) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = "Low Stock Warning",
+                                modifier = Modifier.size(24.dp),
+                                tint = Color.Red
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Low Stock",
+                                fontSize = 14.sp,
+                                fontWeight = Bold,
+                                color = Color.Red
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Quantity: $productQuantity kg",
+                            fontSize = 15.sp,
+                            fontWeight = Bold,
+                            textAlign = TextAlign.Center,
+                            color = Cocoa,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .semantics { testTag = "android:id/productQuantityText" }
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = "Price: ₱$productPricePerKg/kg",
+                            fontSize = 15.sp,
+                            fontWeight = Bold,
+                            textAlign = TextAlign.Center,
+                            color = Cocoa,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .semantics { testTag = "android:id/productPriceText" }
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = "Estimated Harvest Time: $estimatedHarvestTime",
+                            fontSize = 15.sp,
+                            fontWeight = Bold,
+                            textAlign = TextAlign.Center,
+                            color = Cocoa,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .semantics { testTag = "android:id/estimatedHarvestTimeText" }
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = 16.dp)
+                    ) {
+                        if (isLowStock) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .align(Alignment.BottomStart)
+                                    .fillMaxWidth()
+                            ) {
+                                IconButton(
+                                    onClick = { showHarvestDialog = true },
+                                    modifier = Modifier
+                                        .size(35.dp)
+                                        .semantics { testTag = "android:id/lowStockWarningButton" }
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.plant),
+                                        contentDescription = "Low Stock Warning",
+                                        modifier = Modifier.size(30.dp),
+                                        colorFilter = ColorFilter.tint(Cocoa)
+                                    )
+                                }
+                            }
+                        }
+
+                        IconButton(
+                            onClick = onEditClick,
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .size(35.dp)
+                                .semantics { testTag = "android:id/editQuantityButton" }
+                        ) {
+                            Icon(
+                                Icons.Filled.Edit,
+                                contentDescription = "Edit Quantity",
+                                tint = Cocoa
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showHarvestDialog) {
+        FarmerPlanHarvestDialog(
+            farmerName = farmerName,
+            onDismiss = { showHarvestDialog = false },
+            onConfirm = { plantingDate, duration ->
+                farmerItemViewModel.setPlantingInfo(uid, itemData.name, plantingDate, duration)
+                showHarvestDialog = false
+            }
+        )
     }
 }
 
@@ -478,4 +621,32 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
             }
         }
     }
+}
+
+fun computeEstimatedHarvestTime(plantingDate: String, duration: Int, durationUnit: CustomDurationUnit): String {
+    val dateFormat = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    val plantingLocalDate = LocalDate.parse(plantingDate, dateFormat)
+
+    val harvestDate = when (durationUnit) {
+        CustomDurationUnit.DAYS -> plantingLocalDate.plusDays(duration.toLong())
+        CustomDurationUnit.WEEKS -> plantingLocalDate.plusWeeks(duration.toLong())
+        CustomDurationUnit.MONTHS -> plantingLocalDate.plusMonths(duration.toLong())
+    }
+    return harvestDate.format(dateFormat)
+}
+
+fun calculateStockThreshold(
+    productQuantity: Int
+): Pair<Int, Boolean> {
+    val (baseThreshold, percentage) = when {
+        productQuantity > 500 -> 50 to 0.1
+        productQuantity > 200 -> 40 to 0.2
+        else -> 30 to 0.3
+    }
+
+    val percentageBasedThreshold = (productQuantity * percentage).toInt()
+    val dynamicLowStockThreshold = maxOf(baseThreshold, percentageBasedThreshold)
+    val isLowStock = productQuantity <= dynamicLowStockThreshold
+
+    return dynamicLowStockThreshold to isLowStock
 }

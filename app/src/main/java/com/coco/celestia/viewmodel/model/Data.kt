@@ -33,8 +33,17 @@ data class ProductData(
     val type: String = "",
     val priceKg: Double = 0.0,
     val startSeason: String = "",
-    val endSeason: String = ""
+    val endSeason: String = "",
+    var plantingDate: String = "",
+    var duration: Int = 0,
+    var durationUnit: CustomDurationUnit = CustomDurationUnit.DAYS
 )
+
+enum class CustomDurationUnit {
+    DAYS,
+    WEEKS,
+    MONTHS
+}
 
 data class TransactionData(
     val transactionId: String = "",
@@ -59,7 +68,7 @@ data class LocationData(
 data class ItemData(
     val name: String = "",
     val farmerName: String = "",
-    val items: MutableList<ProductData> = mutableListOf()
+    val items: MutableList<ProductData> = mutableListOf(),
 )
 
 data class CalendarUIState(

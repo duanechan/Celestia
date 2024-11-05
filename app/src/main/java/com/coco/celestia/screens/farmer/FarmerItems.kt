@@ -28,6 +28,7 @@ import androidx.compose.ui.semantics.testTag
 import com.coco.celestia.components.toast.Toast
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.components.toast.toastDelay
+import com.coco.celestia.screens.farmer.details.calculateStockThreshold
 import com.coco.celestia.screens.farmer.dialogs.FarmerAddProductDialog
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.screens.`object`.Screen
@@ -236,6 +237,8 @@ fun FarmerProductTypeInventory(
     navController: NavController,
     isFirst: Boolean = false
 ) {
+    val (_, isLowStock) = calculateStockThreshold(product.quantity)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -267,13 +270,26 @@ fun FarmerProductTypeInventory(
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(
-                        text = product.name.replaceFirstChar { it.uppercase() },
-                        fontSize = 25.sp,
-                        color = Cocoa,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.semantics { testTag = "android:id/productName_${product.name}" }
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = product.name.replaceFirstChar { it.uppercase() },
+                            fontSize = 25.sp,
+                            color = Cocoa,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.semantics { testTag = "android:id/productName_${product.name}" }
+                        )
+                        if (isLowStock) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = "Low Stock Warning",
+                                tint = Cinnabar,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.height(5.dp))
                     Text(
                         text = "${product.quantity}kg",
