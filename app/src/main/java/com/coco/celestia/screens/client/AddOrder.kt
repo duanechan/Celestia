@@ -1,10 +1,13 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
+    ExperimentalFoundationApi::class, ExperimentalFoundationApi::class
+)
 
 package com.coco.celestia.screens.client
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +25,8 @@ import androidx.compose.foundation.layout.requiredWidthIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -33,6 +38,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,6 +46,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,6 +55,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -61,11 +69,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.util.convertMillisToDate
-import com.coco.celestia.util.formatDate
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
@@ -76,6 +84,8 @@ import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -239,7 +249,9 @@ fun ProductTypeCard(
 ) {
     val productName = product.name
     val productType = product.type
+    var orderData by remember { mutableStateOf(OrderData()) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var orderConfirmed by remember { mutableStateOf(false) }
     var isSheetOpen by rememberSaveable {
         mutableStateOf(false)
     }
@@ -297,7 +309,6 @@ fun ProductTypeCard(
                             .size(32.dp)
                             .padding(start = 8.dp)
                             .clickable {
-                                //expanded = !expanded
                                 isSheetOpen = true
                             }
                             .semantics { testTag = "android:id/ShoppingCartIcon" }
@@ -311,17 +322,38 @@ fun ProductTypeCard(
                         sheetState = sheetState,
                         onDismissRequest = {
                             isSheetOpen = false
-                        }
+                        },
                     ) {
-                        AddOrderForm(
-                            navController = navController,
-                            userViewModel = userViewModel,
-                            productType = productType,
-                            productName = productName,
-                            onAddToCartEvent = { onAddToCartEvent(it) },
-                            onOrder = { onOrder(it) }
-                        )
+                        Column {
+                            TopAppBar(
+                                title = {
+                                    Text(text = "Order Summary")
+                                }
+                            )
+
+                            AddOrderForm(
+                                userViewModel = userViewModel,
+                                productType = productType,
+                                productName = productName,
+                                onAddToCartEvent = { onAddToCartEvent(it) },
+                                onOrder = {
+                                    onOrder(it)
+                                    orderData = it
+                                },
+                                onSheetChanged = { isSheetOpen = it},
+                                onOrderConfirmed = { orderConfirmed = it }
+                            )
+                        }
                     }
+                }
+
+                if (orderConfirmed) {
+                    ConfirmOrderRequestPanel(
+                        navController = navController,
+                        order = orderData,
+                        userViewModel = userViewModel,
+                        onAddToCartEvent = { onAddToCartEvent(it) },
+                    )
                 }
             }
         }
@@ -332,12 +364,13 @@ fun ProductTypeCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddOrderForm(
-    navController: NavController,
     userViewModel: UserViewModel,
     productType: String?,
     productName: String?,
     onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit,
-    onOrder: (OrderData) -> Unit
+    onOrder: (OrderData) -> Unit,
+    onSheetChanged: (Boolean) -> Unit,
+    onOrderConfirmed: (Boolean) -> Unit
 ) {
     val userData by userViewModel.userData.observeAsState()
     var showDatePicker by remember { mutableStateOf(false) }
@@ -348,6 +381,8 @@ fun AddOrderForm(
     val currentDateTime = LocalDateTime.now()
     val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
     val formattedDateTime = currentDateTime.format(formatter).toString()
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+    val coroutineScope = rememberCoroutineScope()
 
     val order = OrderData(
         orderId = "Order-${UUID.randomUUID()}",
@@ -368,14 +403,14 @@ fun AddOrderForm(
             .verticalScroll(rememberScrollState())
             .semantics { testTag = "android:id/DatePickerDialogContent" }
     ) {
-        Text(text = "Do you want to place this order?", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = "ID: ${order.orderId.substring(6, 10).uppercase()}", modifier = Modifier.semantics { testTag = "android:id/OrderIdText" })
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = "Product: ${productName.toString()}", modifier = Modifier.semantics { testTag = "android:id/ProductNameText" })
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = "Order Date: ${order.orderDate}", modifier = Modifier.semantics { testTag = "android:id/OrderDateText" })
-        Spacer(modifier = Modifier.height(8.dp))
+        SummaryDetails("Name", order.client)
+        SummaryDetails("Phone Number", userData?.phoneNumber.toString())
+        SummaryDetails("Email", userData?.email.toString())
+        SummaryDetails("Address", "${order.barangay}, ${order.street}")
+        SummaryDetails("Date Ordered", order.orderDate)
+        SummaryDetails("Product", productName.toString())
+
+        Spacer(modifier = Modifier.height(32.dp))
 
         OutlinedTextField(
             value = if (quantity == 0) "" else quantity.toString(),
@@ -387,10 +422,13 @@ fun AddOrderForm(
                     quantity = 0
                 }
             },
-            label = { Text("Enter weight (kg)") },
+            label = { Text("Weight (kg)") },
             placeholder = { Text("e.g. 10.5") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/QuantityInput" }
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
+                .semantics { testTag = "android:id/QuantityInput" }
         )
 
         OutlinedTextField(
@@ -401,7 +439,15 @@ fun AddOrderForm(
             readOnly = true,
             trailingIcon = {
                 IconButton(
-                    onClick = { showDatePicker = !showDatePicker },
+                    onClick = {
+                        showDatePicker = !showDatePicker
+                        if (showDatePicker) {
+                            coroutineScope.launch {
+                                delay(300)
+                                bringIntoViewRequester.bringIntoView()
+                            }
+                        }
+                    },
                     modifier = Modifier.semantics { testTag = "android:id/DateIconButton" }
                 ) {
                     Icon(
@@ -419,6 +465,7 @@ fun AddOrderForm(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(10.dp)
+                    .bringIntoViewRequester(bringIntoViewRequester)
                     .semantics { testTag = "android:id/DatePickerBox" }
             ) {
                 BoxWithConstraints {
@@ -444,27 +491,59 @@ fun AddOrderForm(
     }
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 16.dp)
+            .padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         TextButton(onClick = {
             targetDateDialog = false
+            onSheetChanged(false)
         }) {
-            Text("Cancel")
+            Text(
+                text = "Cancel",
+                fontSize = 16.sp
+            )
         }
         TextButton(
             onClick = {
                 onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added order.", System.currentTimeMillis()))
                 onOrder(order)
-                navController.navigate(Screen.OrderConfirmation.route)
                 targetDateDialog = false
+                onSheetChanged(false)
+                onOrderConfirmed(true)
             },
-            enabled = quantity != 0 && selectedDate.isNotEmpty(),
+            enabled = selectedDate.isNotEmpty() && quantity != 0,
             modifier = Modifier.semantics { testTag = "ConfirmOrderButton" }
         ) {
-            Text("Confirm Order")
+            Text(
+                text = "Confirm Order",
+                fontSize = 16.sp
+            )
         }
     }
+}
+
+@Composable
+fun SummaryDetails (label: String, value: String) {
+    Row (
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            color = Color.Black.copy(alpha = 0.6f)
+        )
+        Text(value)
+    }
+    Divider(
+        modifier = Modifier
+            .padding(vertical = 5.dp),
+        thickness = 2.dp
+    )
 }
 
 @Composable
@@ -472,8 +551,8 @@ fun ConfirmOrderRequestPanel(
     navController: NavController,
     order: OrderData,
     userViewModel: UserViewModel,
-    orderViewModel: OrderViewModel,
-    transactionViewModel: TransactionViewModel,
+    orderViewModel: OrderViewModel = viewModel(),
+    transactionViewModel: TransactionViewModel = viewModel(),
     onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val userData by userViewModel.userData.observeAsState()
@@ -481,12 +560,15 @@ fun ConfirmOrderRequestPanel(
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     val barangay = userData?.barangay ?: ""
     val streetNumber = userData?.streetNumber ?: ""
-
+    val orderSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var isOrderSheetOpen by rememberSaveable {
+        mutableStateOf(false)
+    }
     LaunchedEffect(barangay, streetNumber) {
         if (barangay.isEmpty() && streetNumber.isEmpty()) {
             onAddToCartEvent(Triple(ToastStatus.WARNING, "Please complete your address details.", System.currentTimeMillis()))
             navController.navigate(Screen.Profile.route) {
-                popUpTo(Screen.OrderConfirmation.route) { inclusive = true }
+                popUpTo(Screen.AddOrder.route) { inclusive = true }
             }
         } else {
             val transaction = TransactionData(
@@ -508,10 +590,6 @@ fun ConfirmOrderRequestPanel(
                     System.currentTimeMillis()
                 )
             )
-            Text(
-                text = "Loading...",
-                modifier = Modifier.semantics { testTag = "android:id/OrderStateLoading" }
-            )
         }
         is OrderState.ERROR -> {
             onAddToCartEvent(
@@ -520,10 +598,6 @@ fun ConfirmOrderRequestPanel(
                     "Error: ${(orderState as OrderState.ERROR).message}",
                     System.currentTimeMillis()
                 )
-            )
-            Text(
-                text = "Error: ${(orderState as OrderState.ERROR).message}",
-                modifier = Modifier.semantics { testTag = "android:id/OrderStateError" }
             )
         }
         is OrderState.SUCCESS -> {
@@ -535,20 +609,90 @@ fun ConfirmOrderRequestPanel(
                 )
             )
             userData?.let {
+                isOrderSheetOpen = true
+            }
+        }
+        else -> {}
+    }
+
+    if (isOrderSheetOpen) {
+        LaunchedEffect(Unit) {
+            orderSheetState.expand()
+        }
+
+        ModalBottomSheet(
+            sheetState = orderSheetState,
+            onDismissRequest = {
+                isOrderSheetOpen = false
                 navController.navigate(Screen.Client.route) {
                     popUpTo(Screen.Splash.route)
                 }
+            },
+        ) {
+            Column {
+                Box (
+                    modifier = Modifier
+                        .height(300.dp)
+                        .fillMaxWidth()
+                ) {
+                    Column {
+                        TopAppBar(
+                            title = {
+                                Text(text = "Order Confirmation")
+                            }
+                        )
+
+                        Column (
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                        ) {
+                            Text(
+                                text = "Thank you for your order!",
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = 5.dp)
+                            )
+                            Text(
+                                text = "We’ve received your order for ${order.orderData.name} and are preparing it for you. We hope you enjoy your purchase!",
+                                modifier = Modifier.padding(vertical = 10.dp)
+                            )
+                            Text(
+                                text = "Feel free to order again anytime. \uD83D\uDE0A",
+                                modifier = Modifier.padding(vertical = 5.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(56.dp))
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp)
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    TextButton(onClick = {
+                        isOrderSheetOpen = false
+                        navController.navigate(Screen.AddOrder.route)
+                    }) {
+                        Text(
+                            text = "Order Again",
+                            fontSize = 16.sp
+                        )
+                    }
+                    TextButton(
+                        onClick = {
+                            navController.navigate("ClientOrderDetails/${order.orderId}/" + 0)
+                        }
+                    ) {
+                        Text(
+                            text = "Track Order",
+                            fontSize = 16.sp
+                        )
+                    }
+                }
             }
-            Text(
-                text = "Order placed successfully.",
-                modifier = Modifier.semantics { testTag = "android:id/OrderStateSuccess" }
-            )
-        }
-        else -> {
-            Text(
-                text = "Order state is unknown.",
-                modifier = Modifier.semantics { testTag = "android:id/OrderStateUnknown" }
-            )
         }
     }
 }
