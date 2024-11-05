@@ -15,7 +15,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.coco.celestia.screens.client.AddOrderPanel
-import com.coco.celestia.screens.client.ConfirmOrderRequestPanel
 import com.coco.celestia.screens.client.OrderDetailsPanel
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.Calendar
@@ -81,7 +80,6 @@ fun NavGraph(
     val uid = FirebaseAuth.getInstance().uid.toString()
     var orderData by remember { mutableStateOf(OrderData()) }
     val productName by productViewModel.productName.observeAsState("")
-    var addressName by remember { mutableStateOf("") }
     var quantityAmount by remember { mutableIntStateOf(0) }
     var defectBeans by remember { mutableIntStateOf(0) }
     var productType by remember { mutableStateOf("") }
@@ -90,7 +88,6 @@ fun NavGraph(
     var firstname by remember { mutableStateOf("") }
     var lastname by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("") }
-    val from by productViewModel.from.observeAsState("")
 
     NavHost(
         navController = navController,
@@ -466,17 +463,6 @@ fun NavGraph(
                 userViewModel = userViewModel,
                 onAddToCartEvent = { onEvent(it) },
                 onOrder = { orderData = it },
-            )
-        }
-        composable(route = Screen.OrderConfirmation.route) {
-            onNavigate("Order Confirmation")
-            ConfirmOrderRequestPanel(
-                navController = navController,
-                order = orderData,
-                orderViewModel = orderViewModel,
-                userViewModel = userViewModel,
-                transactionViewModel = transactionViewModel,
-                onAddToCartEvent = { onEvent(it) },
             )
         }
         composable(route = Screen.Profile.route) {
