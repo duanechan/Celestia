@@ -96,7 +96,7 @@ fun ClientOrder(
             var text by remember { mutableStateOf("") }
             var selectedStatus by remember { mutableStateOf("All") }
             var expanded by remember { mutableStateOf(false) }
-            val statuses = listOf("All", "Pending", "Preparing", "Rejected", "Delivering", "Completed")
+            val statuses = listOf("All", "Pending", "Preparing", "Rejected", "Delivering", "Completed", "Received")
 
             Row(
                 modifier = Modifier
@@ -267,7 +267,7 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                         Column(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.Start // Align text to start
+                            horizontalAlignment = Alignment.Start
                         ) {
                             Text(
                                 text = "Order ID: $orderId",
@@ -294,15 +294,13 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                         }
                     }
                 }
-
-                // Place the icon at the center-right
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowRight,
                     contentDescription = "Navigate to Details",
                     tint = Color.White,
                     modifier = Modifier
                         .size(20.dp)
-                        .align(Alignment.CenterEnd) // Align to the center end of the Box
+                        .align(Alignment.CenterEnd)
                 )
             }
         }

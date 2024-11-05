@@ -296,4 +296,43 @@ class OrderViewModel : ViewModel() {
             })
         }
     }
+
+    fun markOrderReceived(orderId: String) {
+        viewModelScope.launch {
+            _orderState.value = OrderState.LOADING
+            database.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        for (user in snapshot.children) {
+                            var found = false
+                            val orders = user.children
+                            for (order in orders) {
+                                val currentOrderId = order.child("orderId").getValue(String::class.java)
+                                if (currentOrderId == orderId) {
+                                    order.ref.child("status").setValue("RECEIVED")
+                                        .addOnSuccessListener {
+                                            _orderState.value = OrderState.SUCCESS
+                                        }
+                                        .addOnFailureListener { exception ->
+                                            _orderState.value = OrderState.ERROR(exception.message ?: "Unknown error")
+                                        }
+                                    found = true
+                                    break
+                                }
+                            }
+                            if (found) {
+                                break
+                            }
+                        }
+                    } else {
+                        _orderState.value = OrderState.EMPTY
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    _orderState.value = OrderState.ERROR(error.message)
+                }
+            })
+        }
+    }
 }

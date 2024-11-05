@@ -91,6 +91,7 @@ fun ClientOrderDetails(
 
     val showCancelConfirmation = remember { mutableStateOf(false) }
     val showOrderCancelledDialog = remember { mutableStateOf(false) }
+    val showReceivedConfirmation = remember { mutableStateOf(false) }
 
     when {
         orderState == OrderState.LOADING -> {
@@ -301,27 +302,56 @@ fun ClientOrderDetails(
                                 ) {
                                     Button(
                                         onClick = {
-                                            if (orderData.status == "PENDING") showCancelConfirmation.value =
-                                                true
+                                            if (orderData.status == "PENDING") showCancelConfirmation.value = true
                                         },
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = if (orderData.status == "PENDING") Color.White else Color.Gray
                                         ),
                                         enabled = orderData.status == "PENDING",
                                         modifier = Modifier
-                                            .height(40.dp)
-                                            .width(165.dp)
+                                            .height(50.dp)
+                                            .width(170.dp)
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.cancel),
                                             contentDescription = "Cancel Icon",
                                             tint = if (orderData.status == "PENDING") Color.Red else Color.White,
-                                            modifier = Modifier.size(16.dp)
+                                            modifier = Modifier.size(20.dp)
                                         )
-                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             text = "Cancel Order",
                                             color = if (orderData.status == "PENDING") Color.Red else Color.White
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Button(
+                                        onClick = {
+                                            if (orderData.status == "COMPLETED") {
+                                                showReceivedConfirmation.value = true
+                                                orderViewModel.markOrderReceived(orderData.orderId)
+                                            }
+                                        },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (orderData.status == "COMPLETED") Color.White else Color.Gray
+                                        ),
+                                        enabled = orderData.status == "COMPLETED",
+                                        modifier = Modifier
+                                            .height(50.dp)
+                                            .width(170.dp)
+                                    ) {
+                                        val greenColor = Color(0xFF4CAF50) //to move in colors.kt
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.received),
+                                            contentDescription = "Received Icon",
+                                            tint = if (orderData.status == "COMPLETED") greenColor else Color.White,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "Received",
+                                            color = if (orderData.status == "COMPLETED") greenColor else Color.White,
+                                            fontSize = 12.sp
                                         )
                                     }
                                 }
@@ -405,10 +435,44 @@ fun ClientOrderDetails(
                         modifier = Modifier.fillMaxWidth(0.9f)
                     )
                             }
+                if (showReceivedConfirmation.value) {
+                    AlertDialog(
+                        onDismissRequest = {
+                            showReceivedConfirmation.value = false
+                            navController.navigate(Screen.ClientOrder.route)
+                        },
+                        title = {
+                            Text(
+                                text = "Order Received",
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        },
+                        text = {
+                            Text(
+                                text = "You have confirmed that you received the order.",
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showReceivedConfirmation.value = false
+                                    navController.navigate(Screen.ClientOrder.route)
+                                }
+                            ) {
+                                Text("OK")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(0.9f)
+                    )
                         }
                 }
             }
         }
+}
 
 @Composable
 fun OrderStatusTracker(status: String) {
@@ -517,7 +581,7 @@ fun OrderStatusTracker(status: String) {
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "The order has been received.",
+                        text = "The order has been delivered.",
                         fontSize = 14.sp,
                         color = Color.Gray,
                         modifier = Modifier.semantics { testTag = "android:id/CompletedText" }
