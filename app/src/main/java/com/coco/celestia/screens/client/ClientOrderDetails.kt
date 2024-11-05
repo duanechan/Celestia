@@ -17,8 +17,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -29,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -87,8 +90,7 @@ fun ClientOrderDetails(
     }
 
     val showCancelConfirmation = remember { mutableStateOf(false) }
-    val showCanceledSnackbar = remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
+    val showOrderCancelledDialog = remember { mutableStateOf(false) }
 
     when {
         orderState == OrderState.LOADING -> {
@@ -297,16 +299,30 @@ fun ClientOrderDetails(
                                         .padding(end = 16.dp, bottom = 16.dp),
                                     horizontalArrangement = Arrangement.End
                                 ) {
-                                    if (orderData.status == "PENDING") {
-                                        Button(
-                                            onClick = { showCancelConfirmation.value = true },
-                                            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                                            modifier = Modifier
-                                                .height(40.dp)
-                                                .width(130.dp)
-                                        ) {
-                                            Text(text = "Cancel Order", color = Color.White)
-                                        }
+                                    Button(
+                                        onClick = {
+                                            if (orderData.status == "PENDING") showCancelConfirmation.value =
+                                                true
+                                        },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (orderData.status == "PENDING") Color.White else Color.Gray
+                                        ),
+                                        enabled = orderData.status == "PENDING",
+                                        modifier = Modifier
+                                            .height(40.dp)
+                                            .width(165.dp)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.cancel),
+                                            contentDescription = "Cancel Icon",
+                                            tint = if (orderData.status == "PENDING") Color.Red else Color.White,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Cancel Order",
+                                            color = if (orderData.status == "PENDING") Color.Red else Color.White
+                                        )
                                     }
                                 }
                             }
@@ -316,72 +332,83 @@ fun ClientOrderDetails(
                     Spacer(modifier = Modifier.height(110.dp))
                 }
                 if (showCancelConfirmation.value) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.6f))
-                            .clickable { showCancelConfirmation.value = false }
-                    ) {
-                        Card(
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .padding(16.dp)
-                                .fillMaxWidth(0.8f),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = "Are you sure you want to cancel this order?",
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Row(
-                                    horizontalArrangement = Arrangement.SpaceEvenly,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Button(onClick = {
-                                        showCancelConfirmation.value = false
-                                        showCanceledSnackbar.value =
-                                            true
-                                        orderViewModel.cancelOrder(orderData.orderId)
-                                    }) {
-                                        Text("Yes")
-                                    }
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Button(onClick = { showCancelConfirmation.value = false }) {
-                                        Text("No")
-                                    }
+                    AlertDialog(
+                        onDismissRequest = { showCancelConfirmation.value = false },
+                        title = {
+                            Text(
+                                text = "Cancel Order",
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        },
+                        text = {
+                            Text(
+                                text = "Are you sure you want to cancel this order?",
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showCancelConfirmation.value = false
+                                    orderViewModel.cancelOrder(orderData.orderId)
+                                    showOrderCancelledDialog.value = true
                                 }
+                            ) {
+                                Text("Yes", color = Color.Red)
                             }
-                        }
-                    }
-                }
-            }
-            if (showCanceledSnackbar.value) {
-                LaunchedEffect(showCanceledSnackbar.value) {
-                    kotlinx.coroutines.delay(500L)
-                    showCanceledSnackbar.value = false
-                    navController.navigate(Screen.ClientOrder.route)
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = { showCancelConfirmation.value = false }
+                            ) {
+                                Text("No")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(0.9f)
+                    )
                 }
 
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.BottomCenter
-                ) {
-                    SnackbarHost(
-                        hostState = snackbarHostState,
-                        modifier = Modifier.padding(16.dp)
+                if (showOrderCancelledDialog.value) {
+                    AlertDialog(
+                        onDismissRequest = {
+                            showOrderCancelledDialog.value = false
+                            navController.navigate(Screen.ClientOrder.route)
+                        },
+                        title = {
+                            Text(
+                                text = "Order Cancelled",
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        },
+                        text = {
+                            Text(
+                                text = "Your order has been successfully cancelled.",
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showOrderCancelledDialog.value = false
+                                    navController.navigate(Screen.ClientOrder.route)
+                                }
+                            ) {
+                                Text("OK")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(0.9f)
                     )
+                            }
+                        }
                 }
             }
         }
-    }
-}
 
 @Composable
 fun OrderStatusTracker(status: String) {
