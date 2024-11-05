@@ -58,23 +58,27 @@ val Blue = Color(0xFFb9cecf)
 val Sand2 = Color(0xFFd6af74)
 
 // Coop WhiteBG
-val CoopBackground = Color(0xFFF4F4F4)
+val CoopBackground = Color(0xFFFDFDFD)
+
+// Coop Lighter Green Palette
+val LightDarkGreen = Color(0xFF658A6E)
+val LightBlueGreen = Color(0xFF96EAD7)
 
 // Coop Items Palette
 val GreenBeans = Color(0xFF5A8F5C)
 val RoastedBeans = Color(0xFF362E26)
 val Packed = Color(0xFFB06520)
 val Sorted = Color(0xFF3E3E3E)
-val Ordered = Color(0xFFE0A83B)
-val DeliveredItem = Color(0xFF01A69E)
+val Ordered = Color(0xFF47DEB1)
+val DeliveredItem = Color(0xFF09D1C7)
 val Kiniing = Color(0xFFE86A33)
 val RawMeat = Color(0xFFFB4949)
 
 // Coop Order Palette
-val PendingStatus = Color(0xFFDB873A)
-val PreparingStatus = Color(0xFFC05729)
-val DeliveringStatus = Color(0xFF01A69E)
-val CompletedStatus = Color(0xFF7CC659)
+val PendingStatus = Color(0xFF0C6478)
+val PreparingStatus = Color(0xFF16909B)
+val DeliveringStatus = Color(0xFF09D1C7)
+val CompletedStatus = Color(0xFF82EE99)
 
 // Admin Palette
 val DarkBlue = Color(0xFF252746)
@@ -83,15 +87,23 @@ val PaleBlue = Color(0xFFced7ef)
 val BrownCoffee = Color(0xFF795548)
 val RedMeat = Color(0xFFFB4949)
 
-
 // Coop Gradient Brush
 val GreenGradientBrush = Brush.linearGradient(
     colors = listOf(
-        Color(0xFF83CA95),
-        Color(0xFF41644A)
+        Color(0xFF9FFEB0),
+        Color(0xFF16909B)
     ),
-    start = Offset(0f, 0f),
-    end = Offset(500f, 0f)
+    start = Offset(1000f, -500f),
+    end = Offset(0f, 500f)
+)
+
+val ButtonGradientBrush = Brush.linearGradient(
+    colors = listOf(
+        Color(0xFF9FFEB0),
+        Color(0xFF16909B)
+    ),
+    start = Offset(1000f, -500f),
+    end = Offset(0f, 500f)
 )
 
 //Client Profile 

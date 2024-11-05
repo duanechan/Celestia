@@ -69,6 +69,7 @@ import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.client.OrderStatusTracker
 import com.coco.celestia.ui.theme.Cinnabar
 import com.coco.celestia.ui.theme.CompletedStatus
+import com.coco.celestia.ui.theme.CoopBackground
 import com.coco.celestia.ui.theme.DeliveringStatus
 import com.coco.celestia.ui.theme.JadeGreen
 import com.coco.celestia.ui.theme.PendingStatus
@@ -112,9 +113,10 @@ fun OrderRequest(
     }
     Column(
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.background(CoopBackground)
     ) {
-        Spacer(modifier = Modifier.height(80.dp))
+        Spacer(modifier = Modifier.height(87.dp))
         Row (modifier = Modifier
             .height(75.dp)
             .padding(top = 5.dp)
@@ -135,7 +137,7 @@ fun OrderRequest(
             }
 
         }
-// TODO: Implement filter button functionality
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -158,7 +160,7 @@ fun OrderRequest(
                     contentColor = Color.White
                 )
             ) {
-                Text("Pending", fontFamily = mintsansFontFamily)
+                Text("Pending", fontFamily = mintsansFontFamily, fontWeight = FontWeight.Bold)
             }
             Button(
                 onClick = { keywords = "PREPARING" },
@@ -171,7 +173,7 @@ fun OrderRequest(
                     contentColor = Color.White
                 )
             ) {
-                Text("Preparing", fontFamily = mintsansFontFamily)
+                Text("Preparing", fontFamily = mintsansFontFamily, fontWeight = FontWeight.Bold)
             }
             Button(
                 onClick = { keywords = "DELIVERING" },
@@ -184,7 +186,7 @@ fun OrderRequest(
                     contentColor = Color.White
                 )
             ) {
-                Text("Delivering", fontFamily = mintsansFontFamily)
+                Text("Delivering", fontFamily = mintsansFontFamily, fontWeight = FontWeight.Bold)
             }
             Button(
                 onClick = { keywords = "COMPLETED" },
@@ -196,7 +198,7 @@ fun OrderRequest(
                     contentColor = Color.White
                 )
             ) {
-                Text("Completed", fontFamily = mintsansFontFamily)
+                Text("Completed", fontFamily = mintsansFontFamily, fontWeight = FontWeight.Bold)
             }
         }
 
@@ -306,7 +308,7 @@ fun OrderItem(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(CoopBackground)
             .padding(16.dp)
             .semantics { testTag = "android:id/OrderItem_$orderCount" }
     ) {

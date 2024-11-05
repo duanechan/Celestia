@@ -1,6 +1,7 @@
 package com.coco.celestia.navigation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
@@ -37,6 +39,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -304,7 +308,8 @@ fun NavDrawerBottomBar(
                             }
                         }
                     },
-                    modifier = Modifier.semantics { testTag = "android:id/ordersPage" }
+                    modifier = Modifier
+                        .semantics { testTag = "android:id/ordersPage" }
                 )
             }
 
@@ -388,7 +393,7 @@ fun NavDrawerBottomBar(
             FloatingActionButton(
                 onClick = { navController.navigate(Screen.AddProductInventory.route) },
                 shape = CircleShape,
-                containerColor = DarkGreen,
+                containerColor = PreparingStatus,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .offset(y = (-30).dp)
@@ -407,7 +412,7 @@ fun NavDrawerBottomBar(
             FloatingActionButton(
                 onClick = { navController.navigate(Screen.CoopAddProductInventoryDB.route) },
                 shape = CircleShape,
-                containerColor = DarkGreen,
+                containerColor = DeliveringStatus,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .offset(y = (-30).dp)
@@ -522,9 +527,9 @@ fun bottomColorConfig(role: String): Pair<Color, Color> {
     return when (role) {
         "Admin" -> Pair(Color.White, DarkBlue)
         "Client" -> Pair(LightOrange, Color.White)
-        "Coop" -> Pair(Color.White, DarkGreen)
-        "CoopCoffee" -> Pair(Color.White, DarkGreen)
-        "CoopMeat" -> Pair(Color.White, DarkGreen)
+        "Coop" -> Pair(Color.White, PendingStatus)
+        "CoopCoffee" -> Pair(Color.White, PendingStatus)
+        "CoopMeat" -> Pair(Color.White, PendingStatus)
         "Farmer" -> Pair(Yellow4, Cocoa)
         else -> Pair(Color.White, Color.Black) // Default
     }

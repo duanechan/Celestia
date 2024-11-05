@@ -3,6 +3,7 @@ package com.coco.celestia.screens.coop
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +20,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -396,26 +398,39 @@ fun CoopMonthlyItemList(itemList: List<MonthlyInventory>) {
 
 @Composable
 fun TopBarCoopInventory(onTabSelected: (String) -> Unit) {
-    var selectedOption  by remember { mutableIntStateOf(0) }
+    var selectedOption by remember { mutableIntStateOf(0) }
     Spacer(modifier = Modifier.height(35.dp))
-    Column (
+    Column(
         modifier = Modifier
             .statusBarsPadding()
             .wrapContentHeight()
             .padding(vertical = 20.dp)
             .semantics { testTag = "android:id/TopBarCoopInventoryColumn" }
-    ){
+    ) {
         TabRow(
             selectedTabIndex = selectedOption,
-            modifier = Modifier.wrapContentHeight()
+            modifier = Modifier.wrapContentHeight(),
+            indicator = { tabPositions ->
+                Box(
+                    Modifier
+                        .tabIndicatorOffset(tabPositions[selectedOption])
+                        .height(4.dp)
+                        .background(DeliveringStatus)
+                )
+            }
         ) {
             val tabTitles = listOf("Current Inventory", "Inventory This Month")
             tabTitles.forEachIndexed { index, title ->
                 Tab(
-                    text = { Text(title,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = mintsansFontFamily,
-                        fontSize = 15.sp)},
+                    text = {
+                        Text(
+                            text = title,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily,
+                            fontSize = 15.sp,
+                            color = if (selectedOption == index) DeliveringStatus else PendingStatus // Change text color based on selection
+                        )
+                    },
                     selected = selectedOption == index,
                     onClick = {
                         selectedOption = index
