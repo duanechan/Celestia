@@ -324,7 +324,6 @@ fun ProductTypeCard(
                                 userViewModel = userViewModel,
                                 productType = productType,
                                 productName = productName,
-                                onAddToCartEvent = { onAddToCartEvent(it) },
                                 onOrder = {
                                     onOrder(it)
                                     orderData = it
@@ -356,7 +355,6 @@ fun AddOrderForm(
     userViewModel: UserViewModel,
     productType: String?,
     productName: String?,
-    onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit,
     onOrder: (OrderData) -> Unit,
     onSheetChanged: (Boolean) -> Unit,
     onOrderConfirmed: (Boolean) -> Unit
@@ -497,7 +495,6 @@ fun AddOrderForm(
         }
         TextButton(
             onClick = {
-                onAddToCartEvent(Triple(ToastStatus.SUCCESSFUL, "Added order.", System.currentTimeMillis()))
                 onOrder(order)
                 targetDateDialog = false
                 onSheetChanged(false)
@@ -590,13 +587,6 @@ fun ConfirmOrderRequestPanel(
             )
         }
         is OrderState.SUCCESS -> {
-            onAddToCartEvent(
-                Triple(
-                    ToastStatus.SUCCESSFUL,
-                    "Order placed.",
-                    System.currentTimeMillis()
-                )
-            )
             userData?.let {
                 isOrderSheetOpen = true
             }
@@ -672,7 +662,7 @@ fun ConfirmOrderRequestPanel(
                     }
                     TextButton(
                         onClick = {
-                            navController.navigate("ClientOrderDetails/${order.orderId}")
+                            navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId))
                         }
                     ) {
                         Text(

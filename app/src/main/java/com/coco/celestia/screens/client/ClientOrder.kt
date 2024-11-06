@@ -51,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.LightOrange
 import com.coco.celestia.ui.theme.VeryDarkGreen
 import com.coco.celestia.viewmodel.OrderState
@@ -227,7 +228,7 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                 .weight(1f)
                 .height(165.dp)
                 .clickable {
-                    navController.navigate("ClientOrderDetails/${order.orderId}")
+                    navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId))
                 }
                 .semantics { testTag = "android:id/OrderCard_$orderId" },
             colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)

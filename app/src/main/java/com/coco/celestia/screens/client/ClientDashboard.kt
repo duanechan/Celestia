@@ -16,17 +16,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -173,7 +170,7 @@ fun ClientDashboard(
 
         // Show the notifications dialog if showDialog is true
         if (showDialog.value) {
-            showNotificationsDialog(notifications) {
+            ShowNotificationsDialog(notifications) {
                 showDialog.value = false // Dismiss the dialog
             }
         }
@@ -181,7 +178,7 @@ fun ClientDashboard(
 }
 
 @Composable
-fun showNotificationsDialog(notifications: List<String>, onDismiss: () -> Unit) {
+fun ShowNotificationsDialog(notifications: List<String>, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = { Text(text = "Notifications") },
@@ -479,9 +476,8 @@ fun OrderHistory(
             is OrderState.SUCCESS -> {
                 if (completedOrders.isNotEmpty()) {
                     Column {
-                        completedOrders.forEachIndexed { index, order ->
+                        completedOrders.forEachIndexed { _, order ->
                             OrderCardDetails(
-                                orderCount = index + 1,
                                 order = order,
                                 user = userData,
                                 navController = navController
@@ -502,7 +498,6 @@ fun OrderHistory(
 
 @Composable
 fun OrderCardDetails(
-    orderCount: Int,
     order: OrderData,
     user: UserData,
     navController: NavController
@@ -527,7 +522,7 @@ fun OrderCardDetails(
                     .weight(1f)
                     .height(140.dp)
                     .clickable {
-                        navController.navigate("ClientOrderDetails/${order.orderId}")
+                        navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId))
                     }
                     .padding(end = 8.dp)
                     .semantics { testTag = "android:id/OrderCard_$orderId" },
@@ -558,7 +553,7 @@ fun OrderCardDetails(
                         )
 
                         Text(
-                            text = "$orderStatus",
+                            text = orderStatus,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = LightOrange,

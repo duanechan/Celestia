@@ -477,7 +477,7 @@ fun NavGraph(
             )
         }
         composable(
-            route = "ClientOrderDetails/{orderId}",
+            route = Screen.ClientOrderDetails.route,
             arguments = listOf(
                 navArgument("orderId") { type = NavType.StringType }
             )
