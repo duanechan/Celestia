@@ -527,7 +527,7 @@ fun OrderCardDetails(
                     .weight(1f)
                     .height(140.dp)
                     .clickable {
-                        navController.navigate("ClientOrderDetails/${order.orderId}/$orderCount")
+                        navController.navigate("ClientOrderDetails/${order.orderId}")
                     }
                     .padding(end = 8.dp)
                     .semantics { testTag = "android:id/OrderCard_$orderId" },

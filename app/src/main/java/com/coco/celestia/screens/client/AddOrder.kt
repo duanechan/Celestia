@@ -672,7 +672,7 @@ fun ConfirmOrderRequestPanel(
                     }
                     TextButton(
                         onClick = {
-                            navController.navigate("ClientOrderDetails/${order.orderId}/" + 0)
+                            navController.navigate("ClientOrderDetails/${order.orderId}")
                         }
                     ) {
                         Text(

@@ -227,7 +227,7 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                 .weight(1f)
                 .height(165.dp)
                 .clickable {
-                    navController.navigate("ClientOrderDetails/${order.orderId}/$orderCount")
+                    navController.navigate("ClientOrderDetails/${order.orderId}")
                 }
                 .semantics { testTag = "android:id/OrderCard_$orderId" },
             colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)

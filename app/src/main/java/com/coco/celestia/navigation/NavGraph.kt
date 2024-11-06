@@ -477,17 +477,15 @@ fun NavGraph(
             )
         }
         composable(
-            route = "ClientOrderDetails/{orderId}/{orderCount}",
+            route = "ClientOrderDetails/{orderId}",
             arguments = listOf(
-                navArgument("orderId") { type = NavType.StringType },
-                navArgument("orderCount") { type = NavType.IntType }
+                navArgument("orderId") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val orderId = backStackEntry.arguments?.getString("orderId")
-            val orderCount = backStackEntry.arguments?.getInt("orderCount") ?: 0
-            onNavigate("Order Details")
+            onNavigate("")
             orderId?.let {
-                ClientOrderDetails(navController, it, orderCount)
+                ClientOrderDetails(navController, it)
             }
         }
     }

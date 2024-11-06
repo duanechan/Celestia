@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.client
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,9 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -28,8 +27,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -46,11 +43,8 @@ import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -60,8 +54,6 @@ import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.Copper
 import com.coco.celestia.ui.theme.LightGray
 import com.coco.celestia.ui.theme.LightOrange
-import com.coco.celestia.ui.theme.TreeBark
-import com.coco.celestia.util.formatDate
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.model.OrderData
@@ -69,13 +61,12 @@ import com.coco.celestia.viewmodel.model.OrderData
 @Composable
 fun ClientOrderDetails(
     navController: NavController,
-    orderId: String,
-    orderCount: Int
+    orderId: String
 ) {
     val orderViewModel: OrderViewModel = viewModel()
     val allOrders by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
-    val orderIdSub = orderId.substring(6, 10).uppercase()
+    val orderIdSub = orderId.substring(6, 29).uppercase()
     LaunchedEffect(Unit) {
         if (allOrders.isEmpty()) {
             orderViewModel.fetchAllOrders(
@@ -138,16 +129,14 @@ fun ClientOrderDetails(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(520.dp)
                             .semantics { testTag = "android:id/OrderDetailsCard" },
                         shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
                     ) {
+                        // Upper Part
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(520.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .background(LightOrange),
                             contentAlignment = Alignment.TopStart,
@@ -163,315 +152,264 @@ fun ClientOrderDetails(
                                         .padding(bottom = 8.dp)
                                         .semantics { testTag = "android:id/OrderCountBox" }
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(width = 50.dp, height = 117.dp)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .background(Color.White),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = orderCount.toString(),
-                                            fontSize = 50.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color.Black,
-                                            modifier = Modifier.padding(5.dp)
-                                        )
-                                    }
+                                    Image(
+                                        painter = painterResource(id = R.drawable.vegetable_meat),
+                                        contentDescription = "vegetable_meat_icon",
+                                        modifier = Modifier.size(70.dp)
+                                    )
 
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column {
                                         Text(
-                                            text = buildAnnotatedString {
-                                                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                                    append("Order ID: ")
-                                                }
-                                                withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
-                                                    append("#$orderIdSub")
-                                                }
-                                            },
-                                            fontSize = 20.sp,
+                                            text = orderIdSub,
+                                            fontSize = 15.sp,
                                             color = White,
+                                            fontWeight = FontWeight.Bold,
                                             modifier = Modifier.semantics {
                                                 testTag = "android:id/OrderID"
                                             }
                                         )
 
-                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Spacer(modifier = Modifier.height(6.dp))
 
                                         Text(
-                                            text = buildAnnotatedString {
-                                                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                                    append("Delivery Address: ")
-                                                }
-                                                withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
-                                                    append("${orderData.street}, ${orderData.barangay}")
-                                                }
-                                            },
-                                            fontSize = 20.sp,
+                                            text = orderData.status,
+                                            fontSize = 25.sp,
                                             color = White,
-                                            modifier = Modifier.semantics {
-                                                testTag = "android:id/DeliveryAddress"
-                                            }
-                                        )
-
-                                        Spacer(modifier = Modifier.height(4.dp))
-
-                                        Text(
-                                            text = buildAnnotatedString {
-                                                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                                    append("Estimated Date of Arrival: ")
-                                                }
-                                                withStyle(style = SpanStyle(fontWeight = FontWeight.Medium)) {
-                                                    append(formatDate(orderData.targetDate))
-                                                }
-                                            },
-                                            fontSize = 15.sp,
-                                            color = White,
-                                            modifier = Modifier.semantics {
-                                                testTag = "android:id/ETA"
-                                            }
+                                            fontWeight = FontWeight.Bold
                                         )
                                     }
                                 }
+                            }
+                        }
 
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
+                        // Order Details
+                        Column (
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .padding(top = 24.dp)
+                        ){
+                            Text(
+                                text = "Order Details",
+                                fontSize = 30.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            OrderDetailsColumn("Items Ordered", product.name)
+                            OrderDetailsColumn("Product Quantity", "${product.quantity} kg")
+                            OrderDetailsColumn("Date Ordered", orderData.orderDate)
+                            OrderDetailsColumn("Deliver to", "${orderData.street}, ${orderData.barangay}")
+                            OrderDetailsColumn("Target Date", orderData.targetDate)
+
+                            Divider(
+                                modifier = Modifier
+                                    .padding(top =  15.dp, bottom = 5.dp),
+                                thickness = 3.dp,
+                                color = Color.Black.copy(alpha = 0.6f)
+                            )
+                        }
+
+                        // Buttons For Pending and Completed Orders
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(end = 16.dp, bottom = 16.dp),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            if (orderData.status == "PENDING") {
+                                Button(
+                                    onClick = {
+                                        showCancelConfirmation.value = true
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = White
+                                    ),
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(top = 16.dp)
-                                        .semantics { testTag = "android:id/OrderedProducts" }
+                                        .height(50.dp)
+                                        .width(170.dp)
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.ShoppingCart,
-                                        contentDescription = "Ordered Products Icon",
-                                        tint = White,
-                                        modifier = Modifier.size(24.dp)
+                                        painter = painterResource(id = R.drawable.cancel),
+                                        contentDescription = "Cancel Icon",
+                                        tint = Color.Red,
+                                        modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "Ordered Products",
-                                        color = White,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 20.sp,
-                                        modifier = Modifier.padding(start = 15.dp)
+                                        text = "Cancel Order",
+                                        color = Color.Red
                                     )
                                 }
+                            }
 
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Card(
+                            if (orderData.status == "COMPLETED") {
+                                Button(
+                                    onClick = {
+                                        showReceivedConfirmation.value = true
+                                        orderViewModel.markOrderReceived(orderData.orderId)
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = White
+                                    ),
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(100.dp),
-                                    shape = RoundedCornerShape(16.dp),
-                                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+                                        .height(50.dp)
+                                        .width(170.dp)
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .background(TreeBark)
-                                            .padding(start = 10.dp, end = 10.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(
-                                                text = product.name,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 30.sp,
-                                                color = White,
-                                            )
-                                            Spacer(modifier = Modifier.weight(1f))
-                                            Text(
-                                                text = "${product.quantity} kg",
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 40.sp,
-                                                color = White,
-                                            )
-                                        }
-                                    }
-                                }
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(end = 16.dp, bottom = 16.dp),
-                                    horizontalArrangement = Arrangement.End
-                                ) {
-                                    Button(
-                                        onClick = {
-                                            if (orderData.status == "PENDING") showCancelConfirmation.value = true
-                                        },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (orderData.status == "PENDING") Color.White else Color.Gray
-                                        ),
-                                        enabled = orderData.status == "PENDING",
-                                        modifier = Modifier
-                                            .height(50.dp)
-                                            .width(170.dp)
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.cancel),
-                                            contentDescription = "Cancel Icon",
-                                            tint = if (orderData.status == "PENDING") Color.Red else Color.White,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = "Cancel Order",
-                                            color = if (orderData.status == "PENDING") Color.Red else Color.White
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(16.dp))
-                                    Button(
-                                        onClick = {
-                                            if (orderData.status == "COMPLETED") {
-                                                showReceivedConfirmation.value = true
-                                                orderViewModel.markOrderReceived(orderData.orderId)
-                                            }
-                                        },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (orderData.status == "COMPLETED") Color.White else Color.Gray
-                                        ),
-                                        enabled = orderData.status == "COMPLETED",
-                                        modifier = Modifier
-                                            .height(50.dp)
-                                            .width(170.dp)
-                                    ) {
-                                        val greenColor = Color(0xFF4CAF50) //to move in colors.kt
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.received),
-                                            contentDescription = "Received Icon",
-                                            tint = if (orderData.status == "COMPLETED") greenColor else Color.White,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = "Received",
-                                            color = if (orderData.status == "COMPLETED") greenColor else Color.White,
-                                            fontSize = 12.sp
-                                        )
-                                    }
+                                    val greenColor =
+                                        Color(0xFF4CAF50) //to move in colors.kt
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.received),
+                                        contentDescription = "Received Icon",
+                                        tint = greenColor,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Received",
+                                        color = greenColor,
+                                        fontSize = 12.sp
+                                    )
                                 }
                             }
                         }
+
+                        // Track Order
+                        if (orderData.status != "PENDING") {
+                            OrderStatusTracker(status = orderData.status)
+                        }
+                        Spacer(modifier = Modifier.height(130.dp))
+
                     }
-                    OrderStatusTracker(status = orderData.status)
-                    Spacer(modifier = Modifier.height(110.dp))
-                }
-                if (showCancelConfirmation.value) {
-                    AlertDialog(
-                        onDismissRequest = { showCancelConfirmation.value = false },
-                        title = {
-                            Text(
-                                text = "Cancel Order",
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        },
-                        text = {
-                            Text(
-                                text = "Are you sure you want to cancel this order?",
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    showCancelConfirmation.value = false
-                                    orderViewModel.cancelOrder(orderData.orderId)
-                                    showOrderCancelledDialog.value = true
+                    if (showCancelConfirmation.value) {
+                        AlertDialog(
+                            onDismissRequest = { showCancelConfirmation.value = false },
+                            title = {
+                                Text(
+                                    text = "Cancel Order",
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            },
+                            text = {
+                                Text(
+                                    text = "Are you sure you want to cancel this order?",
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        showCancelConfirmation.value = false
+                                        orderViewModel.cancelOrder(orderData.orderId)
+                                        showOrderCancelledDialog.value = true
+                                    }
+                                ) {
+                                    Text("Yes", color = Color.Red)
                                 }
-                            ) {
-                                Text("Yes", color = Color.Red)
-                            }
-                        },
-                        dismissButton = {
-                            TextButton(
-                                onClick = { showCancelConfirmation.value = false }
-                            ) {
-                                Text("No")
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(0.9f)
-                    )
-                }
+                            },
+                            dismissButton = {
+                                TextButton(
+                                    onClick = { showCancelConfirmation.value = false }
+                                ) {
+                                    Text("No")
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(0.9f)
+                        )
+                    }
 
-                if (showOrderCancelledDialog.value) {
-                    AlertDialog(
-                        onDismissRequest = {
-                            showOrderCancelledDialog.value = false
-                            navController.navigate(Screen.ClientOrder.route)
-                        },
-                        title = {
-                            Text(
-                                text = "Order Cancelled",
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        },
-                        text = {
-                            Text(
-                                text = "Your order has been successfully cancelled.",
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    showOrderCancelledDialog.value = false
-                                    navController.navigate(Screen.ClientOrder.route)
+                    if (showOrderCancelledDialog.value) {
+                        AlertDialog(
+                            onDismissRequest = {
+                                showOrderCancelledDialog.value = false
+                                navController.navigate(Screen.ClientOrder.route)
+                            },
+                            title = {
+                                Text(
+                                    text = "Order Cancelled",
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            },
+                            text = {
+                                Text(
+                                    text = "Your order has been successfully cancelled.",
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        showOrderCancelledDialog.value = false
+                                        navController.navigate(Screen.ClientOrder.route)
+                                    }
+                                ) {
+                                    Text("OK")
                                 }
-                            ) {
-                                Text("OK")
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(0.9f)
-                    )
-                            }
-                if (showReceivedConfirmation.value) {
-                    AlertDialog(
-                        onDismissRequest = {
-                            showReceivedConfirmation.value = false
-                            navController.navigate(Screen.ClientOrder.route)
-                        },
-                        title = {
-                            Text(
-                                text = "Order Received",
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        },
-                        text = {
-                            Text(
-                                text = "You have confirmed that you received the order.",
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        },
-                        confirmButton = {
-                            TextButton(
-                                onClick = {
-                                    showReceivedConfirmation.value = false
-                                    navController.navigate(Screen.ClientOrder.route)
+                            },
+                            modifier = Modifier.fillMaxWidth(0.9f)
+                        )
+                    }
+                    if (showReceivedConfirmation.value) {
+                        AlertDialog(
+                            onDismissRequest = {
+                                showReceivedConfirmation.value = false
+                                navController.navigate(Screen.ClientOrder.route)
+                            },
+                            title = {
+                                Text(
+                                    text = "Order Received",
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            },
+                            text = {
+                                Text(
+                                    text = "You have confirmed that you received the order.",
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        showReceivedConfirmation.value = false
+                                        navController.navigate(Screen.ClientOrder.route)
+                                    }
+                                ) {
+                                    Text("OK")
                                 }
-                            ) {
-                                Text("OK")
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(0.9f)
-                    )
-                        }
+                            },
+                            modifier = Modifier.fillMaxWidth(0.9f)
+                        )
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun OrderDetailsColumn(label: String, value: String) {
+    Text(
+        text = label,
+        fontSize = 16.sp,
+        color = Color.Black.copy(alpha = 0.5f),
+        modifier = Modifier
+            .padding(top = 15.dp, bottom = 3.dp)
+    )
+
+    Text(
+        text = value,
+        fontSize = 22.sp,
+        fontWeight = FontWeight.Bold
+    )
 }
 
 @Composable
@@ -479,14 +417,20 @@ fun OrderStatusTracker(status: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
             .semantics { testTag = "android:id/OrderStatusTracker" },
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            if (status in listOf("PREPARING", "DELIVERING", "COMPLETED")) {
+        Column {
+            Text(
+                text = "Track Order",
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(15.dp))
+
+            if (status in listOf("PREPARING", "DELIVERING", "COMPLETED", "RECEIVED")) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.semantics { testTag = "android:id/PreparingStatus" }
@@ -510,7 +454,7 @@ fun OrderStatusTracker(status: String) {
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
-            if (status in listOf("DELIVERING", "COMPLETED")) {
+            if (status in listOf("DELIVERING", "COMPLETED", "RECEIVED")) {
                 Row(
                     verticalAlignment = Alignment.Top,
                     modifier = Modifier.semantics { testTag = "android:id/DeliveryDivider" }
@@ -550,7 +494,7 @@ fun OrderStatusTracker(status: String) {
             }
             Spacer(modifier = Modifier.height(8.dp))
 
-            if (status == "COMPLETED") {
+            if (status in listOf("COMPLETED", "RECEIVED")) {
                 Row(
                     verticalAlignment = Alignment.Top,
                     modifier = Modifier.semantics { testTag = "android:id/CompletedDivider" }
@@ -588,6 +532,8 @@ fun OrderStatusTracker(status: String) {
                     )
                 }
             }
+
+            // Add Received
         }
     }
 }
