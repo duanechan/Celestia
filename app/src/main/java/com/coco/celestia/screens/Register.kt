@@ -1,7 +1,7 @@
 package com.coco.celestia.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,11 +13,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,13 +32,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -45,6 +48,7 @@ import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.util.isValidEmail
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.ui.theme.*
 
 @Composable
 fun RegisterScreen(
@@ -80,7 +84,7 @@ fun RegisterScreen(
     if (showRoleDialog) {
         AlertDialog(
             onDismissRequest = { showRoleDialog = false },
-            title = { Text(text = "Register As") },
+            title = { Text(text = "Register As", color = BrownCoffee2, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
             text = {
                 Box(
                     modifier = Modifier.fillMaxWidth(),
@@ -89,7 +93,7 @@ fun RegisterScreen(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = "Choose your role")
+                        Text(text = "Choose your role", color = BrownCoffee2, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(16.dp))
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -99,6 +103,7 @@ fun RegisterScreen(
                                     selectedRole = "Farmer"
                                     showRoleDialog = false
                                 },
+                                colors = ButtonDefaults.buttonColors(BrownCoffee),
                                 modifier = Modifier.semantics { testTag = "android:id/farmerButton" }
                             ) {
                                 Text(text = "Farmer")
@@ -109,6 +114,7 @@ fun RegisterScreen(
                                     selectedRole = "Client"
                                     showRoleDialog = false
                                 },
+                                colors = ButtonDefaults.buttonColors(BrownCoffee),
                                 modifier = Modifier.semantics { testTag = "android:id/clientButton" }
                             ) {
                                 Text(text = "Client")
@@ -132,6 +138,7 @@ fun RegisterScreen(
                                 popUpTo(Screen.Login.route) { inclusive = true }
                             }
                         },
+                        colors = ButtonDefaults.buttonColors(Gray),
                         modifier = Modifier.semantics { testTag = "android:id/cancelButton" }
                     ) {
                         Text(text = "Cancel")
@@ -140,122 +147,167 @@ fun RegisterScreen(
             }
         )
     } else {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = BgColor)
         ) {
-            Image(painter = painterResource(id = R.drawable.a), contentDescription = "Login Image",
-                modifier = Modifier.size(195.dp))
-
-            Text(text = "CoCo", fontSize = 54.sp, fontWeight = FontWeight.Bold)
-            Text(text = "Coop Connects", fontSize = 15.sp)
-            Spacer(modifier = Modifier.height(35.dp))
-
-            OutlinedTextField(
-                value = email,
-                onValueChange = {
-                    if (it.length <= maxChar) {
-                        email = it
-                        isValidEmail = isValidEmail(it)
-                    }
-                },
-                label = { Text(text = "Email") },
-                isError = !isValidEmail,
-                singleLine = true,
-                maxLines = 1,
-                modifier = Modifier.semantics { testTag = "android:id/emailFieldReg" }
-            )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            if (!isValidEmail) {
-                Text(
-                    text = "Invalid email format",
-                    color = Color.Red,
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            OutlinedTextField(
-                value = firstName,
-                onValueChange = {
-                    if (it.length <= maxChar) {
-                        firstName = it
-                    }
-                },
-                label = { Text(text = "First Name") },
-                singleLine = true,
-                maxLines = 1,
-                modifier = Modifier.semantics { testTag = "android:id/firstNameField" }
-            )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            OutlinedTextField(
-                value = lastName,
-                onValueChange = {
-                    if (it.length <= maxChar) {
-                        lastName = it
-                    }
-                },
-                label = { Text(text = "Last Name") },
-                singleLine = true,
-                maxLines = 1,
-                modifier = Modifier.semantics { testTag = "android:id/lastNameField" }
-            )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = {
-                    if (it.length <= maxChar) {
-                        password = it
-                    }
-                },
-                label = { Text(text = "Password") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                visualTransformation = PasswordVisualTransformation(),
-                singleLine = true,
-                maxLines = 1,
-                modifier = Modifier.semantics { testTag = "android:id/passwordField" }
-            )
-
-            Spacer(modifier = Modifier.height(2.dp))
-
-            OutlinedTextField(
-                value = confirmPassword,
-                onValueChange = {
-                    if (it.length <= maxChar) {
-                        confirmPassword = it
-                    }
-                },
-                label = { Text(text = "Confirm Password") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                visualTransformation = PasswordVisualTransformation(),
-                singleLine = true,
-                maxLines = 1,
-                modifier = Modifier.semantics { testTag = "android:id/confirmPassField" }
-            )
-
-            Spacer(modifier = Modifier.height(15.dp))
-
-            Button(
-                onClick = {
-                    if (email.isNotEmpty() && firstName.isNotEmpty() && lastName.isNotEmpty() && password.isNotEmpty()) {
-                        userViewModel.register(email, firstName, lastName, password, selectedRole)
-                    } else {
-                        onRegisterEvent(Triple(ToastStatus.WARNING, "All text must be filled", System.currentTimeMillis()))
-                    }
-                },
+            Column(
                 modifier = Modifier
-                    .semantics { testTag = "android:id/registerButton" }
-                    .width(285.dp)
-                    .height(50.dp)) {
-                Text(text = "Register")
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(painter = painterResource(id = R.drawable.a), contentDescription = "Login Image",
+                    modifier = Modifier.size(195.dp))
+
+                Text(text = "CoCo", fontSize = 54.sp, fontWeight = FontWeight.Bold, color = BrownCoffee2)
+                Text(text = "Coop Connects", fontSize = 15.sp, color = BrownCoffee2)
+                Spacer(modifier = Modifier.height(35.dp))
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = {
+                        if (it.length <= maxChar) {
+                            email = it
+                            isValidEmail = isValidEmail(it)
+                        }
+                    },
+                    label = { Text(text = "Email", color = BrownCoffee2) },
+                    isError = !isValidEmail,
+                    singleLine = true,
+                    maxLines = 1,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedBorderColor = BrownCoffee2,
+                        unfocusedBorderColor = BrownCoffee2
+                    ),
+                    modifier = Modifier.semantics { testTag = "android:id/emailFieldReg" }
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                if (!isValidEmail) {
+                    Text(
+                        text = "Invalid email format",
+                        color = Color.Red,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+
+                OutlinedTextField(
+                    value = firstName,
+                    onValueChange = {
+                        if (it.length <= maxChar) {
+                            firstName = it
+                        }
+                    },
+                    label = { Text(text = "First Name", color = BrownCoffee2) },
+                    singleLine = true,
+                    maxLines = 1,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedBorderColor = BrownCoffee2,
+                        unfocusedBorderColor = BrownCoffee2
+                    ),
+                    modifier = Modifier.semantics { testTag = "android:id/firstNameField" }
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                OutlinedTextField(
+                    value = lastName,
+                    onValueChange = {
+                        if (it.length <= maxChar) {
+                            lastName = it
+                        }
+                    },
+                    label = { Text(text = "Last Name", color = BrownCoffee2) },
+                    singleLine = true,
+                    maxLines = 1,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedBorderColor = BrownCoffee2,
+                        unfocusedBorderColor = BrownCoffee2
+                    ),
+                    modifier = Modifier.semantics { testTag = "android:id/lastNameField" }
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = {
+                        if (it.length <= maxChar) {
+                            password = it
+                        }
+                    },
+                    label = { Text(text = "Password", color = BrownCoffee2) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    visualTransformation = PasswordVisualTransformation(),
+                    singleLine = true,
+                    maxLines = 1,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedBorderColor = BrownCoffee2,
+                        unfocusedBorderColor = BrownCoffee2
+                    ),
+                    modifier = Modifier.semantics { testTag = "android:id/passwordField" }
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                OutlinedTextField(
+                    value = confirmPassword,
+                    onValueChange = {
+                        if (it.length <= maxChar) {
+                            confirmPassword = it
+                        }
+                    },
+                    label = { Text(text = "Confirm Password", color = BrownCoffee2) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    visualTransformation = PasswordVisualTransformation(),
+                    singleLine = true,
+                    maxLines = 1,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color.White,
+                        unfocusedContainerColor = Color.White,
+                        focusedBorderColor = BrownCoffee2,
+                        unfocusedBorderColor = BrownCoffee2
+                    ),
+                    modifier = Modifier.semantics { testTag = "android:id/confirmPassField" }
+                )
+
+                Spacer(modifier = Modifier.height(15.dp))
+
+                Button(
+                    onClick = {
+                        if (email.isNotEmpty() && firstName.isNotEmpty() && lastName.isNotEmpty() && password.isNotEmpty()) {
+                            userViewModel.register(email, firstName, lastName, password, selectedRole)
+                        } else {
+                            onRegisterEvent(Triple(ToastStatus.WARNING, "All text must be filled", System.currentTimeMillis()))
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(BrownCoffee),
+                    modifier = Modifier
+                        .semantics { testTag = "android:id/registerButton" }
+                        .width(285.dp)
+                        .height(50.dp)
+                ) {
+                    Text(text = "Register", color = Color.White)
+                }
+                Spacer(modifier = Modifier.height(5.dp))
             }
-            Spacer(modifier = Modifier.height(5.dp))
         }
     }
 }

@@ -3,6 +3,7 @@ package com.coco.celestia.screens
 import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,9 +13,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -42,6 +47,7 @@ import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.util.routeHandler
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.ui.theme.*
 
 @Composable
 fun LoginScreen(
@@ -87,10 +93,10 @@ fun LoginScreen(
         }
     }
 
-
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(color = BgColor)
             .padding(horizontal = 16.dp)
             .semantics { testTag = "android:id/loginScreen" },
         verticalArrangement = Arrangement.Center,
@@ -102,17 +108,24 @@ fun LoginScreen(
             modifier = Modifier.size(195.dp)
         )
 
-        Text(text = "CoCo", fontSize = 54.sp, fontWeight = FontWeight.Bold)
-        Text(text = "Coop Connects", fontSize = 15.sp)
+        Text(text = "CoCo", fontSize = 54.sp, fontWeight = FontWeight.Bold, color = BrownCoffee2)
+        Text(text = "Coop Connects", fontSize = 15.sp, color = BrownCoffee2)
 
         Spacer(modifier = Modifier.height(35.dp))
 
         OutlinedTextField(
             value = email,
             onValueChange = { if (it.length <= 25) email = it },
-            label = { Text(text = "Email") },
+            label = { Text(text = "Email", color = BrownCoffee2) },
             singleLine = true,
             maxLines = 1,
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedBorderColor = BrownCoffee2,
+                unfocusedBorderColor = BrownCoffee2
+            ),
             modifier = Modifier.semantics { testTag = "android:id/emailField" }
         )
 
@@ -121,11 +134,18 @@ fun LoginScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { if (it.length <= 16) password = it },
-            label = { Text(text = "Password") },
+            label = { Text(text = "Password", color = BrownCoffee2) },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             singleLine = true,
             maxLines = 1,
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedBorderColor = BrownCoffee2,
+                unfocusedBorderColor = BrownCoffee2
+            ),
             modifier = Modifier.semantics { testTag = "android:id/passwordField" }
         )
 
@@ -144,17 +164,19 @@ fun LoginScreen(
                     onLoginEvent(Triple(ToastStatus.FAILED, e.message ?: "An unknown error has occurred.", System.currentTimeMillis()))
                 }
             },
+            colors = ButtonDefaults.buttonColors(BrownCoffee),
             modifier = Modifier
                 .width(285.dp)
                 .height(50.dp)
                 .semantics { testTag = "android:id/loginButton" }
         ) {
-            Text(text = "Login")
+            Text(text = "Login", color = Color.White)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "Forgot Password?",
+            color = BrownCoffee2,
             fontSize = 13.sp,
             modifier = Modifier.clickable {
                 mainNavController.navigate(Screen.ForgotPassword.route)
@@ -164,7 +186,8 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(32.dp))
         Text(
             text = "Don't have an account? Register Now!",
-            fontSize = 15.sp,
+            fontSize = 13.sp,
+            color = BrownCoffee2,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clickable {
                 mainNavController.navigate(Screen.Register.route)

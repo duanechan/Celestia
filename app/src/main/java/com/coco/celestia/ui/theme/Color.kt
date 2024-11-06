@@ -18,6 +18,7 @@ val LightGreen = Color(0xFF41644A)
 val DarkGreen = Color(0xFF263A29)
 val BgColor = Color(0xFFF2E3DB)
 val Gray = Color(0xFF3E3E3E)
+val BrownCoffee2 = Color(0xFF633E06)
 
 //Profile Palette
 val GrayTextField = Color(0XFFdcdcdc)
