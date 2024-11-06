@@ -15,25 +15,29 @@ import androidx.navigation.NavController
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import com.coco.celestia.ui.theme.*
-import com.coco.celestia.viewmodel.FarmerItemViewModel
-import com.coco.celestia.viewmodel.OrderViewModel
-import com.coco.celestia.viewmodel.model.ItemData
 import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.ProductData
 
 @Composable
 fun FarmerFulfillDialog(
     navController: NavController,
-    item: ItemData,
-    orderViewModel: OrderViewModel,
+    itemData: List<ProductData>,
     orderData: OrderData,
-    farmerItemViewModel: FarmerItemViewModel,
-    totalFarmers: Int,
     farmerName: String,
+    remainingQuantity: Int,
     onAccept: () -> Unit,
     onReject: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val productInInventory = itemData.find {
+        it.name.equals(orderData.orderData.name, ignoreCase = true)
+    }
+
+    val farmerStock = productInInventory?.quantity ?: 0
+    val canFulfill = remainingQuantity <= farmerStock
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -54,7 +58,7 @@ fun FarmerFulfillDialog(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Incomplete Fulfillment",
+                    text = "Fulfill Order Request",
                     fontSize = 20.sp,
                     color = Cocoa,
                     textAlign = TextAlign.Center,
@@ -63,48 +67,105 @@ fun FarmerFulfillDialog(
             }
         },
         text = {
-            Text(
-                text = "Would you like to fulfill the remaining quantity of this order?",
-                fontSize = 13.sp,
-                color = Cocoa,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { testTag = "android:id/dialogText" }
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = farmerName,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Cocoa,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.semantics { testTag = "android:id/dialogFarmerName" }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Product: ${orderData.orderData.name}",
+                    fontSize = 14.sp,
+                    color = Cocoa,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.semantics { testTag = "android:id/dialogProductName" }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Ordered: ${orderData.orderData.quantity} kg",
+                    fontSize = 13.sp,
+                    color = Cocoa,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.semantics { testTag = "android:id/dialogOrderQuantity" }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Your Current Stock: $farmerStock kg",
+                    fontSize = 13.sp,
+                    color = Cocoa,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.semantics { testTag = "android:id/dialogFarmerStock" }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Remaining to Fulfill: $remainingQuantity kg",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Cocoa,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.semantics { testTag = "android:id/dialogRemainingQuantity" }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = if (canFulfill) {
+                        "You have enough stock to fulfill this order."
+                    } else {
+                        "You do not have enough stock to fulfill this order."
+                    },
+                    color = if (canFulfill) OliveGreen else Copper,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.semantics { testTag = "android:id/dialogStatusMessage" }
+                )
+            }
         },
         dismissButton = {
             TextButton(
                 onClick = {
-                    onReject()
+                    if (canFulfill) {
+                        onReject()
+                    }
                     navController.popBackStack()
                 },
-                modifier = Modifier.semantics { testTag = "android:id/dialogRejectButton" }
+                modifier = Modifier.semantics {
+                    testTag = if (canFulfill) "android:id/dialogRejectButton" else "android:id/dialogOkButton"
+                }
             ) {
                 Text(
-                    text = "Refuse",
+                    text = if (canFulfill) "Refuse" else "Ok",
                     color = Copper,
                     fontSize = 16.sp,
                 )
             }
         },
         confirmButton = {
-            TextButton(
-                onClick = {
-                    val updatedOrder = orderData.copy(status = "PREPARING", fulfilledBy = orderData.fulfilledBy + farmerName)
-                    orderViewModel.updateOrder(updatedOrder)
-                    farmerItemViewModel.reduceItemQuantity(item, totalFarmers)
-
-                    onAccept()
-                    navController.popBackStack()
-                },
-                modifier = Modifier.semantics { testTag = "android:id/dialogAcceptButton" }
-            ) {
-                Text(
-                    text = "Accept",
-                    color = SageGreen,
-                    fontSize = 16.sp,
-                )
+            if (canFulfill) {
+                TextButton(
+                    onClick = {
+                        onAccept()
+                        navController.popBackStack()
+                    },
+                    modifier = Modifier.semantics { testTag = "android:id/dialogAcceptButton" }
+                ) {
+                    Text(
+                        text = "Accept",
+                        color = OliveGreen,
+                        fontSize = 16.sp,
+                    )
+                }
             }
         },
         shape = RoundedCornerShape(16.dp),

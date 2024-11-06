@@ -24,7 +24,8 @@ data class OrderData(
     val barangay: String = "",
     val street: String = "",
     val rejectionReason: String? = null,
-    val fulfilledBy: List<String> = emptyList()
+    val fulfilledBy: List<String> = emptyList(),
+    val partialQuantity: Int? = null
 )
 
 data class ProductData(

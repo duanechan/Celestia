@@ -180,7 +180,7 @@ class FarmerItemViewModel : ViewModel() {
             }
         }
     }
-    fun reduceItemQuantity(item: ItemData, totalFarmers: Int) {
+    fun reduceItemQuantity(item: ItemData, partialQuantity: Int? = null) {
         viewModelScope.launch {
             try {
                 _itemState.value = ItemState.LOADING
@@ -189,19 +189,15 @@ class FarmerItemViewModel : ViewModel() {
                 val uid = FirebaseAuth.getInstance().uid.toString()
                 val snapshot = database.child(uid).child("items").get().await()
                 val orderedQuantity = item.items.firstOrNull()?.quantity ?: 0
-                val baseReductionAmount = orderedQuantity / totalFarmers
-                val remainder = orderedQuantity % totalFarmers
 
-                for ((index, itemNode) in snapshot.children.withIndex()) {
+                // Set reduction amount based on partial fulfillment or full order quantity
+                val reductionAmount = partialQuantity ?: orderedQuantity
+
+                for (itemNode in snapshot.children) {
                     val name = itemNode.child("name").getValue(String::class.java)
 
                     if (name?.equals(item.name, ignoreCase = true) == true) {
                         val currentQuantity = itemNode.child("quantity").getValue(Int::class.java) ?: 0
-                        val reductionAmount = if (index == totalFarmers - 1) {
-                            baseReductionAmount + remainder
-                        } else {
-                            baseReductionAmount
-                        }
 
                         val newQuantity = (currentQuantity - reductionAmount).coerceAtLeast(0)
                         itemNode.child("quantity").ref.setValue(newQuantity).await()
@@ -214,6 +210,8 @@ class FarmerItemViewModel : ViewModel() {
                         }
 
                         itemFound = true
+                        // Break loop if it's a partial fulfillment
+                        if (partialQuantity != null) break
                     }
                 }
 
@@ -221,7 +219,6 @@ class FarmerItemViewModel : ViewModel() {
                     val availableItems = snapshot.children.mapNotNull {
                         it.child("name").getValue(String::class.java)
                     }.joinToString(", ")
-
                     _itemState.value = ItemState.ERROR("Product ${item.name} not found in inventory")
                 } else {
                     getItems(uid)
@@ -232,6 +229,7 @@ class FarmerItemViewModel : ViewModel() {
             }
         }
     }
+
     fun setPlantingInfo(uid: String, productName: String, plantingDate: String, duration: Int) {
         viewModelScope.launch {
             try {

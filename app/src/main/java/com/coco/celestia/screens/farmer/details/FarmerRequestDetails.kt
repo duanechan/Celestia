@@ -59,8 +59,6 @@ fun FarmerRequestDetails(
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
     val itemData by farmerItemViewModel.itemData.observeAsState(emptyList())
     val itemState by farmerItemViewModel.itemState.observeAsState(ItemState.LOADING)
-
-    // Observe user data
     val usersData by userViewModel.usersData.observeAsState(emptyList())
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
 
@@ -117,7 +115,6 @@ fun FarmerRequestDetails(
                 onReject = onReject,
                 orderViewModel = orderViewModel,
                 farmerItemViewModel = farmerItemViewModel,
-                totalFarmers = 2,
                 farmerName = farmerName
             )
         }
@@ -174,7 +171,6 @@ fun OrderDetails(
     onReject: (String) -> Unit,
     orderViewModel: OrderViewModel,
     farmerItemViewModel: FarmerItemViewModel,
-    totalFarmers: Int,
     farmerName: String
 ) {
     LazyColumn(
@@ -201,14 +197,17 @@ fun OrderDetails(
         FarmerDecisionDialog(
             decisionType = decisionType,
             farmerName = farmerName,
-            onConfirm = { selectedReason, isPartialFulfillment ->
+            onConfirm = { selectedReason, isPartialFulfillment, quantity ->
                 setDecisionDialog(false)
                 if (decisionType == "ACCEPT") {
                     setOrderAccepted(true)
-                    val fulfillmentStatus = if (isPartialFulfillment == true) "INCOMPLETE" else "PREPARING"
+
+                    val validQuantity = quantity?.takeIf { it > 0 }
+                    val fulfillmentStatus = if (isPartialFulfillment == false) "PREPARING" else "INCOMPLETE"
                     val updatedOrder = orderData.copy(
                         status = fulfillmentStatus,
-                        fulfilledBy = orderData.fulfilledBy + farmerName
+                        fulfilledBy = orderData.fulfilledBy + farmerName,
+                        partialQuantity = validQuantity
                     )
                     orderViewModel.updateOrder(updatedOrder)
 
@@ -217,15 +216,23 @@ fun OrderDetails(
                         items = mutableListOf(orderData.orderData)
                     )
 
-                    if (isPartialFulfillment != null) {
-                        farmerItemViewModel.reduceItemQuantity(itemData, totalFarmers)
+                    when {
+                        isPartialFulfillment == false -> {
+                            farmerItemViewModel.reduceItemQuantity(itemData)
+                        }
+                        validQuantity != null -> {
+                            farmerItemViewModel.reduceItemQuantity(itemData, validQuantity)
+                        }
                     }
 
                     onAccept(farmerName)
                 } else {
                     setOrderAccepted(false)
                     setRejectionReason(selectedReason)
-                    val updatedOrder = orderData.copy(status = "REJECTED", rejectionReason = selectedReason)
+                    val updatedOrder = orderData.copy(
+                        status = "REJECTED",
+                        rejectionReason = selectedReason
+                    )
                     orderViewModel.updateOrder(updatedOrder)
                     onReject(selectedReason!!)
                 }

@@ -46,9 +46,7 @@ fun FarmerDashboard(
     userData: UserData?,
     orderData: List<OrderData>,
     orderState: OrderState,
-    selectedCategory: String,
     searchQuery: String,
-    farmerName: String,
     itemViewModel: FarmerItemViewModel = viewModel(),
     productViewModel: ProductViewModel = viewModel()
 ) {
@@ -59,6 +57,13 @@ fun FarmerDashboard(
     val dateFormat = remember { SimpleDateFormat("EEEE, MMMM d yyyy", Locale.getDefault()) }
     val today = dateFormat.format(Date())
     val scrollState = rememberScrollState()
+    val calendar = Calendar.getInstance()
+    val hour = calendar.get(Calendar.HOUR_OF_DAY)
+    val greeting = when (hour) {
+        in 0..11 -> "Good Morning"
+        in 12..17 -> "Good Afternoon"
+        else -> "Good Evening"
+    }
 
     LaunchedEffect(uid) {
         itemViewModel.getItems(uid = uid)
@@ -78,26 +83,36 @@ fun FarmerDashboard(
                     .fillMaxSize()
                     .background(BgColor)
                     .verticalScroll(scrollState)
-                    .padding(top = 120.dp, bottom = 150.dp)
+                    .padding(top = 115.dp, bottom = 150.dp)
             ) {
-                Text(
-                    text = today,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Normal,
-                    textAlign = TextAlign.Start,
-                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, bottom = 10.dp),
-                    color = Cocoa
-                )
+                // Greeting and date
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
+                        .background(LightApricot, shape = RoundedCornerShape(12.dp))
+                        .padding(16.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = today,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Normal,
+                            textAlign = TextAlign.Start,
+                            color = Cocoa
+                        )
 
-                userData?.let { user ->
-                    Text(
-                        text = "Welcome, ${user.firstname} ${user.lastname}!",
-                        fontSize = 25.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Start,
-                        modifier = Modifier.fillMaxWidth().padding(start = 16.dp, bottom = 16.dp),
-                        color = Cocoa
-                    )
+                        userData?.let { user ->
+                            Text(
+                                text = "$greeting, ${user.firstname} ${user.lastname}!",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Start,
+                                color = Cocoa,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
+                    }
                 }
 
                 // In Season Products
@@ -165,12 +180,9 @@ fun FarmerDashboard(
                         }
                         OrderStatusSection(
                             navController = navController,
-                            userData = userData,
                             orderData = orderData,
                             orderState = orderState,
-                            selectedCategory = selectedCategory,
-                            searchQuery = searchQuery,
-                            farmerName = farmerName
+                            searchQuery = searchQuery
                         )
                     }
                 }
@@ -299,12 +311,9 @@ fun InSeasonProducts(products: List<ProductData>) {
 @Composable
 fun OrderStatusSection(
     navController: NavController,
-    userData: UserData?,
     orderData: List<OrderData>,
     orderState: OrderState,
-    selectedCategory: String,
     searchQuery: String,
-    farmerName: String // Add farmerName parameter
 ) {
     when (orderState) {
         is OrderState.LOADING -> {
