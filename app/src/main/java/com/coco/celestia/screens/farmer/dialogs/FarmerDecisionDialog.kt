@@ -2,6 +2,7 @@ package com.coco.celestia.screens.farmer.dialogs
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -12,17 +13,19 @@ import com.coco.celestia.ui.theme.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.text.input.KeyboardType
 
 @Composable
 fun FarmerDecisionDialog(
     decisionType: String,
     farmerName: String,
-    onConfirm: (String?, Boolean?) -> Unit,
+    onConfirm: (String?, Boolean?, Int?) -> Unit,
     onDismiss: () -> Unit
 ) {
     var selectedReason by remember { mutableStateOf<String?>(null) }
     var showReasonDropdown by remember { mutableStateOf(false) }
     var isPartialFulfillment by remember { mutableStateOf<Boolean?>(null) }
+    var partialQuantity by remember { mutableStateOf("0") }
 
     val rejectionReasons = listOf("Not in season", "Too Far", "Not Available")
 
@@ -56,7 +59,6 @@ fun FarmerDecisionDialog(
                     modifier = Modifier.semantics { testTag = "android:id/dialogMessage" }
                 )
 
-                // Display Farmer Name as a non-editable TextField
                 Spacer(modifier = Modifier.height(16.dp))
                 TextField(
                     value = farmerName,
@@ -155,6 +157,58 @@ fun FarmerDecisionDialog(
                                 modifier = Modifier.semantics { testTag = "android:id/dialogPartialFulfillText" }
                             )
                         }
+
+                        if (isPartialFulfillment == true) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics { testTag = "android:id/partialQuantityInput" },
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                IconButton(
+                                    onClick = {
+                                        val currentValue = partialQuantity.toIntOrNull() ?: 0
+                                        if (currentValue > 0) {
+                                            partialQuantity = (currentValue - 1).toString()
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .semantics { testTag = "android:id/decrementButton" }
+                                ) {
+                                    Text("-", fontSize = 20.sp)
+                                }
+
+                                TextField(
+                                    value = partialQuantity,
+                                    onValueChange = { newValue ->
+                                        if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                                            partialQuantity = newValue
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .semantics { testTag = "android:id/quantityTextField" },
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    singleLine = true,
+                                    label = { Text("Quantity") }
+                                )
+
+                                IconButton(
+                                    onClick = {
+                                        val currentValue = partialQuantity.toIntOrNull() ?: 0
+                                        partialQuantity = (currentValue + 1).toString()
+                                    },
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .semantics { testTag = "android:id/incrementButton" }
+                                ) {
+                                    Text("+", fontSize = 20.sp)
+                                }
+                            }
+                        }
                     }
 
                     if (isPartialFulfillment == null) {
@@ -173,12 +227,21 @@ fun FarmerDecisionDialog(
             TextButton(
                 onClick = {
                     if (decisionType == "REJECT" && selectedReason != null) {
-                        onConfirm(selectedReason, null)
+                        onConfirm(selectedReason, null, null)
                     } else if (decisionType == "ACCEPT" && isPartialFulfillment != null) {
-                        onConfirm(null, isPartialFulfillment)
+                        val quantity = if (isPartialFulfillment == true) {
+                            partialQuantity.toIntOrNull() ?: 0
+                        } else null
+                        onConfirm(null, isPartialFulfillment, quantity)
                     }
                 },
-                enabled = (decisionType == "REJECT" && selectedReason != null) || (decisionType == "ACCEPT" && isPartialFulfillment != null),
+                enabled = when {
+                    decisionType == "REJECT" -> selectedReason != null
+                    decisionType == "ACCEPT" && isPartialFulfillment == true ->
+                        partialQuantity.toIntOrNull()?.let { it > 0 } ?: false
+                    decisionType == "ACCEPT" -> isPartialFulfillment == false
+                    else -> false
+                },
                 modifier = Modifier.semantics { testTag = "android:id/dialogConfirmButton" }
             ) {
                 Text(

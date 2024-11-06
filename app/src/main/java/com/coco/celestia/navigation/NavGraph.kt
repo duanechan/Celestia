@@ -164,9 +164,7 @@ fun NavGraph(
                     userData = userData,
                     orderData = orderData,
                     orderState = orderState,
-                    selectedCategory = selectedCategory,
                     searchQuery = searchQuery,
-                    farmerName = farmerName,
                     itemViewModel = viewModel(),
                     productViewModel = viewModel()
                 )

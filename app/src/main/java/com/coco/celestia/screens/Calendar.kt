@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
@@ -35,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -79,6 +82,7 @@ fun Calendar(
             )
         }
     ) { padding ->
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -104,8 +108,18 @@ fun Calendar(
             }
 
             item {
-                val textColor = if (userRole == "Admin") Color.White else Cocoa
-                val backgroundColor = if (userRole == "Admin") MaterialTheme.colorScheme.primary.copy(alpha = 1f) else Sand2
+                val textColor = when (userRole) {
+                    "Admin" -> Color.White
+                    "CoopMeat", "CoopCoffee" -> PendingStatus
+                    else -> Cocoa
+                }
+
+                val backgroundColor = when (userRole) {
+                    "Admin" -> MaterialTheme.colorScheme.primary.copy(alpha = 1f)
+                        "CoopMeat", "CoopCoffee" -> DeliveringStatus.copy(alpha = 0.5f)
+                    else -> Sand2
+                }
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -189,13 +203,22 @@ fun Calendar(
 
 @Composable
 fun EmptyOrderState(userRole: String) {
-    val textColor = if (userRole == "Admin") Color.White else Cocoa
+    val textColor = when (userRole) {
+        "Admin" -> Color.White
+        "CoopMeat", "CoopCoffee" -> PendingStatus
+        else -> Cocoa
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
             .background(
-                color = if (userRole == "Admin") MaterialTheme.colorScheme.primary.copy(alpha = 1f) else Sand
+                color = when (userRole) {
+                    "Admin" -> MaterialTheme.colorScheme.primary.copy(alpha = 1f)
+                    "CoopMeat", "CoopCoffee" -> CompletedStatus.copy(alpha = 0.5f)
+                    else -> Sand
+                }
             )
             .padding(bottom = 500.dp, top = 40.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -241,17 +264,27 @@ fun OrderItem(
     fun getBackgroundColor(index: Int): Color {
         return when {
             index % 2 == 0 -> {
-                if (userRole == "Admin") MaterialTheme.colorScheme.primary.copy(alpha = 1f)
-                else Sand
+                when (userRole) {
+                    "Admin" -> MaterialTheme.colorScheme.primary.copy(alpha = 1f)
+                    "CoopMeat", "CoopCoffee" -> CompletedStatus.copy(alpha = 0.5f)
+                    else -> Sand
+                }
             }
             else -> {
-                if (userRole == "Admin") MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
-                else Sand2
+                when (userRole) {
+                    "Admin" -> MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                    "CoopMeat", "CoopCoffee" -> DeliveringStatus.copy(alpha = 0.5f)
+                    else -> Sand2
+                }
             }
         }
     }
 
-    val textColor = if (userRole == "Admin") Color.White else Cocoa
+    val textColor = when (userRole) {
+        "Admin" -> Color.White
+        "CoopMeat", "CoopCoffee" -> PendingStatus
+        else -> Cocoa
+    }
     val backgroundColor = getBackgroundColor(rowIndex)
 
     Column {
@@ -453,14 +486,19 @@ fun ContentItem(
     val backgroundColor = when {
         date.isSelected -> MaterialTheme.colorScheme.secondaryContainer
         targetDates.any { it == date.fullDate.toString() } -> {
-            if (userRole == "Admin") MaterialTheme.colorScheme.primary
-            else Sand2
+            when (userRole) {
+                "Admin" -> MaterialTheme.colorScheme.primary
+                "CoopMeat", "CoopCoffee" -> CompletedStatus.copy(alpha = 0.5f)
+                else -> GoldenYellow
+            }
         }
         else -> Color.Transparent
     }
 
     Row(
         modifier = modifier
+            .size(50.dp)
+            .clip(CircleShape)
             .background(color = backgroundColor)
             .clickable { onClickListener(date) },
         verticalAlignment = Alignment.CenterVertically,
@@ -469,9 +507,7 @@ fun ContentItem(
         Text(
             text = date.dayOfMonth,
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier
-                .weight(2f)
-                .padding(10.dp)
+            modifier = Modifier.padding(10.dp)
         )
     }
 }

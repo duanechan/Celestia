@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -12,7 +13,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -35,6 +35,7 @@ import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.ItemData
+import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -65,6 +66,7 @@ fun FarmerOrderDetails(
         }
         if (uid.isNotEmpty()) {
             farmerName = farmerItemViewModel.fetchFarmerName(uid)
+            farmerItemViewModel.getItems(uid)
         }
     }
 
@@ -77,29 +79,23 @@ fun FarmerOrderDetails(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = BgColor)
-                    .semantics { testTag = "android:id/loadingOrderDetails" },
-                contentAlignment = Alignment.Center
+                    .padding(16.dp) // Optional: Add some padding if needed
             ) {
-                CircularProgressIndicator(color = Cocoa)
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center)
+                )
             }
         }
 
         orderData == null -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(color = BgColor)
-                    .semantics { testTag = "android:id/orderNotFound" },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Order not found",
-                    color = Copper,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            Text(
+                text = "Order not found",
+                color = Color.Red,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxSize().padding(16.dp)
+            )
         }
 
         else -> {
@@ -117,46 +113,56 @@ fun FarmerOrderDetails(
                 OrderDetailsCard(orderData = orderData)
                 Spacer(modifier = Modifier.height(20.dp))
 
-                if (orderData.status == "REJECTED") {
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        text = "Rejection Reason\n ${orderData.rejectionReason}",
-                        color = Copper,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
-                } else if (orderData.status == "CANCELLED") {
-                    Text(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        text = "${orderData.client} cancelled the order",
-                        color = Copper,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
-                } else {
-                    OrderStatusDropdown(orderData = orderData, orderViewModel = orderViewModel)
-                    OrderStatusUpdates(orderData = orderData)
+                when (orderData.status) {
+                    "REJECTED" -> {
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            text = "Rejection Reason\n ${orderData.rejectionReason}",
+                            color = Copper,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    "CANCELLED" -> {
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            text = "${orderData.client} cancelled the order",
+                            color = Copper,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    else -> {
+                        OrderStatusDropdown(orderData = orderData, orderViewModel = orderViewModel)
+                        OrderStatusUpdates(orderData = orderData)
+                    }
                 }
             }
         }
     }
 
     if (showFulfillDialog && orderData != null) {
-        val totalFarmers = 2 // to change
+        val farmerItems = farmerItemViewModel.itemData.observeAsState().value ?: emptyList()
+        val farmerInventory = ItemData(
+            name = orderData.orderData.name,
+            farmerName = farmerName,
+            items = farmerItems.toMutableList()
+        )
+
         DisplayFarmerFulfillDialog(
             navController = navController,
             onDismiss = { showFulfillDialog = false },
             farmerItemViewModel = farmerItemViewModel,
             orderViewModel = orderViewModel,
             orderData = orderData,
-            item = ItemData(name = orderData.orderData.name, items = mutableListOf(orderData.orderData)),
-            totalFarmers = totalFarmers,
+            itemData = farmerInventory,
+            items = farmerItems,
             farmerName = farmerName
         )
     }
@@ -281,23 +287,35 @@ fun DisplayFarmerFulfillDialog(
     farmerItemViewModel: FarmerItemViewModel,
     orderViewModel: OrderViewModel,
     orderData: OrderData,
-    item: ItemData,
-    totalFarmers: Int,
+    itemData: ItemData,
+    items: List<ProductData>,
     farmerName: String
 ) {
+    if (orderData.fulfilledBy.contains(farmerName)) {
+        return
+    }
+
+    val remainingQuantity = orderData.partialQuantity?.let {
+        orderData.orderData.quantity - it
+    } ?: orderData.orderData.quantity
+
+    val validRemainingQuantity = maxOf(remainingQuantity, 0)
+
     FarmerFulfillDialog(
         navController = navController,
         farmerName = farmerName,
-        item = item,
-        orderViewModel = orderViewModel,
+        itemData = items,
         orderData = orderData,
-        farmerItemViewModel = farmerItemViewModel,
-        totalFarmers = totalFarmers,
+        remainingQuantity = validRemainingQuantity,
         onAccept = {
-            val updatedOrder = orderData.copy(status = "PREPARING", fulfilledBy = orderData.fulfilledBy + farmerName)
+            val updatedOrder = orderData.copy(
+                status = "PREPARING",
+                fulfilledBy = orderData.fulfilledBy + farmerName,
+                partialQuantity = validRemainingQuantity
+            )
             orderViewModel.updateOrder(updatedOrder)
+            farmerItemViewModel.reduceItemQuantity(itemData, validRemainingQuantity)
 
-            farmerItemViewModel.reduceItemQuantity(item, totalFarmers)
             onDismiss()
         },
         onReject = {
