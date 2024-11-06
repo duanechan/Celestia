@@ -1,6 +1,7 @@
 package com.coco.celestia.screens
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -8,8 +9,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,10 +24,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
+import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 
@@ -40,6 +46,7 @@ fun ForgotPasswordScreen(
     Column (
         modifier = Modifier
             .fillMaxSize()
+            .background(color = BgColor)
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -47,9 +54,16 @@ fun ForgotPasswordScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { if (it.length <= 25) email = it },
-            label = { Text(text = "Email") },
+            label = { Text(text = "Email", color = BrownCoffee2) },
             singleLine = true,
-            maxLines = 1
+            maxLines = 1,
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedBorderColor = BrownCoffee2,
+                unfocusedBorderColor = BrownCoffee2
+            ),
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -62,6 +76,7 @@ fun ForgotPasswordScreen(
                     userViewModel.sendPasswordResetEmail(email)
                 }
             },
+            colors = ButtonDefaults.buttonColors(BrownCoffee),
             modifier = Modifier
                 .width(285.dp)
                 .height(50.dp)
