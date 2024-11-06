@@ -2,6 +2,7 @@ package com.coco.celestia.screens.admin
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -83,7 +84,6 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                 .semantics { testTag = "android:id/HeaderRow" },
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Back Button
             IconButton(
                 onClick = { navController.navigate(Screen.AdminUserManagement.route) },
                 modifier = Modifier
@@ -135,9 +135,10 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                         textAlign = TextAlign.Start
                     )
                     Text(
-                        text = "USER",
+                        text = "USER-ROLE",
                         modifier = Modifier
                             .weight(1f)
+                            .offset(x = (-25).dp)
                             .semantics { testTag = "android:id/UserHeader" },
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Start
@@ -146,7 +147,7 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                         text = "ACTION",
                         modifier = Modifier
                             .weight(1f)
-                            .offset(x = (-15).dp)
+                            .offset(x = (-20).dp)
                             .semantics { testTag = "android:id/ActionHeader" },
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Start
@@ -154,7 +155,6 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                 }
                 Divider()
             }
-            // Rows for audit logs
             when (transactionState) {
                 TransactionState.EMPTY -> {
                     item { Text("Empty logs.") }
@@ -193,24 +193,24 @@ fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
         modifier = Modifier
             .fillMaxWidth()
             .background(if (isEvenRow) PaleBlue else Color.White)
-            .padding(13.dp)
+            .padding(10.dp)
             .semantics { testTag = "android:id/LogItem" }
     ) {
         Text(
             text = transaction.date,
-            fontSize = 14.sp,
+            fontSize = 13.sp,
             fontFamily = mintsansFontFamily,
             modifier = Modifier.weight(1f)
         )
         Text(
-            text = if (userData != null) "${userData?.firstname} ${userData?.lastname}" else "Unknown",
-            fontSize = 14.sp,
+            text = if (userData != null) "${userData?.firstname} ${userData?.lastname}- ${userData?.role}" else "Unknown",
+            fontSize = 13.sp,
             fontFamily = mintsansFontFamily,
             modifier = Modifier.weight(1f)
         )
         Text(
             text = transaction.type,
-            fontSize = 14.sp,
+            fontSize = 12.sp,
             fontFamily = mintsansFontFamily,
             modifier = Modifier.weight(1f)
         )
@@ -221,11 +221,10 @@ fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
         ) {
             Icon(
                 painter = painterResource(R.drawable.viewmore),
-                contentDescription = "Show Description",
+                contentDescription = "View Details",
                 tint = DarkBlue,
                 modifier = Modifier
                     .size(25.dp)
-
             )
         }
 
@@ -233,7 +232,7 @@ fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
             AlertDialog(
                 onDismissRequest = { showDescriptionDialog = false },
                 title = {
-                    Text(text = "Transaction Details", fontFamily = mintsansFontFamily,)
+                    Text(text = "Transaction Details", fontFamily = mintsansFontFamily)
                 },
                 text = {
                     Text(text = transaction.description)
@@ -249,4 +248,5 @@ fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
         }
     }
 }
+
 

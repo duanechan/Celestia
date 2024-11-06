@@ -340,12 +340,14 @@ fun NavDrawerBottomBar(
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "User Management",
+                            tint = DarkBlue
                         )
                     },
                     label = { Text("User Management",
                         fontSize = (9.9).sp,
                         fontFamily = mintsansFontFamily,
                         maxLines = 1,
+                        color = DarkBlue,
                         overflow = TextOverflow.Ellipsis) },
                     selected = currentDestination == Screen.AdminUserManagement.route ||
                             currentDestination == Screen.AdminAddUserManagement.route,

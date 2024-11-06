@@ -100,7 +100,7 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
                     active = false,
                     onActiveChange = {},
                     placeholder = { Text(text = "Search", color = DarkBlue) },
-                    leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon") },
+                    leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon", tint = DarkBlue) },
                     modifier = Modifier
                         .width(screenWidth * 0.75f)
                         .offset(y = 75.dp)
@@ -188,7 +188,8 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                         .fillMaxWidth()
                         .offset(x = 5.dp),
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Start
+                    textAlign = TextAlign.Start,
+                    color = DarkBlue
                 )
                 Text(
                     text = "ROLE",
@@ -197,7 +198,8 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                         .fillMaxWidth()
                         .padding(start = 20.dp),
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Start
+                    textAlign = TextAlign.Start,
+                    color = DarkBlue
                 )
                 Text(
                     text = "EDIT",
@@ -205,7 +207,8 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                         .weight(2f)
                         .fillMaxWidth(),
                     fontWeight = FontWeight.SemiBold,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    color = DarkBlue
                 )
             }
         }
@@ -224,6 +227,7 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                             .weight(2f)
                             .fillMaxWidth(),
                         textAlign = TextAlign.Start,
+                        color = DarkBlue
                     )
                     role = if (user.role == "CoopCoffee") {
                         "Coffee"
@@ -237,6 +241,7 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                             .weight(2f)
                             .fillMaxWidth(),
                         textAlign = TextAlign.Start,
+                        color = DarkBlue
                     )
                     IconButton(
                         onClick = {
@@ -247,7 +252,7 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit User",
-                            modifier = Modifier
+                            tint = DarkBlue
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))

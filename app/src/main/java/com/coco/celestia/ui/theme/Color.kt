@@ -81,7 +81,7 @@ val DeliveringStatus = Color(0xFF09D1C7)
 val CompletedStatus = Color(0xFF82EE99)
 
 // Admin Palette
-val DarkBlue = Color(0xFF252746)
+val DarkBlue = Color(0xFF373c71)
 val LightBlue = Color(0xFF40458d)
 val PaleBlue = Color(0xFFced7ef)
 val BrownCoffee = Color(0xFF795548)
@@ -120,7 +120,7 @@ val OrangeGradientBrush = Brush.linearGradient(
 val BlueGradientBrush = Brush.horizontalGradient(
     colors = listOf(
         Color(0xFF40458d),
-        Color(0xFF252746)
+        Color(0xFF4851ad)
  )
     //    start = Offset(0f, 0f),
 //    end = Offset(500f, 0f)
