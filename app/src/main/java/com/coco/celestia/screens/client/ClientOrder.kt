@@ -52,8 +52,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.ui.theme.CLGText
+import com.coco.celestia.ui.theme.ClientBG
 import com.coco.celestia.ui.theme.LightOrange
-import com.coco.celestia.ui.theme.VeryDarkGreen
+import com.coco.celestia.ui.theme.CLightGreen
+import com.coco.celestia.ui.theme.LGContainer
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
@@ -84,6 +87,7 @@ fun ClientOrder(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(ClientBG)
     ) {
         Column(
             modifier = Modifier
@@ -140,10 +144,17 @@ fun ClientOrder(
                         modifier = Modifier,
                         contentPadding = PaddingValues(0.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.List,
-                            contentDescription = "Search Icon"
-                        )
+                        Box(
+                            modifier = Modifier
+                                .background(LGContainer)
+                                .padding(17.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.List,
+                                contentDescription = " Filter Icon",
+                                tint = Color.White
+                            )
+                        }
                     }
 
                     DropdownMenu(
@@ -231,7 +242,7 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                     navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId))
                 }
                 .semantics { testTag = "android:id/OrderCard_$orderId" },
-            colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
+            colors = CardDefaults.cardColors(containerColor = CLightGreen)
         ) {
             Box(
                 modifier = Modifier.padding(16.dp)
@@ -289,7 +300,7 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                                 text = orderStatus,
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = LightOrange,
+                                color = CLGText,
                                 modifier = Modifier.padding(top = 5.dp, start = 10.dp)
                             )
                         }

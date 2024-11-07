@@ -73,6 +73,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.ui.theme.ClientBG
 import com.coco.celestia.util.convertMillisToDate
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
@@ -100,6 +101,7 @@ fun AddOrderPanel(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxWidth()
+            .background(ClientBG)
             .padding(16.dp)
             .semantics { testTag = "android:id/AddOrderPanel" }
     ) {
@@ -182,58 +184,62 @@ fun OrderDetailsPanel(
     val productData by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState()
 
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
+            .background(ClientBG)
+            .fillMaxSize()
             .padding(16.dp)
             .semantics { testTag = "android:id/OrderDetailsPanel" }
     ) {
-        Spacer(modifier = Modifier.height(100.dp))
-        Text(
-            text = type ?: "Unknown Product",
-            fontSize = 25.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            modifier = Modifier
-                .padding(bottom = 20.dp)
-                .semantics { testTag = "android:id/ProductTypeTitle" }
-        )
-        type?.let {
-            LaunchedEffect(type) {
-                productViewModel.fetchProductByType(type)
-            }
-            when (productState) {
-                is ProductState.EMPTY -> Text(
-                    text = "No products available.",
-                    modifier = Modifier.semantics { testTag = "android:id/ProductStateEmpty" }
-                )
-                is ProductState.ERROR -> Text(
-                    text = "Error: ${(productState as ProductState.ERROR).message}",
-                    modifier = Modifier.semantics { testTag = "android:id/ProductStateError" }
-                )
-                is ProductState.LOADING -> Text(
-                    text = "Loading products...",
-                    modifier = Modifier.semantics { testTag = "android:id/ProductStateLoading" }
-                )
-                is ProductState.SUCCESS -> {
-                    LazyColumn(modifier = Modifier.semantics { testTag = "android:id/ProductList" }) {
-                        items(productData) { product ->
-                            ProductTypeCard(
-                                product,
-                                navController,
-                                userViewModel = userViewModel,
-                                onAddToCartEvent = { onAddToCartEvent(it) },
-                                onOrder = { onOrder(it) }
-                            )
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(100.dp))
+            Text(
+                text = type ?: "Unknown Product",
+                fontSize = 25.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                modifier = Modifier
+                    .padding(bottom = 20.dp)
+                    .semantics { testTag = "android:id/ProductTypeTitle" }
+            )
+            type?.let {
+                LaunchedEffect(type) {
+                    productViewModel.fetchProductByType(type)
+                }
+                when (productState) {
+                    is ProductState.EMPTY -> Text(
+                        text = "No products available.",
+                        modifier = Modifier.semantics { testTag = "android:id/ProductStateEmpty" }
+                    )
+                    is ProductState.ERROR -> Text(
+                        text = "Error: ${(productState as ProductState.ERROR).message}",
+                        modifier = Modifier.semantics { testTag = "android:id/ProductStateError" }
+                    )
+                    is ProductState.LOADING -> Text(
+                        text = "Loading products...",
+                        modifier = Modifier.semantics { testTag = "android:id/ProductStateLoading" }
+                    )
+                    is ProductState.SUCCESS -> {
+                        LazyColumn(modifier = Modifier.semantics { testTag = "android:id/ProductList" }) {
+                            items(productData) { product ->
+                                ProductTypeCard(
+                                    product,
+                                    navController,
+                                    userViewModel = userViewModel,
+                                    onAddToCartEvent = { onAddToCartEvent(it) },
+                                    onOrder = { onOrder(it) }
+                                )
+                            }
                         }
                     }
+                    null -> Text(
+                        text = "Unknown state",
+                        modifier = Modifier.semantics { testTag = "android:id/ProductStateUnknown" }
+                    )
                 }
-                null -> Text(
-                    text = "Unknown state",
-                    modifier = Modifier.semantics { testTag = "android:id/ProductStateUnknown" }
-                )
             }
         }
     }

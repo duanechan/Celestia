@@ -56,11 +56,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.ui.theme.ContainerGray
-import com.coco.celestia.ui.theme.LightGray
+import com.coco.celestia.ui.theme.ClientBG
+import com.coco.celestia.ui.theme.ContainerLO
 import com.coco.celestia.ui.theme.LightOrange
 import com.coco.celestia.ui.theme.RavenBlack
-import com.coco.celestia.ui.theme.VeryDarkGreen
+import com.coco.celestia.ui.theme.CLightGreen
+import com.coco.celestia.ui.theme.LGContainer
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
@@ -102,7 +103,7 @@ fun ClientDashboard(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(LightGray)
+            .background(ClientBG)
             .semantics { testTag = "android:id/ClientDashboardScreen" }
     ) {
         Column(
@@ -130,25 +131,37 @@ fun ClientDashboard(
                             .semantics { testTag = "android:id/WelcomeText" }
                     )
 
-                    Button(
-                        onClick = {
-                            if (notifications.isNotEmpty()) {
-                                // Show the dialog if there are notifications
-                                showDialog.value = true
-                            } else {
-                                // Show a message if there are no notifications
-                                Toast.makeText(context, "No new notifications", Toast.LENGTH_SHORT).show()
-                            }
-                        },
+                    Box(
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
-                            .semantics { testTag = "android:id/NotificationButton" }
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.notification_icon),
-                            contentDescription = "Notification Icon",
-                            modifier = Modifier.size(30.dp)
-                        )
+                        Button(
+                            onClick = {
+                                if (notifications.isNotEmpty()) {
+                                    showDialog.value = true
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "No new notifications",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            },
+                            modifier = Modifier,
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .background(LGContainer)
+                                    .padding(17.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.notification_icon),
+                                    contentDescription = "Notification Icon",
+                                    modifier = Modifier.size(25.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -168,10 +181,9 @@ fun ClientDashboard(
             )
         }
 
-        // Show the notifications dialog if showDialog is true
         if (showDialog.value) {
             ShowNotificationsDialog(notifications) {
-                showDialog.value = false // Dismiss the dialog
+                showDialog.value = false
             }
         }
     }
@@ -229,7 +241,7 @@ fun BrowseCategories(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(ContainerGray, shape = RoundedCornerShape(8.dp))
+                .background(ContainerLO, shape = RoundedCornerShape(8.dp))
                 .padding(horizontal = 16.dp, vertical = 16.dp)
                 .semantics { testTag = "android:id/CategoriesContainer" }
         ) {
@@ -359,7 +371,7 @@ fun FeaturedProducts(
         }
         Box(
             modifier = Modifier
-                .background(ContainerGray, shape = RoundedCornerShape(8.dp))
+                .background(ContainerLO, shape = RoundedCornerShape(8.dp))
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             LazyVerticalGrid(
@@ -412,7 +424,8 @@ fun ProductTypeCard(
                 Image(
                     painter = painterResource(id = iconId),
                     contentDescription = "${product.name} icon",
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(40.dp),
+                    colorFilter = ColorFilter.tint(Color.White)
                 )
                 Text(
                     text = product.name,
@@ -510,7 +523,7 @@ fun OrderCardDetails(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .background(ContainerGray, shape = RoundedCornerShape(8.dp))
+            .background(ContainerLO, shape = RoundedCornerShape(8.dp))
             .padding(8.dp)
     ) {
         Row(
@@ -526,7 +539,7 @@ fun OrderCardDetails(
                     }
                     .padding(end = 8.dp)
                     .semantics { testTag = "android:id/OrderCard_$orderId" },
-                colors = CardDefaults.cardColors(containerColor = VeryDarkGreen)
+                colors = CardDefaults.cardColors(containerColor = CLightGreen)
             ) {
                 Row(
                     Modifier

@@ -51,8 +51,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.ui.theme.ClientBG
 import com.coco.celestia.ui.theme.Copper
-import com.coco.celestia.ui.theme.LightGray
 import com.coco.celestia.ui.theme.LightOrange
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
@@ -89,7 +89,7 @@ fun ClientOrderDetails(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = LightGray)
+                    .background(color = ClientBG)
                     .semantics { testTag = "android:id/LoadingIndicator" },
                 contentAlignment = Alignment.Center
             ) {
