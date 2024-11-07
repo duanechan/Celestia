@@ -1,5 +1,6 @@
 package com.coco.celestia.navigation
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -88,6 +89,7 @@ fun NavGraph(
     var firstname by remember { mutableStateOf("") }
     var lastname by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("") }
+    var updatedProductImage by remember { mutableStateOf<Uri?>(null) }
 
     NavHost(
         navController = navController,
@@ -301,22 +303,30 @@ fun NavGraph(
                 navController = navController,
                 productPrice = productPrice,
                 productName = productName,
+                onUpdatedProductImage = { updatedProductImage = it },
                 onProductNameChanged = { productViewModel.updateProductName(it) },
                 onTypeSelected = { productType = it },
-                onPriceChanged = { productPrice = it }
+                onPriceChanged = { productPrice = it },
+                onToastEvent = { onEvent(it) }
             )
         }
         composable(route = Screen.AdminConfirmAddProduct.route) {
             onNavigate("Add Product")
-            ConfirmAddProduct(
-                navController = navController,
-                productViewModel = productViewModel,
-                transactionViewModel = transactionViewModel,
-                productName = productName,
-                productType = productType,
-                productPrice = productPrice,
-                onToastEvent = { onEvent(it) }
-            )
+            if (productName.isNotEmpty() && productType.isNotEmpty() && productPrice.isNotEmpty()) {
+                ConfirmAddProduct(
+                    navController = navController,
+                    productViewModel = productViewModel,
+                    transactionViewModel = transactionViewModel,
+                    productName = productName,
+                    productType = productType,
+                    productPrice = productPrice,
+                    updatedProductImage = updatedProductImage,
+                    onToastEvent = { onEvent(it) }
+                )
+            } else {
+                onEvent(Triple(ToastStatus.WARNING, "All Fields must be filled", System.currentTimeMillis()))
+                navController.navigate(Screen.AdminAddProduct.route)
+            }
         }
         composable(route = Screen.Coop.route) {
             onNavigate("Dashboard")
