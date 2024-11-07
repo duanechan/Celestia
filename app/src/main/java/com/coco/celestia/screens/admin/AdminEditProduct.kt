@@ -42,9 +42,14 @@ fun EditProduct(
 
     AlertDialog(
         onDismissRequest = { onDismiss() },
-        title = { Text(text = "Change $productName Price/Kg") },
+        title = {
+            Text(
+                text = "Change $productName Price/Kg",
+                modifier = Modifier.semantics { testTag = "android:id/dialogTitle" }
+            )
+        },
         text = {
-            Column {
+            Column(modifier = Modifier.semantics { testTag = "android:id/dialogContent" }) {
                 OutlinedTextField(
                     value = updatedPrice,
                     onValueChange = { updatedPrice = it },
@@ -56,7 +61,6 @@ fun EditProduct(
                 Spacer(modifier = Modifier.height(8.dp))
             }
         },
-
         confirmButton = {
             Button(
                 onClick = {
@@ -71,13 +75,18 @@ fun EditProduct(
                     )
                     productViewModel.updateProductPrice(productName, updatedPrice.toDouble())
                     onDismiss()
-                }) {
-                Text("Save", modifier = Modifier.semantics { testTag = "android:id/saveButton" })
+                },
+                modifier = Modifier.semantics { testTag = "android:id/saveButton" }
+            ) {
+                Text("Save")
             }
         },
         dismissButton = {
-            Button(onClick = { onDismiss() }) {
-                Text("Cancel", modifier = Modifier.semantics { testTag = "android:id/cancelButton" })
+            Button(
+                onClick = { onDismiss() },
+                modifier = Modifier.semantics { testTag = "android:id/cancelButton" }
+            ) {
+                Text("Cancel")
             }
         }
     )

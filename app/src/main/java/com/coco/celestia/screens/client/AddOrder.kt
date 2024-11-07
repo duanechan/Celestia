@@ -63,6 +63,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -405,24 +406,29 @@ fun AddOrderForm(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        OutlinedTextField(
-            value = if (quantity == 0) "" else quantity.toString(),
-            onValueChange = { newValue ->
-                val intValue = newValue.toIntOrNull()
-                if (intValue != null) {
-                    quantity = intValue
-                } else if (newValue.isEmpty()) {
-                    quantity = 0
-                }
-            },
-            label = { Text("Weight (kg)") },
-            placeholder = { Text("e.g. 10.5") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 12.dp)
-                .semantics { testTag = "android:id/QuantityInputField" }
-        )
+                .clickable { /* Empty action */ }
+                .semantics { testTag = "QuantityInputFieldContainer" }
+        ) {
+            OutlinedTextField(
+                value = if (quantity == 0) "" else quantity.toString(),
+                onValueChange = { newValue ->
+                    val intValue = newValue.toIntOrNull()
+                    if (intValue != null) {
+                        quantity = intValue
+                    } else if (newValue.isEmpty()) {
+                        quantity = 0
+                    }
+                },
+                label = { Text("Weight (kg)") },
+                placeholder = { Text("e.g. 10.5") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
         OutlinedTextField(
             value = selectedDate,

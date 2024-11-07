@@ -111,6 +111,7 @@ fun SummaryDashboard() {
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp)
+            .semantics { testTag = "android:id/summaryDashboard" }
     ) {
         item{
         Box(
@@ -152,6 +153,7 @@ fun SummaryDashboard() {
                     .border(BorderStroke(3.dp, Color.White), shape = RoundedCornerShape(15.dp))
                     .clip(RoundedCornerShape(18.dp))
                     .background(Color.White)
+                    .semantics { testTag = "android:id/userManagementOverviewBox" }
             ) {
                 Text(
                     text = "User Management Overview",
@@ -194,12 +196,14 @@ fun InventoryPieChart(entries: List<PieEntry>) {
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .semantics { testTag = "android:id/inventoryPieChartContainer" }
     ) {
         // Alerts Information
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp)
+                .semantics { testTag = "android:id/alertsCard" }
         ) {
             Column(Modifier.padding(16.dp)) {
                 Text("Alerts", fontWeight = FontWeight.Bold, fontSize = 18.sp)
@@ -257,6 +261,7 @@ fun InventoryPieChart(entries: List<PieEntry>) {
                     modifier = Modifier
                         .size(12.dp)
                         .background(BrownCoffee)
+                        .semantics { testTag = "android:id/coffeeLegend" }
                 )
                 Text(
                     text = " Coffee",
@@ -272,6 +277,7 @@ fun InventoryPieChart(entries: List<PieEntry>) {
                     modifier = Modifier
                         .size(12.dp)
                         .background(RedMeat)
+                        .semantics { testTag = "android:id/meatLegend" }
                 )
                 Text(
                     text = " Meat",
@@ -292,42 +298,72 @@ fun UserManagementDashboard() {
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .semantics { testTag = "android:id/userManagementDashboard" }
     ) {
-        // Might be changed
+        // Total Users Card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
+                .padding(vertical = 8.dp)
+                .semantics { testTag = "android:id/totalUsersCard" }
         ) {
             Column(Modifier.padding(16.dp)) {
-                Text("Total Users", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(
+                    "Total Users",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    modifier = Modifier.semantics { testTag = "android:id/totalUsersLabel" }
+                )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text("20", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
-            }
-        }
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-        ) {
-            Column(Modifier.padding(16.dp)) {
-                Text("Active Users", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text("7", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.Green)
+                Text(
+                    "20",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.DarkGray,
+                    modifier = Modifier.semantics { testTag = "android:id/totalUsersCount" }
+                )
             }
         }
 
-        // for Audit Logs, will be changed
+        // Active Users Card
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+                .semantics { testTag = "android:id/activeUsersCard" }
+        ) {
+            Column(Modifier.padding(16.dp)) {
+                Text(
+                    "Active Users",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    modifier = Modifier.semantics { testTag = "android:id/activeUsersLabel" }
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    "7",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Green,
+                    modifier = Modifier.semantics { testTag = "android:id/activeUsersCount" }
+                )
+            }
+        }
+
+        // Recent Activity Section
         Text(
             text = "Recent Activity",
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
-            modifier = Modifier.padding(vertical = 8.dp)
+            modifier = Modifier
+                .padding(vertical = 8.dp)
+                .semantics { testTag = "android:id/recentActivityLabel" }
         )
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp)
+                .semantics { testTag = "android:id/recentActivityList" }
         ) {
             Text("• User A updated inventory - 2 mins ago", fontSize = 14.sp)
             Text("• User B added a new order - 10 mins ago", fontSize = 14.sp)

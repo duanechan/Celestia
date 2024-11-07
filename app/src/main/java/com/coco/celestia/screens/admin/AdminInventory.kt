@@ -64,23 +64,19 @@ fun AdminInventory(
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     var query by remember { mutableStateOf("Coffee") }
-    var selectedButton by remember { mutableStateOf<String?>("Coffee") } // Row for aligned buttons
+    var selectedButton by remember { mutableStateOf<String?>("Coffee") }
     var selectedTab by remember { mutableStateOf("Current Inventory") }
     var monthlyInventory by remember { mutableStateOf<List<MonthlyInventory>>(emptyList()) }
 
     LaunchedEffect(query) {
-        productViewModel.fetchProducts(
-            filter = query,
-            role = "Admin"
-        )
-        orderViewModel.fetchAllOrders(
-            "",
-            "Admin"
-        )
+        productViewModel.fetchProducts(filter = query, role = "Admin")
+        orderViewModel.fetchAllOrders("", "Admin")
     }
+
     LaunchedEffect(orderData, productData) {
         monthlyInventory = calculateMonthlyInventory(orderData, productData)
     }
+
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -98,13 +94,12 @@ fun AdminInventory(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 5.dp)
-                    .padding(horizontal = 13.dp)
-                    .offset(y = ((-50).dp))
+                    .padding(vertical = 5.dp, horizontal = 13.dp)
+                    .offset(y = (-50).dp)
                     .border(1.dp, Color.White, RoundedCornerShape(10.dp))
                     .clip(RoundedCornerShape(10.dp))
                     .height(48.dp)
-                    .background(color = Color.White)
+                    .background(Color.White)
                     .semantics { testTag = "android:id/ButtonRow" },
                 horizontalArrangement = Arrangement.Center
             ) {
@@ -115,7 +110,7 @@ fun AdminInventory(
                     },
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor =  if (selectedButton == "Coffee") BrownCoffee else Color.White,
+                        containerColor = if (selectedButton == "Coffee") BrownCoffee else Color.White,
                         contentColor = if (selectedButton == "Coffee") Color.White else Color.Black
                     ),
                     contentPadding = PaddingValues(0.dp),
@@ -124,9 +119,11 @@ fun AdminInventory(
                         .fillMaxHeight()
                         .semantics { testTag = "android:id/CoffeeButton" }
                 ) {
-                    Text(text = "COFFEE",
+                    Text(
+                        text = "COFFEE",
                         fontFamily = mintsansFontFamily,
-                        fontWeight = if (selectedButton == "Coffee") FontWeight.Normal else FontWeight.Bold)
+                        fontWeight = if (selectedButton == "Coffee") FontWeight.Normal else FontWeight.Bold
+                    )
                 }
 
                 Button(
@@ -136,7 +133,7 @@ fun AdminInventory(
                     },
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor =  if (selectedButton == "Meat") RedMeat else Color.White,
+                        containerColor = if (selectedButton == "Meat") RedMeat else Color.White,
                         contentColor = if (selectedButton == "Meat") Color.White else Color.Black
                     ),
                     contentPadding = PaddingValues(0.dp),
@@ -145,16 +142,22 @@ fun AdminInventory(
                         .fillMaxHeight()
                         .semantics { testTag = "android:id/MeatButton" }
                 ) {
-                    Text(text = "MEAT",
+                    Text(
+                        text = "MEAT",
                         fontFamily = mintsansFontFamily,
-                        fontWeight = if (selectedButton == "Meat") FontWeight.Normal else FontWeight.Bold)
+                        fontWeight = if (selectedButton == "Meat") FontWeight.Normal else FontWeight.Bold
+                    )
                 }
             }
             Spacer(modifier = Modifier.height(20.dp))
 
             when (productState) {
                 is ProductState.LOADING -> {
-                    Text("Loading products...", color = Color.White, modifier = Modifier.semantics { testTag = "LoadingText" }) // Test tag for loading text
+                    Text(
+                        "Loading products...",
+                        color = Color.White,
+                        modifier = Modifier.semantics { testTag = "android:id/LoadingText" }
+                    )
                 }
 
                 is ProductState.ERROR -> {
@@ -166,7 +169,11 @@ fun AdminInventory(
                 }
 
                 is ProductState.EMPTY -> {
-                    Text("No products available.", color = Color.White, modifier = Modifier.semantics { testTag = "EmptyText" }) // Test tag for empty text
+                    Text(
+                        "No products available.",
+                        color = Color.White,
+                        modifier = Modifier.semantics { testTag = "android:id/EmptyText" }
+                    )
                 }
 
                 is ProductState.SUCCESS -> {
@@ -180,21 +187,25 @@ fun AdminInventory(
         }
     }
 }
-
 @Composable
-fun AdminItemList(itemList: List<ProductData>, productViewModel: ProductViewModel, transactionViewModel: TransactionViewModel) {
+fun AdminItemList(
+    itemList: List<ProductData>,
+    productViewModel: ProductViewModel,
+    transactionViewModel: TransactionViewModel
+) {
     var selectedProduct by remember { mutableStateOf<ProductData?>(null) }
     if (itemList.isNotEmpty()) {
         itemList.forEach { item ->
             AdminItemCard(
-                item.name,
-                item.quantity,
-                0,
-                item.priceKg,
-                "current",
+                productName = item.name,
+                quantity = item.quantity,
+                ordered = 0,
+                price = item.priceKg,
+                identifier = "current",
                 onEditProductClick = {
                     selectedProduct = item
-                }
+                },
+                modifier = Modifier.semantics { testTag = "android:id/AdminItemCard_${item.name}" }
             )
             Spacer(modifier = Modifier.height(10.dp))
         }
@@ -224,7 +235,7 @@ fun AdminMonthlyInventoryList(itemList: List<MonthlyInventory>) {
                 price = item.priceKg,
                 identifier = "monthly",
                 onEditProductClick = {},
-                modifier = Modifier.testTag("MonthlyInventory_${item.productName}")
+                modifier = Modifier.semantics { testTag = "android:id/MonthlyInventory_${item.productName}" }
             )
             Spacer(modifier = Modifier.height(10.dp))
         }
@@ -246,7 +257,8 @@ fun AdminItemCard(
         .width(500.dp)
         .height(200.dp)
         .offset(x = (-16).dp, y = (-50).dp)
-        .padding(top = 0.dp, bottom = 5.dp, start = 30.dp, end = 0.dp),
+        .padding(top = 0.dp, bottom = 5.dp, start = 30.dp, end = 0.dp)
+        .semantics { testTag = "android:id/AdminItemCard_${productName}_${identifier}" },
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         )) {
@@ -277,6 +289,7 @@ fun AdminItemCard(
                         modifier = Modifier
                             .padding(top = 15.dp, start = 10.dp)
                             .alignBy(LastBaseline)
+                            .semantics { testTag = "android:id/ProductName_${productName}" }
                     )
 
                     Text(
@@ -286,6 +299,7 @@ fun AdminItemCard(
                         modifier = Modifier
                             .padding(top = 15.dp, start = 10.dp)
                             .alignBy(LastBaseline)
+                            .semantics { testTag = "android:id/ProductPrice_${productName}" }
                     )
                 }
                 Row (
@@ -298,13 +312,15 @@ fun AdminItemCard(
                         text = "Inventory",
                         fontSize = 20.sp,
                         fontFamily = mintsansFontFamily,
-                        color = Gray
+                        color = Gray,
+                        modifier = Modifier.semantics { testTag = "android:id/InventoryLabel_${productName}" }
                     )
                     Text(
                         text = "${quantity}kg",
                         fontSize = 20.sp,
                         fontFamily = mintsansFontFamily,
-                        color = Gray
+                        color = Gray,
+                        modifier = Modifier.semantics { testTag = "android:id/InventoryQuantity_${productName}" }
                     )
                 }
                 if (identifier == "monthly") {
@@ -318,13 +334,15 @@ fun AdminItemCard(
                             text = "Ordered",
                             fontSize = 20.sp,
                             fontFamily = mintsansFontFamily,
-                            color = Gray
+                            color = Gray,
+                            modifier = Modifier.semantics { testTag = "android:id/OrderedLabel_${productName}" }
                         )
                         Text(
                             text = "-${ordered}kg",
                             fontSize = 20.sp,
                             fontFamily = mintsansFontFamily,
-                            color = Gray
+                            color = Gray,
+                            modifier = Modifier.semantics { testTag = "android:id/OrderedQuantity_${productName}" }
                         )
                     }
                 }
@@ -335,6 +353,7 @@ fun AdminItemCard(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(8.dp)
+                        .semantics { testTag = "android:id/EditButton_${productName}" }
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
@@ -376,7 +395,9 @@ fun TopBarInventory(onTabSelected: (String) -> Unit) {
                         selectedOption = index
                         onTabSelected(title)
                     },
-                    modifier = Modifier.padding(8.dp).testTag("android:id/Tab_$title")
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .semantics { testTag = "android:id/Tab_$title" }
                 )
             }
         }

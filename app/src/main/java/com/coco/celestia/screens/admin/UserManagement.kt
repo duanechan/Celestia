@@ -69,8 +69,7 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
     LaunchedEffect(userState) {
         userViewModel.fetchUsers()
     }
-    usersData.forEach{ user ->
-        //Add Conditional Statement for Coop Members Only not all Users
+    usersData.forEach { user ->
         if (user.role == "CoopCoffee" || user.role == "CoopMeat") {
             users.add(user)
         }
@@ -82,10 +81,8 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
             modifier = Modifier
                 .fillMaxHeight()
                 .background(BlueGradientBrush)
-                .verticalScroll(rememberScrollState()) // Scrollable column
+                .verticalScroll(rememberScrollState())
         ) {
-
-            // Search Bar
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -124,6 +121,7 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
                         contentDescription = "Audit Logs",
                         modifier = Modifier
                             .size(30.dp)
+                            .semantics { testTag = "android:id/auditLogIcon" }
                     )
                 }
             }
@@ -186,7 +184,8 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                     modifier = Modifier
                         .weight(2f)
                         .fillMaxWidth()
-                        .offset(x = 5.dp),
+                        .offset(x = 5.dp)
+                        .semantics { testTag = "android:id/userTableHeaderName" },
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Start,
                     color = DarkBlue
@@ -196,7 +195,8 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                     modifier = Modifier
                         .weight(2f)
                         .fillMaxWidth()
-                        .padding(start = 20.dp),
+                        .padding(start = 20.dp)
+                        .semantics { testTag = "android:id/userTableHeaderRole" },
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Start,
                     color = DarkBlue
@@ -205,7 +205,8 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                     text = "EDIT",
                     modifier = Modifier
                         .weight(2f)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .semantics { testTag = "android:id/userTableHeaderEdit" },
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
                     color = DarkBlue
@@ -218,14 +219,16 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(if (index % 2 == 0) PaleBlue else Color.White)
-                        .padding(10.dp),
+                        .padding(10.dp)
+                        .semantics { testTag = "android:id/userRow_$index" },
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = user.firstname + " " + user.lastname,
                         modifier = Modifier
                             .weight(2f)
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .semantics { testTag = "android:id/userName_$index" },
                         textAlign = TextAlign.Start,
                         color = DarkBlue
                     )
@@ -239,7 +242,8 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                         text = role,
                         modifier = Modifier
                             .weight(2f)
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .semantics { testTag = "android:id/userRole_$index" },
                         textAlign = TextAlign.Start,
                         color = DarkBlue
                     )
@@ -247,12 +251,15 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                         onClick = {
                             onEditUserClick(user)
                         },
-                        modifier = Modifier.offset(x = (-30).dp)
+                        modifier = Modifier
+                            .offset(x = (-30).dp)
+                            .semantics { testTag = "android:id/editButton_$index" }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit User",
-                            tint = DarkBlue
+                            tint = DarkBlue,
+                            modifier = Modifier.semantics { testTag = "android:id/editIcon_$index" }
                         )
                     }
                     Spacer(modifier = Modifier.width(8.dp))
