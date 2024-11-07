@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -284,6 +285,10 @@ fun NavDrawerBottomBar(
                         popUpTo(navController.graph.startDestinationId)
                     }
                 },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = if (role == "Client") Color.White else bottomBarColors.second,
+                    indicatorColor = if (role == "Client") GreenCircle else bottomBarColors.first // Apply the custom color for Client
+                ),
                 modifier = Modifier.semantics { testTag = "android:id/dashboardPage" }
             )
 
@@ -304,6 +309,10 @@ fun NavDrawerBottomBar(
                             }
                         }
                     },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = if (role == "Client") Color.White else bottomBarColors.second,
+                        indicatorColor = if (role == "Client") GreenCircle else bottomBarColors.first
+                    ),
                     modifier = Modifier
                         .semantics { testTag = "android:id/ordersPage" }
                 )
@@ -370,6 +379,10 @@ fun NavDrawerBottomBar(
                             popUpTo(navController.graph.startDestinationId)
                         }
                     },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = if (role == "Client") Color.White else bottomBarColors.second,
+                        indicatorColor = if (role == "Client") GreenCircle else bottomBarColors.first
+                    ),
                     modifier = Modifier.semantics { testTag = "android:id/contactPage" }
                 )
             }
@@ -383,6 +396,10 @@ fun NavDrawerBottomBar(
                         popUpTo(navController.graph.startDestinationId)
                     }
                 },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = if (role == "Client") Color.White else bottomBarColors.second,
+                    indicatorColor = if (role == "Client") GreenCircle else bottomBarColors.first
+                ),
                 modifier = Modifier.semantics { testTag = "android:id/profilePage" }
             )
         }

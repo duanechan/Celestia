@@ -19,10 +19,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
@@ -30,6 +31,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -56,6 +58,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.ui.theme.CLGText
 import com.coco.celestia.ui.theme.ClientBG
 import com.coco.celestia.ui.theme.ContainerLO
 import com.coco.celestia.ui.theme.LightOrange
@@ -72,8 +75,6 @@ import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.UserData
 import kotlinx.coroutines.delay
 
-//TODO: add vertical scrolling and spacer at the end for the scrolling
-// + fix icons sizes of each methods
 @Composable
 fun ClientDashboard(
     navController: NavController,
@@ -109,14 +110,19 @@ fun ClientDashboard(
         Column(
             modifier = Modifier
                 .fillMaxHeight()
+                .verticalScroll(rememberScrollState())
                 .padding(top = 75.dp)
                 .semantics { testTag = "android:id/ClientDashboardColumn" }
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
-                    .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 16.dp)
+                    .padding(
+                        top = 27.dp,
+                        bottom = 8.dp,
+                        start = 25.dp,
+                        end = 25.dp
+                    )
                     .semantics { testTag = "android:id/DashboardHeaderRow" },
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -134,6 +140,7 @@ fun ClientDashboard(
                     Box(
                         modifier = Modifier
                             .align(Alignment.CenterVertically)
+                            .padding(start = 12.dp)
                     ) {
                         Button(
                             onClick = {
@@ -158,18 +165,22 @@ fun ClientDashboard(
                                 Image(
                                     painter = painterResource(id = R.drawable.notification_icon),
                                     contentDescription = "Notification Icon",
-                                    modifier = Modifier.size(25.dp)
+                                    modifier = Modifier.size(24.dp)
                                 )
                             }
                         }
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
+            Divider(
+                color = Color.Gray.copy(alpha = 0.3f),
+                thickness = 1.dp,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+            Spacer(modifier = Modifier.height(12.dp))
             BrowseCategories(navController)
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             FeaturedProducts(featuredProducts, navController)
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -179,12 +190,12 @@ fun ClientDashboard(
                 userData = userData,
                 navController = navController
             )
+            Spacer(modifier = Modifier.height(160.dp))
         }
-
-        if (showDialog.value) {
-            ShowNotificationsDialog(notifications) {
-                showDialog.value = false
-            }
+    }
+    if (showDialog.value) {
+        ShowNotificationsDialog(notifications) {
+            showDialog.value = false
         }
     }
 }
@@ -374,10 +385,8 @@ fun FeaturedProducts(
                 .background(ContainerLO, shape = RoundedCornerShape(8.dp))
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
+            LazyRow(
                 contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(featuredProducts) { product ->
@@ -402,7 +411,7 @@ fun ProductTypeCard(
 
     Card(
         modifier = Modifier
-            .fillMaxWidth()
+            .width(120.dp)
             .height(100.dp)
             .clickable {
                 navController.navigate(Screen.OrderDetails.createRoute(product.type))
@@ -451,8 +460,8 @@ fun OrderHistory(
     userData: UserData,
     navController: NavController
 ) {
-    val completedOrders = orderData.filter { order ->
-        order.status.trim().equals("Completed", ignoreCase = true)
+    val recievedOrders = orderData.filter { order ->
+        order.status.trim().equals("Received", ignoreCase = true)
     }
 
     Column(
@@ -485,11 +494,11 @@ fun OrderHistory(
         when (orderState) {
             is OrderState.LOADING -> CircularProgressIndicator(color = Color.White)
             is OrderState.ERROR -> Text(text = "Error fetching orders: ${orderState.message}", color = Color.Red)
-            is OrderState.EMPTY -> Text(text = "No completed orders found.", color = Color.Red)
+            is OrderState.EMPTY -> Text(text = "No received orders found.", color = Color.Red)
             is OrderState.SUCCESS -> {
-                if (completedOrders.isNotEmpty()) {
+                if (recievedOrders.isNotEmpty()) {
                     Column {
-                        completedOrders.forEachIndexed { _, order ->
+                        recievedOrders.forEachIndexed { _, order ->
                             OrderCardDetails(
                                 order = order,
                                 user = userData,
@@ -499,7 +508,7 @@ fun OrderHistory(
                     }
                 } else {
                     Text(
-                        text = "No completed orders found.",
+                        text = "No orders found.",
                         fontSize = 16.sp,
                         color = Color.Red
                     )
@@ -515,7 +524,6 @@ fun OrderCardDetails(
     user: UserData,
     navController: NavController
 ) {
-    val clientName = "${user.firstname} ${user.lastname}"
     val orderId = order.orderId.substring(6, 10).uppercase()
     val orderStatus = order.status
 
@@ -523,7 +531,7 @@ fun OrderCardDetails(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .background(ContainerLO, shape = RoundedCornerShape(8.dp))
+//            .background(ContainerLO, shape = RoundedCornerShape(8.dp))
             .padding(8.dp)
     ) {
         Row(
@@ -559,17 +567,10 @@ fun OrderCardDetails(
                         )
 
                         Text(
-                            text = "Client Name: $clientName",
-                            fontSize = 15.sp,
-                            color = Color.White,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-
-                        Text(
                             text = orderStatus,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = LightOrange,
+                            color = CLGText,
                             modifier = Modifier.padding(bottom = 4.dp)
                         )
                     }

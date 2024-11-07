@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import com.coco.celestia.viewmodel.model.ContactData
 import com.coco.celestia.ui.theme.ClientBG
 import com.coco.celestia.ui.theme.CLightGreen
+import com.coco.celestia.ui.theme.ContactText
 import com.coco.celestia.viewmodel.ContactState
 import com.coco.celestia.viewmodel.ContactViewModel
 
@@ -114,7 +115,7 @@ fun ClientContact(contactViewModel: ContactViewModel) {
                 )
             }
         }
-        Spacer(modifier = Modifier.height(100.dp))
+        Spacer(modifier = Modifier.height(160.dp))
     }
 }
 
@@ -137,7 +138,7 @@ fun ItemCards(contact: ContactData) {
     Card(
         modifier = Modifier
             .width(500.dp)
-            .height(if (expanded) 195.dp else 165.dp)
+            .height(if (expanded) 200.dp else 150.dp)
             .offset(x = (-16).dp, y = 0.dp)
             .padding(top = 0.dp, bottom = 5.dp, start = 30.dp, end = 0.dp)
             .clickable { expanded = !expanded }
@@ -150,7 +151,7 @@ fun ItemCards(contact: ContactData) {
         ) {
             Text(
                 text = name,
-                fontSize = 30.sp,
+                fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
                 modifier = Modifier
@@ -159,7 +160,7 @@ fun ItemCards(contact: ContactData) {
             )
             Text(
                 text = role,
-                fontSize = 20.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.White,
                 modifier = Modifier
@@ -170,7 +171,7 @@ fun ItemCards(contact: ContactData) {
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = "Contact Number: $contactNumber",
-                    fontSize = 20.sp,
+                    fontSize = 14.sp,
                     color = Color.White,
                     modifier = Modifier
                         .padding(top = 10.dp, start = 10.dp)
@@ -178,7 +179,7 @@ fun ItemCards(contact: ContactData) {
                 )
                 Text(
                     text = "Email: $email",
-                    fontSize = 20.sp,
+                    fontSize = 14.sp,
                     color = Color.White,
                     modifier = Modifier
                         .padding(top = 5.dp, start = 10.dp)
@@ -187,8 +188,8 @@ fun ItemCards(contact: ContactData) {
             }
             Text(
                 text = if (expanded) "Show Less" else "Show More",
-                fontSize = 16.sp,
-                color = Color.LightGray,
+                fontSize = 13.sp,
+                color = ContactText,
                 modifier = Modifier
                     .padding(top = 10.dp, start = 10.dp)
                     .semantics { testTag = "android:id/ExpandText_${contact.name}" }

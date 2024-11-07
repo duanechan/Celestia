@@ -24,14 +24,16 @@ val BrownCoffee2 = Color(0xFF633E06)
 val GrayTextField = Color(0XFFdcdcdc)
 
 //Client Palette
-val LightOrange = Color(0xFFDA8359) //top bar
+val LightOrange = Color(0xFFe79857) //top bar
 val ClientBG = Color (0xFFECDFCC)  //client bg
-val ContainerLO = Color (0xFFf9cb9c) //container bg in client dashboard
-val CLightGreen = Color (0xFFA5B68D) //order card
+val ContainerLO = Color (0xFFd4c8b7) //container bg in client dashboard
+val CLightGreen = Color (0xFF84b070) //order card
 val LGContainer = Color (0xff93c47d) //filter and notif
-val CLGText = Color (0xFFF5B971) //order status color in client order
-val BBGreen = Color (0xFF6A9C89) //icon color bottom bar
-val RavenBlack = Color (0xFF3e3e3e) //TEXT IN CLIENT
+val CLGText = Color (0xFFF5E1A4) //order status color in client order
+val ContactText = Color (0xFF827d6d) //contact showmore/less text
+val BBGreen = Color (0xffffffff) //icon color bottom bar
+val GreenCircle = Color(0xff9dc98a) //circular indicator in bottom bar
+val RavenBlack = Color (0xFF333333) //TEXT IN CLIENT
 
 // Toast Palette
 val JadeGreen = Color(0xFF00bb77)
@@ -110,7 +112,7 @@ val ButtonGradientBrush = Brush.linearGradient(
 //Client Profile 
 val OrangeGradientBrush = Brush.linearGradient(
     colors = listOf(
-        Color(0xFFDA8359),
+        Color(0xFFe79857),
         Color(0xFFE9C4A0)
     ),
     start = Offset(0f, 0f),
