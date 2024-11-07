@@ -276,7 +276,7 @@ fun NavDrawerBottomBar(
         ) {
             // Dashboard - Default to all roles except Client
             NavigationBarItem(
-                icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard", tint = if (role == "Client") VeryDarkPurple else bottomBarColors.second) },
+                icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard", tint = if (role == "Client") BBGreen else bottomBarColors.second) },
                 label = { Text("Dashboard", color = if (role == "Client") Color.White else bottomBarColors.second, fontFamily = mintsansFontFamily) },
                 selected = currentDestination == routes.dashboard,
                 onClick = {
@@ -289,7 +289,7 @@ fun NavDrawerBottomBar(
 
             if(role == "Coop" || role == "CoopCoffee" || role == "CoopMeat"|| role == "Client" || role == "Farmer") {
                 NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Orders", tint = if (role == "Client") VeryDarkPurple else bottomBarColors.second) },
+                    icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Orders", tint = if (role == "Client") BBGreen else bottomBarColors.second) },
                     label = { Text("Orders", color = if (role == "Client") Color.White else bottomBarColors.second, fontFamily = mintsansFontFamily) },
                     selected = currentDestination == routes.orders || currentDestination == Screen.ClientOrderDetails.route,
                     onClick = {
@@ -362,7 +362,7 @@ fun NavDrawerBottomBar(
 
             if (role == "Client") {
                 NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.Call, contentDescription = "Contact", tint = VeryDarkPurple) },
+                    icon = { Icon(imageVector = Icons.Default.Call, contentDescription = "Contact", tint = BBGreen) },
                     label = { Text("Contact", color = Color.White, fontFamily = mintsansFontFamily) },
                     selected = currentDestination == Screen.ClientContact.route,
                     onClick = {
@@ -375,7 +375,7 @@ fun NavDrawerBottomBar(
             }
 
             NavigationBarItem(
-                icon = { Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile", tint = if (role == "Client") VeryDarkPurple else bottomBarColors.second) },
+                icon = { Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile", tint = if (role == "Client") BBGreen else bottomBarColors.second) },
                 label = { Text("Profile", color = if (role == "Client") Color.White else bottomBarColors.second, fontFamily = mintsansFontFamily) },
                 selected = currentDestination == Screen.Profile.route,
                 onClick = {
