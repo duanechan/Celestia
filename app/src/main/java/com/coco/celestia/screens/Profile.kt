@@ -272,186 +272,197 @@ fun ProfileScreen(
             "Admin" -> BlueGradientBrush
             "Client" -> OrangeGradientBrush
             "Farmer" -> FarmerGradientBrush
-            "Coop" -> GreenGradientBrush
+            "Coop", "CoopCoffee", "CoopMeat" -> GreenGradientBrush
             else -> GrayGradientBrush
         }
     }
-
+    fun getFirstColorForRole(role: String): Color {
+        return when (role) {
+            "Admin" -> Color(0xFF40458d)
+            "Client" -> Color(0xFFe79857)
+            "Farmer" -> Color(0xFFE6B962)
+            "Coop", "CoopCoffee", "CoopMeat" -> Color(0xFF16909B)
+            else -> Color(0x80FFFFFF)
+        }
+    }
     val gradientBrush = getGradientBrushForRole(role)
 
-    Column(
+    Box(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 80.dp)
+            .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp)
-                .background(
-                    brush = gradientBrush,
-                    shape = RoundedCornerShape(bottomEnd = 16.dp, bottomStart = 16.dp)
-                ),
-            contentAlignment = Alignment.Center
-        )
-
-        {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(16.dp)
-            ) {
-
-                Image(
-                    painter = rememberImagePainter(
-                        data = updatedProfilePicture ?: profilePicture ?: R.drawable.profile_icon
-                    ),
-                    contentScale = ContentScale.FillWidth,
-                    contentDescription = "Profile Icon",
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(RoundedCornerShape(50.dp))
-                        .background(Color.White)
-                        .clickable { openGallery() }
-                )
-
-                Text(
-                    text = "$firstName $lastName",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp,
-                    color = Color.White
-                )
-                Text(
-                    text = role,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 18.sp,
-                    color = Color.White
-                )
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-                .background(
-                    color = GrayTextField,
-                    shape = RoundedCornerShape(bottomEnd = 16.dp, bottomStart = 16.dp)
-                )
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 80.dp)
         ) {
-            Column {
-                OutlinedTextField(
-                    value = updatedEmail,
-                    onValueChange = {
-                        updatedEmail = it
-                    },
-                    label = { Text(text = "Email") },
-                    singleLine = true,
-                    maxLines = 1,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    modifier = Modifier.semantics { testTag = "android:id/updateEmailField" },
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        containerColor = Color.White // Background color
-                    )
-                )
 
-                OutlinedTextField(
-                    value = updatedPhoneNumber,
-                    onValueChange = { updatedPhoneNumber = it },
-                    label = { Text(text = "Phone Number") },
-                    singleLine = true,
-                    maxLines = 1,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                    modifier = Modifier.semantics { testTag = "android:id/updatePhoneNumber" },
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        containerColor = Color.White// Background color
-                    )
-                )
-
-                OutlinedTextField(
-                    value = updatedStreetNumber,
-                    onValueChange = { updatedStreetNumber = it },
-                    label = { Text(text = "Street No.") },
-                    singleLine = true,
-                    maxLines = 1,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                    modifier = Modifier.semantics { testTag = "android:id/updateStreetNumber" },
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        containerColor = Color.White // Background color
-                    )
-                )
-
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded },
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp)
+                    .background(
+                        brush = gradientBrush,
+                        shape = RoundedCornerShape(bottomEnd = 16.dp, bottomStart = 16.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.padding(16.dp)
                 ) {
-                    OutlinedTextField(
-                        value = updatedBarangay,
-                        onValueChange = { updatedBarangay = it },
-                        label = { Text("Barangay") },
-                        readOnly = true,
+                    Image(
+                        painter = rememberImagePainter(
+                            data = updatedProfilePicture ?: profilePicture ?: R.drawable.profile_icon
+                        ),
+                        contentScale = ContentScale.FillWidth,
+                        contentDescription = "Profile Icon",
                         modifier = Modifier
-                            .menuAnchor()
-                            .semantics { testTag = "android:id/updateBarangay" },
+                            .size(100.dp)
+                            .clip(RoundedCornerShape(50.dp))
+                            .background(Color.White)
+                            .clickable { openGallery() }
+                    )
+
+                    Text(
+                        text = "$firstName $lastName",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 28.sp,
+                        color = Color.White
+                    )
+                    Text(
+                        text = role,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 18.sp,
+                        color = Color.White
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .background(
+                        color = GrayTextField,
+                        shape = RoundedCornerShape(bottomEnd = 16.dp, bottomStart = 16.dp)
+                    )
+                    .padding(16.dp)
+            ) {
+                Column {
+                    OutlinedTextField(
+                        value = updatedEmail,
+                        onValueChange = {
+                            updatedEmail = it
+                        },
+                        label = { Text(text = "Email") },
+                        singleLine = true,
+                        maxLines = 1,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        modifier = Modifier.semantics { testTag = "android:id/updateEmailField" },
                         colors = TextFieldDefaults.outlinedTextFieldColors(
-                            containerColor = Color.White// Background color
+                            containerColor = Color.White
                         )
                     )
-                    ExposedDropdownMenu(
+
+                    OutlinedTextField(
+                        value = updatedPhoneNumber,
+                        onValueChange = { updatedPhoneNumber = it },
+                        label = { Text(text = "Phone Number") },
+                        singleLine = true,
+                        maxLines = 1,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        modifier = Modifier.semantics { testTag = "android:id/updatePhoneNumber" },
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = Color.White
+                        )
+                    )
+
+                    OutlinedTextField(
+                        value = updatedStreetNumber,
+                        onValueChange = { updatedStreetNumber = it },
+                        label = { Text(text = "Street No.") },
+                        singleLine = true,
+                        maxLines = 1,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                        modifier = Modifier.semantics { testTag = "android:id/updateStreetNumber" },
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = Color.White
+                        )
+                    )
+
+                    ExposedDropdownMenuBox(
                         expanded = expanded,
-                        onDismissRequest = { expanded = false },
+                        onExpandedChange = { expanded = !expanded },
                     ) {
-                        locationData?.forEach { location ->
-                            DropdownMenuItem(
-                                text = { Text(text = location.barangay) },
-                                onClick = {
-                                    updatedBarangay = location.barangay
-                                    expanded = false
-                                },
-                                modifier = Modifier.semantics {
-                                    testTag = "android:id/barangayDropdownItem_${location.barangay}"
-                                }
+                        OutlinedTextField(
+                            value = updatedBarangay,
+                            onValueChange = { updatedBarangay = it },
+                            label = { Text("Barangay") },
+                            readOnly = true,
+                            modifier = Modifier
+                                .menuAnchor()
+                                .semantics { testTag = "android:id/updateBarangay" },
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                containerColor = Color.White
                             )
+                        )
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                        ) {
+                            locationData?.forEach { location ->
+                                DropdownMenuItem(
+                                    text = { Text(text = location.barangay) },
+                                    onClick = {
+                                        updatedBarangay = location.barangay
+                                        expanded = false
+                                    },
+                                    modifier = Modifier.semantics {
+                                        testTag = "android:id/barangayDropdownItem_${location.barangay}"
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
-        }
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Button(
-                onClick = { saveInfoDialog = true },
-                enabled = saveButtonEnabled,
-                modifier = Modifier.semantics { testTag = "android:id/saveButton" }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
-                Text(text = "Save")
+                Button(
+                    onClick = { saveInfoDialog = true },
+                    enabled = saveButtonEnabled,
+                    modifier = Modifier.semantics { testTag = "android:id/saveButton" }
+                ) {
+                    Text(text = "Save")
+                }
+                Button(
+                    onClick = { logoutDialog = true },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = getFirstColorForRole(role),
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .semantics { testTag = "android:id/logoutButton" }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ExitToApp,
+                        contentDescription = "Logout",
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text("Logout")
+                }
             }
-            Button(
-                onClick = { logoutDialog = true },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                    contentColor = Color.DarkGray
-                ),
-                modifier = Modifier
-                    .padding(8.dp)
-                    .semantics { testTag = "android:id/logoutButton" }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ExitToApp,
-                    contentDescription = "Logout",
-                    modifier = Modifier.size(24.dp)
-                )
-                Text("Logout")
-            }
+            Spacer(modifier = Modifier.height(100.dp))
         }
     }
-}
+    }
 
 @Composable
 fun Profile(

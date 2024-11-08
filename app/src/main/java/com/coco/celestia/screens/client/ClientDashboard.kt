@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -228,27 +229,6 @@ fun BrowseCategories(navController: NavController) {
             .padding(horizontal = 16.dp)
             .semantics { testTag = "android:id/BrowseCategoriesSection" }
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .padding(bottom = 8.dp)
-                .semantics { testTag = "android:id/BrowseCategoriesHeader" }
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.browsecategories),
-                contentDescription = "Browse Categories Icon",
-                modifier = Modifier.size(24.dp),
-                colorFilter = ColorFilter.tint(RavenBlack)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Browse Categories",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = RavenBlack,
-                modifier = Modifier.semantics { testTag = "android:id/BrowseCategoriesText" }
-            )
-        }
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -256,7 +236,30 @@ fun BrowseCategories(navController: NavController) {
                 .padding(horizontal = 16.dp, vertical = 16.dp)
                 .semantics { testTag = "android:id/CategoriesContainer" }
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .semantics { testTag = "android:id/BrowseCategoriesHeader" }
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.browsecategories),
+                    contentDescription = "Browse Categories Icon",
+                    modifier = Modifier.size(24.dp),
+                    colorFilter = ColorFilter.tint(RavenBlack)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Browse Categories",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = RavenBlack,
+                    modifier = Modifier.semantics { testTag = "android:id/BrowseCategoriesText" }
+                )
+            }
+
+            // Spacer between header and the category boxes
+            Spacer(modifier = Modifier.height(16.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -324,26 +327,31 @@ fun CategoryBox(
         verticalArrangement = Arrangement.Center,
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(1f)
-            .background(brush = gradientBrush, shape = RoundedCornerShape(8.dp))
             .padding(8.dp)
             .clickable {
                 navController.navigate(Screen.OrderDetails.createRoute(productName))
             }
             .semantics { testTag = "android:id/CategoryBox_$productName" }
     ) {
-        Image(
-            painter = painterResource(id = iconId),
-            contentDescription = "$productName icon",
-            modifier = Modifier.size(50.dp),
-            colorFilter = ColorFilter.tint(iconColor)
-        )
-
+        Box(
+            modifier = Modifier
+                .size(80.dp)
+                .background(gradientBrush, shape = CircleShape)
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = iconId),
+                contentDescription = "$productName icon",
+                modifier = Modifier.size(50.dp),
+                colorFilter = ColorFilter.tint(iconColor)
+            )
+        }
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = productName,
-            fontSize = 16.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
             modifier = Modifier
@@ -531,7 +539,6 @@ fun OrderCardDetails(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-//            .background(ContainerLO, shape = RoundedCornerShape(8.dp))
             .padding(8.dp)
     ) {
         Row(
@@ -540,8 +547,8 @@ fun OrderCardDetails(
         ) {
             Card(
                 modifier = Modifier
-                    .weight(1f)
-                    .height(140.dp)
+                    .width(200.dp)
+                    .height(125.dp)
                     .clickable {
                         navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId))
                     }
@@ -585,8 +592,8 @@ fun OrderCardDetails(
 
             Box(
                 modifier = Modifier
-                    .height(140.dp)
-                    .width(90.dp)
+                    .height(125.dp)
+                    .width(135.dp)
                     .background(LightOrange, shape = RoundedCornerShape(8.dp))
                     .padding(8.dp)
                     .clickable {
