@@ -370,15 +370,20 @@ fun FeaturedProducts(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
+            .background(ContainerLO, shape = RoundedCornerShape(8.dp))  // Shared background for the entire section
+            .padding(16.dp)
     ) {
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier
+                .padding(bottom = 16.dp)
         ) {
             Image(
                 painter = painterResource(id = R.drawable.featuredproducts),
                 contentDescription = "Featured Products Icon",
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(24.dp),
+                colorFilter = ColorFilter.tint(RavenBlack)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
@@ -388,18 +393,13 @@ fun FeaturedProducts(
                 color = RavenBlack
             )
         }
-        Box(
-            modifier = Modifier
-                .background(ContainerLO, shape = RoundedCornerShape(8.dp))
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+
+        LazyRow(
+            contentPadding = PaddingValues(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            LazyRow(
-                contentPadding = PaddingValues(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(featuredProducts) { product ->
-                    ProductTypeCard(product = product, navController = navController)
-                }
+            items(featuredProducts) { product ->
+                ProductTypeCard(product = product, navController = navController)
             }
         }
     }
@@ -468,7 +468,7 @@ fun OrderHistory(
     userData: UserData,
     navController: NavController
 ) {
-    val recievedOrders = orderData.filter { order ->
+    val receivedOrders = orderData.filter { order ->
         order.status.trim().equals("Received", ignoreCase = true)
     }
 
@@ -476,11 +476,14 @@ fun OrderHistory(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
+            .background(ContainerLO, shape = RoundedCornerShape(8.dp))
+            .padding(16.dp)
             .semantics { testTag = "android:id/OrderHistory" }
     ) {
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 16.dp)
         ) {
             Image(
                 painter = painterResource(id = R.drawable.orderhistory),
@@ -497,16 +500,14 @@ fun OrderHistory(
             )
         }
 
-        Spacer(modifier = Modifier.height(2.dp))
-
         when (orderState) {
             is OrderState.LOADING -> CircularProgressIndicator(color = Color.White)
             is OrderState.ERROR -> Text(text = "Error fetching orders: ${orderState.message}", color = Color.Red)
             is OrderState.EMPTY -> Text(text = "No received orders found.", color = Color.Red)
             is OrderState.SUCCESS -> {
-                if (recievedOrders.isNotEmpty()) {
+                if (receivedOrders.isNotEmpty()) {
                     Column {
-                        recievedOrders.forEachIndexed { _, order ->
+                        receivedOrders.forEach { order ->
                             OrderCardDetails(
                                 order = order,
                                 user = userData,
@@ -535,91 +536,86 @@ fun OrderCardDetails(
     val orderId = order.orderId.substring(6, 10).uppercase()
     val orderStatus = order.status
 
-    Box(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .padding(8.dp)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Card(
-                modifier = Modifier
-                    .width(200.dp)
-                    .height(125.dp)
-                    .clickable {
-                        navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId))
-                    }
-                    .padding(end = 8.dp)
-                    .semantics { testTag = "android:id/OrderCard_$orderId" },
-                colors = CardDefaults.cardColors(containerColor = CLightGreen)
-            ) {
-                Row(
-                    Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = "Order ID: $orderId",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-
-                        Text(
-                            text = orderStatus,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = CLGText,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                    }
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowRight,
-                        contentDescription = "Navigate to Details",
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
-                    )
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .height(125.dp)
+                .clickable {
+                    navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId))
                 }
-            }
-
-            Box(
-                modifier = Modifier
-                    .height(125.dp)
-                    .width(135.dp)
-                    .background(LightOrange, shape = RoundedCornerShape(8.dp))
-                    .padding(8.dp)
-                    .clickable {
-                        navController.navigate(Screen.OrderDetails.createRoute(order.orderData.type))
-                    },
-                contentAlignment = Alignment.Center
+                .padding(end = 8.dp)
+                .semantics { testTag = "android:id/OrderCard_$orderId" },
+            colors = CardDefaults.cardColors(containerColor = CLightGreen)
+        ) {
+            Row(
+                Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.buyagain),
-                        contentDescription = "Buy Again Icon",
-                        colorFilter = ColorFilter.tint(Color.White),
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Buy Again",
-                        color = Color.White,
-                        fontSize = 14.sp,
+                        text = "Order ID: $orderId",
+                        fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
+                        color = Color.White,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+
+                    Text(
+                        text = orderStatus,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = CLGText,
+                        modifier = Modifier.padding(bottom = 4.dp)
                     )
                 }
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowRight,
+                    contentDescription = "Navigate to Details",
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .height(125.dp)
+                .width(135.dp)
+                .background(LightOrange, shape = RoundedCornerShape(8.dp))
+                .padding(8.dp)
+                .clickable {
+                    navController.navigate(Screen.OrderDetails.createRoute(order.orderData.type))
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.buyagain),
+                    contentDescription = "Buy Again Icon",
+                    colorFilter = ColorFilter.tint(Color.White),
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Buy Again",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
