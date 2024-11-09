@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.coco.celestia.viewmodel.model.MostOrdered
 import com.coco.celestia.viewmodel.model.OrderData
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -21,12 +22,23 @@ sealed class OrderState {
     data class ERROR(val message: String) : OrderState()
 }
 
+sealed class MostOrderedState {
+    data object LOADING : MostOrderedState()
+    data object SUCCESS : MostOrderedState()
+    data object EMPTY : MostOrderedState()
+    data class ERROR(val message: String) : MostOrderedState()
+}
+
 class OrderViewModel : ViewModel() {
     private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("orders")
     private val _orderData = MutableLiveData<List<OrderData>>()
+    private val _mostOrderedData = MutableLiveData<List<MostOrdered>>()
     private val _orderState = MutableLiveData<OrderState>()
+    private val _mostOrderedState = MutableLiveData<MostOrderedState>()
     val orderData: LiveData<List<OrderData>> = _orderData
+    val mostOrderedData: LiveData<List<MostOrdered>> = _mostOrderedData
     val orderState: LiveData<OrderState> = _orderState
+    val mostOrderedState: LiveData<MostOrderedState> = _mostOrderedState
     /**
      * Fetches order data from the database based on the provided order ID.
      *
@@ -108,6 +120,40 @@ class OrderViewModel : ViewModel() {
         }
     }
 
+    fun fetchMostOrderedItems () {
+        viewModelScope.launch {
+            val productCount = mutableMapOf<String, Pair <Int, String>>()
+            database.addListenerForSingleValueEvent(object: ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    for (orderSnapshot in snapshot.children) {
+
+                        for (productSnapshot in orderSnapshot.children) {
+                            val orderList = productSnapshot.child("orderData")
+                            val productName = orderList.child("name").getValue(String::class.java)
+                            val quantity = orderList.child("quantity").getValue(Int::class.java) ?: 0
+                            val type = orderList.child("type").getValue(String::class.java)
+
+                            productName?.let {
+                                val currentData = productCount[it] ?: Pair(0, type ?: "Unknown Type")
+                                productCount[it] = Pair(currentData.first + quantity, currentData.second)
+                            }
+                        }
+                    }
+                    val topProducts = productCount.entries
+                        .sortedByDescending { it.value.first }
+                        .take(6)
+                        .map { MostOrdered (name = it.key, quantity = it.value.first, type = it.value.second) }
+
+                    _mostOrderedData.value = topProducts
+                    _mostOrderedState.value = if (topProducts.isEmpty()) MostOrderedState.EMPTY else MostOrderedState.SUCCESS
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    _mostOrderedState.value = MostOrderedState.ERROR(error.message)
+                }
+            })
+        }
+    }
     /**
      * Fetches all orders from the database based on the provided filter criteria.
      *

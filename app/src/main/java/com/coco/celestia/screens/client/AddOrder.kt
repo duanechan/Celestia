@@ -1,14 +1,16 @@
 @file:OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
-    ExperimentalFoundationApi::class, ExperimentalFoundationApi::class
+    ExperimentalFoundationApi::class, ExperimentalFoundationApi::class, ExperimentalCoilApi::class
 )
 
 package com.coco.celestia.screens.client
 
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,7 +25,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidthIn
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
@@ -33,10 +36,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.Card
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -61,299 +61,320 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
+import com.coco.celestia.R
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.ClientBG
 import com.coco.celestia.util.convertMillisToDate
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
-import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.MostOrdered
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.Month
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import java.util.UUID
 
 @Composable
-fun AddOrderPanel(navController: NavController) {
+fun AddOrderPanel(
+    navController: NavController,
+    orderViewModel: OrderViewModel,
+    productViewModel: ProductViewModel,
+    userViewModel: UserViewModel
+) {
+    val mostOrdered by orderViewModel.mostOrderedData.observeAsState(emptyList())
+    val products by productViewModel.productData.observeAsState(emptyList())
+    val currentMonth = LocalDate.now().month
+
+    LaunchedEffect(Unit) {
+        orderViewModel.fetchMostOrderedItems()
+        productViewModel.fetchProducts(
+            filter = "",
+            role = "Farmer"
+        )
+    }
+
+    val inSeasonProducts = products.filter { product ->
+        val sanitizedStartSeason = product.startSeason.trim().uppercase(Locale.ROOT)
+        val sanitizedEndSeason = product.endSeason.trim().uppercase(Locale.ROOT)
+
+        val startMonth = try {
+            Month.valueOf(sanitizedStartSeason)
+        } catch (e: IllegalArgumentException) { return@filter false }
+
+        val endMonth = try {
+            Month.valueOf(sanitizedEndSeason)
+        } catch (e: IllegalArgumentException) { return@filter false }
+
+        when {
+            startMonth.value <= endMonth.value -> {
+                currentMonth.value in startMonth.value..endMonth.value
+            }
+            else -> {
+                currentMonth.value >= startMonth.value || currentMonth.value <= endMonth.value
+            }
+        }
+    }
+
     BackHandler {
         navController.navigateUp()
     }
     Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .background(ClientBG)
             .padding(16.dp)
+            .verticalScroll(rememberScrollState())
             .semantics { testTag = "android:id/AddOrderPanel" }
     ) {
-        Text(text = "Add Order", fontSize = 25.sp)
-        Spacer(modifier = Modifier.height(150.dp))
-        ProductCard("Coffee", navController)
-        ProductCard("Meat", navController)
-        ProductCard("Vegetable", navController)
+        DisplayMostOrdered(
+            mostOrdered,
+            navController,
+            userViewModel
+        )
+        DisplayInSeason(
+            inSeasonProducts,
+            navController,
+            userViewModel
+        )
+        DisplayProducts(
+            productViewModel,
+            navController,
+            userViewModel
+        )
     }
 }
 
 @Composable
-fun ProductCard(
-    product: String,
+fun DisplayMostOrdered(
+    products: List <MostOrdered>,
     navController: NavController,
+    userViewModel: UserViewModel
 ) {
-    val gradient = when (product) {
-        "Meat" -> Brush.linearGradient(
-            colors = listOf(Color(0xFFFF5151), Color(0xFFB06520))
+    Text(
+        text = "Most Ordered Products",
+        fontSize = 20.sp,
+        fontWeight = FontWeight.Bold
+    )
+
+    LazyRow (
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(products) { product ->
+            ProductCard(
+                product,
+                navController,
+                userViewModel,
+                Modifier
+            )
+        }
+    }
+}
+
+@Composable
+fun DisplayInSeason(
+    products: List <ProductData>,
+    navController: NavController,
+    userViewModel: UserViewModel
+) {
+    Text(
+        text = "In Season Vegetables",
+        fontSize = 20.sp,
+        fontWeight = FontWeight.Bold,
+    )
+
+    LazyRow (
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(products) { product ->
+            ProductCard(
+                product,
+                navController,
+                userViewModel,
+                Modifier
+            )
+        }
+    }
+}
+
+@Composable
+fun DisplayProducts (
+    productViewModel: ProductViewModel,
+    navController: NavController,
+    userViewModel: UserViewModel
+) {
+    val products by productViewModel.productData.observeAsState(emptyList())
+
+    LaunchedEffect(Unit) {
+        productViewModel.fetchProducts(
+            filter = "",
+            role = "Client"
         )
-        "Coffee" -> Brush.linearGradient(
-            colors = listOf(Color(0xFFB06520), Color(0xFF5D4037))
-        )
-        "Vegetable" -> Brush.linearGradient(
-            colors = listOf(Color(0xFF42654A), Color(0xFF3B8D46))
-        )
-        else -> Brush.linearGradient(
-            colors = listOf(Color.Gray, Color.LightGray)
+    }
+    Text(
+        text = "Products",
+        fontSize = 20.sp,
+        fontWeight = FontWeight.Bold
+    )
+
+    Column {
+        products.chunked(3).forEach { chunk ->
+            Row (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                chunk.forEach { product ->
+                    ProductCard(
+                        product = product,
+                        navController = navController,
+                        userViewModel = userViewModel,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun <T> ProductCard(
+    product: T,
+    navController: NavController,
+    userViewModel: UserViewModel,
+    modifier: Modifier
+) {
+    var orderData by remember { mutableStateOf(OrderData()) }
+    var productImage by remember { mutableStateOf<Uri?>(null) }
+    var isSheetOpen by rememberSaveable { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var orderConfirmed by remember { mutableStateOf(false) }
+    var toastEvent by remember { mutableStateOf(Triple(ToastStatus.INFO, "", 0L)) }
+    val productName = when (product) {
+        is MostOrdered -> product.name
+        is ProductData -> product.name
+        else -> ""
+    }
+
+    val productType = when (product) {
+        is MostOrdered -> product.type
+        is ProductData -> product.type
+        else -> ""
+    }
+
+    LaunchedEffect(product) {
+        if (productName.isNotEmpty()) {
+            ImageService.fetchProfilePicture(productName) {
+                productImage = it
+            }
+        }
+    }
+
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val horizontalPadding = 16.dp * 2
+    val horizontalSpacing = 8.dp * 2
+    val itemWidth = (screenWidth - horizontalPadding - horizontalSpacing) / 3
+
+    Column (
+        modifier = modifier
+            .fillMaxWidth()
+            .width(itemWidth)
+            .clickable { isSheetOpen = true },
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box (
+            modifier = Modifier
+                .size(100.dp)
+                .border(
+                    width = 2.dp,
+                    color = Color.Black,
+                    shape = RoundedCornerShape(2)
+                )
+        ) {
+            Image(
+                painter = rememberImagePainter(data = productImage ?: R.drawable.product_image),
+                contentScale = ContentScale.Fit,
+                contentDescription = "Product Image",
+                modifier = Modifier.size(100.dp)
+            )
+        }
+
+        Text(
+            text = productName,
+            modifier = Modifier
+                .height(55.dp)
+                .padding(5.dp),
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
         )
     }
 
-    // Apply gradient inside the card
-    Card(
-        modifier = Modifier
-            .height(150.dp)
-            .clickable {
-                navController.navigate(Screen.OrderDetails.createRoute(product))
-            }
-            .semantics { testTag = "android:id/ProductCard_$product" },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
-        ),
-        elevation = CardDefaults.elevatedCardElevation(5.dp) // adjust shadow effect here
-    ) {
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(brush = gradient) // gradient background here
+    if (isSheetOpen) {
+        ModalBottomSheet(
+            sheetState = sheetState,
+            onDismissRequest = { isSheetOpen = false },
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = product,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+            Column {
+                TopAppBar(
+                    title = { Text(text = "Order Summary") }
+                )
+                AddOrderForm(
+                    userViewModel = userViewModel,
+                    productType = productType,
+                    productName = productName,
+                    onOrder = {
+                        orderData = it
+                    },
+                    onSheetChanged = { isSheetOpen = it },
+                    onOrderConfirmed = { orderConfirmed = it }
                 )
             }
         }
     }
-    Spacer(modifier = Modifier.height(15.dp))
-}
 
-@Composable
-fun OrderDetailsPanel(
-    navController: NavController,
-    type: String?,
-    userViewModel: UserViewModel,
-    productViewModel: ProductViewModel,
-    onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit,
-    onOrder: (OrderData) -> Unit
-) {
-    val productData by productViewModel.productData.observeAsState(emptyList())
-    val productState by productViewModel.productState.observeAsState()
-
-    Box(
-        modifier = Modifier
-            .background(ClientBG)
-            .fillMaxSize()
-            .padding(16.dp)
-            .semantics { testTag = "android:id/OrderDetailsPanel" }
-    ) {
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(100.dp))
-            Text(
-                text = type ?: "Unknown Product",
-                fontSize = 25.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                modifier = Modifier
-                    .padding(bottom = 20.dp)
-                    .semantics { testTag = "android:id/ProductTypeTitle" }
-            )
-            type?.let {
-                LaunchedEffect(type) {
-                    productViewModel.fetchProductByType(type)
-                }
-                when (productState) {
-                    is ProductState.EMPTY -> Text(
-                        text = "No products available.",
-                        modifier = Modifier.semantics { testTag = "android:id/ProductStateEmpty" }
-                    )
-                    is ProductState.ERROR -> Text(
-                        text = "Error: ${(productState as ProductState.ERROR).message}",
-                        modifier = Modifier.semantics { testTag = "android:id/ProductStateError" }
-                    )
-                    is ProductState.LOADING -> Text(
-                        text = "Loading products...",
-                        modifier = Modifier.semantics { testTag = "android:id/ProductStateLoading" }
-                    )
-                    is ProductState.SUCCESS -> {
-                        LazyColumn(modifier = Modifier.semantics { testTag = "android:id/ProductList" }) {
-                            items(productData) { product ->
-                                ProductTypeCard(
-                                    product,
-                                    navController,
-                                    userViewModel = userViewModel,
-                                    onAddToCartEvent = { onAddToCartEvent(it) },
-                                    onOrder = { onOrder(it) }
-                                )
-                            }
-                        }
-                    }
-                    null -> Text(
-                        text = "Unknown state",
-                        modifier = Modifier.semantics { testTag = "android:id/ProductStateUnknown" }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun ProductTypeCard(
-    product: ProductData,
-    navController: NavController,
-    userViewModel: UserViewModel,
-    onAddToCartEvent: (Triple<ToastStatus, String, Long>) -> Unit,
-    onOrder: (OrderData) -> Unit
-) {
-    val productName = product.name
-    val productType = product.type
-    var orderData by remember { mutableStateOf(OrderData()) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    var orderConfirmed by remember { mutableStateOf(false) }
-    var isSheetOpen by rememberSaveable { mutableStateOf(false) }
-
-    val gradientBrush = when (productType.lowercase()) {
-        "coffee" -> Brush.linearGradient(
-            colors = listOf(Color(0xFFB79276), Color(0xFF91684A))
-        )
-        "meat" -> Brush.linearGradient(
-            colors = listOf(Color(0xFFD45C5C), Color(0xFFAA3333))
-        )
-        "vegetable" -> Brush.linearGradient(
-            colors = listOf(Color(0xFF4CB05C), Color(0xFF4F8A45))
-        )
-        else -> Brush.linearGradient(
-            colors = listOf(Color.Gray, Color.LightGray)
+    if (orderConfirmed) {
+        ConfirmOrderRequestPanel(
+            navController = navController,
+            order = orderData,
+            userViewModel = userViewModel,
+            onAddToCartEvent = { toastEvent = it }
         )
     }
-
-    Card(
-        modifier = Modifier
-            .padding(vertical = 8.dp)
-            .animateContentSize()
-            .fillMaxWidth()
-            .clickable { isSheetOpen = true }
-            .semantics { testTag = "android:id/ProductTypeCard_${product.name}" },
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.elevatedCardElevation(5.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .background(brush = gradientBrush)
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Column {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = productName,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White,
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    }
-                    Icon(
-                        imageVector = Icons.Filled.ShoppingCart,
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .padding(start = 8.dp)
-                            .clickable { isSheetOpen = true }
-                            .semantics { testTag = "android:id/ShoppingCartIcon" }
-                    )
-                }
-
-                if (isSheetOpen) {
-                    ModalBottomSheet(
-                        sheetState = sheetState,
-                        onDismissRequest = { isSheetOpen = false },
-                    ) {
-                        Column {
-                            TopAppBar(
-                                title = { Text(text = "Order Summary") }
-                            )
-                            AddOrderForm(
-                                userViewModel = userViewModel,
-                                productType = productType,
-                                productName = productName,
-                                onOrder = {
-                                    onOrder(it)
-                                    orderData = it
-                                },
-                                onSheetChanged = { isSheetOpen = it },
-                                onOrderConfirmed = { orderConfirmed = it }
-                            )
-                        }
-                    }
-                }
-
-                if (orderConfirmed) {
-                    ConfirmOrderRequestPanel(
-                        navController = navController,
-                        order = orderData,
-                        userViewModel = userViewModel,
-                        onAddToCartEvent = { onAddToCartEvent(it) }
-                    )
-                }
-            }
-        }
-    }
-    Spacer(modifier = Modifier.height(15.dp))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
