@@ -20,13 +20,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,7 +47,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.util.UserIdentifier
+import com.coco.celestia.viewmodel.TransactionViewModel
+import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.UserData
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.PieChart
@@ -293,6 +301,22 @@ fun InventoryPieChart(entries: List<PieEntry>) {
 
 @Composable
 fun UserManagementDashboard() {
+    val dateFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+    val transactionViewModel: TransactionViewModel = viewModel()
+    val userViewModel: UserViewModel = viewModel()
+    val transactionData by transactionViewModel.transactionData.observeAsState(hashMapOf())
+    val usersData by userViewModel.usersData.observeAsState(emptyList())
+    var activeUsers by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        transactionViewModel.fetchAllTransactions()
+        userViewModel.fetchUsers()
+        userViewModel.fetchActiveUsers(
+            onResult = { activeUsers = it.size },
+            onError = { /* This returns an error message */ activeUsers = 0 }
+        )
+    }
+
     Spacer(modifier = Modifier.height(20.dp))
     Column(
         modifier = Modifier
@@ -316,7 +340,7 @@ fun UserManagementDashboard() {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "20",
+                    usersData.size.toString(),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.DarkGray,
@@ -341,7 +365,7 @@ fun UserManagementDashboard() {
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "7",
+                    activeUsers.toString(),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Green,
@@ -365,9 +389,26 @@ fun UserManagementDashboard() {
                 .padding(horizontal = 8.dp)
                 .semantics { testTag = "android:id/recentActivityList" }
         ) {
-            Text("• User A updated inventory - 2 mins ago", fontSize = 14.sp)
-            Text("• User B added a new order - 10 mins ago", fontSize = 14.sp)
-            Text("• User C logged in - 30 mins ago", fontSize = 14.sp)
+            transactionData.entries
+                .flatMap { entry ->
+                    entry.value.map { transaction ->
+                        Pair(entry.key, transaction)
+                    }
+                }
+                .sortedByDescending { (_, transaction) ->
+                    dateFormat.parse(transaction.date) ?: Date(0)
+                }
+                .take(3)
+                .forEach { (userId, transaction) ->
+                    var userData by remember { mutableStateOf(UserData()) }
+                    LaunchedEffect(userId) {
+                        UserIdentifier.getUserData(userId) { result ->
+                            userData = result
+                        }
+                    }
+                    Text("• ${userData.firstname} ${userData.lastname} - ${transaction.description} - ${transaction.date}", fontSize = 14.sp)
+                }
+
         }
     }
 }

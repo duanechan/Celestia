@@ -42,7 +42,7 @@ fun AdminProfile(userViewModel: UserViewModel, navController: NavController) {
             onDismiss = { exitDialog = false },
             onExit = {
                 // Navigate back to the login screen
-                userViewModel.logout()
+//                userViewModel.logout()
                 navController.navigate(Screen.Login.route) {
                     popUpTo(navController.graph.startDestinationId) { inclusive = true }
                 }
@@ -55,7 +55,7 @@ fun AdminProfile(userViewModel: UserViewModel, navController: NavController) {
         LogoutDialog(
             onDismiss = { logoutDialog = false },
             onLogout = {
-                userViewModel.logout()
+//                userViewModel.logout()
                 navController.navigate(Screen.Login.route) {
                     popUpTo(navController.graph.startDestinationId) { inclusive = true }
                 }

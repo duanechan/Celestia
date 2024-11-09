@@ -209,7 +209,7 @@ fun ProfileScreen(
         LogoutDialog(
             onDismiss = { logoutDialog = false },
             onLogout = {
-                userViewModel.logout()
+                userViewModel.logout(uid)
                 navController.navigate(Screen.Login.route) {
                     popUpTo(0)
                 }
