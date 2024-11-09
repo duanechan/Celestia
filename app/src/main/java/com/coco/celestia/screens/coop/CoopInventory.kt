@@ -72,8 +72,6 @@ fun CoopInventory(navController: NavController, role: String) {
             .verticalScroll(rememberScrollState())
             .semantics { testTag = "android:id/CoopInventoryColumn" }
     ){
-        Spacer(modifier = Modifier.height(100.dp))
-
         when (productState) {
             is ProductState.LOADING -> {
                 Text("Loading products...")
@@ -142,7 +140,6 @@ fun ProductTypeInventory(type: String?, userRole: String) {
 
     Column(modifier = Modifier
         .fillMaxSize()
-        .padding(top = 10.dp)
         .verticalScroll(rememberScrollState())
         .semantics { testTag = "android:id/ProductTypeInventoryColumn" },
         horizontalAlignment = Alignment.CenterHorizontally
@@ -234,7 +231,6 @@ fun ProductTypeInventory(type: String?, userRole: String) {
                     fontWeight = FontWeight.Bold)
             }
         }
-        Spacer(modifier = Modifier.height(100.dp))
     }
 }
 
@@ -399,12 +395,9 @@ fun CoopMonthlyItemList(itemList: List<MonthlyInventory>) {
 @Composable
 fun TopBarCoopInventory(onTabSelected: (String) -> Unit) {
     var selectedOption by remember { mutableIntStateOf(0) }
-    Spacer(modifier = Modifier.height(35.dp))
     Column(
         modifier = Modifier
-            .statusBarsPadding()
             .wrapContentHeight()
-            .padding(vertical = 20.dp)
             .semantics { testTag = "android:id/TopBarCoopInventoryColumn" }
     ) {
         TabRow(

@@ -77,7 +77,6 @@ fun CoopDashboard(
         .fillMaxSize()
         .semantics { testTag = "android:id/CoopDashboardBox" }) {
         Column {
-            Spacer(modifier = Modifier.height(118.dp))
             OverviewSummaryBox(orderViewModel, productViewModel)
         }
     }

@@ -294,7 +294,7 @@ fun ProfileScreen(
     ) {
         Column(
             modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 80.dp)
+                .padding(horizontal = 16.dp)
         ) {
 
             Box(

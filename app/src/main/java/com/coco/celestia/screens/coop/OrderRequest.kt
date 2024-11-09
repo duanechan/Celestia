@@ -112,15 +112,14 @@ fun OrderRequest(
         )
     }
     Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.background(CoopBackground)
     ) {
-        Spacer(modifier = Modifier.height(87.dp))
         Row (modifier = Modifier
             .height(75.dp)
-            .padding(top = 5.dp)
-            .background(Color.Transparent)) {
+            .width(800.dp)
+            .background(Color.Transparent)
+            .padding(start = 8.dp, end = 8.dp)
+        ) {
             SearchBar(
                 query = query,
                 onQueryChange = { query = it },
@@ -131,11 +130,10 @@ fun OrderRequest(
                 placeholder = { Text("Search") },
                 modifier = Modifier
                     .height(50.dp)
+                    .width(800.dp)
                     .semantics { testTag = "android:id/OrderSearchBar" }
             ) {
-
             }
-
         }
 
         Row(
