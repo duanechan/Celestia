@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -16,7 +17,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.coco.celestia.screens.client.AddOrderPanel
-import com.coco.celestia.screens.client.OrderDetailsPanel
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.Calendar
 import com.coco.celestia.screens.ForgotPasswordScreen
@@ -60,7 +60,6 @@ import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
-import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.auth.FirebaseAuth
 
@@ -76,10 +75,10 @@ fun NavGraph(
     transactionViewModel: TransactionViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
     onNavigate: (String) -> Unit,
-    onEvent: (Triple<ToastStatus, String, Long>) -> Unit
+    onEvent: (Triple<ToastStatus, String, Long>) -> Unit,
+    modifier: Modifier
 ) {
     val uid = FirebaseAuth.getInstance().uid.toString()
-    var orderData by remember { mutableStateOf(OrderData()) }
     val productName by productViewModel.productName.observeAsState("")
     var quantityAmount by remember { mutableIntStateOf(0) }
     var defectBeans by remember { mutableIntStateOf(0) }
@@ -94,6 +93,7 @@ fun NavGraph(
     NavHost(
         navController = navController,
         startDestination = Screen.Splash.route,
+        modifier = modifier
     ) {
         composable(route = Screen.Splash.route) {
             SplashScreen(
@@ -349,7 +349,12 @@ fun NavGraph(
         }
         composable(route = Screen.AddOrder.route) {
             onNavigate("Add Order")
-            AddOrderPanel(navController = navController)
+            AddOrderPanel(
+                navController = navController,
+                orderViewModel = orderViewModel,
+                productViewModel = productViewModel,
+                userViewModel = userViewModel
+            )
         }
         composable(
             route = Screen.CoopProductInventory.route,
@@ -459,21 +464,7 @@ fun NavGraph(
                 )
             }
         }
-        composable(
-            route = Screen.OrderDetails.route,
-            arguments = listOf(navArgument("type") { type = NavType.StringType })
-        ) { backStack ->
-            val type = backStack.arguments?.getString("type")
-            onNavigate("Request Order")
-            OrderDetailsPanel(
-                navController = navController,
-                type = type,
-                productViewModel = productViewModel,
-                userViewModel = userViewModel,
-                onAddToCartEvent = { onEvent(it) },
-                onOrder = { orderData = it },
-            )
-        }
+
         composable(route = Screen.Profile.route) {
             onNavigate("Profile")
             Profile(

@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -142,12 +143,13 @@ fun App() {
                 )
             }
         }
-    ) { // APP CONTENT
+    ) { paddingValues ->
         NavGraph(
             navController = navController,
             userRole = userData?.role.toString(),
             onNavigate = { topBarTitle = it },
-            onEvent = { toastEvent = Triple(it.first, it.second, it.third) }
+            onEvent = { toastEvent = Triple(it.first, it.second, it.third) },
+            modifier = Modifier.padding(paddingValues)
         )
     }
 }
