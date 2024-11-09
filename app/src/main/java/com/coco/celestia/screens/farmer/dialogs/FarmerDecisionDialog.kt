@@ -55,6 +55,7 @@ fun FarmerDecisionDialog(
             Column(modifier = Modifier.semantics { testTag = "android:id/dialogContent" }) {
                 Text(
                     text = message,
+
                     fontSize = 16.sp,
                     modifier = Modifier.semantics { testTag = "android:id/dialogMessage" }
                 )

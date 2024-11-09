@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.farmer.dialogs
 
+import androidx.compose.foundation.background
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -7,15 +8,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.TextField
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import com.coco.celestia.ui.theme.*
 
@@ -27,7 +32,7 @@ fun FarmerAddProductDialog(
     onConfirm: (name: String, quantity: Int, seasonStart: String, seasonEnd: String) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
-    var quantity by remember { mutableStateOf("") }
+    var quantity by remember { mutableStateOf("1") }
     var seasonStart by remember { mutableStateOf("") }
     var seasonEnd by remember { mutableStateOf("") }
     var nameError by remember { mutableStateOf(false) }
@@ -48,7 +53,6 @@ fun FarmerAddProductDialog(
         confirmButton = {
             TextButton(onClick = {
                 val quantityInt = quantity.toIntOrNull()
-
                 // Validate inputs
                 nameError = name.isBlank()
                 quantityError = quantityInt == null || quantityInt <= 0
@@ -56,6 +60,7 @@ fun FarmerAddProductDialog(
                 seasonEndError = seasonEnd.isBlank()
 
                 if (!nameError && !quantityError && !seasonStartError && !seasonEndError) {
+                    println("Farmer's Name: $farmerName")
                     onConfirm(name, quantityInt!!, seasonStart, seasonEnd)
                     onDismiss()
                 }
@@ -63,7 +68,7 @@ fun FarmerAddProductDialog(
                 modifier = Modifier
                     .semantics { testTagsAsResourceId = true }
                     .semantics { testTag = "android:id/confirmButton" }) {
-                Text("Confirm", color = SageGreen)
+                Text("Confirm", color = OliveGreen)
             }
         },
         dismissButton = {
@@ -89,27 +94,10 @@ fun FarmerAddProductDialog(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .background(Sand2)
                     .padding(16.dp)
             ) {
-                // Farmer's Name (read-only)
-                Text(text = "Farmer's Name", color = Cocoa, fontWeight = FontWeight.Bold)
-                TextField(
-                    value = farmerName,
-                    onValueChange = {},
-                    enabled = false,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { testTagsAsResourceId = true }
-                        .semantics { testTag = "android:id/farmersName" },
-                    colors = TextFieldDefaults.colors(
-                        unfocusedContainerColor = Apricot,
-                        focusedContainerColor = Apricot
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Product Name Input
+                // Product Name
                 Text(text = "Enter Product Name", color = Cocoa, fontWeight = FontWeight.Bold)
                 TextField(
                     value = name,
@@ -117,15 +105,18 @@ fun FarmerAddProductDialog(
                         name = it
                         nameError = false
                     },
-                    placeholder = { Text("Enter vegetable name", color = Color.Gray) },
+                    placeholder = { Text("Enter vegetable name", color = Cocoa.copy(alpha = 0.7f)) },
                     isError = nameError,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
                         .semantics { testTagsAsResourceId = true }
                         .semantics { testTag = "android:id/enterVegetableName" },
                     colors = TextFieldDefaults.colors(
                         unfocusedContainerColor = Apricot,
-                        focusedContainerColor = Apricot
+                        focusedContainerColor = Apricot,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent
                     )
                 )
                 if (nameError) {
@@ -142,25 +133,59 @@ fun FarmerAddProductDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Quantity Input
-                Text(text = "Enter Quantity", color = Cocoa, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.semantics { testTag = "android:id/enterQuantity" })
+                Text(text = "Enter Quantity", color = Cocoa, fontWeight = FontWeight.Bold)
                 TextField(
                     value = quantity,
-                    onValueChange = {
-                        quantity = it
-                        quantityError = false
+                    onValueChange = { newValue ->
+                        if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                            quantity = newValue
+                            quantityError = false
+                        }
                     },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                    placeholder = { Text("Enter quantity", color = Color.Gray) },
-                    isError = quantityError,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .semantics { testTagsAsResourceId = true }
-                        .semantics { testTag = "android:id/quantityError" },
+                        .clip(RoundedCornerShape(16.dp)),
+                    trailingIcon = {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(end = 8.dp, top = 4.dp, bottom = 4.dp)
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    val currentValue = quantity.toIntOrNull() ?: 0
+                                    quantity = (currentValue + 1).toString()
+                                },
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                            ) {
+                                Text("▲", fontSize = 10.sp, color = Cocoa)
+                            }
+
+                            IconButton(
+                                onClick = {
+                                    val currentValue = quantity.toIntOrNull() ?: 0
+                                    if (currentValue > 1) {
+                                        quantity = (currentValue - 1).toString()
+                                    }
+                                },
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(RoundedCornerShape(4.dp))
+                            ) {
+                                Text("▼", fontSize = 10.sp, color = Cocoa)
+                            }
+                        }
+                    },
                     colors = TextFieldDefaults.colors(
                         unfocusedContainerColor = Apricot,
-                        focusedContainerColor = Apricot
-                    )
+                        focusedContainerColor = Apricot,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent
+                    ),
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = Cocoa.copy(alpha = 0.7f))
                 )
                 if (quantityError) {
                     Text(
@@ -174,19 +199,22 @@ fun FarmerAddProductDialog(
 
                 // Season Start Dropdown
                 Text(text = "Select Season Start", color = Cocoa, fontWeight = FontWeight.Bold)
-                OutlinedTextField(
+                TextField(
                     value = seasonStart,
                     onValueChange = {},
                     enabled = false,
                     readOnly = true,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
                         .clickable { isSeasonStartDropdownExpanded = true }
                         .semantics { testTagsAsResourceId = true }
                         .semantics { testTag = "android:id/selectStartMonth" },
-                    placeholder = { Text("Select start month") },
-                    colors = OutlinedTextFieldDefaults.colors(
+                    placeholder = { Text("Select start month", color = Cocoa.copy(alpha = 0.7f)) },
+                    colors = TextFieldDefaults.colors(
                         disabledContainerColor = Apricot,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent
                     )
                 )
                 DropdownMenu(
@@ -225,19 +253,22 @@ fun FarmerAddProductDialog(
 
                 // Season End Dropdown
                 Text(text = "Select Season End", color = Cocoa, fontWeight = FontWeight.Bold)
-                OutlinedTextField(
+                TextField(
                     value = seasonEnd,
                     onValueChange = {},
                     enabled = false,
                     readOnly = true,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
                         .clickable { isSeasonEndDropdownExpanded = true }
                         .semantics { testTagsAsResourceId = true }
                         .semantics { testTag = "android:id/seasonEndInput" },
-                    placeholder = { Text("Select end month") },
-                    colors = OutlinedTextFieldDefaults.colors(
+                    placeholder = { Text("Select end month", color = Cocoa.copy(alpha = 0.7f)) },
+                    colors = TextFieldDefaults.colors(
                         disabledContainerColor = Apricot,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent
                     )
                 )
                 DropdownMenu(
@@ -273,6 +304,7 @@ fun FarmerAddProductDialog(
                 }
             }
         },
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+        containerColor = Sand2
     )
 }

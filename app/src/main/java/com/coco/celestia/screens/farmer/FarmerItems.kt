@@ -265,7 +265,8 @@ fun FarmerProductTypeInventory(
         ) {
             Row(
                 modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(
                     modifier = Modifier.weight(1f)
@@ -311,7 +312,7 @@ fun FarmerProductTypeInventory(
                     tint = Cocoa,
                     modifier = Modifier
                         .size(24.dp)
-                        .align(Alignment.Bottom)
+                        .align(Alignment.CenterVertically)
                         .semantics { testTag = "android:id/navigateIcon_${product.name}" }
                 )
             }

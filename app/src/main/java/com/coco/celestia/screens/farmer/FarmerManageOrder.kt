@@ -1,4 +1,3 @@
-@file:Suppress("IMPLICIT_CAST_TO_ANY")
 package com.coco.celestia.screens.farmer
 
 import androidx.compose.foundation.BorderStroke
@@ -21,7 +20,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +43,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Brush
@@ -59,12 +58,11 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import com.coco.celestia.ui.theme.*
-import com.coco.celestia.viewmodel.FarmerItemViewModel
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 fun FarmerManageOrder(
     navController: NavController,
     userViewModel: UserViewModel,
@@ -111,18 +109,27 @@ fun FarmerManageOrder(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     placeholder = { Text("Search orders...", color = Cocoa) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search Icon",
+                            tint = Cocoa
+                        )
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .background(color = Apricot, shape = RoundedCornerShape(16.dp))
                         .border(BorderStroke(1.dp, color = Cocoa), shape = RoundedCornerShape(16.dp))
                         .semantics { testTag = "android:id/searchBar" },
                     singleLine = true,
-                    colors = TextFieldDefaults.textFieldColors(
-                        containerColor = Color.Transparent,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
                         disabledIndicatorColor = Color.Transparent,
-                        errorIndicatorColor = Color.Transparent
+                        errorIndicatorColor = Color.Transparent,
                     )
                 )
 
@@ -134,7 +141,11 @@ fun FarmerManageOrder(
                         .background(color = Apricot, shape = RoundedCornerShape(16.dp))
                         .border(BorderStroke(1.dp, color = Cocoa), shape = RoundedCornerShape(16.dp))
                 ) {
-                    Icon(painter = painterResource(id = R.drawable.transactions), contentDescription = "Transactions", tint = Cocoa)
+                    Icon(
+                        painter = painterResource(id = R.drawable.transactions),
+                        contentDescription = "Transactions",
+                        tint = Cocoa
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
@@ -147,7 +158,11 @@ fun FarmerManageOrder(
                             .border(BorderStroke(1.dp, color = Cocoa), shape = RoundedCornerShape(16.dp))
                             .semantics { testTag = "android:id/filterButton" }
                     ) {
-                        Icon(painter = painterResource(id = R.drawable.filter), contentDescription = "Filter", tint = Cocoa)
+                        Icon(
+                            painter = painterResource(id = R.drawable.filter),
+                            contentDescription = "Filter",
+                            tint = Cocoa
+                        )
                     }
 
                     DropdownMenu(
@@ -156,7 +171,7 @@ fun FarmerManageOrder(
                         modifier = Modifier.background(color = LightApricot, shape = RoundedCornerShape(8.dp))
                     ) {
                         if (isOrderStatusView) {
-                            listOf("All", "Preparing", "Incomplete", "Delivering", "Completed", "Rejected").forEach { status ->
+                            listOf("All", "Preparing", "Incomplete", "Delivering", "Completed", "Rejected", "Cancelled").forEach { status ->
                                 DropdownMenuItem(
                                     text = { Text(status, color = Cocoa) },
                                     onClick = {
@@ -367,20 +382,24 @@ fun ManageOrderCards(
                     modifier = Modifier
                         .padding(20.dp)
                         .fillMaxSize(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Order Info
                     Column(
-                        verticalArrangement = Arrangement.Center,
                         modifier = Modifier
+                            .weight(1f)
                             .fillMaxHeight()
-                            .semantics { testTag = "android:id/orderInfoColumn_${order.orderId}" }
+                            .semantics { testTag = "android:id/orderInfoColumn_${order.orderId}" },
+                        verticalArrangement = Arrangement.Center
                     ) {
                         Text(
                             text = "Order ID: $orderId",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = Cocoa,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.semantics { testTag = "android:id/orderIdText_${order.orderId}" }
                         )
                         Spacer(modifier = Modifier.height(4.dp))
@@ -389,6 +408,8 @@ fun ManageOrderCards(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Normal,
                             color = Cocoa,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.semantics { testTag = "android:id/clientNameText_${order.orderId}" }
                         )
                     }
@@ -416,7 +437,9 @@ fun OrderStatusCard(
     cardHeight: Dp = 180.dp,
     showText: Boolean = true
 ) {
-    val backgroundColor = when (orderStatus) {
+    val displayStatus = if (orderStatus == "RECEIVED") "COMPLETED" else orderStatus
+
+    val backgroundColor = when (displayStatus) {
         "PREPARING" -> Brown1
         "INCOMPLETE" -> Tangerine
         "REJECTED" -> Copper3
@@ -426,14 +449,14 @@ fun OrderStatusCard(
         else -> Color.Gray
     }
 
-    val iconPainter: Painter? = when (orderStatus) {
+    val iconPainter: Painter? = when (displayStatus) {
         "PREPARING" -> painterResource(id = R.drawable.preparing)
         "INCOMPLETE" -> painterResource(id = R.drawable.incomplete)
         "DELIVERING" -> painterResource(id = R.drawable.deliveryicon)
         else -> null
     }
 
-    val iconVector: ImageVector? = when (orderStatus) {
+    val iconVector: ImageVector = when (displayStatus) {
         "REJECTED" -> Icons.Default.Clear
         "COMPLETED" -> Icons.Default.CheckCircle
         "CANCELLED" -> Icons.Default.Clear
@@ -459,16 +482,16 @@ fun OrderStatusCard(
             if (iconPainter != null) {
                 Icon(
                     painter = iconPainter,
-                    contentDescription = orderStatus,
+                    contentDescription = displayStatus,
                     modifier = Modifier
                         .size(35.dp)
                         .semantics { testTag = "android:id/statusIcon_$orderId" },
                     tint = Cocoa
                 )
-            } else if (iconVector != null) {
+            } else {
                 Icon(
                     imageVector = iconVector,
-                    contentDescription = orderStatus,
+                    contentDescription = displayStatus,
                     tint = Cocoa,
                     modifier = Modifier
                         .size(35.dp)
@@ -480,7 +503,7 @@ fun OrderStatusCard(
 
             if (showText) {
                 Text(
-                    text = orderStatus,
+                    text = displayStatus,
                     fontSize = 7.sp,
                     fontWeight = FontWeight.Bold,
                     color = Cocoa,

@@ -79,7 +79,7 @@ fun FarmerOrderDetails(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp) // Optional: Add some padding if needed
+                    .padding(16.dp)
             ) {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center)
@@ -362,7 +362,7 @@ fun OrderDetailsCard(orderData: OrderData) {
                         horizontalAlignment = Alignment.Start,
                         modifier = Modifier
                             .weight(1f) // Adjusted weight
-                            .border(1.dp, Cocoa, RoundedCornerShape(5.dp))
+                            .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(5.dp))
                             .background(Sand2, shape = RoundedCornerShape(5.dp))
                             .padding(top = 8.dp, start = 8.dp, bottom = 30.dp)
                     ) {
@@ -390,104 +390,9 @@ fun OrderDetailsCard(orderData: OrderData) {
                         horizontalAlignment = Alignment.Start,
                         modifier = Modifier
                             .weight(1f)
-                            .border(1.dp, Cocoa, RoundedCornerShape(5.dp))
+                            .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(5.dp))
                             .background(Sand2, shape = RoundedCornerShape(5.dp))
-                            .padding(top = 8.dp, start = 8.dp, bottom = 30.dp)
-                    ) {
-                        Text(
-                            text = "Address",
-                            fontSize = 20.sp,
-                            color = Cocoa,
-                            textAlign = TextAlign.Center,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/deliveryAddressLabel" }
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = "${orderData.street}, ${orderData.barangay}",
-                            fontSize = 15.sp,
-                            color = Cocoa,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/deliveryAddressText" }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(15.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.Start,
-                        modifier = Modifier
-                            .weight(1f)
-                            .border(1.dp, Cocoa, RoundedCornerShape(5.dp))
-                            .background(Sand2, shape = RoundedCornerShape(5.dp))
-                            .padding(top = 8.dp, start = 8.dp, bottom = 25.dp)
-                    ) {
-                        Text(
-                            text = "Target Date",
-                            fontSize = 20.sp,
-                            color = Cocoa,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/targetDateLabel" }
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = orderData.targetDate,
-                            fontSize = 15.sp,
-                            color = Cocoa,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/targetDateText" }
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(15.dp))
-
-                    Column(
-                        horizontalAlignment = Alignment.Start,
-                        modifier = Modifier
-                            .weight(1f)
-                            .border(1.dp, Cocoa, RoundedCornerShape(5.dp))
-                            .background(Sand2, shape = RoundedCornerShape(5.dp))
-                            .padding(top = 8.dp, start = 8.dp, bottom = 25.dp)
-                    ) {
-                        Text(
-                            text = "Client Name",
-                            fontSize = 20.sp,
-                            color = Cocoa,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/clientNameLabel" }
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = orderData.client,
-                            fontSize = 15.sp,
-                            color = Cocoa,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/clientNameText" }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(15.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.Start,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .weight(1f)
-                            .border(1.dp, Cocoa, RoundedCornerShape(5.dp))
-                            .background(Sand2, shape = RoundedCornerShape(5.dp))
-                            .padding(8.dp)
+                            .padding(top = 8.dp, start = 8.dp, bottom = 18.dp)
                             .semantics { testTag = "android:id/orderedProductSection" }
                     ) {
                         Row(
@@ -523,15 +428,81 @@ fun OrderDetailsCard(orderData: OrderData) {
                             modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/productQuantityText" }
                         )
                     }
+                }
+
+                Spacer(modifier = Modifier.height(15.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.Start,
+                        modifier = Modifier
+                            .weight(1f)
+                            .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(5.dp))
+                            .background(Sand2, shape = RoundedCornerShape(5.dp))
+                            .padding(top = 8.dp, start = 8.dp, bottom = 25.dp)
+                    ) {
+                        Text(
+                            text = "Target Date",
+                            fontSize = 20.sp,
+                            color = Cocoa,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/targetDateLabel" }
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = orderData.targetDate,
+                            fontSize = 15.sp,
+                            color = Cocoa,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/targetDateText" }
+                        )
+                    }
 
                     Spacer(modifier = Modifier.width(15.dp))
 
                     Column(
                         horizontalAlignment = Alignment.Start,
                         modifier = Modifier
+                            .weight(1f)
+                            .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(5.dp))
+                            .background(Sand2, shape = RoundedCornerShape(5.dp))
+                            .padding(top = 8.dp, start = 8.dp, bottom = 25.dp)
+                    ) {
+                        Text(
+                            text = "Client Name",
+                            fontSize = 20.sp,
+                            color = Cocoa,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/clientNameLabel" }
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = orderData.client,
+                            fontSize = 15.sp,
+                            color = Cocoa,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/clientNameText" }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(15.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.Start,
+                        modifier = Modifier
                             .fillMaxHeight()
                             .weight(1f)
-                            .border(1.dp, Cocoa, RoundedCornerShape(5.dp))
+                            .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(5.dp))
                             .background(Sand2, shape = RoundedCornerShape(5.dp))
                             .padding(8.dp)
                     ) {
@@ -566,6 +537,35 @@ fun OrderDetailsCard(orderData: OrderData) {
                                 modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/fulfilledByText" }
                             )
                         }
+                    }
+
+                    Spacer(modifier = Modifier.width(15.dp))
+
+                    Column(
+                        horizontalAlignment = Alignment.Start,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .weight(1f)
+                            .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(5.dp))
+                            .background(Sand2, shape = RoundedCornerShape(5.dp))
+                            .padding(top = 8.dp, start = 8.dp, bottom = 20.dp)
+                    ) {
+                        Text(
+                            text = "Address",
+                            fontSize = 20.sp,
+                            color = Cocoa,
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/deliveryAddressLabel" }
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = "${orderData.street}, ${orderData.barangay}",
+                            fontSize = 15.sp,
+                            color = Cocoa,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/deliveryAddressText" }
+                        )
                     }
                 }
             }

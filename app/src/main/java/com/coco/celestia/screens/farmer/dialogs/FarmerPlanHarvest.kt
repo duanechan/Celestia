@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import android.app.DatePickerDialog
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -39,7 +38,7 @@ fun FarmerPlanHarvestDialog(
 ) {
     val context = LocalContext.current
     var plantingDate by remember { mutableStateOf("") }
-    var duration by remember { mutableStateOf(1) }
+    var duration by remember { mutableIntStateOf(1) }
     var selectedUnit by remember { mutableStateOf("Days") }
     var plantingDateError by remember { mutableStateOf(false) }
     var durationError by remember { mutableStateOf(false) }
@@ -69,7 +68,7 @@ fun FarmerPlanHarvestDialog(
             usePlatformDefaultWidth = false,
             decorFitsSystemWindows = false
         ),
-        containerColor = BgColor,
+        containerColor = Sand2,
         shape = RoundedCornerShape(16.dp),
         titleContentColor = Color.Black,
         textContentColor = Color.Black,
@@ -85,6 +84,7 @@ fun FarmerPlanHarvestDialog(
                             "Months" -> duration * 30
                             else -> duration
                         }
+                        println("Farmer's Name: $farmerName")
                         onConfirm(plantingDate, durationInDays)
                         onDismiss()
                     }
@@ -117,11 +117,9 @@ fun FarmerPlanHarvestDialog(
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                Text(text = "Farmer's Name: $farmerName", fontWeight = FontWeight.Bold)
-
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Planting Date Input
+                // Planting Date
                 Text(text = "Planting Date", fontWeight = FontWeight.Bold, color = Cocoa)
                 OutlinedTextField(
                     value = plantingDate,
@@ -129,13 +127,22 @@ fun FarmerPlanHarvestDialog(
                     readOnly = true,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { datePickerDialog.show() },
+                        .clickable { datePickerDialog.show() }
+                        .background(
+                            color = Apricot,
+                            shape = RoundedCornerShape(8.dp)
+                        ),
                     shape = RoundedCornerShape(8.dp),
-                    placeholder = { Text("Select planting date") },
+                    placeholder = { Text("Select planting date", color = Cocoa.copy(alpha = 0.7f)) },
                     isError = plantingDateError,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color.Transparent,
+                        unfocusedBorderColor = Color.Transparent,
+                        errorBorderColor = Color.Transparent,
+                    ),
                     trailingIcon = {
                         IconButton(onClick = { datePickerDialog.show() }) {
-                            Icon(imageVector = Icons.Default.DateRange, contentDescription = "Select Date")
+                            Icon(imageVector = Icons.Default.DateRange, contentDescription = "Select Date", tint = Cocoa)
                         }
                     }
                 )
@@ -145,6 +152,7 @@ fun FarmerPlanHarvestDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Duration
                 Text(text = "Enter Duration", fontWeight = FontWeight.Bold, color = Cocoa)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -155,9 +163,8 @@ fun FarmerPlanHarvestDialog(
                         modifier = Modifier
                             .weight(1f)
                             .height(56.dp)
-                            .border(
-                                width = 1.dp,
-                                color = if (durationError) Color.Red else Color.Gray,
+                            .background(
+                                color = Apricot,
                                 shape = RoundedCornerShape(8.dp)
                             )
                     ) {
@@ -180,6 +187,7 @@ fun FarmerPlanHarvestDialog(
                                     .weight(1f)
                                     .padding(start = 16.dp),
                                 textStyle = MaterialTheme.typography.bodyLarge.copy(
+                                    color = Cocoa.copy(alpha = 0.7f),
                                     textAlign = TextAlign.Center
                                 ),
                                 singleLine = true
@@ -197,7 +205,8 @@ fun FarmerPlanHarvestDialog(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.KeyboardArrowUp,
-                                        contentDescription = "Increase"
+                                        contentDescription = "Increase",
+                                        tint = Cocoa
                                     )
                                 }
                                 IconButton(
@@ -208,7 +217,8 @@ fun FarmerPlanHarvestDialog(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.KeyboardArrowDown,
-                                        contentDescription = "Decrease"
+                                        contentDescription = "Decrease",
+                                        tint = Cocoa
                                     )
                                 }
                             }
@@ -224,11 +234,22 @@ fun FarmerPlanHarvestDialog(
                             readOnly = true,
                             trailingIcon = {
                                 IconButton(onClick = { isUnitMenuExpanded = true }) {
-                                    Icon(Icons.Default.ArrowDropDown, "Select unit")
+                                    Icon(Icons.Default.ArrowDropDown, "Select unit", tint = Cocoa)
                                 }
                             },
                             shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    color = Apricot,
+                                    shape = RoundedCornerShape(8.dp)
+                                ),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color.Transparent,
+                                unfocusedBorderColor = Color.Transparent,
+                                errorBorderColor = Color.Transparent,
+                            ),
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(color = Cocoa.copy(alpha = 0.7f))
                         )
 
                         DropdownMenu(
@@ -238,7 +259,7 @@ fun FarmerPlanHarvestDialog(
                         ) {
                             durationUnits.forEach { unit ->
                                 DropdownMenuItem(
-                                    text = { Text(unit) },
+                                    text = { Text(unit, color = Cocoa.copy(alpha = 0.7f)) },
                                     onClick = {
                                         selectedUnit = unit
                                         isUnitMenuExpanded = false

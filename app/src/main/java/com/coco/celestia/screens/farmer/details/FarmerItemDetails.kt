@@ -2,13 +2,13 @@ package com.coco.celestia.screens.farmer.details
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -42,6 +42,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
+import androidx.compose.ui.text.font.FontWeight.Companion.Medium
 import com.coco.celestia.R
 import com.coco.celestia.screens.farmer.dialogs.EditQuantityDialog
 import com.coco.celestia.screens.farmer.dialogs.FarmerPlanHarvestDialog
@@ -56,7 +57,6 @@ import java.time.LocalDateTime
 import java.util.UUID
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.TransactionData
-
 
 @Composable
 fun FarmerItemDetails(navController: NavController, productName: String) {
@@ -129,8 +129,6 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                 ProductState.SUCCESS -> {
                     val product = productData.find { it.name.equals(productName, ignoreCase = true) }
                     val selectedItemData = itemData.find { it.name.equals(productName, ignoreCase = true) }
-
-                    // Convert ProductData to ItemData
                     val selectedItemAsItemData = selectedItemData?.let {
                         ItemData(
                             name = it.name,
@@ -310,7 +308,7 @@ fun ProductDetailsCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(310.dp)
+            .height(350.dp)
     ) {
         Card(
             shape = RoundedCornerShape(16.dp),
@@ -344,67 +342,110 @@ fun ProductDetailsCard(
                             .semantics { testTag = "android:id/productNameText" }
                     )
 
-                    if (isLowStock) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Warning,
-                                contentDescription = "Low Stock Warning",
-                                modifier = Modifier.size(24.dp),
-                                tint = Color.Red
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Low Stock",
-                                fontSize = 14.sp,
-                                fontWeight = Bold,
-                                color = Color.Red
-                            )
-                        }
-                    }
-
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = "Quantity: $productQuantity kg",
-                            fontSize = 15.sp,
-                            fontWeight = Bold,
-                            textAlign = TextAlign.Center,
-                            color = Cocoa,
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            // Quantity
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 4.dp)
+                                    .background(Sand2, RoundedCornerShape(8.dp))
+                                    .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                                    .padding(vertical = 8.dp)
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = "Quantity",
+                                        fontSize = 14.sp,
+                                        fontWeight = Medium,
+                                        color = Cocoa,
+                                        modifier = Modifier.semantics { testTag = "android:id/quantityTitleText" }
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "$productQuantity kg",
+                                        fontSize = 16.sp,
+                                        fontWeight = Bold,
+                                        color = Cocoa,
+                                        modifier = Modifier.semantics { testTag = "android:id/quantityValueText" }
+                                    )
+                                }
+                            }
+
+                            // Price
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 4.dp)
+                                    .background(Sand2, RoundedCornerShape(8.dp))
+                                    .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                                    .padding(vertical = 8.dp)
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = "Price",
+                                        fontSize = 14.sp,
+                                        fontWeight = Medium,
+                                        color = Cocoa,
+                                        modifier = Modifier.semantics { testTag = "android:id/priceTitleText" }
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "₱$productPricePerKg/kg",
+                                        fontSize = 16.sp,
+                                        fontWeight = Bold,
+                                        color = Cocoa,
+                                        modifier = Modifier.semantics { testTag = "android:id/priceValueText" }
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(15.dp))
+
+                        // Estimated Harvest Time
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .semantics { testTag = "android:id/productQuantityText" }
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = "Price: ₱$productPricePerKg/kg",
-                            fontSize = 15.sp,
-                            fontWeight = Bold,
-                            textAlign = TextAlign.Center,
-                            color = Cocoa,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .semantics { testTag = "android:id/productPriceText" }
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = "Estimated Harvest Time: $estimatedHarvestTime",
-                            fontSize = 15.sp,
-                            fontWeight = Bold,
-                            textAlign = TextAlign.Center,
-                            color = Cocoa,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .semantics { testTag = "android:id/estimatedHarvestTimeText" }
-                        )
+                                .background(Sand2, RoundedCornerShape(8.dp))
+                                .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "Estimated Harvest Time",
+                                    fontSize = 14.sp,
+                                    fontWeight = Medium,
+                                    color = Cocoa,
+                                    modifier = Modifier.semantics { testTag = "android:id/harvestTimeTitleText" }
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = estimatedHarvestTime,
+                                    fontSize = 16.sp,
+                                    fontWeight = Bold,
+                                    color = Cocoa,
+                                    modifier = Modifier.semantics { testTag = "android:id/harvestTimeValueText" }
+                                )
+                            }
+                        }
                     }
 
                     Box(
@@ -412,41 +453,58 @@ fun ProductDetailsCard(
                             .fillMaxSize()
                             .padding(bottom = 16.dp)
                     ) {
-                        if (isLowStock) {
+                        Row(
+                            modifier = Modifier
+                                .align(Alignment.BottomStart)
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .align(Alignment.BottomStart)
-                                    .fillMaxWidth()
+                                horizontalArrangement = Arrangement.Start
                             ) {
-                                IconButton(
-                                    onClick = { showHarvestDialog = true },
-                                    modifier = Modifier
-                                        .size(35.dp)
-                                        .semantics { testTag = "android:id/lowStockWarningButton" }
-                                ) {
-                                    Image(
-                                        painter = painterResource(id = R.drawable.plant),
-                                        contentDescription = "Low Stock Warning",
-                                        modifier = Modifier.size(30.dp),
-                                        colorFilter = ColorFilter.tint(Cocoa)
-                                    )
+                                if (isLowStock) {
+                                    IconButton(
+                                        onClick = { showHarvestDialog = true },
+                                        modifier = Modifier
+                                            .size(35.dp)
+                                            .semantics { testTag = "android:id/lowStockWarningButton" }
+                                    ) {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.plant),
+                                            contentDescription = "Low Stock Warning",
+                                            modifier = Modifier.size(30.dp),
+                                            colorFilter = ColorFilter.tint(Cocoa)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Low Stock",
+                                            fontSize = 14.sp,
+                                            fontWeight = Bold,
+                                            color = Cinnabar
+                                        )
+                                    }
                                 }
                             }
-                        }
 
-                        IconButton(
-                            onClick = onEditClick,
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .size(35.dp)
-                                .semantics { testTag = "android:id/editQuantityButton" }
-                        ) {
-                            Icon(
-                                Icons.Filled.Edit,
-                                contentDescription = "Edit Quantity",
-                                tint = Cocoa
-                            )
+                            IconButton(
+                                onClick = onEditClick,
+                                modifier = Modifier
+                                    .size(35.dp)
+                                    .semantics { testTag = "android:id/editQuantityButton" }
+                            ) {
+                                Icon(
+                                    Icons.Filled.Edit,
+                                    contentDescription = "Edit Quantity",
+                                    tint = Cocoa
+                                )
+                            }
                         }
                     }
                 }
@@ -512,17 +570,13 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
             )
         }
 
-        // Divider
-        Spacer(modifier = Modifier.height(2.dp))
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(1.dp)
-                .background(Color.Gray)
+                .background(Sand2)
         )
 
-        // Table with orders
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -567,7 +621,7 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                             )
                         }
                         Divider(
-                            color = Color.White,
+                            color = Sand2,
                             thickness = 1.dp,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -586,22 +640,25 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                         ) {
                             Text(
                                 text = "---",
+                                color = Cocoa.copy(alpha = 0.7f),
                                 modifier = Modifier.weight(1f),
                                 textAlign = TextAlign.Left
                             )
                             Text(
                                 text = "---",
+                                color = Cocoa.copy(alpha = 0.7f),
                                 modifier = Modifier.weight(1f),
                                 textAlign = TextAlign.Center
                             )
                             Text(
                                 text = "---",
+                                color = Cocoa.copy(alpha = 0.7f),
                                 modifier = Modifier.weight(1f),
                                 textAlign = TextAlign.Right
                             )
                         }
                         Divider(
-                            color = Color.White,
+                            color = Sand2,
                             thickness = 1.dp,
                             modifier = Modifier.fillMaxWidth()
                         )

@@ -237,7 +237,7 @@ fun GradientTopBar(title: String, navController: NavController) {
                 }
             },
             actions = {
-                if (currentDestination == "farmer_items" || currentDestination == "farmer_manage_order") {
+                if (currentDestination == "farmer_dashboard" || currentDestination == "farmer_items" || currentDestination == "farmer_manage_order") {
                     Icon(
                         imageVector = Icons.Default.DateRange,
                         tint = Cocoa,

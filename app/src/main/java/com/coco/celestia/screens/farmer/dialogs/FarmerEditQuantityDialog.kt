@@ -2,8 +2,13 @@ package com.coco.celestia.screens.farmer.dialogs
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -13,6 +18,9 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import com.coco.celestia.ui.theme.*
 
 @Composable
 fun EditQuantityDialog(
@@ -43,22 +51,22 @@ fun EditQuantityDialog(
                 }
             },
                 modifier = Modifier.semantics { testTag = "android:id/editQuantityConfirmButton" }) {
-                Text("Confirm",
+                Text("Confirm", color = OliveGreen,
                     modifier = Modifier.semantics { testTag = "android:id/editQuantityConfirmButtonText" })
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel",
+                Text("Cancel", color = Copper,
                     modifier = Modifier.semantics { testTag = "android:id/editQuantityDismissButtonText" })
             }
         },
-        title = { Text(text = "Edit Details for $productName",
+        title = { Text(text = "Edit Details for $productName", color = Cocoa, fontWeight = FontWeight.Bold,
             modifier = Modifier.semantics { testTag = "android:id/editQuantityTitle" }
         ) },
         text = {
             Column(modifier = Modifier.semantics { testTag = "android:id/editQuantityContent" }) {
-                Text("Enter new quantity:",
+                Text("Enter new quantity:", color = Cocoa, fontWeight = FontWeight.Bold,
                     modifier = Modifier.semantics { testTag = "android:id/editQuantityLabel" })
                 Spacer(modifier = Modifier.height(10.dp))
                 TextField(
@@ -68,15 +76,47 @@ fun EditQuantityDialog(
                         quantityError = false
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
-                    placeholder = { Text(text = "Enter quantity",
-                        modifier = Modifier.semantics { testTag = "android:id/editQuantityPlaceholder" }) },
+                    placeholder = {
+                        Text(
+                            text = "Enter quantity",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    },
                     isError = quantityError,
-                    modifier = Modifier.semantics { testTag = "android:id/editQuantityTextField" }
+                    shape = RoundedCornerShape(8.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Apricot,
+                        unfocusedContainerColor = Apricot,
+                        disabledContainerColor = Apricot,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTag = "android:id/editQuantityTextField" },
+                    textStyle = LocalTextStyle.current.copy(color = Cocoa, textAlign = TextAlign.Center),
+                    leadingIcon = {
+                        IconButton(onClick = {
+                            quantityToEdit = (quantityToEdit.toIntOrNull()?.minus(1)?.takeIf { it >= 0 } ?: 0).toString()
+                            quantityError = false
+                        }) {
+                            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Decrease Quantity", tint = Cocoa)
+                        }
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            quantityToEdit = (quantityToEdit.toIntOrNull()?.plus(1) ?: 1).toString()
+                            quantityError = false
+                        }) {
+                            Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Increase Quantity", tint = Cocoa)
+                        }
+                    }
                 )
                 if (quantityError) {
                     Text(
                         text = "Please enter a valid non-negative number.",
-                        color = Color.Red,
+                        color = Cinnabar,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.semantics { testTag = "android:id/editQuantityErrorText" }
                     )
@@ -84,7 +124,7 @@ fun EditQuantityDialog(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                Text("Enter new price per kg:",
+                Text("Enter price per kg", color = Cocoa, fontWeight = FontWeight.Bold,
                     modifier = Modifier.semantics { testTag = "android:id/editPriceLabel" })
                 Spacer(modifier = Modifier.height(10.dp))
                 TextField(
@@ -94,15 +134,47 @@ fun EditQuantityDialog(
                         priceError = false
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal),
-                    placeholder = { Text(text = "Enter price per kg",
-                        modifier = Modifier.semantics { testTag = "android:id/editPricePlaceholder" }) },
+                    placeholder = {
+                        Text(
+                            text = "Enter price per kg",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    },
                     isError = priceError,
-                    modifier = Modifier.semantics { testTag = "android:id/editPriceTextField" }
+                    shape = RoundedCornerShape(8.dp),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Apricot,
+                        unfocusedContainerColor = Apricot,
+                        disabledContainerColor = Apricot,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTag = "android:id/editPriceTextField" },
+                    textStyle = LocalTextStyle.current.copy(color = Cocoa, textAlign = TextAlign.Center),
+                    leadingIcon = {
+                        IconButton(onClick = {
+                            priceToEdit = (priceToEdit.toDoubleOrNull()?.minus(1)?.takeIf { it >= 0 } ?: 0.0).toString()
+                            priceError = false
+                        }) {
+                            Icon(Icons.Default.KeyboardArrowDown, contentDescription = "Decrease Price", tint = Cocoa)
+                        }
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            priceToEdit = (priceToEdit.toDoubleOrNull()?.plus(1) ?: 1.0).toString()
+                            priceError = false
+                        }) {
+                            Icon(Icons.Default.KeyboardArrowUp, contentDescription = "Increase Price", tint = Cocoa)
+                        }
+                    }
                 )
                 if (priceError) {
                     Text(
                         text = "Please enter a valid non-negative number.",
-                        color = Color.Red,
+                        color = Cinnabar,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.semantics { testTag = "android:id/editPriceErrorText" }
                     )
@@ -110,7 +182,7 @@ fun EditQuantityDialog(
             }
         },
         properties = DialogProperties(dismissOnClickOutside = true),
-        containerColor = Color(0xFFF2E3DB),
+        containerColor = Sand2,
         modifier = Modifier.semantics { testTag = "android:id/editQuantityDialog" }
     )
 }
