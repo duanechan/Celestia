@@ -37,7 +37,8 @@ data class ProductData(
     val endSeason: String = "",
     var plantingDate: String = "",
     var duration: Int = 0,
-    var durationUnit: CustomDurationUnit = CustomDurationUnit.DAYS
+    var durationUnit: CustomDurationUnit = CustomDurationUnit.DAYS,
+    var plantingQuantity: Int = 0
 )
 
 enum class CustomDurationUnit {

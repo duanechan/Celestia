@@ -34,16 +34,19 @@ import com.coco.celestia.ui.theme.*
 fun FarmerPlanHarvestDialog(
     farmerName: String,
     onDismiss: () -> Unit,
-    onConfirm: (plantingDate: String, durationInDays: Int) -> Unit
+    onConfirm: (plantingDate: String, durationInDays: Int, quantity: Int) -> Unit
 ) {
     val context = LocalContext.current
     var plantingDate by remember { mutableStateOf("") }
     var duration by remember { mutableIntStateOf(1) }
+    var quantity by remember { mutableIntStateOf(1) }
     var selectedUnit by remember { mutableStateOf("Days") }
     var plantingDateError by remember { mutableStateOf(false) }
     var durationError by remember { mutableStateOf(false) }
+    var quantityError by remember { mutableStateOf(false) }
     var isUnitMenuExpanded by remember { mutableStateOf(false) }
     val durationUnits = listOf("Days", "Weeks", "Months")
+
     val calendar = Calendar.getInstance()
     val datePickerDialog = DatePickerDialog(
         context,
@@ -75,17 +78,18 @@ fun FarmerPlanHarvestDialog(
         confirmButton = {
             TextButton(
                 onClick = {
+                    println("Submitting harvest plan for farmer: $farmerName")
                     plantingDateError = plantingDate.isBlank()
                     durationError = duration <= 0
+                    quantityError = quantity <= 0
 
-                    if (!plantingDateError && !durationError) {
+                    if (!plantingDateError && !durationError && !quantityError) {
                         val durationInDays = when (selectedUnit) {
                             "Weeks" -> duration * 7
                             "Months" -> duration * 30
                             else -> duration
                         }
-                        println("Farmer's Name: $farmerName")
-                        onConfirm(plantingDate, durationInDays)
+                        onConfirm(plantingDate, durationInDays, quantity)
                         onDismiss()
                     }
                 },
@@ -112,167 +116,289 @@ fun FarmerPlanHarvestDialog(
             )
         },
         text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Spacer(modifier = Modifier.height(16.dp))
+            HarvestPlanContent(
+                plantingDate = plantingDate,
+                duration = duration,
+                quantity = quantity,
+                selectedUnit = selectedUnit,
+                plantingDateError = plantingDateError,
+                durationError = durationError,
+                quantityError = quantityError,
+                isUnitMenuExpanded = isUnitMenuExpanded,
+                durationUnits = durationUnits,
+                onPlantingDateClick = { datePickerDialog.show() },
+                onQuantityChange = { newValue ->
+                    val number = newValue.filter { it.isDigit() }
+                    if (number.isNotEmpty()) {
+                        number.toIntOrNull()?.let {
+                            if (it in 1..9999) quantity = it
+                        }
+                    }
+                },
+                onQuantityIncrement = { quantity = (quantity + 1).coerceAtMost(9999) },
+                onQuantityDecrement = { quantity = (quantity - 1).coerceAtLeast(1) },
+                onDurationChange = { newValue ->
+                    val number = newValue.filter { it.isDigit() }
+                    if (number.isNotEmpty()) {
+                        number.toIntOrNull()?.let {
+                            if (it in 1..999) duration = it
+                        }
+                    }
+                },
+                onDurationIncrement = { duration = (duration + 1).coerceAtMost(999) },
+                onDurationDecrement = { duration = (duration - 1).coerceAtLeast(1) },
+                onUnitMenuExpandedChange = { isUnitMenuExpanded = it },
+                onUnitSelected = { unit ->
+                    selectedUnit = unit
+                    isUnitMenuExpanded = false
+                }
+            )
+        }
+    )
+}
 
-                // Planting Date
-                Text(text = "Planting Date", fontWeight = FontWeight.Bold, color = Cocoa)
+@Composable
+private fun HarvestPlanContent(
+    plantingDate: String,
+    duration: Int,
+    quantity: Int,
+    selectedUnit: String,
+    plantingDateError: Boolean,
+    durationError: Boolean,
+    quantityError: Boolean,
+    isUnitMenuExpanded: Boolean,
+    durationUnits: List<String>,
+    onPlantingDateClick: () -> Unit,
+    onQuantityChange: (String) -> Unit,
+    onQuantityIncrement: () -> Unit,
+    onQuantityDecrement: () -> Unit,
+    onDurationChange: (String) -> Unit,
+    onDurationIncrement: () -> Unit,
+    onDurationDecrement: () -> Unit,
+    onUnitMenuExpandedChange: (Boolean) -> Unit,
+    onUnitSelected: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Planting Date
+        Text(text = "Planting Date", fontWeight = FontWeight.Bold, color = Cocoa)
+        OutlinedTextField(
+            value = plantingDate,
+            onValueChange = {},
+            readOnly = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onPlantingDateClick() }
+                .background(
+                    color = Apricot,
+                    shape = RoundedCornerShape(8.dp)
+                ),
+            shape = RoundedCornerShape(8.dp),
+            placeholder = { Text("Select planting date", color = Cocoa.copy(alpha = 0.7f)) },
+            isError = plantingDateError,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color.Transparent,
+                unfocusedBorderColor = Color.Transparent,
+                errorBorderColor = Color.Transparent,
+            ),
+            trailingIcon = {
+                IconButton(onClick = onPlantingDateClick) {
+                    Icon(imageVector = Icons.Default.DateRange, contentDescription = "Select Date", tint = Cocoa)
+                }
+            }
+        )
+        if (plantingDateError) {
+            Text("Please select a planting date.", color = Color.Red, style = MaterialTheme.typography.bodySmall)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Quantity
+        Text(text = "Enter Quantity to Plant (Kg)", fontWeight = FontWeight.Bold, color = Cocoa)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp)
+                    .background(
+                        color = Apricot,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    BasicTextField(
+                        value = quantity.toString(),
+                        onValueChange = onQuantityChange,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 16.dp),
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(
+                            color = Cocoa.copy(alpha = 0.7f),
+                            textAlign = TextAlign.Center
+                        ),
+                        singleLine = true
+                    )
+                    Column(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .fillMaxHeight()
+                    ) {
+                        IconButton(
+                            onClick = onQuantityIncrement,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowUp,
+                                contentDescription = "Increase quantity",
+                                tint = Cocoa
+                            )
+                        }
+                        IconButton(
+                            onClick = onQuantityDecrement,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = "Decrease quantity",
+                                tint = Cocoa
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        if (quantityError) {
+            Text("Please enter a valid quantity.", color = Color.Red, style = MaterialTheme.typography.bodySmall)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Duration
+        Text(text = "Enter Duration", fontWeight = FontWeight.Bold, color = Cocoa)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp)
+                    .background(
+                        color = Apricot,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    BasicTextField(
+                        value = duration.toString(),
+                        onValueChange = onDurationChange,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(start = 16.dp),
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(
+                            color = Cocoa.copy(alpha = 0.7f),
+                            textAlign = TextAlign.Center
+                        ),
+                        singleLine = true
+                    )
+                    Column(
+                        modifier = Modifier
+                            .width(40.dp)
+                            .fillMaxHeight()
+                    ) {
+                        IconButton(
+                            onClick = onDurationIncrement,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowUp,
+                                contentDescription = "Increase duration",
+                                tint = Cocoa
+                            )
+                        }
+                        IconButton(
+                            onClick = onDurationDecrement,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = "Decrease duration",
+                                tint = Cocoa
+                            )
+                        }
+                    }
+                }
+            }
+
+            Box(
+                modifier = Modifier.width(120.dp)
+            ) {
                 OutlinedTextField(
-                    value = plantingDate,
+                    value = selectedUnit,
                     onValueChange = {},
                     readOnly = true,
+                    trailingIcon = {
+                        IconButton(onClick = { onUnitMenuExpandedChange(true) }) {
+                            Icon(Icons.Default.ArrowDropDown, "Select unit", tint = Cocoa)
+                        }
+                    },
+                    shape = RoundedCornerShape(8.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { datePickerDialog.show() }
                         .background(
                             color = Apricot,
                             shape = RoundedCornerShape(8.dp)
                         ),
-                    shape = RoundedCornerShape(8.dp),
-                    placeholder = { Text("Select planting date", color = Cocoa.copy(alpha = 0.7f)) },
-                    isError = plantingDateError,
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(
+                        color = Cocoa.copy(alpha = 0.7f),
+                        textAlign = TextAlign.Center
+                    ),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color.Transparent,
-                        unfocusedBorderColor = Color.Transparent,
-                        errorBorderColor = Color.Transparent,
-                    ),
-                    trailingIcon = {
-                        IconButton(onClick = { datePickerDialog.show() }) {
-                            Icon(imageVector = Icons.Default.DateRange, contentDescription = "Select Date", tint = Cocoa)
-                        }
-                    }
+                        unfocusedBorderColor = Color.Transparent
+                    )
                 )
-                if (plantingDateError) {
-                    Text("Please select a planting date.", color = Color.Red, style = MaterialTheme.typography.bodySmall)
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Duration
-                Text(text = "Enter Duration", fontWeight = FontWeight.Bold, color = Cocoa)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                DropdownMenu(
+                    expanded = isUnitMenuExpanded,
+                    onDismissRequest = { onUnitMenuExpandedChange(false) }
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp)
-                            .background(
-                                color = Apricot,
-                                shape = RoundedCornerShape(8.dp)
-                            )
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            BasicTextField(
-                                value = duration.toString(),
-                                onValueChange = { newValue ->
-                                    val number = newValue.filter { it.isDigit() }
-                                    if (number.isNotEmpty()) {
-                                        number.toIntOrNull()?.let {
-                                            if (it in 1..999) duration = it
-                                        }
-                                    }
-                                },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(start = 16.dp),
-                                textStyle = MaterialTheme.typography.bodyLarge.copy(
-                                    color = Cocoa.copy(alpha = 0.7f),
-                                    textAlign = TextAlign.Center
-                                ),
-                                singleLine = true
-                            )
-                            Column(
-                                modifier = Modifier
-                                    .width(40.dp)
-                                    .fillMaxHeight()
-                            ) {
-                                IconButton(
-                                    onClick = { duration = (duration + 1).coerceAtMost(999) },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxWidth()
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.KeyboardArrowUp,
-                                        contentDescription = "Increase",
-                                        tint = Cocoa
-                                    )
-                                }
-                                IconButton(
-                                    onClick = { duration = (duration - 1).coerceAtLeast(1) },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxWidth()
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.KeyboardArrowDown,
-                                        contentDescription = "Decrease",
-                                        tint = Cocoa
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier.width(120.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = selectedUnit,
-                            onValueChange = {},
-                            readOnly = true,
-                            trailingIcon = {
-                                IconButton(onClick = { isUnitMenuExpanded = true }) {
-                                    Icon(Icons.Default.ArrowDropDown, "Select unit", tint = Cocoa)
-                                }
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(
-                                    color = Apricot,
-                                    shape = RoundedCornerShape(8.dp)
-                                ),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Color.Transparent,
-                                unfocusedBorderColor = Color.Transparent,
-                                errorBorderColor = Color.Transparent,
-                            ),
-                            textStyle = MaterialTheme.typography.bodyMedium.copy(color = Cocoa.copy(alpha = 0.7f))
+                    durationUnits.forEach { unit ->
+                        DropdownMenuItem(
+                            text = { Text(unit, color = Cocoa) },
+                            onClick = { onUnitSelected(unit) }
                         )
-
-                        DropdownMenu(
-                            expanded = isUnitMenuExpanded,
-                            onDismissRequest = { isUnitMenuExpanded = false },
-                            modifier = Modifier.width(120.dp)
-                        ) {
-                            durationUnits.forEach { unit ->
-                                DropdownMenuItem(
-                                    text = { Text(unit, color = Cocoa.copy(alpha = 0.7f)) },
-                                    onClick = {
-                                        selectedUnit = unit
-                                        isUnitMenuExpanded = false
-                                    }
-                                )
-                            }
-                        }
                     }
-                }
-                if (durationError) {
-                    Text("Please enter a valid duration.", color = Color.Red, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
-    )
+        if (durationError) {
+            Text("Please enter a valid duration.", color = Color.Red, style = MaterialTheme.typography.bodySmall)
+        }
+    }
 }

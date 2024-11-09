@@ -189,8 +189,6 @@ class FarmerItemViewModel : ViewModel() {
                 val uid = FirebaseAuth.getInstance().uid.toString()
                 val snapshot = database.child(uid).child("items").get().await()
                 val orderedQuantity = item.items.firstOrNull()?.quantity ?: 0
-
-                // Set reduction amount based on partial fulfillment or full order quantity
                 val reductionAmount = partialQuantity ?: orderedQuantity
 
                 for (itemNode in snapshot.children) {
@@ -210,7 +208,6 @@ class FarmerItemViewModel : ViewModel() {
                         }
 
                         itemFound = true
-                        // Break loop if it's a partial fulfillment
                         if (partialQuantity != null) break
                     }
                 }
@@ -229,8 +226,7 @@ class FarmerItemViewModel : ViewModel() {
             }
         }
     }
-
-    fun setPlantingInfo(uid: String, productName: String, plantingDate: String, duration: Int) {
+    fun setPlantingInfo(uid: String, productName: String, plantingDate: String, duration: Int, quantity: Int) {
         viewModelScope.launch {
             try {
                 _itemState.value = ItemState.LOADING
@@ -241,10 +237,11 @@ class FarmerItemViewModel : ViewModel() {
                 if (snapshot.exists()) {
                     productRef.child("plantingDate").setValue(plantingDate).await()
                     productRef.child("duration").setValue(duration).await()
+                    productRef.child("plantingQuantity").setValue(quantity).await()
 
                     _itemData.value = _itemData.value?.map {
                         if (it.name.equals(productName, ignoreCase = true)) {
-                            it.copy(plantingDate = plantingDate, duration = duration)
+                            it.copy(plantingDate = plantingDate, duration = duration, plantingQuantity = quantity)
                         } else it
                     }
 
