@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -40,8 +41,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -59,6 +62,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.service.NotificationService
 import com.coco.celestia.ui.theme.CLGText
 import com.coco.celestia.ui.theme.ClientBG
 import com.coco.celestia.ui.theme.ContainerLO
@@ -71,10 +75,16 @@ import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
+import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.viewmodel.model.UserData
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun ClientDashboard(
@@ -84,15 +94,27 @@ fun ClientDashboard(
     orderViewModel: OrderViewModel,
     transactionViewModel: TransactionViewModel
 ) {
+    val uid = FirebaseAuth.getInstance().uid.toString()
     val userData by userViewModel.userData.observeAsState(UserData())
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     val featuredProducts by productViewModel.featuredProducts.observeAsState(emptyList())
-    val notifications by transactionViewModel.notifications.observeAsState(emptyList())
+    var notifications = remember { mutableListOf<Notification>() }
     val context = LocalContext.current
-    val showDialog = remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
+        NotificationService.pushNotifications(
+            uid = uid,
+            onComplete = {
+                notifications.clear()
+                notifications.addAll(it)
+            },
+            onError = {
+
+            }
+        )
+        Log.d("Notifs", notifications.toString())
         orderViewModel.fetchAllOrders("", "Client")
         Log.d("OrderData", "Observed orders: ${orderData.size}")
         delay(1000)
@@ -146,7 +168,7 @@ fun ClientDashboard(
                         Button(
                             onClick = {
                                 if (notifications.isNotEmpty()) {
-                                    showDialog.value = true
+                                    showDialog = true
                                 } else {
                                     Toast.makeText(
                                         context,
@@ -194,22 +216,26 @@ fun ClientDashboard(
             Spacer(modifier = Modifier.height(160.dp))
         }
     }
-    if (showDialog.value) {
+    if (showDialog) {
         ShowNotificationsDialog(notifications) {
-            showDialog.value = false
+            showDialog = false
         }
     }
 }
 
 @Composable
-fun ShowNotificationsDialog(notifications: List<String>, onDismiss: () -> Unit) {
+fun ShowNotificationsDialog(notifications: List<Notification>, onDismiss: () -> Unit) {
+    val dateFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = { Text(text = "Notifications") },
         text = {
-            Column {
-                notifications.forEach { notification ->
-                    Text(text = notification)
+            LazyColumn {
+                items(notifications.sortedByDescending { notification ->
+                    dateFormat.parse(notification.timestamp) ?: Date(0)
+                }) { notification ->
+                    NotificationItem(notification)
                 }
             }
         },
@@ -219,6 +245,17 @@ fun ShowNotificationsDialog(notifications: List<String>, onDismiss: () -> Unit) 
             }
         }
     )
+}
+
+@Composable
+fun NotificationItem(notification: Notification) {
+    Column(
+        verticalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.padding(vertical = 8.dp)
+    ) {
+        Text(text = notification.timestamp)
+        Text(text = notification.message, fontWeight = FontWeight.SemiBold)
+    }
 }
 
 @Composable

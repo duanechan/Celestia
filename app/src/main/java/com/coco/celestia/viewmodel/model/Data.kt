@@ -1,7 +1,10 @@
 package com.coco.celestia.viewmodel.model
 
+import com.google.firebase.Timestamp
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.YearMonth
+import java.util.Locale
 
 data class UserData(
     val email: String = "",
@@ -73,6 +76,11 @@ data class ItemData(
     val name: String = "",
     val farmerName: String = "",
     val items: MutableList<ProductData> = mutableListOf(),
+)
+
+data class Notification(
+    val timestamp: String = "",
+    val message: String = "",
 )
 
 data class CalendarUIState(
