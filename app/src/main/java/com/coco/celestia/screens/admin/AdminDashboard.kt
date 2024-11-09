@@ -255,6 +255,7 @@ fun InventoryPieChart(entries: List<PieEntry>) {
                 }
             )
         }
+
         Spacer(modifier = Modifier.height(16.dp))
         Row(
             modifier = Modifier
