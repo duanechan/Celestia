@@ -236,7 +236,7 @@ fun OrderRequest(
                             }
                         )
                     }
-                    item { Spacer(modifier = Modifier.height(150.dp)) }
+                    item { Spacer(modifier = Modifier.height(175.dp)) }
                 }
             }
         }

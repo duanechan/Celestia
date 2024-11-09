@@ -121,21 +121,26 @@ fun OrderStatusDonutChart(orderViewModel: OrderViewModel) {
     val pending = orders.count { it.status == "PENDING" }
     val preparing = orders.count { it.status == "PREPARING" }
     val completed = orders.count { it.status == "COMPLETED" }
+    val delivering = orders.count { it.status == "DELIVERING" }
 
+    // Calculate percentages
     val pendingPercentage = if (totalOrders > 0) (pending / totalOrders) * 100 else 0f
     val preparingPercentage = if (totalOrders > 0) (preparing / totalOrders) * 100 else 0f
     val completedPercentage = if (totalOrders > 0) (completed / totalOrders) * 100 else 0f
+    val deliveringPercentage = if (totalOrders > 0) (delivering / totalOrders) * 100 else 0f
 
     // Animation states
     var targetPendingProgress by remember { mutableStateOf(0f) }
     var targetPreparingProgress by remember { mutableStateOf(0f) }
     var targetCompletedProgress by remember { mutableStateOf(0f) }
+    var targetDeliveringProgress by remember { mutableStateOf(0f) }
 
     // Trigger animations
-    LaunchedEffect(pendingPercentage, preparingPercentage, completedPercentage) {
+    LaunchedEffect(pendingPercentage, preparingPercentage, completedPercentage, deliveringPercentage) {
         targetPendingProgress = pendingPercentage
         targetPreparingProgress = preparingPercentage
         targetCompletedProgress = completedPercentage
+        targetDeliveringProgress = deliveringPercentage
     }
 
     // Animated values
@@ -151,98 +156,139 @@ fun OrderStatusDonutChart(orderViewModel: OrderViewModel) {
         targetValue = targetCompletedProgress,
         animationSpec = tween(durationMillis = 750)
     )
+    val animatedDeliveringProgress by animateFloatAsState(
+        targetValue = targetDeliveringProgress,
+        animationSpec = tween(durationMillis = 750)
+    )
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
+    // Prepare status data for both the chart and the legend
+    val statusData = listOf(
+        Triple(animatedPendingProgress, PendingStatus, "Pending"),
+        Triple(animatedPreparingProgress, PreparingStatus, "Preparing"),
+        Triple(animatedCompletedProgress, CompletedStatus, "Completed"),
+        Triple(animatedDeliveringProgress, DeliveringStatus, "Delivering")
+    )
+
+    Row(
         modifier = Modifier
             .padding(16.dp)
-            .semantics { testTag = "android:id/OrderStatusDonutChartColumn" }
+            .semantics { testTag = "android:id/OrderStatusDonutChartRow" }
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .height(100.dp)
-                .width(100.dp)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.weight(1f)
         ) {
-            Canvas(modifier = Modifier.size(85.dp)) {
-                val canvasSize = size.minDimension
-                val radius = canvasSize / 2
-                val strokeWidth = 30f
-                val center = Offset(size.width / 2, size.height / 2)
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .height(100.dp)
+                    .width(100.dp)
+            ) {
+                Canvas(modifier = Modifier.size(85.dp)) {
+                    val canvasSize = size.minDimension
+                    val radius = canvasSize / 2
+                    val strokeWidth = 30f
+                    val center = Offset(size.width / 2, size.height / 2)
 
-                drawCircle(
-                    color = Color.LightGray.copy(alpha = 0.3f),
-                    radius = radius,
-                    style = Stroke(strokeWidth)
-                )
-
-                var startAngle = 0f
-                val statusData = listOf(
-                    Triple(animatedPendingProgress, PendingStatus, "Pending"),
-                    Triple(animatedPreparingProgress, PreparingStatus, "Preparing"),
-                    Triple(animatedCompletedProgress, CompletedStatus, "Completed")
-                )
-
-                statusData.forEach { (percentage, color, _) ->
-                    val sweepAngle = percentage * 3.6f
-                    drawArc(
-                        color = color,
-                        startAngle = startAngle,
-                        sweepAngle = sweepAngle,
-                        useCenter = false,
-                        style = Stroke(width = strokeWidth)
+                    drawCircle(
+                        color = Color.LightGray.copy(alpha = 0.3f),
+                        radius = radius,
+                        style = Stroke(strokeWidth)
                     )
 
-                    // Calculate position for percentage text
-                    val angleInRadians = Math.toRadians(startAngle + (sweepAngle / 2). toDouble())
-                    val textRadius = size.width / 2 * 1.5f
-                    val x = center.x + (textRadius * cos(angleInRadians)).toFloat()
-                    val y = center.y + (textRadius * sin(angleInRadians)).toFloat()
+                    var startAngle = 0f
 
-                    // Draw percentage text
-                    drawContext.canvas.nativeCanvas.apply {
-                        val paint = android.graphics.Paint().apply {
-                            textSize = 40f
-                            isFakeBoldText = true
-                            textAlign = android.graphics.Paint.Align.CENTER
-                            this.color = color.toArgb()
+                    statusData.forEach { (percentage, color, _) ->
+                        val sweepAngle = percentage * 3.6f
+                        if (percentage > 0) { // Only draw if percentage is greater than zero
+                            drawArc(
+                                color = color,
+                                startAngle = startAngle,
+                                sweepAngle = sweepAngle,
+                                useCenter = false,
+                                style = Stroke(width = strokeWidth)
+                            )
+
+                            // Calculate position for percentage text
+                            val angleInRadians = Math.toRadians(startAngle + (sweepAngle / 2).toDouble())
+                            val textRadius = size.width / 2 * 1.5f
+                            val x = center.x + (textRadius * cos(angleInRadians)).toFloat()
+                            val y = center.y + (textRadius * sin(angleInRadians)).toFloat()
+
+                            // Draw percentage text
+                            drawContext.canvas.nativeCanvas.apply {
+                                val paint = android.graphics.Paint().apply {
+                                    textSize = 40f
+                                    isFakeBoldText = true
+                                    textAlign = android.graphics.Paint.Align.CENTER
+                                    this.color = color.toArgb()
+                                }
+                                drawText(
+                                    "${String.format("%.1f", percentage)}%",
+                                    x,
+                                    y,
+                                    paint
+                                )
+                            }
+                            startAngle += sweepAngle
                         }
-                        drawText(
-                            "${String.format("%.1f", percentage)}%",
-                            x,
-                            y,
-                            paint
-                        )
                     }
-                    startAngle += sweepAngle
+                }
+
+                // Total orders in center
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.align(Alignment.Center)
+                ) {
+                    Text(
+                        text = "${totalOrders.toInt()}",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = DarkGreen
+                    )
+                    Text(
+                        text = "Total",
+                        fontSize = 12.sp,
+                        color = DarkGreen
+                    )
                 }
             }
+            Text(
+                text = "Order Status Breakdown",
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                color = DarkGreen,
+                modifier = Modifier.padding(top = 20.dp)
+            )
+        }
 
-            // Total orders in center
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.align(Alignment.Center)
-            ) {
-                Text(
-                    text = "${totalOrders.toInt()}",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = DarkGreen
-                )
-                Text(
-                    text = "Total",
-                    fontSize = 12.sp,
-                    color = DarkGreen
-                )
+        // Legend Column
+        Column(
+            modifier = Modifier
+                .padding(start = 0.dp)
+                .align(Alignment.CenterVertically)
+        ) {
+            statusData.forEach { (percentage, color, label) ->
+                if (percentage > 0) { // Only show legend for non-zero percentages
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .background(color)
+                        )
+                        Text(
+                            text = label,
+                            fontSize = 14.sp,
+                            color = DarkGreen,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
             }
         }
-        Text(
-            text = "Order Status Breakdown",
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
-            color = DarkGreen,
-            modifier = Modifier.padding(top = 10.dp)
-        )
     }
 }
 
