@@ -303,14 +303,17 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel) {
         productViewModel.fetchProductByType("Coffee")  // Only fetch coffee products
     }
 
-    val lastFiveDays = (0..4).map { offset ->
+    val lastSevenDays = (0..6).map { offset ->
         Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -offset) }.time
     }.sortedBy { it }
-    val dateFormatter = SimpleDateFormat("MM/dd", Locale.US)
-    val formattedLastFiveDays = lastFiveDays.map { dateFormatter.format(it) }
+    val dateFormatter = SimpleDateFormat("MM/dd/yyyy", Locale.US)  // Use full date format for consistency
+    val formattedLastSevenDays = lastSevenDays.map { dateFormatter.format(it) }
+
+    // Map and filter data based on your database structure
     val joinedData = products.map { product ->
         product to orders.filter { order ->
-            order.orderData.name == product.name && order.orderDate in formattedLastFiveDays
+            val orderDate = dateFormatter.parse(order.orderDate)
+            order.orderData.name == product.name && orderDate != null && dateFormatter.format(orderDate) in formattedLastSevenDays
         }
     }
 
@@ -352,7 +355,7 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel) {
                     .border(1.dp, Color.LightGray, RoundedCornerShape(16.dp))
             ) {
                 Text(
-                    text = "Product Stock Trends",
+                    text = "Product Stock Trends (last 7 days)",
                     fontWeight = FontWeight.Bold,
                     color = DarkGreen,
                     modifier = Modifier.padding(start = 15.dp, top = 5.dp),
@@ -385,6 +388,7 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel) {
                                 textColor = Color(0xFF6F4E37).toArgb()
                                 setDrawGridLines(true)
                                 gridColor = Color.LightGray.toArgb()
+                                axisMinimum = 0f  // Ensures no negative values are displayed
                             }
 
                             legend.apply {
@@ -399,26 +403,35 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel) {
                     },
                     update = { lineChart ->
                         val dataSets = joinedData.map { (product, matchedOrders) ->
-                            val entries = formattedLastFiveDays.mapIndexed { index, date ->
-                                val quantity = matchedOrders.find { it.orderDate == date }?.orderData?.quantity ?: 0
-                                Entry(index.toFloat(), quantity.toFloat())
+                            val entries = formattedLastSevenDays.mapIndexed { index, date ->
+                                val quantity = matchedOrders.find { dateFormatter.format(dateFormatter.parse(it.orderDate)) == date }
+                                    ?.orderData?.quantity ?: 0
+                                Entry(index.toFloat(), quantity.coerceAtLeast(0).toFloat())  // Coerce to avoid negatives
+                            }
+
+                            val color = when (product.name) {
+                                "Green Beans" -> GreenBeans.toArgb()
+                                "Roasted Beans" -> RoastedBeans.toArgb()
+                                "Packaged Beans" -> Packed.toArgb()
+                                "Sorted Beans" -> Sorted.toArgb()
+                                else -> Color.Gray.toArgb()  // Default color for unclassified products
                             }
 
                             LineDataSet(entries, product.name).apply {
-                                color = Color(0xFF6F4E37).toArgb()
+                                this.color = color
                                 lineWidth = 2f
                                 setDrawCircles(true)
                                 circleRadius = 4f
-                                setCircleColor(Color(0xFF6F4E37).toArgb())
+                                setCircleColor(color)
                                 mode = LineDataSet.Mode.CUBIC_BEZIER
                                 setDrawFilled(true)
-                                fillColor = Color(0xFF6F4E37).toArgb()
+                                fillColor = color
                             }
                         }
 
                         lineChart.apply {
                             data = LineData(dataSets)
-                            xAxis.valueFormatter = IndexAxisValueFormatter(formattedLastFiveDays.toTypedArray())
+                            xAxis.valueFormatter = IndexAxisValueFormatter(formattedLastSevenDays.toTypedArray())
                             animateX(1000)
                             invalidate()
                         }
@@ -428,3 +441,5 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel) {
         }
     }
 }
+
+
