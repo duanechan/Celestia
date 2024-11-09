@@ -410,42 +410,70 @@ fun StockLevelBarGraph(items: List<ProductData>) {
                     modifier = Modifier.padding(bottom = 2.dp)
                 )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                Box(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    var animationPlayed by remember { mutableStateOf(false) }
-                    val animatedWidth by animateDpAsState(
-                        targetValue = if (animationPlayed) (item.quantity.toFloat() / maxQuantity.toFloat() * 200).dp else 0.dp,
-                        animationSpec = tween(durationMillis = 1000)
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        var animationPlayed by remember { mutableStateOf(false) }
+                        val animatedWidth by animateDpAsState(
+                            targetValue = if (animationPlayed) (item.quantity.toFloat() / maxQuantity.toFloat() * 200).dp else 0.dp,
+                            animationSpec = tween(durationMillis = 1000)
+                        )
 
-                    LaunchedEffect(Unit) {
-                        animationPlayed = true
+                        LaunchedEffect(Unit) {
+                            animationPlayed = true
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .width(if (item.name == "Placeholder") 0.dp else animatedWidth)
+                                .height(40.dp)
+                                .background(
+                                    if (item.name == "Placeholder") Color.LightGray else SoftOrange,
+                                    shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp)
+                                )
+                        )
+
+                        val plantingWidth = (item.plantingQuantity.toFloat() / maxQuantity.toFloat() * 200).dp
+                        Box(
+                            modifier = Modifier
+                                .width(plantingWidth)
+                                .height(40.dp)
+                                .background(OliveGreen.copy(alpha = 0.4f))
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(40.dp)
+                                .background(
+                                    Color.Gray.copy(alpha = 0.2f),
+                                    shape = RoundedCornerShape(topEnd = 10.dp, bottomEnd = 10.dp)
+                                )
+                        )
                     }
 
-                    Box(
+                    Row(
                         modifier = Modifier
-                            .width(if (item.name == "Placeholder") 0.dp else animatedWidth)
-                            .height(40.dp)
-                            .background(
-                                if (item.name == "Placeholder") Color.LightGray else Copper3,
-                                shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp)
-                            )
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(40.dp)
-                            .background(Color.Gray.copy(alpha = 0.2f), shape = RoundedCornerShape(topEnd = 10.dp, bottomEnd = 10.dp)),
-                        contentAlignment = Alignment.CenterEnd
+                            .align(Alignment.CenterEnd)
+                            .padding(end = 8.dp),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = "${item.quantity}",
                             fontSize = 14.sp,
-                            color = if (item.name == "Placeholder") Color.Gray else Cocoa,
-                            modifier = Modifier.padding(end = 8.dp)
+                            color = if (item.name == "Placeholder") Color.Gray else Sand,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = " + ${item.plantingQuantity} Kg",
+                            fontSize = 14.sp,
+                            color = OliveGreen,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }

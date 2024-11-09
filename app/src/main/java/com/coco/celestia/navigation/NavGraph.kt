@@ -146,8 +146,6 @@ fun NavGraph(
             val userData by userViewModel.userData.observeAsState()
             val orderData by orderViewModel.orderData.observeAsState(emptyList())
             val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
-            val productData by productViewModel.productData.observeAsState(emptyList())
-            val selectedCategory = ""
             val searchQuery = ""
 
             var farmerName by remember { mutableStateOf("") }
@@ -411,16 +409,20 @@ fun NavGraph(
             val productName = backStackEntry.arguments?.getString("productName")
             val quantity = backStackEntry.arguments?.getInt("quantity")
             val product = ProductData(name = productName ?: "", quantity = quantity ?: 0)
+            val currentMonth = java.time.LocalDate.now().monthValue.toString()
+
             onNavigate("Inventory")
-            FarmerProductTypeInventory(product = product, navController = navController)
+            FarmerProductTypeInventory(
+                product = product,
+                navController = navController,
+                currentMonth = currentMonth
+            )
         }
         composable(
             route = Screen.FarmerItemDetails.route,
             arguments = listOf(navArgument("productName") { type = NavType.StringType })
         ) { backStackEntry ->
             val productNameDetail = backStackEntry.arguments?.getString("productName")
-            val productViewModel: ProductViewModel = viewModel()
-            val productData by productViewModel.productData.observeAsState(emptyList())
             onNavigate("Products")
             FarmerItemDetails(
                 navController = navController,
