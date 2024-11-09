@@ -100,7 +100,7 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
                     leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon", tint = DarkBlue) },
                     modifier = Modifier
                         .width(screenWidth * 0.75f)
-                        .offset(y = 75.dp)
+                        .offset(y = (-20).dp)
                         .semantics { testTag = "android:id/searchBar" }
                 ) {}
                 Spacer(modifier = Modifier.width(5.dp))
@@ -112,7 +112,7 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
                         containerColor = LightBlue
                     ),
                     modifier = Modifier
-                        .padding(top = 120.dp)
+                        .padding(top = 23.dp)
                         .semantics { testTag = "android:id/auditLogsButton" }
                 ) {
                     Icon(
@@ -142,7 +142,7 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
             users = users,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 200.dp)
+                .padding(top = 100.dp)
                 .semantics { testTag = "android:id/userTable" },
             onEditUserClick = { user ->
                 selectedUser = user

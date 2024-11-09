@@ -1,8 +1,5 @@
 package com.coco.celestia.screens.admin
 
-import android.graphics.Typeface
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,26 +11,24 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.semantics.semantics
@@ -43,7 +38,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.util.UserIdentifier
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.UserData
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.PieChart
@@ -59,7 +58,7 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun AdminDashboard(userData: UserData?) {
+fun AdminDashboard(userData: UserData?, navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -68,12 +67,11 @@ fun AdminDashboard(userData: UserData?) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(10.dp)
         ) {
 
             val dateFormat = SimpleDateFormat("EEEE, MMMM d yyyy", Locale.getDefault())
             val today = dateFormat.format(Date())
-            Spacer(modifier = Modifier.height(100.dp))
             userData?.let { user ->
                 Text(
                     text = "Welcome, ${user.firstname} ${user.lastname}!",
@@ -100,17 +98,17 @@ fun AdminDashboard(userData: UserData?) {
                 color = Color.White
             )
             Spacer(modifier = Modifier.height(30.dp))
-            SummaryDashboard()
+            SummaryDashboard(navController)
         }
     }
 }
 
 @Composable
-fun SummaryDashboard() {
+fun SummaryDashboard(navController: NavController) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 5.dp)
             .semantics { testTag = "android:id/summaryDashboard" }
     ) {
         item{
@@ -134,6 +132,7 @@ fun SummaryDashboard() {
             Text(
                 text = "Inventory Overview",
                 fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily,
                 color = DarkBlue,
                 modifier = Modifier
                     .padding(start = 20.dp, top =15.dp)
@@ -158,17 +157,17 @@ fun SummaryDashboard() {
                 Text(
                     text = "User Management Overview",
                     fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily,
                     color = DarkBlue,
                     modifier = Modifier
                         .padding(start = 20.dp, top = 15.dp)
                 )
                 Row(modifier = Modifier.padding(5.dp)) {
                     Column {
-                        UserManagementDashboard()
+                        UserManagementDashboard(navController)
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }
@@ -206,10 +205,13 @@ fun InventoryPieChart(entries: List<PieEntry>) {
                 .semantics { testTag = "android:id/alertsCard" }
         ) {
             Column(Modifier.padding(16.dp)) {
-                Text("Alerts", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text("Alerts", fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    fontFamily = mintsansFontFamily,
+                    color = DarkBlue)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text("• Green beans: 15 kg left", fontSize = 14.sp, color = Color.Red)
-                Text("• Kiniing: 5 kg left", fontSize = 14.sp, color = Color.Red)
+                Text("• Green beans: 15 kg left", fontSize = 14.sp, color = DuskyBlue)
+                Text("• Kiniing: 5 kg left", fontSize = 14.sp, color = DuskyBlue)
             }
         }
 
@@ -236,8 +238,8 @@ fun InventoryPieChart(entries: List<PieEntry>) {
                 update = { pieChart ->
                     val dataSet = PieDataSet(entries, "").apply {
                         setColors(
-                            RedMeat.toArgb(),
-                            BrownCoffee.toArgb()
+                            DuskyBlue.toArgb(),
+                            DarkBlue.toArgb()
                         )
                         valueTextColor = android.graphics.Color.WHITE
                         valueTextSize = 12f
@@ -260,12 +262,13 @@ fun InventoryPieChart(entries: List<PieEntry>) {
                 Box(
                     modifier = Modifier
                         .size(12.dp)
-                        .background(BrownCoffee)
+                        .background(DarkBlue)
                         .semantics { testTag = "android:id/coffeeLegend" }
                 )
                 Text(
                     text = " Coffee",
                     fontSize = 14.sp,
+                    color = DarkBlue,
                     modifier = Modifier.padding(start = 4.dp)
                 )
             }
@@ -276,14 +279,14 @@ fun InventoryPieChart(entries: List<PieEntry>) {
                 Box(
                     modifier = Modifier
                         .size(12.dp)
-                        .background(RedMeat)
+                        .background(DuskyBlue)
                         .semantics { testTag = "android:id/meatLegend" }
                 )
                 Text(
                     text = " Meat",
                     fontSize = 14.sp,
-                    modifier = Modifier
-                        .padding(start = 4.dp)
+                    color = DarkBlue,
+                    modifier = Modifier.padding(start = 4.dp)
                 )
             }
         }
@@ -292,7 +295,7 @@ fun InventoryPieChart(entries: List<PieEntry>) {
 
 
 @Composable
-fun UserManagementDashboard() {
+fun UserManagementDashboard(navController: NavController) {
     Spacer(modifier = Modifier.height(20.dp))
     Column(
         modifier = Modifier
@@ -312,6 +315,8 @@ fun UserManagementDashboard() {
                     "Total Users",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
+                    fontFamily = mintsansFontFamily,
+                    color = DarkBlue,
                     modifier = Modifier.semantics { testTag = "android:id/totalUsersLabel" }
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -319,7 +324,8 @@ fun UserManagementDashboard() {
                     "20",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.DarkGray,
+                    fontFamily = mintsansFontFamily,
+                    color = DarkBlue,
                     modifier = Modifier.semantics { testTag = "android:id/totalUsersCount" }
                 )
             }
@@ -337,6 +343,7 @@ fun UserManagementDashboard() {
                     "Active Users",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
+                    color = DarkBlue,
                     modifier = Modifier.semantics { testTag = "android:id/activeUsersLabel" }
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -344,31 +351,65 @@ fun UserManagementDashboard() {
                     "7",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Green,
+                    color = DuskyBlue,
                     modifier = Modifier.semantics { testTag = "android:id/activeUsersCount" }
                 )
             }
         }
 
         // Recent Activity Section
-        Text(
-            text = "Recent Activity",
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp,
-            modifier = Modifier
-                .padding(vertical = 8.dp)
-                .semantics { testTag = "android:id/recentActivityLabel" }
-        )
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 8.dp)
-                .semantics { testTag = "android:id/recentActivityList" }
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("• User A updated inventory - 2 mins ago", fontSize = 14.sp)
-            Text("• User B added a new order - 10 mins ago", fontSize = 14.sp)
-            Text("• User C logged in - 30 mins ago", fontSize = 14.sp)
+            Text(
+                text = "Recent Logs",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = DarkBlue,
+                fontFamily = mintsansFontFamily,
+                modifier = Modifier.semantics { testTag = "android:id/recentActivityLabel" }
+            )
+            TextButton(onClick = { navController.navigate("admin_add_user_management_logs") }) {
+                Text(
+                    text = "See All",
+                    color = DarkBlue,
+                    fontFamily = mintsansFontFamily,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
+        val dateFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+        val transactionViewModel: TransactionViewModel = viewModel()
+        val transactionData by transactionViewModel.transactionData.observeAsState(hashMapOf())
+
+        LaunchedEffect(Unit) {
+            transactionViewModel.fetchAllTransactions()
+        }
+        transactionData.entries
+            .flatMap { entry ->
+                entry.value.map { transaction ->
+                    Pair(entry.key, transaction)
+                }
+            }
+            .sortedByDescending { (_, transaction) ->
+                dateFormat.parse(transaction.date) ?: Date(0)
+            }
+            .take(3)
+            .forEach { (userId, transaction) ->
+                var userData by remember { mutableStateOf(UserData()) }
+                LaunchedEffect(userId) {
+                    UserIdentifier.getUserData(userId) { result ->
+                        userData = result
+                    }
+                }
+                Text("• ${transaction.date} - ${userData.firstname} ${userData.lastname} - ${transaction.description} ",
+                    fontSize = 14.sp,
+                    color = DarkBlue)
+            }
     }
 }
 

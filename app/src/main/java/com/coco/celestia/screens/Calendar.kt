@@ -75,18 +75,9 @@ fun Calendar(
         )
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {}
-            )
-        }
-    ) { padding ->
-
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
         ) {
             item {
                 CalendarWidget(
@@ -115,7 +106,7 @@ fun Calendar(
                 }
 
                 val backgroundColor = when (userRole) {
-                    "Admin" -> MaterialTheme.colorScheme.primary.copy(alpha = 1f)
+                    "Admin" -> DuskyBlue.copy(alpha = 1f)
                         "CoopMeat", "CoopCoffee" -> DeliveringStatus.copy(alpha = 0.5f)
                     else -> Sand2
                 }
@@ -198,7 +189,6 @@ fun Calendar(
                 }
             }
         }
-    }
 }
 
 @Composable
@@ -215,7 +205,7 @@ fun EmptyOrderState(userRole: String) {
             .fillMaxHeight()
             .background(
                 color = when (userRole) {
-                    "Admin" -> MaterialTheme.colorScheme.primary.copy(alpha = 1f)
+                    "Admin" -> DuskyBlue.copy(alpha = 1f)
                     "CoopMeat", "CoopCoffee" -> CompletedStatus.copy(alpha = 0.5f)
                     else -> Sand
                 }
@@ -239,7 +229,7 @@ fun ErrorOrderState(userRole: String, message: String) {
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = if (userRole == "Admin") MaterialTheme.colorScheme.primary.copy(alpha = 1f) else Sand
+                color = if (userRole == "Admin") DuskyBlue.copy(alpha = 1f) else Sand
             )
             .padding(vertical = 30.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -265,14 +255,14 @@ fun OrderItem(
         return when {
             index % 2 == 0 -> {
                 when (userRole) {
-                    "Admin" -> MaterialTheme.colorScheme.primary.copy(alpha = 1f)
+                    "Admin" -> DuskyBlue.copy(alpha = 1f)
                     "CoopMeat", "CoopCoffee" -> CompletedStatus.copy(alpha = 0.5f)
                     else -> Sand
                 }
             }
             else -> {
                 when (userRole) {
-                    "Admin" -> MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                    "Admin" -> DuskyBlue.copy(alpha = 0.5f)
                     "CoopMeat", "CoopCoffee" -> DeliveringStatus.copy(alpha = 0.5f)
                     else -> Sand2
                 }
@@ -487,7 +477,7 @@ fun ContentItem(
         date.isSelected -> MaterialTheme.colorScheme.secondaryContainer
         targetDates.any { it == date.fullDate.toString() } -> {
             when (userRole) {
-                "Admin" -> MaterialTheme.colorScheme.primary
+                "Admin" -> DuskyBlue.copy(alpha = 0.8f)
                 "CoopMeat", "CoopCoffee" -> CompletedStatus.copy(alpha = 0.5f)
                 else -> GoldenYellow
             }

@@ -513,7 +513,6 @@ fun NavDrawerBottomBar(
                     tint = Color.White,
                     modifier = Modifier
                         .size(24.dp)
-//                        .background(BlueGradientBrush)
                 )
             }
         }

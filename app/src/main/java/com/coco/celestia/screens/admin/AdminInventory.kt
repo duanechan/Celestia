@@ -38,13 +38,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.coco.celestia.ui.theme.BlueGradientBrush
-import com.coco.celestia.ui.theme.BrownCoffee
 import com.coco.celestia.viewmodel.model.ProductData
-import com.coco.celestia.ui.theme.DarkBlue
-import com.coco.celestia.ui.theme.Gray
-import com.coco.celestia.ui.theme.RedMeat
-import com.coco.celestia.ui.theme.mintsansFontFamily
+import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.calculateMonthlyInventory
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
@@ -80,9 +75,7 @@ fun AdminInventory(
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
                 .background(BlueGradientBrush)
-                .padding(top = 7.dp)
                 .verticalScroll(rememberScrollState())
         ) {
             TopBarInventory(
@@ -110,8 +103,8 @@ fun AdminInventory(
                     },
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedButton == "Coffee") BrownCoffee else Color.White,
-                        contentColor = if (selectedButton == "Coffee") Color.White else Color.Black
+                        containerColor = if (selectedButton == "Coffee") DuskyBlue else Color.White,
+                        contentColor = if (selectedButton == "Coffee") Color.White else DarkBlue
                     ),
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier
@@ -133,8 +126,8 @@ fun AdminInventory(
                     },
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedButton == "Meat") RedMeat else Color.White,
-                        contentColor = if (selectedButton == "Meat") Color.White else Color.Black
+                        containerColor = if (selectedButton == "Meat") DuskyBlue else Color.White,
+                        contentColor = if (selectedButton == "Meat") Color.White else DarkBlue
                     ),
                     contentPadding = PaddingValues(0.dp),
                     modifier = Modifier
@@ -237,9 +230,7 @@ fun AdminMonthlyInventoryList(itemList: List<MonthlyInventory>) {
                 onEditProductClick = {},
                 modifier = Modifier.semantics { testTag = "android:id/MonthlyInventory_${item.productName}" }
             )
-            Spacer(modifier = Modifier.height(10.dp))
         }
-        Spacer(modifier = Modifier.height(50.dp))
     }
 }
 
@@ -368,11 +359,8 @@ fun AdminItemCard(
 @Composable
 fun TopBarInventory(onTabSelected: (String) -> Unit) {
     var selectedOption by remember { mutableIntStateOf(0) }
-    Spacer(modifier = Modifier.height(35.dp))
     Column (
         modifier = Modifier
-            .statusBarsPadding()
-            .wrapContentHeight()
             .padding(vertical = 20.dp)
     ) {
         TabRow(

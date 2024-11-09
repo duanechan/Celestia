@@ -76,7 +76,7 @@ fun AddUserForm(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Spacer(modifier = Modifier.height(80.dp))
+
 
         Row(
             modifier = Modifier.fillMaxWidth(),

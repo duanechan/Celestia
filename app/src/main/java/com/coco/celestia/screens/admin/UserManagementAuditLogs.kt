@@ -48,10 +48,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.ui.theme.BlueGradientBrush
-import com.coco.celestia.ui.theme.DarkBlue
-import com.coco.celestia.ui.theme.PaleBlue
-import com.coco.celestia.ui.theme.mintsansFontFamily
+import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.UserIdentifier
 import com.coco.celestia.viewmodel.TransactionState
 import com.coco.celestia.viewmodel.TransactionViewModel
@@ -76,7 +73,6 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
             .semantics { testTag = "android:id/AuditLogsScreen" },
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Spacer(modifier = Modifier.height(80.dp))
 
         Row(
             modifier = Modifier
