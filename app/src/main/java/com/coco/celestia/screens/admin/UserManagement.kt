@@ -112,7 +112,7 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
                         containerColor = LightBlue
                     ),
                     modifier = Modifier
-                        .padding(top = 23.dp)
+                        .padding(top = 25.dp)
                         .semantics { testTag = "android:id/auditLogsButton" }
                 ) {
                     Icon(
