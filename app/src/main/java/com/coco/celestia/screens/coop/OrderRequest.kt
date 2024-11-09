@@ -344,11 +344,13 @@ fun OrderItem(
                     }
                 }
 
-                Text(
-                    text = orderStatus.lowercase().replaceFirstChar { it.uppercase() },
-                    color = orderStatusConfig(orderStatus),
-                    modifier = Modifier.semantics { testTag = "android:id/OrderStatus_$orderCount" }
-                )
+                if (orderStatus == "REJECTED") {
+                    Text(
+                        text = orderStatus.lowercase().replaceFirstChar { it.uppercase() },
+                        color = orderStatusConfig(orderStatus),
+                        modifier = Modifier.semantics { testTag = "android:id/OrderStatus_$orderCount" }
+                    )
+                }
 
             }
             Column(modifier = Modifier.padding(16.dp)) {
