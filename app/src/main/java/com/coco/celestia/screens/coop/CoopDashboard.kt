@@ -306,7 +306,7 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel) {
     val lastSevenDays = (0..6).map { offset ->
         Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -offset) }.time
     }.sortedBy { it }
-    val dateFormatter = SimpleDateFormat("MM/dd/yyyy", Locale.US)  // Use full date format for consistency
+    val dateFormatter = SimpleDateFormat("MM/dd/yyyy", Locale.US)
     val formattedLastSevenDays = lastSevenDays.map { dateFormatter.format(it) }
 
     // Map and filter data based on your database structure
@@ -414,7 +414,7 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel) {
                                 "Roasted Beans" -> RoastedBeans.toArgb()
                                 "Packaged Beans" -> Packed.toArgb()
                                 "Sorted Beans" -> Sorted.toArgb()
-                                else -> Color.Gray.toArgb()  // Default color for unclassified products
+                                else -> Color.Gray.toArgb()
                             }
 
                             LineDataSet(entries, product.name).apply {

@@ -247,6 +247,7 @@ fun CoopItemList(itemList: List<ProductData>) {
                         "Sorted Beans" -> Sorted
                         "Kiniing" -> Kiniing
                         "Raw Meat" -> RawMeat
+                        "Pork" -> Pork
                         else -> Color.White
                     }
                 ),

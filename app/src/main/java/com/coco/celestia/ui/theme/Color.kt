@@ -76,6 +76,7 @@ val Ordered = Color(0xFF47DEB1)
 val DeliveredItem = Color(0xFF09D1C7)
 val Kiniing = Color(0xFFE86A33)
 val RawMeat = Color(0xFFFB4949)
+val Pork = Color(0xFFFF746C)
 
 // Coop Order Palette
 val PendingStatus = Color(0xFF0C6478)
@@ -90,7 +91,6 @@ val DuskyBlue = Color(0xFF5362bd)
 val PaleBlue = Color(0xFFced7ef)
 
 val BrownCoffee = Color(0xFF795548)
-val RedMeat = Color(0xFFFB4949)
 
 // Coop Gradient Brush
 val GreenGradientBrush = Brush.linearGradient(
