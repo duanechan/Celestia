@@ -317,6 +317,7 @@ fun CoopMonthlyItemList(itemList: List<MonthlyInventory>) {
                         "Sorted Beans" -> Sorted
                         "Kiniing" -> Kiniing
                         "Raw Meat" -> RawMeat
+                        "Pork" -> Pork
                         else -> Color.White // Default color if no match
                     }
                 ),
