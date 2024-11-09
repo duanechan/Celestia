@@ -94,6 +94,30 @@ class UserViewModel : ViewModel() {
         }
     }
 
+    fun fetchActiveUsers(onResult: (List<UserData>) -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            val query = database.orderByChild("online").equalTo(true)
+
+            query.addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        onResult(
+                            snapshot.children.mapNotNull { userSnapshot ->
+                                userSnapshot.getValue(UserData::class.java)
+                            }
+                        )
+                    } else {
+                        onResult(emptyList())
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    onError(error.message)
+                }
+            })
+        }
+    }
+
     fun getUserUidByEmail(email: String, onResult: (String?) -> Unit) {
         viewModelScope.launch {
             val query = database.orderByChild("email").equalTo(email)
@@ -234,6 +258,7 @@ class UserViewModel : ViewModel() {
                 val result = auth.signInWithEmailAndPassword(email, password).await()
                 val user = result.user
                 user?.let {
+                    database.child(user.uid).child("online").setValue(true)
                     database.child(user.uid).get()
                         .addOnSuccessListener { snapshot ->
                             val userRole = snapshot.child("role").getValue(String::class.java)
@@ -316,13 +341,18 @@ class UserViewModel : ViewModel() {
     /**
      * Logs out the current user.
      */
-    fun logout() {
+    fun logout(uid: String) {
         viewModelScope.launch {
             _userState.value = UserState.LOADING
             try {
                 auth.signOut()
-                _userData.value = UserData()
-                _userState.value = UserState.SUCCESS
+                database.child(uid).child("online").setValue(false)
+                    .addOnSuccessListener {
+                        _userData.value = UserData()
+                        _userState.value = UserState.SUCCESS
+                    }.addOnFailureListener {
+                        _userState.value = UserState.ERROR("Logout failed")
+                    }
             } catch (e: Exception) {
                 _userState.value = UserState.ERROR(e.message ?: "Unknown error")
             } catch (e: FirebaseNetworkException) {

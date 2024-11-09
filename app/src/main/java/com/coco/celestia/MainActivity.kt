@@ -21,8 +21,8 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.semantics //testing
-import androidx.compose.ui.semantics.testTagsAsResourceId //testing
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
@@ -37,13 +37,14 @@ import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.util.checkNetworkConnection
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalComposeUiApi::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             CelestiaTheme {
@@ -57,6 +58,38 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        val uid = FirebaseAuth.getInstance().uid
+        FirebaseDatabase.getInstance().reference
+            .child("users/$uid/online")
+            .setValue(true)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val uid = FirebaseAuth.getInstance().uid
+        FirebaseDatabase.getInstance().reference
+            .child("users/$uid/online")
+            .setValue(true)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        val uid = FirebaseAuth.getInstance().uid
+        FirebaseDatabase.getInstance().reference
+            .child("users/$uid/online")
+            .setValue(false)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        val uid = FirebaseAuth.getInstance().uid
+        FirebaseDatabase.getInstance().reference
+            .child("users/$uid/online")
+            .setValue(false)
     }
 }
 

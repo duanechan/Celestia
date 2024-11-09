@@ -1,5 +1,8 @@
 package com.coco.celestia.screens.admin
 
+import android.graphics.Typeface
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,24 +14,30 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.semantics.semantics
@@ -39,10 +48,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.UserIdentifier
 import com.coco.celestia.viewmodel.TransactionViewModel
+import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.UserData
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.charts.PieChart
@@ -58,7 +67,7 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun AdminDashboard(userData: UserData?, navController: NavController) {
+fun AdminDashboard(userData: UserData?) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -67,11 +76,12 @@ fun AdminDashboard(userData: UserData?, navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(10.dp)
+                .padding(16.dp)
         ) {
 
             val dateFormat = SimpleDateFormat("EEEE, MMMM d yyyy", Locale.getDefault())
             val today = dateFormat.format(Date())
+            Spacer(modifier = Modifier.height(100.dp))
             userData?.let { user ->
                 Text(
                     text = "Welcome, ${user.firstname} ${user.lastname}!",
@@ -98,17 +108,17 @@ fun AdminDashboard(userData: UserData?, navController: NavController) {
                 color = Color.White
             )
             Spacer(modifier = Modifier.height(30.dp))
-            SummaryDashboard(navController)
+            SummaryDashboard()
         }
     }
 }
 
 @Composable
-fun SummaryDashboard(navController: NavController) {
+fun SummaryDashboard() {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 5.dp)
+            .padding(horizontal = 16.dp)
             .semantics { testTag = "android:id/summaryDashboard" }
     ) {
         item{
@@ -132,7 +142,6 @@ fun SummaryDashboard(navController: NavController) {
             Text(
                 text = "Inventory Overview",
                 fontWeight = FontWeight.Bold,
-                fontFamily = mintsansFontFamily,
                 color = DarkBlue,
                 modifier = Modifier
                     .padding(start = 20.dp, top =15.dp)
@@ -157,17 +166,17 @@ fun SummaryDashboard(navController: NavController) {
                 Text(
                     text = "User Management Overview",
                     fontWeight = FontWeight.Bold,
-                    fontFamily = mintsansFontFamily,
                     color = DarkBlue,
                     modifier = Modifier
                         .padding(start = 20.dp, top = 15.dp)
                 )
                 Row(modifier = Modifier.padding(5.dp)) {
                     Column {
-                        UserManagementDashboard(navController)
+                        UserManagementDashboard()
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }
@@ -205,13 +214,10 @@ fun InventoryPieChart(entries: List<PieEntry>) {
                 .semantics { testTag = "android:id/alertsCard" }
         ) {
             Column(Modifier.padding(16.dp)) {
-                Text("Alerts", fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    fontFamily = mintsansFontFamily,
-                    color = DarkBlue)
+                Text("Alerts", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text("• Green beans: 15 kg left", fontSize = 14.sp, color = DuskyBlue)
-                Text("• Kiniing: 5 kg left", fontSize = 14.sp, color = DuskyBlue)
+                Text("• Green beans: 15 kg left", fontSize = 14.sp, color = Color.Red)
+                Text("• Kiniing: 5 kg left", fontSize = 14.sp, color = Color.Red)
             }
         }
 
@@ -238,8 +244,8 @@ fun InventoryPieChart(entries: List<PieEntry>) {
                 update = { pieChart ->
                     val dataSet = PieDataSet(entries, "").apply {
                         setColors(
-                            DuskyBlue.toArgb(),
-                            DarkBlue.toArgb()
+                            RedMeat.toArgb(),
+                            BrownCoffee.toArgb()
                         )
                         valueTextColor = android.graphics.Color.WHITE
                         valueTextSize = 12f
@@ -262,13 +268,12 @@ fun InventoryPieChart(entries: List<PieEntry>) {
                 Box(
                     modifier = Modifier
                         .size(12.dp)
-                        .background(DarkBlue)
+                        .background(BrownCoffee)
                         .semantics { testTag = "android:id/coffeeLegend" }
                 )
                 Text(
                     text = " Coffee",
                     fontSize = 14.sp,
-                    color = DarkBlue,
                     modifier = Modifier.padding(start = 4.dp)
                 )
             }
@@ -279,14 +284,14 @@ fun InventoryPieChart(entries: List<PieEntry>) {
                 Box(
                     modifier = Modifier
                         .size(12.dp)
-                        .background(DuskyBlue)
+                        .background(RedMeat)
                         .semantics { testTag = "android:id/meatLegend" }
                 )
                 Text(
                     text = " Meat",
                     fontSize = 14.sp,
-                    color = DarkBlue,
-                    modifier = Modifier.padding(start = 4.dp)
+                    modifier = Modifier
+                        .padding(start = 4.dp)
                 )
             }
         }
@@ -295,7 +300,23 @@ fun InventoryPieChart(entries: List<PieEntry>) {
 
 
 @Composable
-fun UserManagementDashboard(navController: NavController) {
+fun UserManagementDashboard() {
+    val dateFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+    val transactionViewModel: TransactionViewModel = viewModel()
+    val userViewModel: UserViewModel = viewModel()
+    val transactionData by transactionViewModel.transactionData.observeAsState(hashMapOf())
+    val usersData by userViewModel.usersData.observeAsState(emptyList())
+    var activeUsers by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        transactionViewModel.fetchAllTransactions()
+        userViewModel.fetchUsers()
+        userViewModel.fetchActiveUsers(
+            onResult = { activeUsers = it.size },
+            onError = { /* This returns an error message */ activeUsers = 0 }
+        )
+    }
+
     Spacer(modifier = Modifier.height(20.dp))
     Column(
         modifier = Modifier
@@ -315,17 +336,14 @@ fun UserManagementDashboard(navController: NavController) {
                     "Total Users",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    fontFamily = mintsansFontFamily,
-                    color = DarkBlue,
                     modifier = Modifier.semantics { testTag = "android:id/totalUsersLabel" }
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "20",
+                    usersData.size.toString(),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    fontFamily = mintsansFontFamily,
-                    color = DarkBlue,
+                    color = Color.DarkGray,
                     modifier = Modifier.semantics { testTag = "android:id/totalUsersCount" }
                 )
             }
@@ -343,73 +361,55 @@ fun UserManagementDashboard(navController: NavController) {
                     "Active Users",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = DarkBlue,
                     modifier = Modifier.semantics { testTag = "android:id/activeUsersLabel" }
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    "7",
+                    activeUsers.toString(),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = DuskyBlue,
+                    color = Color.Green,
                     modifier = Modifier.semantics { testTag = "android:id/activeUsersCount" }
                 )
             }
         }
 
         // Recent Activity Section
-        Row(
+        Text(
+            text = "Recent Activity",
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            modifier = Modifier
+                .padding(vertical = 8.dp)
+                .semantics { testTag = "android:id/recentActivityLabel" }
+        )
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .padding(horizontal = 8.dp)
+                .semantics { testTag = "android:id/recentActivityList" }
         ) {
-            Text(
-                text = "Recent Logs",
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                color = DarkBlue,
-                fontFamily = mintsansFontFamily,
-                modifier = Modifier.semantics { testTag = "android:id/recentActivityLabel" }
-            )
-            TextButton(onClick = { navController.navigate("admin_add_user_management_logs") }) {
-                Text(
-                    text = "See All",
-                    color = DarkBlue,
-                    fontFamily = mintsansFontFamily,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-        val dateFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
-        val transactionViewModel: TransactionViewModel = viewModel()
-        val transactionData by transactionViewModel.transactionData.observeAsState(hashMapOf())
-
-        LaunchedEffect(Unit) {
-            transactionViewModel.fetchAllTransactions()
-        }
-        transactionData.entries
-            .flatMap { entry ->
-                entry.value.map { transaction ->
-                    Pair(entry.key, transaction)
-                }
-            }
-            .sortedByDescending { (_, transaction) ->
-                dateFormat.parse(transaction.date) ?: Date(0)
-            }
-            .take(3)
-            .forEach { (userId, transaction) ->
-                var userData by remember { mutableStateOf(UserData()) }
-                LaunchedEffect(userId) {
-                    UserIdentifier.getUserData(userId) { result ->
-                        userData = result
+            transactionData.entries
+                .flatMap { entry ->
+                    entry.value.map { transaction ->
+                        Pair(entry.key, transaction)
                     }
                 }
-                Text("• ${transaction.date} - ${userData.firstname} ${userData.lastname} - ${transaction.description} ",
-                    fontSize = 14.sp,
-                    color = DarkBlue)
-            }
+                .sortedByDescending { (_, transaction) ->
+                    dateFormat.parse(transaction.date) ?: Date(0)
+                }
+                .take(3)
+                .forEach { (userId, transaction) ->
+                    var userData by remember { mutableStateOf(UserData()) }
+                    LaunchedEffect(userId) {
+                        UserIdentifier.getUserData(userId) { result ->
+                            userData = result
+                        }
+                    }
+                    Text("• ${userData.firstname} ${userData.lastname} - ${transaction.description} - ${transaction.date}", fontSize = 14.sp)
+                }
+
+        }
     }
 }
 
