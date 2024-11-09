@@ -8,11 +8,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -101,7 +103,7 @@ fun ClientOrderDetails(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = White)
+                    .background(color = ClientBG)
                     .semantics { testTag = "android:id/OrderNotFound" },
                 contentAlignment = Alignment.Center
             ) {
@@ -118,7 +120,9 @@ fun ClientOrderDetails(
             val product = orderData.orderData
 
             Box(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(LightOrange)
             ) {
                 Column(
                     modifier = Modifier
@@ -130,21 +134,21 @@ fun ClientOrderDetails(
                         modifier = Modifier
                             .fillMaxWidth()
                             .semantics { testTag = "android:id/OrderDetailsCard" },
-                        shape = RoundedCornerShape(20.dp),
+//                        shape = RoundedCornerShape(20.dp),
                         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
                     ) {
                         // Upper Part
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(20.dp))
+//                                .clip(RoundedCornerShape(5.dp))
                                 .background(LightOrange),
                             contentAlignment = Alignment.TopStart,
                         ) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 110.dp, start = 16.dp, end = 16.dp)
+                                    .padding(start = 16.dp, end = 16.dp)
                             ) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -184,92 +188,107 @@ fun ClientOrderDetails(
                         }
 
                         // Order Details
-                        Column (
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                                .padding(top = 24.dp)
-                        ){
-                            Text(
-                                text = "Order Details",
-                                fontSize = 30.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-
-                            OrderDetailsColumn("Items Ordered", product.name)
-                            OrderDetailsColumn("Product Quantity", "${product.quantity} kg")
-                            OrderDetailsColumn("Date Ordered", orderData.orderDate)
-                            OrderDetailsColumn("Deliver to", "${orderData.street}, ${orderData.barangay}")
-                            OrderDetailsColumn("Target Date", orderData.targetDate)
-
-                            Divider(
+                                .background(ClientBG)
+                        ) {
+                            Column(
                                 modifier = Modifier
-                                    .padding(top =  15.dp, bottom = 5.dp),
-                                thickness = 3.dp,
-                                color = Color.Black.copy(alpha = 0.6f)
-                            )
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp)
+                                    .padding(top = 24.dp)
+                            ) {
+                                Text(
+                                    text = "Order Details",
+                                    fontSize = 30.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                OrderDetailsColumn("Items Ordered", product.name)
+                                OrderDetailsColumn("Product Quantity", "${product.quantity} kg")
+                                OrderDetailsColumn("Date Ordered", orderData.orderDate)
+                                OrderDetailsColumn(
+                                    "Deliver to",
+                                    "${orderData.street}, ${orderData.barangay}"
+                                )
+                                OrderDetailsColumn("Target Date", orderData.targetDate)
+
+                                Divider(
+                                    modifier = Modifier
+                                        .padding(top = 15.dp, bottom = 5.dp),
+                                    thickness = 3.dp,
+                                    color = Color.Black.copy(alpha = 0.6f)
+                                )
+                            }
                         }
 
-                        // Buttons For Pending and Completed Orders
-                        Row(
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(end = 16.dp, bottom = 16.dp),
-                            horizontalArrangement = Arrangement.End
+                                .background(ClientBG)
                         ) {
-                            if (orderData.status == "PENDING") {
-                                Button(
-                                    onClick = {
-                                        showCancelConfirmation.value = true
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = White
-                                    ),
-                                    modifier = Modifier
-                                        .height(50.dp)
-                                        .width(170.dp)
-                                ) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.cancel),
-                                        contentDescription = "Cancel Icon",
-                                        tint = Color.Red,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "Cancel Order",
-                                        color = Color.Red
-                                    )
+                            // Buttons For Pending and Completed Orders
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(end = 16.dp, bottom = 16.dp),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                if (orderData.status == "PENDING") {
+                                    Button(
+                                        onClick = {
+                                            showCancelConfirmation.value = true
+                                        },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = White
+                                        ),
+                                        modifier = Modifier
+                                            .height(50.dp)
+                                            .width(170.dp)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.cancel),
+                                            contentDescription = "Cancel Icon",
+                                            tint = Color.Red,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "Cancel Order",
+                                            color = Color.Red
+                                        )
+                                    }
                                 }
-                            }
 
-                            if (orderData.status == "COMPLETED") {
-                                Button(
-                                    onClick = {
-                                        showReceivedConfirmation.value = true
-                                        orderViewModel.markOrderReceived(orderData.orderId)
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = White
-                                    ),
-                                    modifier = Modifier
-                                        .height(50.dp)
-                                        .width(170.dp)
-                                ) {
-                                    val greenColor =
-                                        Color(0xFF4CAF50) //to move in colors.kt
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.received),
-                                        contentDescription = "Received Icon",
-                                        tint = greenColor,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "Received",
-                                        color = greenColor,
-                                        fontSize = 12.sp
-                                    )
+                                if (orderData.status == "COMPLETED") {
+                                    Button(
+                                        onClick = {
+                                            showReceivedConfirmation.value = true
+                                            orderViewModel.markOrderReceived(orderData.orderId)
+                                        },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = White
+                                        ),
+                                        modifier = Modifier
+                                            .height(50.dp)
+                                            .width(170.dp)
+                                    ) {
+                                        val greenColor =
+                                            Color(0xFF4CAF50) //to move in colors.kt
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.received),
+                                            contentDescription = "Received Icon",
+                                            tint = greenColor,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "Received",
+                                            color = greenColor,
+                                            fontSize = 12.sp
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -417,11 +436,16 @@ fun OrderStatusTracker(status: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .background(ClientBG)
             .padding(horizontal = 16.dp)
             .semantics { testTag = "android:id/OrderStatusTracker" },
         contentAlignment = Alignment.Center
     ) {
-        Column {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp)
+        ) {
             Text(
                 text = "Track Order",
                 fontSize = 30.sp,
@@ -429,6 +453,7 @@ fun OrderStatusTracker(status: String) {
             )
 
             Spacer(modifier = Modifier.height(15.dp))
+
 
             if (status in listOf("PREPARING", "DELIVERING", "COMPLETED", "RECEIVED")) {
                 Row(
@@ -439,21 +464,18 @@ fun OrderStatusTracker(status: String) {
                         painter = painterResource(id = R.drawable.warehouse),
                         contentDescription = "Warehouse",
                         tint = Color(0xFF5A7F54),
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clickable { }
-                            .semantics { testTag = "android:id/WarehouseIcon" }
+                        modifier = Modifier.size(50.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "The product is being prepared in the warehouse.",
                         fontSize = 14.sp,
-                        color = Color.Gray,
-                        modifier = Modifier.semantics { testTag = "android:id/PreparingText" }
+                        color = Color.Gray
                     )
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
+
             if (status in listOf("DELIVERING", "COMPLETED", "RECEIVED")) {
                 Row(
                     verticalAlignment = Alignment.Top,
@@ -478,17 +500,13 @@ fun OrderStatusTracker(status: String) {
                         painter = painterResource(id = R.drawable.deliveryicon),
                         contentDescription = "DeliveryTruck",
                         tint = Color(0xFF5A7F54),
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clickable { }
-                            .semantics { testTag = "android:id/DeliveryTruckIcon" }
+                        modifier = Modifier.size(50.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "The delivery is on the way.",
                         fontSize = 14.sp,
-                        color = Color.Gray,
-                        modifier = Modifier.semantics { testTag = "android:id/DeliveringText" }
+                        color = Color.Gray
                     )
                 }
             }
@@ -518,22 +536,18 @@ fun OrderStatusTracker(status: String) {
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = "Location",
                         tint = Color(0xFFFFA500),
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clickable { }
-                            .semantics { testTag = "LocationIcon" }
+                        modifier = Modifier.size(50.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "The order has been delivered.",
                         fontSize = 14.sp,
-                        color = Color.Gray,
-                        modifier = Modifier.semantics { testTag = "android:id/CompletedText" }
+                        color = Color.Gray
                     )
                 }
             }
 
-            // Add Received
+            //TODO: Add Received
         }
     }
 }

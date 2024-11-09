@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,7 +40,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -49,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -63,13 +62,18 @@ import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.NotificationService
+import com.coco.celestia.ui.theme.BABText
+import com.coco.celestia.ui.theme.BAButton
 import com.coco.celestia.ui.theme.CLGText
 import com.coco.celestia.ui.theme.ClientBG
 import com.coco.celestia.ui.theme.ContainerLO
-import com.coco.celestia.ui.theme.LightOrange
-import com.coco.celestia.ui.theme.RavenBlack
-import com.coco.celestia.ui.theme.CLightGreen
+import com.coco.celestia.ui.theme.CDText
+import com.coco.celestia.ui.theme.CDarkOrange
 import com.coco.celestia.ui.theme.LGContainer
+import com.coco.celestia.ui.theme.LightBeige
+import com.coco.celestia.ui.theme.LightOrange
+import com.coco.celestia.ui.theme.SoftCOrange
+import com.coco.celestia.ui.theme.SoftPeach
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
@@ -78,7 +82,6 @@ import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
-import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
@@ -134,7 +137,7 @@ fun ClientDashboard(
             modifier = Modifier
                 .fillMaxHeight()
                 .verticalScroll(rememberScrollState())
-                .padding(top = 75.dp)
+                .padding(top = 0.dp)
                 .semantics { testTag = "android:id/ClientDashboardColumn" }
         ) {
             Row(
@@ -154,7 +157,7 @@ fun ClientDashboard(
                         text = "Welcome, ${user.firstname} ${user.lastname}!",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = RavenBlack,
+                        color = CDText,
                         modifier = Modifier
                             .weight(1f)
                             .semantics { testTag = "android:id/WelcomeText" }
@@ -213,7 +216,7 @@ fun ClientDashboard(
                 userData = userData,
                 navController = navController
             )
-            Spacer(modifier = Modifier.height(160.dp))
+            Spacer(modifier = Modifier.height(145.dp))
         }
     }
     if (showDialog) {
@@ -283,14 +286,14 @@ fun BrowseCategories(navController: NavController) {
                     painter = painterResource(id = R.drawable.browsecategories),
                     contentDescription = "Browse Categories Icon",
                     modifier = Modifier.size(24.dp),
-                    colorFilter = ColorFilter.tint(RavenBlack)
+                    colorFilter = ColorFilter.tint(CDText)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Browse Categories",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = RavenBlack,
+                    color = CDText,
                     modifier = Modifier.semantics { testTag = "android:id/BrowseCategoriesText" }
                 )
             }
@@ -344,21 +347,6 @@ fun CategoryBox(
     iconColor: Color,
     modifier: Modifier = Modifier
 ) {
-    val gradientBrush = when (productName) {
-        "Coffee" -> Brush.linearGradient(
-            colors = listOf(Color(0xFFB79276), Color(0xFF91684A))
-        )
-        "Meat" -> Brush.linearGradient(
-            colors = listOf(Color(0xFFD45C5C), Color(0xFFAA3333))
-        )
-        "Vegetable" -> Brush.linearGradient(
-            colors = listOf(Color(0xFF4CB05C), Color(0xFF4F8A45))
-        )
-        else -> Brush.linearGradient(
-            colors = listOf(Color.Gray, Color.LightGray)
-        )
-    }
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -373,7 +361,7 @@ fun CategoryBox(
         Box(
             modifier = Modifier
                 .size(80.dp)
-                .background(gradientBrush, shape = CircleShape)
+                .background(SoftCOrange, shape = CircleShape)
                 .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -381,7 +369,7 @@ fun CategoryBox(
                 painter = painterResource(id = iconId),
                 contentDescription = "$productName icon",
                 modifier = Modifier.size(50.dp),
-                colorFilter = ColorFilter.tint(iconColor)
+                colorFilter = ColorFilter.tint(White)
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
@@ -390,7 +378,7 @@ fun CategoryBox(
             text = productName,
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White,
+            color = CDText,
             modifier = Modifier
                 .align(Alignment.CenterHorizontally)
                 .semantics { testTag = "android:id/CategoryText_$productName" }
@@ -420,14 +408,14 @@ fun FeaturedProducts(
                 painter = painterResource(id = R.drawable.featuredproducts),
                 contentDescription = "Featured Products Icon",
                 modifier = Modifier.size(24.dp),
-                colorFilter = ColorFilter.tint(RavenBlack)
+                colorFilter = ColorFilter.tint(CDText)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "Featured Products",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = RavenBlack
+                color = CDText
             )
         }
 
@@ -447,11 +435,11 @@ fun ProductTypeCard(
     product: ProductData,
     navController: NavController
 ) {
-    val (iconId, gradientBrush) = when (product.type) {
-        "Meat" -> Pair(R.drawable.meaticon, Brush.linearGradient(colors = listOf(Color(0xFFD45C5C), Color(0xFFAA3333))))
-        "Coffee" -> Pair(R.drawable.coffeeicon, Brush.linearGradient(colors = listOf(Color(0xFFB79276), Color(0xFF91684A))))
-        "Vegetable" -> Pair(R.drawable.vegetable, Brush.linearGradient(colors = listOf(Color(0xFF4CB05C), Color(0xFF4F8A45))))
-        else -> Pair(R.drawable.incomplete, Brush.linearGradient(colors = listOf(Color.Gray, Color.LightGray)))
+    val iconId = when (product.type) {
+        "Meat" -> R.drawable.meaticon
+        "Coffee" -> R.drawable.coffeeicon
+        "Vegetable" -> R.drawable.vegetable
+        else -> R.drawable.incomplete
     }
 
     Card(
@@ -465,7 +453,7 @@ fun ProductTypeCard(
     ) {
         Box(
             modifier = Modifier
-                .background(gradientBrush)
+                .background(SoftCOrange)
                 .fillMaxSize()
                 .padding(8.dp)
         ) {
@@ -497,7 +485,6 @@ fun ProductTypeCard(
         }
     }
 }
-
 @Composable
 fun OrderHistory(
     orderData: List<OrderData>,
@@ -526,14 +513,14 @@ fun OrderHistory(
                 painter = painterResource(id = R.drawable.orderhistory),
                 contentDescription = "Order History Icon",
                 modifier = Modifier.size(24.dp),
-                colorFilter = ColorFilter.tint(RavenBlack)
+                colorFilter = ColorFilter.tint(CDText)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "Order History",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = RavenBlack
+                color = CDText
             )
         }
 
@@ -588,7 +575,7 @@ fun OrderCardDetails(
                 }
                 .padding(end = 8.dp)
                 .semantics { testTag = "android:id/OrderCard_$orderId" },
-            colors = CardDefaults.cardColors(containerColor = CLightGreen)
+            colors = CardDefaults.cardColors(containerColor = CDarkOrange)
         ) {
             Row(
                 Modifier
@@ -628,7 +615,7 @@ fun OrderCardDetails(
             modifier = Modifier
                 .height(125.dp)
                 .width(135.dp)
-                .background(LightOrange, shape = RoundedCornerShape(8.dp))
+                .background(BAButton, shape = RoundedCornerShape(8.dp))
                 .padding(8.dp)
                 .clickable {
                     navController.navigate(Screen.OrderDetails.createRoute(order.orderData.type))
@@ -642,13 +629,13 @@ fun OrderCardDetails(
                 Image(
                     painter = painterResource(id = R.drawable.buyagain),
                     contentDescription = "Buy Again Icon",
-                    colorFilter = ColorFilter.tint(Color.White),
+                    colorFilter = ColorFilter.tint(BABText),
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = "Buy Again",
-                    color = Color.White,
+                    color = BABText,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center

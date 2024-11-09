@@ -54,8 +54,7 @@ import androidx.navigation.NavController
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.CLGText
 import com.coco.celestia.ui.theme.ClientBG
-import com.coco.celestia.ui.theme.LightOrange
-import com.coco.celestia.ui.theme.CLightGreen
+import com.coco.celestia.ui.theme.CDarkOrange
 import com.coco.celestia.ui.theme.LGContainer
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
@@ -92,7 +91,6 @@ fun ClientOrder(
         Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(top = 70.dp)
                 .verticalScroll(rememberScrollState())
                 .semantics { testTag = "android:id/ClientOrderColumn" }
         ) {
@@ -242,7 +240,7 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                     navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId))
                 }
                 .semantics { testTag = "android:id/OrderCard_$orderId" },
-            colors = CardDefaults.cardColors(containerColor = CLightGreen)
+            colors = CardDefaults.cardColors(containerColor = CDarkOrange)
         ) {
             Box(
                 modifier = Modifier.padding(16.dp)

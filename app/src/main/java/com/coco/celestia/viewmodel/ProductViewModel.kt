@@ -272,10 +272,11 @@ class ProductViewModel : ViewModel() {
                 // Randomizer for coffee and vegetables, taking only 2 from each
                 val randomVegetables = vegetableProducts.shuffled().take(2)
                 val randomCoffee = coffeeProducts.shuffled().take(2)
+                val randomMeat = meatProducts.shuffled().take(2)
 
                 // combine featured products
                 val featured = mutableListOf<ProductData>()
-                featured.addAll(meatProducts.take(2)) // meat has only 2 products
+                featured.addAll(randomMeat)
                 featured.addAll(randomVegetables)
                 featured.addAll(randomCoffee)
 

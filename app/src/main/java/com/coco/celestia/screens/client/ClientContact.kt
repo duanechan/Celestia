@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coco.celestia.viewmodel.model.ContactData
 import com.coco.celestia.ui.theme.ClientBG
-import com.coco.celestia.ui.theme.CLightGreen
+import com.coco.celestia.ui.theme.CDarkOrange
 import com.coco.celestia.ui.theme.ContactText
 import com.coco.celestia.viewmodel.ContactState
 import com.coco.celestia.viewmodel.ContactViewModel
@@ -61,7 +61,7 @@ fun ClientContact(contactViewModel: ContactViewModel) {
         modifier = Modifier
             .fillMaxSize()
             .background(ClientBG)
-            .padding(top = 75.dp)
+//            .padding(top = 75.dp)
             .verticalScroll(rememberScrollState())
             .semantics { testTag = "android:id/ClientContactScreen" }
     ) {
@@ -143,7 +143,7 @@ fun ItemCards(contact: ContactData) {
             .padding(top = 0.dp, bottom = 5.dp, start = 30.dp, end = 0.dp)
             .clickable { expanded = !expanded }
             .semantics { testTag = "android:id/ContactCard_${contact.name}" },
-        colors = CardDefaults.cardColors(containerColor = CLightGreen)
+        colors = CardDefaults.cardColors(containerColor = CDarkOrange)
     ) {
         Column(
             Modifier
