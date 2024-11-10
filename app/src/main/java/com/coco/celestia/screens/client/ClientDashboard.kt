@@ -314,7 +314,7 @@ fun CategoryBox(
             .fillMaxWidth()
             .padding(8.dp)
             .clickable {
-                navController.navigate(Screen.OrderDetails.createRoute(productName))
+                navController.navigate("add_order/$productName")
             }
             .semantics { testTag = "android:id/CategoryBox_$productName" }
     ) {
@@ -407,7 +407,7 @@ fun ProductTypeCard(
             .width(120.dp)
             .height(100.dp)
             .clickable {
-                navController.navigate(Screen.OrderDetails.createRoute(product.type))
+                navController.navigate("add_order/${product.type}")
             },
         elevation = CardDefaults.cardElevation(4.dp),
     ) {
@@ -577,7 +577,7 @@ fun OrderCardDetails(
                 .background(BAButton, shape = RoundedCornerShape(8.dp))
                 .padding(8.dp)
                 .clickable {
-                    navController.navigate(Screen.OrderDetails.createRoute(order.orderData.type))
+                    navController.navigate("add_order/${order.orderData.type}")
                 },
             contentAlignment = Alignment.Center
         ) {

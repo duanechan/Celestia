@@ -114,6 +114,7 @@ import java.util.UUID
 @Composable
 fun AddOrderPanel(
     navController: NavController,
+    productType: String,
     orderViewModel: OrderViewModel,
     productViewModel: ProductViewModel,
     userViewModel: UserViewModel

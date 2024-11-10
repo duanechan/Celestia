@@ -193,7 +193,6 @@ fun NavGraph(
             FarmerItems(navController = navController)
         }
 
-        //TODO: Initial might change
         composable(route = Screen.Client.route) {
             onNavigate("Dashboard")
             ClientDashboard(
@@ -351,7 +350,8 @@ fun NavGraph(
                 navController = navController,
                 orderViewModel = orderViewModel,
                 productViewModel = productViewModel,
-                userViewModel = userViewModel
+                productType = productType ?: "",
+                userViewModel = userViewModel,
             )
         }
         composable(
@@ -489,7 +489,21 @@ fun NavGraph(
                 ClientOrderDetails(navController, it)
             }
         }
+        composable(
+            route = "add_order/{productType}",
+            arguments = listOf(navArgument("productType") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val productType = backStackEntry.arguments?.getString("productType")
+            AddOrderPanel(
+                navController = navController,
+                productType = productType ?: "",
+                orderViewModel = viewModel(),
+                productViewModel = viewModel(),
+                userViewModel = viewModel()
+            )
+        }
     }
+
 //    NavHost(navController, startDestination = "client_dashboard") {
 //        composable("client_dashboard") {
 //            ClientDashboard(
