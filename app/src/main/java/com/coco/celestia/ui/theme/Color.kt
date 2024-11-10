@@ -62,7 +62,7 @@ val Apricot = Color(0xFFF6E5C4)
 val Apricot2 = Color(0xFFE9C276)
 val Tangerine = Color(0xFFe9b986)
 val OliveGreen = Color(0xFF8d8d5f)
-val Blue = Color(0xFFb9cecf)
+val Blue = Color(0xFFCEE2F6)
 val Sand2 = Color(0xFFd6af74)
 
 // Coop WhiteBG
@@ -107,13 +107,13 @@ val GreenGradientBrush = Brush.linearGradient(
     end = Offset(0f, 500f)
 )
 
-val ButtonGradientBrush = Brush.linearGradient(
+val BGGradientBrush = Brush.linearGradient(
     colors = listOf(
         Color(0xFF9FFEB0),
         Color(0xFF16909B)
     ),
-    start = Offset(1000f, -500f),
-    end = Offset(0f, 500f)
+    start = Offset(1555f, -500f),
+    end = Offset(0f, 255f)
 )
 
 //Client Profile 
