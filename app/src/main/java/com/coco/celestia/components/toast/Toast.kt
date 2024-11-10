@@ -39,6 +39,7 @@ import com.coco.celestia.ui.theme.Cinnabar
 import com.coco.celestia.ui.theme.JadeGreen
 import com.coco.celestia.ui.theme.MustardYellow
 import com.coco.celestia.ui.theme.Purple40
+import com.coco.celestia.ui.theme.mintsansFontFamily
 import kotlinx.coroutines.delay
 
 const val toastDelay = 2000L
@@ -105,6 +106,7 @@ fun Toast(message: String, status: ToastStatus, visibility: Boolean) {
                         textAlign = TextAlign.Center,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily,
                         color = White,
                         modifier = Modifier
                             .padding(10.dp, 0.dp, 10.dp, 0.dp)

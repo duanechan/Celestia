@@ -7,23 +7,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.text.font.FontWeight
+import com.coco.celestia.ui.theme.mintsansFontFamily
 
 @Composable
 fun ExitDialog(onDismiss: () -> Unit, onExit: () -> Unit) {
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = {
-            Text(text = "Exiting")
+            Text(text = "Exiting", fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily)
         },
         text = {
-            Text(text = "Are you sure you want to leave the app?")
+            Text(text = "Are you sure you want to leave the app?", fontFamily = mintsansFontFamily)
         },
         confirmButton = {
             Button(
                 onClick = { onExit() },
                 modifier = Modifier.semantics { testTag = "android:id/exitDialogConfirmButton" }
             ) {
-                Text(text = "Exit")
+                Text(text = "Exit", fontFamily = mintsansFontFamily)
             }
         },
         dismissButton = {
@@ -31,7 +33,7 @@ fun ExitDialog(onDismiss: () -> Unit, onExit: () -> Unit) {
                 onClick = { onDismiss() },
                 modifier = Modifier.semantics { testTag = "android:id/exitDialogDismissButton" }
             ) {
-                Text(text = "Cancel")
+                Text(text = "Cancel", fontFamily = mintsansFontFamily)
             }
         }
     )
