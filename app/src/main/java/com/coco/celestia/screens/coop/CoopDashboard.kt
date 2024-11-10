@@ -316,7 +316,7 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel, role: String) {
         }
     }
 
-    val lastSevenDays = (0..29).map { offset ->
+    val lastSevenDays = (0..6).map { offset ->
         Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -offset) }.time
     }.sortedBy { it }
     val dateFormatter = SimpleDateFormat("MM/dd/yyyy", Locale.US)
