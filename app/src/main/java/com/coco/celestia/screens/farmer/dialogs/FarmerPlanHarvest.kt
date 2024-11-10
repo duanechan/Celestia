@@ -93,9 +93,11 @@ fun FarmerPlanHarvestDialog(
                         onDismiss()
                     }
                 },
-                shape = RoundedCornerShape(8.dp)
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = OliveGreen),
+                modifier = Modifier.padding(end = 15.dp)
             ) {
-                Text("Confirm", color = OliveGreen)
+                Text("Confirm", color = Apricot)
             }
         },
         dismissButton = {
@@ -103,7 +105,7 @@ fun FarmerPlanHarvestDialog(
                 onClick = onDismiss,
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Cancel", color = Copper)
+                Text("Cancel", color = Cocoa.copy(alpha = 0.8f))
             }
         },
         title = {

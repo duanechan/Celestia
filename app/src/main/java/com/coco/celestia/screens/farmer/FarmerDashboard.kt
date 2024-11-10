@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
+import com.coco.celestia.screens.farmer.dialogs.InSeasonProductListDialog
+import com.coco.celestia.screens.farmer.dialogs.ProductListDialog
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.UserData
@@ -65,10 +67,36 @@ fun FarmerDashboard(
         else -> "Good Evening"
     }
 
+    var showInSeasonDialog by remember { mutableStateOf(false) }
+    var showAllDialog by remember { mutableStateOf(false) }
+
     LaunchedEffect(uid) {
         itemViewModel.getItems(uid = uid)
         productViewModel.fetchProducts(filter = "", role = "Farmer")
         itemViewModel.fetchFarmerName(uid)
+    }
+
+    val inSeasonProducts = products.filter { product ->
+        val currentMonth = LocalDate.now().month
+        val sanitizedStartSeason = product.startSeason.trim().uppercase(Locale.getDefault())
+        val sanitizedEndSeason = product.endSeason.trim().uppercase(Locale.getDefault())
+
+        val startMonth = try {
+            Month.valueOf(sanitizedStartSeason)
+        } catch (e: IllegalArgumentException) { return@filter false }
+
+        val endMonth = try {
+            Month.valueOf(sanitizedEndSeason)
+        } catch (e: IllegalArgumentException) { return@filter false }
+
+        when {
+            startMonth.value <= endMonth.value -> {
+                currentMonth.value in startMonth.value..endMonth.value
+            }
+            else -> {
+                currentMonth.value >= startMonth.value || currentMonth.value <= endMonth.value
+            }
+        }
     }
 
     when (itemState) {
@@ -83,7 +111,7 @@ fun FarmerDashboard(
                     .fillMaxSize()
                     .background(BgColor)
                     .verticalScroll(scrollState)
-                    .padding(top = 115.dp, bottom = 150.dp)
+                    .padding(top = 10.dp, bottom = 10.dp)
             ) {
                 // Greeting and date
                 Box(
@@ -122,14 +150,28 @@ fun FarmerDashboard(
                         .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
                         .background(LightApricot, shape = RoundedCornerShape(12.dp))
                 ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Text(
-                            text = "In Season Products",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Cocoa
-                        )
-                        InSeasonProducts(products = products)
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "In Season Products",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Cocoa
+                            )
+                            TextButton(
+                                onClick = { showInSeasonDialog = true },
+                                modifier = Modifier.padding(start = 8.dp)
+                            ) {
+                                Text("See All", color = Cocoa, fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        InSeasonProducts(products = inSeasonProducts)
                     }
                 }
 
@@ -141,12 +183,27 @@ fun FarmerDashboard(
                         .background(LightApricot, shape = RoundedCornerShape(12.dp))
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Product Stock Levels",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Cocoa
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Product Stock Levels",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Cocoa
+                            )
+
+                            TextButton(onClick = { showAllDialog = true }) {
+                                Text(
+                                    text = "See All",
+                                    color = Cocoa,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                         StockLevelBarGraph(items = itemData)
                     }
                 }
@@ -202,6 +259,22 @@ fun FarmerDashboard(
                 Text("No items available", modifier = Modifier.padding(16.dp))
             }
         }
+    }
+
+    // Show dialog if the state is true
+    if (showInSeasonDialog) {
+        InSeasonProductListDialog(
+            products = inSeasonProducts,
+            onDismiss = { showInSeasonDialog = false }
+        )
+    }
+
+    // Show dialog for product stock levels if needed
+    if (showAllDialog) {
+        ProductListDialog(
+            items = itemData,
+            onDismiss = { showAllDialog = false }
+        )
     }
 }
 
@@ -397,84 +470,87 @@ fun StockLevelBarGraph(items: List<ProductData>) {
             .padding(10.dp),
         horizontalAlignment = Alignment.Start
     ) {
-        itemsToDisplay.forEach { item ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-            ) {
-                Text(
-                    text = if (item.name == "Placeholder") "No Product" else item.name.replaceFirstChar { it.uppercase() },
-                    fontSize = 14.sp,
-                    color = if (item.name == "Placeholder") Color.Gray else Cocoa,
-                    modifier = Modifier.padding(bottom = 2.dp)
-                )
-
-                Box(
-                    modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            itemsToDisplay.forEach { item ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        var animationPlayed by remember { mutableStateOf(false) }
-                        val animatedWidth by animateDpAsState(
-                            targetValue = if (animationPlayed) (item.quantity.toFloat() / maxQuantity.toFloat() * 200).dp else 0.dp,
-                            animationSpec = tween(durationMillis = 1000)
-                        )
+                    Text(
+                        text = if (item.name == "Placeholder") "No Product" else item.name.replaceFirstChar { it.uppercase() },
+                        fontSize = 14.sp,
+                        color = if (item.name == "Placeholder") Color.Gray else Cocoa,
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    )
 
-                        LaunchedEffect(Unit) {
-                            animationPlayed = true
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            var animationPlayed by remember { mutableStateOf(false) }
+                            val animatedWidth by animateDpAsState(
+                                targetValue = if (animationPlayed) (item.quantity.toFloat() / maxQuantity.toFloat() * 200).dp else 0.dp,
+                                animationSpec = tween(durationMillis = 1000)
+                            )
+
+                            LaunchedEffect(Unit) {
+                                animationPlayed = true
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .width(if (item.name == "Placeholder") 0.dp else animatedWidth)
+                                    .height(40.dp)
+                                    .background(
+                                        if (item.name == "Placeholder") Color.LightGray else SoftOrange,
+                                        shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp)
+                                    )
+                            )
+
+                            val plantingWidth = (item.plantingQuantity.toFloat() / maxQuantity.toFloat() * 200).dp
+                            Box(
+                                modifier = Modifier
+                                    .width(plantingWidth)
+                                    .height(40.dp)
+                                    .background(OliveGreen.copy(alpha = 0.4f))
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(40.dp)
+                                    .background(
+                                        Color.Gray.copy(alpha = 0.2f),
+                                        shape = RoundedCornerShape(topEnd = 10.dp, bottomEnd = 10.dp)
+                                    )
+                            )
                         }
 
-                        Box(
+                        Row(
                             modifier = Modifier
-                                .width(if (item.name == "Placeholder") 0.dp else animatedWidth)
-                                .height(40.dp)
-                                .background(
-                                    if (item.name == "Placeholder") Color.LightGray else SoftOrange,
-                                    shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp)
-                                )
-                        )
-
-                        val plantingWidth = (item.plantingQuantity.toFloat() / maxQuantity.toFloat() * 200).dp
-                        Box(
-                            modifier = Modifier
-                                .width(plantingWidth)
-                                .height(40.dp)
-                                .background(OliveGreen.copy(alpha = 0.4f))
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(40.dp)
-                                .background(
-                                    Color.Gray.copy(alpha = 0.2f),
-                                    shape = RoundedCornerShape(topEnd = 10.dp, bottomEnd = 10.dp)
-                                )
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .padding(end = 8.dp),
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "${item.quantity}",
-                            fontSize = 14.sp,
-                            color = if (item.name == "Placeholder") Color.Gray else Sand,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = " + ${item.plantingQuantity} Kg",
-                            fontSize = 14.sp,
-                            color = OliveGreen,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                                .align(Alignment.CenterEnd)
+                                .padding(end = 8.dp),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "${item.quantity}",
+                                fontSize = 14.sp,
+                                color = if (item.name == "Placeholder") Color.Gray else Sand,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = " + ${item.plantingQuantity} Kg",
+                                fontSize = 14.sp,
+                                color = OliveGreen,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                     }
                 }
             }

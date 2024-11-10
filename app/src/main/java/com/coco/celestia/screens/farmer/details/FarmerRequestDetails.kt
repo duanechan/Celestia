@@ -177,7 +177,7 @@ fun OrderDetails(
         modifier = Modifier
             .fillMaxSize()
             .background(color = BgColor)
-            .padding(top = 30.dp)
+//            .padding(top = 30.dp)
             .semantics { testTag = "android:id/orderDetailsScreen" }
     ) {
         item {
@@ -258,7 +258,7 @@ fun OrderDetails(
 @Composable
 fun OrderDetailsCard(orderData: OrderData, navController: NavController) {
     Card(
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(bottomEnd = 20.dp, bottomStart = 20.dp),
         modifier = Modifier
             .fillMaxWidth()
             .semantics { testTag = "android:id/orderDetailsCard" },
@@ -275,7 +275,7 @@ fun OrderDetailsCard(orderData: OrderData, navController: NavController) {
             Column(
                 modifier = Modifier
                     .padding(
-                        top = 80.dp,
+                        top = 10.dp,
                         start = 40.dp,
                         end = 40.dp,
                         bottom = 20.dp
@@ -451,7 +451,7 @@ fun InventoryCheckCard(
     val isInsufficient = (availableProduct?.quantity ?: 0) < orderData.orderData.quantity
 
     Card(
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         modifier = Modifier
             .fillMaxWidth()
             .semantics { testTag = "android:id/inventoryCheckCard" },
@@ -463,9 +463,10 @@ fun InventoryCheckCard(
         ) {
             Column(
                 modifier = Modifier
+                    .fillMaxHeight()
                     .padding(
                         top = 20.dp,
-                        bottom = 160.dp
+                        bottom = 120.dp
                     ),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

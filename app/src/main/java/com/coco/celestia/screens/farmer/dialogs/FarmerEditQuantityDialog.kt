@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -50,14 +51,16 @@ fun EditQuantityDialog(
                     priceError = newPrice == null || newPrice < 0
                 }
             },
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = OliveGreen),
                 modifier = Modifier.semantics { testTag = "android:id/editQuantityConfirmButton" }) {
-                Text("Confirm", color = OliveGreen,
+                Text("Confirm", color = Apricot,
                     modifier = Modifier.semantics { testTag = "android:id/editQuantityConfirmButtonText" })
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = Copper,
+                Text("Cancel", color = Cocoa,
                     modifier = Modifier.semantics { testTag = "android:id/editQuantityDismissButtonText" })
             }
         },

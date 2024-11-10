@@ -20,13 +20,10 @@ import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -54,7 +51,6 @@ import java.time.YearMonth
 import java.util.Locale
 import com.coco.celestia.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Calendar(
     userRole: String,
@@ -75,9 +71,16 @@ fun Calendar(
         )
     }
 
+    val calendarBackgroundColor = when (userRole) {
+        "Admin" -> Color.White
+        "CoopMeat", "CoopCoffee" -> Color.White
+        else -> BgColor
+    }
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
+                .background(calendarBackgroundColor)
         ) {
             item {
                 CalendarWidget(
