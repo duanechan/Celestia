@@ -2,22 +2,18 @@ package com.coco.celestia.screens.client
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
@@ -39,9 +35,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -92,7 +88,7 @@ fun ClientOrderDetails(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(color = ClientBG)
-                    .semantics { testTag = "android:id/LoadingIndicator" },
+                    .testTag("android:id/LoadingIndicator"),
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator()
@@ -104,7 +100,7 @@ fun ClientOrderDetails(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(color = ClientBG)
-                    .semantics { testTag = "android:id/OrderNotFound" },
+                    .testTag("android:id/OrderNotFound"),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -133,8 +129,7 @@ fun ClientOrderDetails(
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .semantics { testTag = "android:id/OrderDetailsCard" },
-//                        shape = RoundedCornerShape(20.dp),
+                            .testTag("android:id/OrderDetailsCard"),
                         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
                     ) {
                         // Upper Part
@@ -154,7 +149,7 @@ fun ClientOrderDetails(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier
                                         .padding(bottom = 8.dp)
-                                        .semantics { testTag = "android:id/OrderCountBox" }
+                                        .testTag("android:id/OrderCountBox")
                                 ) {
                                     Image(
                                         painter = painterResource(id = R.drawable.vegetable_meat),
@@ -169,9 +164,7 @@ fun ClientOrderDetails(
                                             fontSize = 15.sp,
                                             color = White,
                                             fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.semantics {
-                                                testTag = "android:id/OrderID"
-                                            }
+                                            modifier = Modifier.testTag("android:id/OrderID")
                                         )
 
                                         Spacer(modifier = Modifier.height(6.dp))
@@ -192,6 +185,7 @@ fun ClientOrderDetails(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(ClientBG)
+                                .testTag("android:id/OrderDetailsSection")
                         ) {
                             Column(
                                 modifier = Modifier
@@ -227,6 +221,7 @@ fun ClientOrderDetails(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .background(ClientBG)
+                                .testTag("android:id/OrderActionButtons")
                         ) {
                             // Buttons For Pending and Completed Orders
                             Row(
@@ -246,6 +241,7 @@ fun ClientOrderDetails(
                                         modifier = Modifier
                                             .height(50.dp)
                                             .width(170.dp)
+                                            .testTag("android:id/CancelOrderButton")
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.cancel),
@@ -273,9 +269,9 @@ fun ClientOrderDetails(
                                         modifier = Modifier
                                             .height(50.dp)
                                             .width(170.dp)
+                                            .testTag("android:id/ReceivedOrderButton")
                                     ) {
-                                        val greenColor =
-                                            Color(0xFF4CAF50) //to move in colors.kt
+                                        val greenColor = Color(0xFF4CAF50)
                                         Icon(
                                             painter = painterResource(id = R.drawable.received),
                                             contentDescription = "Received Icon",
@@ -295,11 +291,15 @@ fun ClientOrderDetails(
 
                         // Track Order
                         if (orderData.status != "PENDING") {
-                            OrderStatusTracker(status = orderData.status)
+                            OrderStatusTracker(
+                                status = orderData.status,
+                                modifier = Modifier.testTag("android:id/OrderStatusTracker")
+                            )
                         }
                         Spacer(modifier = Modifier.height(130.dp))
 
                     }
+
                     if (showCancelConfirmation.value) {
                         AlertDialog(
                             onDismissRequest = { showCancelConfirmation.value = false },
@@ -336,7 +336,7 @@ fun ClientOrderDetails(
                                     Text("No")
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth(0.9f)
+                            modifier = Modifier.fillMaxWidth(0.9f).testTag("android:id/CancelOrderDialog")
                         )
                     }
 
@@ -371,9 +371,10 @@ fun ClientOrderDetails(
                                     Text("OK")
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth(0.9f)
+                            modifier = Modifier.fillMaxWidth(0.9f).testTag("android:id/OrderCancelledDialog")
                         )
                     }
+
                     if (showReceivedConfirmation.value) {
                         AlertDialog(
                             onDismissRequest = {
@@ -405,7 +406,7 @@ fun ClientOrderDetails(
                                     Text("OK")
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth(0.9f)
+                            modifier = Modifier.fillMaxWidth(0.9f).testTag("android:id/OrderReceivedDialog")
                         )
                     }
                 }
@@ -432,7 +433,7 @@ fun OrderDetailsColumn(label: String, value: String) {
 }
 
 @Composable
-fun OrderStatusTracker(status: String) {
+fun OrderStatusTracker(status: String, modifier: Modifier) {
     Box(
         modifier = Modifier
             .fillMaxWidth()

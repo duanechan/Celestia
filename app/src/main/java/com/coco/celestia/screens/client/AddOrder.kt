@@ -50,6 +50,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SearchBar
@@ -114,6 +115,7 @@ import java.util.UUID
 @Composable
 fun AddOrderPanel(
     navController: NavController,
+    productType: String,
     orderViewModel: OrderViewModel,
     productViewModel: ProductViewModel,
     userViewModel: UserViewModel
@@ -583,6 +585,7 @@ fun AddOrderForm(
                 placeholder = { Text("e.g. 10.5") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
+                    .semantics { testTag = "android:id/QuantityInputField" }
             )
         }
 
@@ -658,7 +661,8 @@ fun AddOrderForm(
         }) {
             Text(
                 text = "Cancel",
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                modifier = Modifier.semantics { testTag = "CancelButton" }
             )
         }
         TextButton(
@@ -689,7 +693,8 @@ fun SummaryDetails (label: String, value: String) {
     ) {
         Text(
             text = label,
-            color = Color.Black.copy(alpha = 0.6f)
+            color = Color.Black.copy(alpha = 0.6f),
+            modifier = Modifier.semantics { testTag = "android:id/$label" }
         )
         Text(value)
     }

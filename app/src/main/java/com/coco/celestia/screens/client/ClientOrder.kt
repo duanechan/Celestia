@@ -92,7 +92,7 @@ fun ClientOrder(
             modifier = Modifier
                 .fillMaxHeight()
                 .verticalScroll(rememberScrollState())
-                .semantics { testTag = "android:id/ClientOrderColumn" }
+                .semantics { testTag = "android:id/ClientOrderColumn" } // Test tag for the main column
         ) {
             Spacer(modifier = Modifier.height(10.dp))
 
@@ -136,6 +136,7 @@ fun ClientOrder(
                 Box(
                     modifier = Modifier
                         .padding(top = 40.dp)
+                        .semantics { testTag = "android:id/FilterButton" }
                 ) {
                     Button(
                         onClick = { expanded = true },
@@ -149,7 +150,7 @@ fun ClientOrder(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.List,
-                                contentDescription = " Filter Icon",
+                                contentDescription = "Filter Icon",
                                 tint = Color.White
                             )
                         }
@@ -158,6 +159,7 @@ fun ClientOrder(
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
+                        modifier = Modifier.semantics { testTag = "android:id/StatusDropdown" }
                     ) {
                         statuses.forEach { status ->
                             DropdownMenuItem(
@@ -165,7 +167,8 @@ fun ClientOrder(
                                 onClick = {
                                     selectedStatus = status
                                     expanded = false
-                                }
+                                },
+                                modifier = Modifier.semantics { testTag = "android:id/Status_${status}" }
                             )
                         }
                     }
@@ -175,15 +178,18 @@ fun ClientOrder(
             Spacer(modifier = Modifier.height(10.dp))
             when (orderState) {
                 is OrderState.LOADING -> {
-                    Text("Loading orders...")
+                    Text("Loading orders...", modifier = Modifier.semantics { testTag = "android:id/LoadingText" })
                 }
 
                 is OrderState.ERROR -> {
-                    Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}")
+                    Text(
+                        "Failed to load orders: ${(orderState as OrderState.ERROR).message}",
+                        modifier = Modifier.semantics { testTag = "android:id/ErrorText" }
+                    )
                 }
 
                 is OrderState.EMPTY -> {
-                    Text("No orders available.")
+                    Text("No orders available.", modifier = Modifier.semantics { testTag = "android:id/EmptyText" })
                 }
 
                 is OrderState.SUCCESS -> {
@@ -200,7 +206,9 @@ fun ClientOrder(
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Gray,
-                            modifier = Modifier.padding(16.dp)
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .semantics { testTag = "android:id/NoResultsText" }
                         )
                     } else {
                         var orderCount = 1
@@ -208,7 +216,9 @@ fun ClientOrder(
                             userData?.let { user ->
                                 OrderCards(orderCount, order, user, navController)
                             } ?: run {
-                                CircularProgressIndicator()
+                                CircularProgressIndicator(
+                                    modifier = Modifier.semantics { testTag = "android:id/ProgressIndicator" }
+                                )
                             }
                             orderCount++
                         }
@@ -269,7 +279,8 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                                 modifier = Modifier
                                     .padding(5.dp)
                                     .widthIn(max = 40.dp)
-                                    .wrapContentSize(),
+                                    .wrapContentSize()
+                                    .semantics { testTag = "android:id/OrderNumber_$orderCount" },
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -284,14 +295,18 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = CLGText,
-                                modifier = Modifier.padding(top = 5.dp, start = 10.dp)
+                                modifier = Modifier
+                                    .padding(top = 5.dp, start = 10.dp)
+                                    .semantics { testTag = "android:id/OrderStatus_$orderId" }
                             )
                             Text(
                                 text = "Order ID: $orderId",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Normal,
                                 color = Color.White,
-                                modifier = Modifier.padding(start = 10.dp)
+                                modifier = Modifier
+                                    .padding(start = 10.dp)
+                                    .semantics { testTag = "android:id/OrderID_$orderId" }
                             )
 
                             Text(
@@ -299,7 +314,9 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Normal,
                                 color = Color.White,
-                                modifier = Modifier.padding(top = 5.dp, start = 10.dp)
+                                modifier = Modifier
+                                    .padding(top = 5.dp, start = 10.dp)
+                                    .semantics { testTag = "android:id/ClientName_$clientName" }
                             )
 
                         }
@@ -312,6 +329,7 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                     modifier = Modifier
                         .size(20.dp)
                         .align(Alignment.CenterEnd)
+                        .semantics { testTag = "android:id/DetailsIcon_$orderId" }
                 )
             }
         }
