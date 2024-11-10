@@ -293,6 +293,7 @@ fun ProfileScreen(
             else -> GrayGradientBrush
         }
     }
+
     fun getFirstColorForRole(role: String): Color {
         return when (role) {
             "Admin" -> Color(0xFF40458d)
@@ -302,6 +303,17 @@ fun ProfileScreen(
             else -> Color(0x80FFFFFF)
         }
     }
+
+    fun saveInfoColor(role: String): Color {
+        return when (role) {
+            "Admin" -> Color(0xFF5362bd)
+            "Client" -> Color(0xFFe3a383)
+            "Farmer" -> Color(0xFF88563d)
+            "Coop", "CoopCoffee", "CoopMeat" -> Color(0xFF47DEB1)
+            else -> Color(0x80FFFFFF)
+        }
+    }
+
     fun getIconColorForRole(role: String): Color {
         return when (role) {
             "Admin" -> DuskyBlue
@@ -311,6 +323,7 @@ fun ProfileScreen(
             else -> Color(0x80FFFFFF)
         }
     }
+
     fun getProfileColorForRole(role: String): Color {
         return when (role) {
             "Admin" -> PaleBlue
@@ -320,6 +333,7 @@ fun ProfileScreen(
             else -> Color(0x80FFFFFF)
         }
     }
+
     val gradientBrush = getGradientBrushForRole(role)
 
     Box(
@@ -328,10 +342,8 @@ fun ProfileScreen(
             .verticalScroll(rememberScrollState())
     ) {
         Column(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -349,7 +361,8 @@ fun ProfileScreen(
                 ) {
                     Image(
                         painter = rememberImagePainter(
-                            data = updatedProfilePicture ?: profilePicture ?: R.drawable.profile_icon
+                            data = updatedProfilePicture ?: profilePicture
+                            ?: R.drawable.profile_icon
                         ),
                         contentScale = ContentScale.FillWidth,
                         contentDescription = "Profile Icon",
@@ -370,7 +383,7 @@ fun ProfileScreen(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Change Image",
                             tint = getIconColorForRole(role)
-                            )
+                        )
                     }
 
                     Text(
@@ -390,27 +403,32 @@ fun ProfileScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(15.dp))
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp)
+                    .padding(horizontal = 12.dp)
                     .background(
                         color = getProfileColorForRole(role),
-                        shape = RoundedCornerShape(bottomEnd = 16.dp, bottomStart = 16.dp)
+                        shape = RoundedCornerShape(16.dp)
                     )
                     .padding(16.dp)
             ) {
-                Column {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     OutlinedTextField(
                         value = updatedEmail,
-                        onValueChange = {
-                            updatedEmail = it
-                        },
+                        onValueChange = { updatedEmail = it },
                         label = { Text(text = "Email") },
                         singleLine = true,
                         maxLines = 1,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        modifier = Modifier.semantics { testTag = "android:id/updateEmailField" },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                            .semantics { testTag = "android:id/updateEmailField" },
                         colors = TextFieldDefaults.outlinedTextFieldColors(
                             containerColor = Color.White
                         )
@@ -423,7 +441,10 @@ fun ProfileScreen(
                         singleLine = true,
                         maxLines = 1,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                        modifier = Modifier.semantics { testTag = "android:id/updatePhoneNumber" },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                            .semantics { testTag = "android:id/updatePhoneNumber" },
                         colors = TextFieldDefaults.outlinedTextFieldColors(
                             containerColor = Color.White
                         )
@@ -436,7 +457,10 @@ fun ProfileScreen(
                         singleLine = true,
                         maxLines = 1,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                        modifier = Modifier.semantics { testTag = "android:id/updateStreetNumber" },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                            .semantics { testTag = "android:id/updateStreetNumber" },
                         colors = TextFieldDefaults.outlinedTextFieldColors(
                             containerColor = Color.White
                         )
@@ -445,6 +469,7 @@ fun ProfileScreen(
                     ExposedDropdownMenuBox(
                         expanded = expanded,
                         onExpandedChange = { expanded = !expanded },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         OutlinedTextField(
                             value = updatedBarangay,
@@ -452,6 +477,7 @@ fun ProfileScreen(
                             label = { Text("Barangay") },
                             readOnly = true,
                             modifier = Modifier
+                                .fillMaxWidth()
                                 .menuAnchor()
                                 .semantics { testTag = "android:id/updateBarangay" },
                             colors = TextFieldDefaults.outlinedTextFieldColors(
@@ -461,6 +487,7 @@ fun ProfileScreen(
                         ExposedDropdownMenu(
                             expanded = expanded,
                             onDismissRequest = { expanded = false },
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             locationData?.forEach { location ->
                                 DropdownMenuItem(
@@ -469,9 +496,12 @@ fun ProfileScreen(
                                         updatedBarangay = location.barangay
                                         expanded = false
                                     },
-                                    modifier = Modifier.semantics {
-                                        testTag = "android:id/barangayDropdownItem_${location.barangay}"
-                                    }
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .semantics {
+                                            testTag =
+                                                "android:id/barangayDropdownItem_${location.barangay}"
+                                        }
                                 )
                             }
                         }
@@ -480,14 +510,23 @@ fun ProfileScreen(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
                 Button(
                     onClick = { saveInfoDialog = true },
                     enabled = saveButtonEnabled,
-                    modifier = Modifier.semantics { testTag = "android:id/saveButton" }
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = saveInfoColor(role),
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp)
+                        .semantics { testTag = "android:id/saveButton" }
                 ) {
                     Text(text = "Save")
                 }
@@ -498,7 +537,8 @@ fun ProfileScreen(
                         contentColor = Color.White
                     ),
                     modifier = Modifier
-                        .padding(8.dp)
+                        .weight(1f)
+                        .padding(start = 8.dp)
                         .semantics { testTag = "android:id/logoutButton" }
                 ) {
                     Icon(
@@ -511,7 +551,7 @@ fun ProfileScreen(
             }
         }
     }
-    }
+}
 
 @Composable
 fun Profile(
