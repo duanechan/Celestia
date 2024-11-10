@@ -24,6 +24,8 @@ import androidx.compose.ui.text.style.TextAlign
 fun FarmerDecisionDialog(
     decisionType: String,
     farmerName: String,
+    availableQuantity: Int,
+    orderedQuantity: Int,
     onConfirm: (String?, Boolean?, Int?) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -33,8 +35,10 @@ fun FarmerDecisionDialog(
     var showReasonDropdown by remember { mutableStateOf(false) }
     var isPartialFulfillment by remember { mutableStateOf<Boolean?>(null) }
     var partialQuantity by remember { mutableStateOf("0") }
+    var showMaxMessage by remember { mutableStateOf(false) }
 
     val rejectionReasons = listOf("Not in season", "Too Far", "Not Available")
+    val maxPartialQuantity = orderedQuantity / 2
 
     val title = when (decisionType) {
         "ACCEPT" -> "Accept Order"
@@ -57,16 +61,15 @@ fun FarmerDecisionDialog(
                 color = Cocoa,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/dialogTitle" }
+                modifier = Modifier.fillMaxWidth()
             )
         },
         text = {
-            Column(modifier = Modifier.semantics { testTag = "android:id/dialogContent" }) {
+            Column {
                 Text(
                     text = message,
                     fontSize = 16.sp,
-                    color = Cocoa,
-                    modifier = Modifier.semantics { testTag = "android:id/dialogMessage" }
+                    color = Cocoa
                 )
 
                 if (decisionType == "REJECT") {
@@ -75,16 +78,13 @@ fun FarmerDecisionDialog(
                         text = "Reason",
                         fontSize = 20.sp,
                         color = Cocoa,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.semantics { testTag = "android:id/dialogReasonLabel" }
+                        fontWeight = FontWeight.Bold
                     )
 
-                    Box(modifier = Modifier.semantics { testTag = "android:id/dialogReasonBox" }) {
+                    Box {
                         OutlinedButton(
                             onClick = { showReasonDropdown = true },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .semantics { testTag = "android:id/dialogReasonButton" },
+                            modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 containerColor = Apricot,
                                 contentColor = Cocoa
@@ -94,14 +94,12 @@ fun FarmerDecisionDialog(
                         ) {
                             Text(
                                 text = selectedReason ?: "Select reason",
-                                color = if (selectedReason == null) Cocoa.copy(alpha = 0.8f) else Cocoa,
-                                modifier = Modifier.semantics { testTag = "android:id/SelectedReasonText" }
+                                color = if (selectedReason == null) Cocoa.copy(alpha = 0.8f) else Cocoa
                             )
                         }
                         DropdownMenu(
                             expanded = showReasonDropdown,
-                            onDismissRequest = { showReasonDropdown = false },
-                            modifier = Modifier.semantics { testTag = "android:id/dialogReasonDropdown" }
+                            onDismissRequest = { showReasonDropdown = false }
                         ) {
                             rejectionReasons.forEach { reason ->
                                 DropdownMenuItem(
@@ -109,8 +107,7 @@ fun FarmerDecisionDialog(
                                     onClick = {
                                         selectedReason = reason
                                         showReasonDropdown = false
-                                    },
-                                    modifier = Modifier.semantics { testTag = "android:id/dialogReasonItem_$reason" }
+                                    }
                                 )
                             }
                         }
@@ -121,8 +118,7 @@ fun FarmerDecisionDialog(
                         Text(
                             text = "You must select a reason before rejecting.",
                             color = Cinnabar,
-                            fontSize = 12.sp,
-                            modifier = Modifier.semantics { testTag = "android:id/dialogReasonWarning" }
+                            fontSize = 12.sp
                         )
                     }
                 } else if (decisionType == "ACCEPT") {
@@ -131,103 +127,204 @@ fun FarmerDecisionDialog(
                         text = "Fulfillment Type:",
                         color = Cocoa,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        modifier = Modifier.semantics { testTag = "android:id/dialogFulfillmentLabel" }
+                        fontSize = 20.sp
                     )
 
-                    Column(modifier = Modifier.semantics { testTag = "android:id/dialogFulfillmentOptions" }) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.semantics { testTag = "android:id/dialogFulfillmentOption" }
-                        ) {
-                            RadioButton(
-                                selected = isPartialFulfillment == false,
-                                onClick = { isPartialFulfillment = false },
-                                modifier = Modifier.semantics { testTag = "android:id/dialogFullFulfillRadioButton" }
-                            )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(
-                                text = "Full Fulfill",
-                                color = Cocoa,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.semantics { testTag = "android:id/dialogFullFulfillText" }
-                            )
-                        }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.semantics { testTag = "android:id/dialogPartialFulfillOption" }
-                        ) {
-                            RadioButton(
-                                selected = isPartialFulfillment == true,
-                                onClick = { isPartialFulfillment = true },
-                                modifier = Modifier.semantics { testTag = "android:id/dialogPartialFulfillRadioButton" }
-                            )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(
-                                text = "Partial Fulfill",
-                                color = Cocoa,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.semantics { testTag = "android:id/dialogPartialFulfillText" }
-                            )
-                        }
-
-                        if (isPartialFulfillment == true) {
-                            Spacer(modifier = Modifier.height(16.dp))
+                    Column {
+                        if (availableQuantity >= orderedQuantity) {
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .semantics { testTag = "android:id/partialQuantityInput" },
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                IconButton(
-                                    onClick = {
-                                        val currentValue = partialQuantity.toIntOrNull() ?: 0
-                                        if (currentValue > 0) {
-                                            partialQuantity = (currentValue - 1).toString()
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .semantics { testTag = "android:id/decrementButton" }
-                                ) {
-                                    Text("-", fontSize = 20.sp, color = Cocoa)
-                                }
-
-                                TextField(
-                                    value = partialQuantity,
-                                    onValueChange = { newValue ->
-                                        if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
-                                            partialQuantity = newValue
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .semantics { testTag = "android:id/quantityTextField" }
-                                        .background(color = Apricot, shape = RoundedCornerShape(8.dp)),
-                                    colors = TextFieldDefaults.colors(
-                                        focusedContainerColor = Apricot,
-                                        unfocusedContainerColor = Apricot,
-                                        disabledContainerColor = Apricot,
-                                        focusedIndicatorColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.Transparent,
-                                    ),
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    singleLine = true,
-                                    label = { Text("Quantity", color = Cocoa, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
-                                    textStyle = TextStyle(color = Cocoa, textAlign = TextAlign.Center)
+                                RadioButton(
+                                    selected = isPartialFulfillment == false,
+                                    onClick = { isPartialFulfillment = false }
                                 )
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text(
+                                    text = "Full Fulfill",
+                                    color = Cocoa,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
 
-                                IconButton(
-                                    onClick = {
-                                        val currentValue = partialQuantity.toIntOrNull() ?: 0
-                                        partialQuantity = (currentValue + 1).toString()
-                                    },
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .semantics { testTag = "android:id/incrementButton" }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = isPartialFulfillment == true,
+                                    onClick = { isPartialFulfillment = true }
+                                )
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text(
+                                    text = "Partial Fulfill",
+                                    color = Cocoa,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            if (isPartialFulfillment == true) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Text("+", fontSize = 20.sp, color = Cocoa)
+                                    IconButton(
+                                        onClick = {
+                                            val currentValue = partialQuantity.toIntOrNull() ?: 0
+                                            if (currentValue > 0) {
+                                                partialQuantity = (currentValue - 1).toString()
+                                                showMaxMessage = false
+                                            }
+                                        },
+                                        modifier = Modifier.size(40.dp)
+                                    ) {
+                                        Text("-", fontSize = 20.sp, color = Cocoa)
+                                    }
+                                    TextField(
+                                        value = partialQuantity,
+                                        onValueChange = { newValue ->
+                                            if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                                                val newQuantity = newValue.toIntOrNull() ?: 0
+
+                                                if (newQuantity == maxPartialQuantity) {
+                                                    showMaxMessage = true
+                                                } else {
+                                                    showMaxMessage = false
+                                                }
+
+                                                if (newQuantity <= maxPartialQuantity) {
+                                                    partialQuantity = newValue
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .background(color = Apricot, shape = RoundedCornerShape(8.dp)),
+                                        colors = TextFieldDefaults.colors(
+                                            focusedContainerColor = Apricot,
+                                            unfocusedContainerColor = Apricot,
+                                            disabledContainerColor = Apricot,
+                                            focusedIndicatorColor = Color.Transparent,
+                                            unfocusedIndicatorColor = Color.Transparent,
+                                        ),
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        label = { Text("Quantity", color = Cocoa, textAlign = TextAlign.Center) },
+                                        textStyle = TextStyle(color = Cocoa, textAlign = TextAlign.Center)
+                                    )
+
+                                    IconButton(
+                                        onClick = {
+                                            val currentValue = partialQuantity.toIntOrNull() ?: 0
+                                            if (currentValue < maxPartialQuantity) {
+                                                partialQuantity = (currentValue + 1).toString()
+                                                showMaxMessage = false
+                                            }
+                                        },
+                                        modifier = Modifier.size(40.dp)
+                                    ) {
+                                        Text("+", fontSize = 20.sp, color = Cocoa)
+                                    }
+                                }
+                                if (showMaxMessage) {
+                                    Text(
+                                        text = "You have reached the max partial quantity to fulfill.",
+                                        color = Color.Red,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+                        } else {
+                            // Only show partial fulfill option if inventory is insufficient
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = isPartialFulfillment == true,
+                                    onClick = { isPartialFulfillment = true }
+                                )
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text(
+                                    text = "Partial Fulfill",
+                                    color = Cocoa,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            if (isPartialFulfillment == true) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    IconButton(
+                                        onClick = {
+                                            val currentValue = partialQuantity.toIntOrNull() ?: 0
+                                            if (currentValue > 0) {
+                                                partialQuantity = (currentValue - 1).toString()
+                                                showMaxMessage = false
+                                            }
+                                        },
+                                        modifier = Modifier.size(40.dp)
+                                    ) {
+                                        Text("-", fontSize = 20.sp, color = Cocoa)
+                                    }
+
+                                    TextField(
+                                        value = partialQuantity,
+                                        onValueChange = { newValue ->
+                                            if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
+                                                val newQuantity = newValue.toIntOrNull() ?: 0
+
+                                                if (newQuantity == availableQuantity) {
+                                                    showMaxMessage = true
+                                                } else {
+                                                    showMaxMessage = false
+                                                }
+
+                                                if (newQuantity <= availableQuantity) {
+                                                    partialQuantity = newValue
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .background(color = Apricot, shape = RoundedCornerShape(8.dp)),
+                                        colors = TextFieldDefaults.colors(
+                                            focusedContainerColor = Apricot,
+                                            unfocusedContainerColor = Apricot,
+                                            disabledContainerColor = Apricot,
+                                            focusedIndicatorColor = Color.Transparent,
+                                            unfocusedIndicatorColor = Color.Transparent,
+                                        ),
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        singleLine = true,
+                                        label = { Text("Quantity", color = Cocoa, textAlign = TextAlign.Center) },
+                                        textStyle = TextStyle(color = Cocoa, textAlign = TextAlign.Center)
+                                    )
+
+                                    IconButton(
+                                        onClick = {
+                                            val currentValue = partialQuantity.toIntOrNull() ?: 0
+                                            if (currentValue < availableQuantity) {
+                                                partialQuantity = (currentValue + 1).toString()
+                                                showMaxMessage = false
+                                            }
+                                        },
+                                        modifier = Modifier.size(40.dp)
+                                    ) {
+                                        Text("+", fontSize = 20.sp, color = Cocoa)
+                                    }
+                                }
+                                if (showMaxMessage) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "You have reached the maximum partial quantity to fulfill.",
+                                        color = Cinnabar,
+                                        fontSize = 12.sp
+                                    )
                                 }
                             }
                         }
@@ -238,8 +335,7 @@ fun FarmerDecisionDialog(
                         Text(
                             text = "You must select a fulfillment type.",
                             color = Color.Red,
-                            fontSize = 12.sp,
-                            modifier = Modifier.semantics { testTag = "android:id/dialogFulfillmentWarning" }
+                            fontSize = 12.sp
                         )
                     }
                 }
@@ -253,43 +349,36 @@ fun FarmerDecisionDialog(
                     } else if (decisionType == "ACCEPT" && isPartialFulfillment != null) {
                         val quantity = if (isPartialFulfillment == true) {
                             partialQuantity.toIntOrNull() ?: 0
-                        } else null
+                        } else orderedQuantity
                         onConfirm(null, isPartialFulfillment, quantity)
                     }
                 },
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = OliveGreen),
-                enabled = when {
-                    decisionType == "REJECT" -> selectedReason != null
-                    decisionType == "ACCEPT" && isPartialFulfillment == true -> partialQuantity.toIntOrNull()?.let { it > 0 } ?: false
-                    decisionType == "ACCEPT" -> isPartialFulfillment == false
-                    else -> false
-                },
-                modifier = Modifier.semantics { testTag = "android:id/dialogConfirmButton" }
+                enabled = (decisionType == "REJECT" && selectedReason != null) || (decisionType == "ACCEPT" && isPartialFulfillment != null)
             ) {
                 Text(
-                    "Confirm",
+                    text = "Confirm",
+                    fontWeight = FontWeight.Bold,
                     color = Apricot,
-                    fontSize = 16.sp,
-                    modifier = Modifier.semantics { testTag = "android:id/dialogConfirmButtonText" }
+                    fontSize = 16.sp
                 )
             }
         },
         dismissButton = {
             TextButton(
                 onClick = onDismiss,
-                modifier = Modifier.semantics { testTag = "android:id/dialogDismissButton" }
+                shape = RoundedCornerShape(8.dp),
             ) {
                 Text(
-                    "Cancel",
+                    text = "Cancel",
+                    fontWeight = FontWeight.Bold,
                     color = Cocoa,
-                    fontSize = 16.sp,
-                    modifier = Modifier.semantics { testTag = "android:id/dialogDismissButtonText" }
+                    fontSize = 16.sp
                 )
             }
         },
         shape = RoundedCornerShape(16.dp),
-        containerColor = Sand2,
-        modifier = Modifier.semantics { testTag = "android:id/farmerDecisionDialog" }
+        containerColor = Sand2
     )
 }

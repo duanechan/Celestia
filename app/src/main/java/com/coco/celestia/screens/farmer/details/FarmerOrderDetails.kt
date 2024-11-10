@@ -107,7 +107,6 @@ fun FarmerOrderDetails(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(color = BgColor)
-//                    .padding(top = 80.dp)
                     .semantics { testTag = "android:id/orderDetailsScreen" }
             ) {
                 OrderDetailsCard(orderData = orderData)
@@ -576,6 +575,8 @@ fun OrderDetailsCard(orderData: OrderData) {
 @Composable
 fun OrderStatusUpdates(orderData: OrderData) {
     val client = orderData.client
+    val displayStatus = if (orderData.status == "RECEIVED") "COMPLETED" else orderData.status
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -595,6 +596,7 @@ fun OrderStatusUpdates(orderData: OrderData) {
                     colorFilter = ColorFilter.tint(Cocoa)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
+
                 Spacer(modifier = Modifier.height(50.dp))
 
                 Text(
@@ -613,7 +615,7 @@ fun OrderStatusUpdates(orderData: OrderData) {
                 )
             }
 
-            if (orderData.status in listOf("DELIVERING", "COMPLETED")) {
+            if (displayStatus in listOf("DELIVERING", "COMPLETED")) {
                 Row(
                     verticalAlignment = Alignment.Top
                 ) {
@@ -645,7 +647,7 @@ fun OrderStatusUpdates(orderData: OrderData) {
                 }
             }
 
-            if (orderData.status == "COMPLETED") {
+            if (displayStatus == "COMPLETED") {
                 Row(
                     verticalAlignment = Alignment.Top
                 ) {

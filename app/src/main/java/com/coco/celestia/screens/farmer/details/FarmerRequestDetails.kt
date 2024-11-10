@@ -173,11 +173,13 @@ fun OrderDetails(
     farmerItemViewModel: FarmerItemViewModel,
     farmerName: String
 ) {
+    val orderedQuantity = orderData.orderData.quantity
+    val availableQuantity = itemData.find { it.name == orderData.orderData.name }?.quantity ?: 0
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .background(color = BgColor)
-//            .padding(top = 30.dp)
             .semantics { testTag = "android:id/orderDetailsScreen" }
     ) {
         item {
@@ -197,17 +199,19 @@ fun OrderDetails(
         FarmerDecisionDialog(
             decisionType = decisionType,
             farmerName = farmerName,
+            availableQuantity = availableQuantity,
+            orderedQuantity = orderedQuantity,
             onConfirm = { selectedReason, isPartialFulfillment, quantity ->
                 setDecisionDialog(false)
                 if (decisionType == "ACCEPT") {
                     setOrderAccepted(true)
 
-                    val validQuantity = quantity?.takeIf { it > 0 }
+                    val validQuantity = quantity?.takeIf { it > 0 } ?: orderedQuantity
                     val fulfillmentStatus = if (isPartialFulfillment == false) "PREPARING" else "INCOMPLETE"
                     val updatedOrder = orderData.copy(
                         status = fulfillmentStatus,
                         fulfilledBy = orderData.fulfilledBy + farmerName,
-                        partialQuantity = validQuantity
+                        partialQuantity = if (isPartialFulfillment == true) validQuantity else null
                     )
                     orderViewModel.updateOrder(updatedOrder)
 
@@ -216,19 +220,17 @@ fun OrderDetails(
                         items = mutableListOf(orderData.orderData)
                     )
 
-                    when {
-                        isPartialFulfillment == false -> {
-                            farmerItemViewModel.reduceItemQuantity(itemData)
-                        }
-                        validQuantity != null -> {
-                            farmerItemViewModel.reduceItemQuantity(itemData, validQuantity)
-                        }
+                    if (isPartialFulfillment == true && validQuantity > 0) {
+                        farmerItemViewModel.reduceItemQuantity(itemData, validQuantity)
+                    } else {
+                        farmerItemViewModel.reduceItemQuantity(itemData)
                     }
 
                     onAccept(farmerName)
                 } else {
                     setOrderAccepted(false)
                     setRejectionReason(selectedReason)
+
                     val updatedOrder = orderData.copy(
                         status = "REJECTED",
                         rejectionReason = selectedReason
@@ -254,6 +256,7 @@ fun OrderDetails(
         )
     }
 }
+
 
 @Composable
 fun OrderDetailsCard(orderData: OrderData, navController: NavController) {

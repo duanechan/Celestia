@@ -94,7 +94,6 @@ fun FarmerManageOrder(
             modifier = Modifier
                 .fillMaxHeight()
                 .background(color = BgColor)
-//                .padding(top = 100.dp, bottom = 50.dp)
                 .verticalScroll(rememberScrollState())
                 .semantics { testTag = "android:id/farmerManageOrderColumn" }
         ) {
@@ -168,7 +167,10 @@ fun FarmerManageOrder(
                     DropdownMenu(
                         expanded = filterMenuExpanded,
                         onDismissRequest = { filterMenuExpanded = false },
-                        modifier = Modifier.background(color = LightApricot, shape = RoundedCornerShape(8.dp))
+                        modifier = Modifier
+                            .background(color = LightApricot, shape = RoundedCornerShape(8.dp))
+                            .heightIn(max = 250.dp)
+
                     ) {
                         if (isOrderStatusView) {
                             listOf("All", "Preparing", "Incomplete", "Delivering", "Completed", "Rejected", "Cancelled").forEach { status ->
@@ -181,7 +183,6 @@ fun FarmerManageOrder(
                                 )
                             }
                         } else {
-                            val categoryOptions = productData?.map { it.name } ?: emptyList()
                             DropdownMenuItem(
                                 text = { Text("All Products", color = Cocoa) },
                                 onClick = {
@@ -189,7 +190,7 @@ fun FarmerManageOrder(
                                     filterMenuExpanded = false
                                 }
                             )
-                            categoryOptions.forEach { category ->
+                            productData?.map { it.name }?.forEach { category ->
                                 DropdownMenuItem(
                                     text = { Text(category, color = Cocoa) },
                                     onClick = {
@@ -212,7 +213,9 @@ fun FarmerManageOrder(
                 Button(
                     onClick = { isOrderStatusView = true },
                     colors = ButtonDefaults.buttonColors(containerColor = if (isOrderStatusView) GoldenYellow else Brown1),
-                    modifier = Modifier.weight(1f).semantics { testTag = "android:id/orderStatusButton" }
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics { testTag = "android:id/orderStatusButton" }
                 ) {
                     Text("Order Status", color = Cocoa)
                 }
@@ -222,7 +225,9 @@ fun FarmerManageOrder(
                 Button(
                     onClick = { isOrderStatusView = false },
                     colors = ButtonDefaults.buttonColors(containerColor = if (!isOrderStatusView) GoldenYellow else Brown1),
-                    modifier = Modifier.weight(1f).semantics { testTag = "android:id/orderRequestButton" }
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics { testTag = "android:id/orderRequestButton" }
                 ) {
                     Text("Order Requests", color = Cocoa)
                 }
@@ -233,12 +238,21 @@ fun FarmerManageOrder(
             if (isOrderStatusView) {
                 when (orderState) {
                     is OrderState.LOADING -> {
-                        Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
                             CircularProgressIndicator()
                         }
                     }
                     is OrderState.ERROR -> {
-                        Text("Failed to load orders: ${(orderState as OrderState.ERROR).message}", color = Color.Red, modifier = Modifier.padding(16.dp))
+                        Text(
+                            "Failed to load orders: ${(orderState as OrderState.ERROR).message}",
+                            color = Color.Red,
+                            modifier = Modifier.padding(16.dp)
+                        )
                     }
                     is OrderState.EMPTY -> {
                         Text("No orders available.", modifier = Modifier.padding(16.dp))
@@ -246,12 +260,19 @@ fun FarmerManageOrder(
                     is OrderState.SUCCESS -> {
                         val filteredOrders = orderData.filter { order ->
                             order.orderId.contains(searchQuery, ignoreCase = true) &&
-                                    (selectedStatus == "All" || order.status.equals(selectedStatus, ignoreCase = true)) &&
+                                    (selectedStatus == "All" ||
+                                            (selectedStatus == "Completed" && (order.status == "COMPLETED" || order.status == "RECEIVED")) ||
+                                            order.status.equals(selectedStatus, ignoreCase = true)) &&
                                     order.status != "PENDING"
                         }
 
                         if (filteredOrders.isEmpty()) {
-                            Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
                                 Text("No matching orders available.")
                             }
                         } else {
@@ -259,10 +280,16 @@ fun FarmerManageOrder(
                                 if (userData == null) {
                                     CircularProgressIndicator()
                                 } else {
-                                    Box(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
-                                        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(8.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
                                             ManageOrderCards(navController, order)
-                                            OrderStatusCard(orderStatus = order.status, orderId = order.orderId)
                                         }
                                     }
                                 }
@@ -344,11 +371,36 @@ fun FarmerManageRequest(
 fun ManageOrderCards(
     navController: NavController,
     order: OrderData,
-    cardWidth: Dp = 240.dp,
-    cardHeight: Dp = 180.dp
+    cardHeight: Dp = 200.dp,
+    showStatus: Boolean = true
 ) {
     val clientName = order.client
     val orderId = order.orderId.substring(6, 10).uppercase()
+    val displayStatus = if (order.status == "RECEIVED") "COMPLETED" else order.status
+
+    val backgroundColor = when (displayStatus) {
+        "PREPARING" -> Brown1
+        "INCOMPLETE" -> Tangerine
+        "REJECTED" -> Copper.copy(alpha = 0.4f)
+        "DELIVERING" -> Blue.copy(alpha = 0.7f)
+        "COMPLETED" -> SageGreen.copy(alpha = 0.7f)
+        "CANCELLED" -> Copper3
+        else -> Color.Gray
+    }
+
+    val iconPainter: Painter? = when (displayStatus) {
+        "PREPARING" -> painterResource(id = R.drawable.preparing)
+        "INCOMPLETE" -> painterResource(id = R.drawable.incomplete)
+        "DELIVERING" -> painterResource(id = R.drawable.deliveryicon)
+        else -> null
+    }
+
+    val iconVector: ImageVector = when (displayStatus) {
+        "REJECTED" -> Icons.Default.Clear
+        "COMPLETED" -> Icons.Default.CheckCircle
+        "CANCELLED" -> Icons.Default.Clear
+        else -> Icons.Default.Warning
+    }
 
     Row(
         modifier = Modifier
@@ -357,7 +409,7 @@ fun ManageOrderCards(
     ) {
         Card(
             modifier = Modifier
-                .width(cardWidth)
+                .fillMaxWidth()
                 .height(cardHeight)
                 .semantics { testTag = "android:id/manageOrderCard+${order.orderId}" },
             shape = RoundedCornerShape(12.dp),
@@ -382,135 +434,102 @@ fun ManageOrderCards(
                     modifier = Modifier
                         .padding(20.dp)
                         .fillMaxSize(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Order Info
                     Column(
                         modifier = Modifier
                             .weight(1f)
-                            .fillMaxHeight()
-                            .semantics { testTag = "android:id/orderInfoColumn_${order.orderId}" },
-                        verticalArrangement = Arrangement.Center
+                            .padding(end = 8.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.Start
                     ) {
-                        Text(
-                            text = "Order ID: $orderId",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Cocoa,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.semantics { testTag = "android:id/orderIdText_${order.orderId}" }
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Client Name: $clientName",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Normal,
-                            color = Cocoa,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.semantics { testTag = "android:id/clientNameText_${order.orderId}" }
-                        )
+                        if (showStatus) {
+                            Box(
+                                modifier = Modifier
+                                    .background(backgroundColor, shape = RoundedCornerShape(8.dp))
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    .semantics { testTag = "android:id/orderStatusRow_${order.orderId}" }
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    if (iconPainter != null) {
+                                        Icon(
+                                            painter = iconPainter,
+                                            contentDescription = displayStatus,
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .semantics { testTag = "android:id/statusIcon_${order.orderId}" },
+                                            tint = Cocoa
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = iconVector,
+                                            contentDescription = displayStatus,
+                                            tint = Cocoa,
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .semantics { testTag = "android:id/statusIcon_${order.orderId}" }
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(6.dp))
+
+                                    Text(
+                                        text = displayStatus,
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Cocoa,
+                                        modifier = Modifier
+                                            .semantics { testTag = "android:id/statusText_${order.orderId}" }
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp)
+                                .semantics { testTag = "android:id/orderInfoColumn_${order.orderId}" },
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.Start
+                        ) {
+                            Text(
+                                text = "Order ID: $orderId",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Cocoa,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.semantics { testTag = "android:id/orderIdText_${order.orderId}" }
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Client Name: $clientName",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Cocoa,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.semantics { testTag = "android:id/clientNameText_${order.orderId}" }
+                            )
+                        }
                     }
+
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowRight,
-                        contentDescription = "Arrow Forward",
-                        tint = Cocoa,
+                        contentDescription = "Arrow Icon",
                         modifier = Modifier
-                            .size(24.dp)
-                            .align(Alignment.CenterVertically)
-                            .semantics { testTag = "navigateIcon_${order.orderId}" }
+                            .size(40.dp)
+                            .padding(end = 8.dp)
+                            .align(Alignment.CenterVertically),
+                        tint = Cocoa
                     )
                 }
             }
         }
         Spacer(modifier = Modifier.width(8.dp))
-    }
-}
-
-@Composable
-fun OrderStatusCard(
-    orderStatus: String,
-    orderId: String,
-    cardWidth: Dp = 100.dp,
-    cardHeight: Dp = 180.dp,
-    showText: Boolean = true
-) {
-    val displayStatus = if (orderStatus == "RECEIVED") "COMPLETED" else orderStatus
-
-    val backgroundColor = when (displayStatus) {
-        "PREPARING" -> Brown1
-        "INCOMPLETE" -> Tangerine
-        "REJECTED" -> Copper3
-        "DELIVERING" -> Blue
-        "COMPLETED" -> SageGreen
-        "CANCELLED" -> Copper3
-        else -> Color.Gray
-    }
-
-    val iconPainter: Painter? = when (displayStatus) {
-        "PREPARING" -> painterResource(id = R.drawable.preparing)
-        "INCOMPLETE" -> painterResource(id = R.drawable.incomplete)
-        "DELIVERING" -> painterResource(id = R.drawable.deliveryicon)
-        else -> null
-    }
-
-    val iconVector: ImageVector = when (displayStatus) {
-        "REJECTED" -> Icons.Default.Clear
-        "COMPLETED" -> Icons.Default.CheckCircle
-        "CANCELLED" -> Icons.Default.Clear
-        else -> Icons.Default.Warning
-    }
-
-    Card(
-        modifier = Modifier
-            .size(cardWidth, cardHeight)
-            .semantics { testTag = "android:id/orderStatusCard_$orderId" },
-        shape = RoundedCornerShape(10.dp),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-                .semantics { testTag = "android:id/orderStatusColumn_$orderId" },
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            if (iconPainter != null) {
-                Icon(
-                    painter = iconPainter,
-                    contentDescription = displayStatus,
-                    modifier = Modifier
-                        .size(35.dp)
-                        .semantics { testTag = "android:id/statusIcon_$orderId" },
-                    tint = Cocoa
-                )
-            } else {
-                Icon(
-                    imageVector = iconVector,
-                    contentDescription = displayStatus,
-                    tint = Cocoa,
-                    modifier = Modifier
-                        .size(35.dp)
-                        .semantics { testTag = "android:id/statusIcon_$orderId" }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (showText) {
-                Text(
-                    text = displayStatus,
-                    fontSize = 7.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Cocoa,
-                    modifier = Modifier.semantics { testTag = "android:id/statusText_$orderId" }
-                )
-            }
-        }
     }
 }
 
@@ -524,13 +543,13 @@ fun RequestCards(
 
     Row(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 2.dp)
             .semantics { testTag = "android:id/requestRow_${order.orderId}" }
     ) {
         Card(
             modifier = Modifier
-                .weight(1f)
-                .height(175.dp)
+                .fillMaxWidth()
+                .height(200.dp)
                 .semantics { testTag = "android:id/requestCard_${order.orderId}" },
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
@@ -552,7 +571,7 @@ fun RequestCards(
             ) {
                 Row(
                     modifier = Modifier
-                        .padding(16.dp)
+                        .padding(20.dp)
                         .fillMaxSize(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -584,7 +603,8 @@ fun RequestCards(
                         contentDescription = "Arrow Forward",
                         tint = Cocoa,
                         modifier = Modifier
-                            .size(24.dp)
+                            .size(40.dp)
+                            .padding(end = 8.dp)
                             .align(Alignment.CenterVertically)
                             .semantics { testTag = "android:id/requestNavigateIcon_${order.orderId}" }
                     )

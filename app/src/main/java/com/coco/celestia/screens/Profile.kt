@@ -18,21 +18,26 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -73,13 +78,22 @@ import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.BGGradientBrush
+import com.coco.celestia.ui.theme.Apricot
 import com.coco.celestia.ui.theme.BlueGradientBrush
 import com.coco.celestia.ui.theme.CelestiaTheme
+import com.coco.celestia.ui.theme.Cocoa
+import com.coco.celestia.ui.theme.DuskyBlue
 import com.coco.celestia.ui.theme.FarmerGradientBrush
 import com.coco.celestia.ui.theme.GrayGradientBrush
 import com.coco.celestia.ui.theme.GrayTextField
 import com.coco.celestia.ui.theme.GreenGradientBrush
+import com.coco.celestia.ui.theme.LightBlueGreen
+import com.coco.celestia.ui.theme.LightOrange
 import com.coco.celestia.ui.theme.OrangeGradientBrush
+import com.coco.celestia.ui.theme.PaleBlue
+import com.coco.celestia.ui.theme.PreparingStatus
+import com.coco.celestia.ui.theme.SoftCOrange
+import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.util.isValidEmail
 import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.UserViewModel
@@ -286,6 +300,24 @@ fun ProfileScreen(
             else -> Color(0x80FFFFFF)
         }
     }
+    fun getIconColorForRole(role: String): Color {
+        return when (role) {
+            "Admin" -> DuskyBlue
+            "Client" -> LightOrange
+            "Farmer" -> Cocoa
+            "Coop", "CoopCoffee", "CoopMeat" -> PreparingStatus
+            else -> Color(0x80FFFFFF)
+        }
+    }
+    fun getProfileColorForRole(role: String): Color {
+        return when (role) {
+            "Admin" -> PaleBlue
+            "Client" -> SoftCOrange
+            "Farmer" -> Apricot
+            "Coop", "CoopCoffee", "CoopMeat" -> LightBlueGreen
+            else -> Color(0x80FFFFFF)
+        }
+    }
     val gradientBrush = getGradientBrushForRole(role)
 
     Box(
@@ -323,19 +355,34 @@ fun ProfileScreen(
                             .size(100.dp)
                             .clip(RoundedCornerShape(50.dp))
                             .background(Color.White)
-                            .clickable { openGallery() }
                     )
+                    FloatingActionButton(
+                        onClick = { openGallery() },
+                        shape = CircleShape,
+                        modifier = Modifier
+                            .size(35.dp)
+                            .offset(y = (-30).dp, x = 25.dp),
+                        contentColor = Color.White.copy(0.5f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Change Image",
+                            tint = getIconColorForRole(role)
+                            )
+                    }
 
                     Text(
                         text = "$firstName $lastName",
                         fontWeight = FontWeight.Bold,
                         fontSize = 28.sp,
+                        fontFamily = mintsansFontFamily,
                         color = Color.White
                     )
                     Text(
                         text = role,
                         fontWeight = FontWeight.Normal,
                         fontSize = 18.sp,
+                        fontFamily = mintsansFontFamily,
                         color = Color.White
                     )
                 }
@@ -344,9 +391,9 @@ fun ProfileScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(12.dp)
                     .background(
-                        color = GrayTextField,
+                        color = getProfileColorForRole(role),
                         shape = RoundedCornerShape(bottomEnd = 16.dp, bottomStart = 16.dp)
                     )
                     .padding(16.dp)
@@ -460,7 +507,6 @@ fun ProfileScreen(
                     Text("Logout")
                 }
             }
-            Spacer(modifier = Modifier.height(100.dp))
         }
     }
     }

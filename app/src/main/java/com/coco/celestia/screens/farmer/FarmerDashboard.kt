@@ -261,7 +261,6 @@ fun FarmerDashboard(
         }
     }
 
-    // Show dialog if the state is true
     if (showInSeasonDialog) {
         InSeasonProductListDialog(
             products = inSeasonProducts,
@@ -269,7 +268,6 @@ fun FarmerDashboard(
         )
     }
 
-    // Show dialog for product stock levels if needed
     if (showAllDialog) {
         ProductListDialog(
             items = itemData,
@@ -440,15 +438,8 @@ fun OrderStatusSection(
                             ManageOrderCards(
                                 navController = navController,
                                 order = order,
-                                cardWidth = 220.dp,
-                                cardHeight = 80.dp
-                            )
-                            OrderStatusCard(
-                                orderStatus = order.status,
-                                orderId = order.orderId,
-                                cardWidth = 400.dp,
-                                cardHeight = 80.dp,
-                                showText = false
+                                cardHeight = 100.dp,
+                                showStatus = false
                             )
                         }
                     }
