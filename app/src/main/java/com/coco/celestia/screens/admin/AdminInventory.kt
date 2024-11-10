@@ -1,5 +1,10 @@
+@file:OptIn(ExperimentalCoilApi::class)
+
 package com.coco.celestia.screens.admin
 
+import android.net.Uri
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,15 +34,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.LastBaseline
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
+import com.coco.celestia.R
+import com.coco.celestia.service.ImageService
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.calculateMonthlyInventory
@@ -46,14 +56,12 @@ import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.MonthlyInventory
-import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun AdminInventory(
     orderViewModel: OrderViewModel,
     productViewModel: ProductViewModel,
-    transactionViewModel: TransactionViewModel,
-    navController: NavController
+    transactionViewModel: TransactionViewModel
 ) {
     val productData by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
@@ -82,13 +90,10 @@ fun AdminInventory(
                 onTabSelected = { selectedTab = it }
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
-
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 5.dp, horizontal = 13.dp)
-                    .offset(y = (-50).dp)
                     .border(1.dp, Color.White, RoundedCornerShape(10.dp))
                     .clip(RoundedCornerShape(10.dp))
                     .height(48.dp)
@@ -142,7 +147,6 @@ fun AdminInventory(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(20.dp))
 
             when (productState) {
                 is ProductState.LOADING -> {
@@ -191,18 +195,17 @@ fun AdminItemList(
         itemList.forEach { item ->
             AdminItemCard(
                 productName = item.name,
-                quantity = item.quantity,
+                monthly = 0,
                 ordered = 0,
                 price = item.priceKg,
+                current = item.quantity,
                 identifier = "current",
                 onEditProductClick = {
                     selectedProduct = item
                 },
                 modifier = Modifier.semantics { testTag = "android:id/AdminItemCard_${item.name}" }
             )
-            Spacer(modifier = Modifier.height(10.dp))
         }
-        Spacer(modifier = Modifier.height(50.dp))
 
         selectedProduct?.let { product ->
             EditProduct(
@@ -223,9 +226,10 @@ fun AdminMonthlyInventoryList(itemList: List<MonthlyInventory>) {
         itemList.forEach { item ->
             AdminItemCard(
                 productName = item.productName,
-                quantity = item.remainingQuantity,
+                monthly = item.remainingQuantity,
                 ordered = item.totalOrderedThisMonth,
                 price = item.priceKg,
+                current = item.currentInv,
                 identifier = "monthly",
                 onEditProductClick = {},
                 modifier = Modifier.semantics { testTag = "android:id/MonthlyInventory_${item.productName}" }
@@ -237,18 +241,27 @@ fun AdminMonthlyInventoryList(itemList: List<MonthlyInventory>) {
 @Composable
 fun AdminItemCard(
     productName: String,
-    quantity: Int,
+    monthly: Int,
     ordered: Int,
     price: Double,
+    current: Int,
     identifier: String,
     onEditProductClick: (ProductData) -> Unit,
     modifier: Modifier = Modifier // Modifier added for customization
 ) {
+    var productImage by remember { mutableStateOf<Uri?>(null) }
+    LaunchedEffect(Unit) {
+        if (productName.isNotEmpty()) {
+            ImageService.fetchProfilePicture(productName) {
+                productImage = it
+            }
+        }
+    }
+
     Card(modifier = modifier
-        .width(500.dp)
-        .height(200.dp)
-        .offset(x = (-16).dp, y = (-50).dp)
-        .padding(top = 0.dp, bottom = 5.dp, start = 30.dp, end = 0.dp)
+        .fillMaxWidth()
+        .height(if (identifier == "monthly") 220.dp else 180.dp)
+        .padding(16.dp)
         .semantics { testTag = "android:id/AdminItemCard_${productName}_${identifier}" },
         colors = CardDefaults.cardColors(
             containerColor = Color.White
@@ -256,106 +269,136 @@ fun AdminItemCard(
         var expanded by remember { mutableStateOf(false) }
         val productData = ProductData(
             name = productName,
-            quantity = quantity,
+            quantity = current,
         )
         Box(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            Column(
-                Modifier
-                    .clickable { expanded = !expanded }
-                    .padding(16.dp)
+            Row (
+                modifier = Modifier
+                    .fillMaxWidth()
             ) {
-                Row (
+                Image(
+                    painter = rememberImagePainter(data = productImage ?: R.drawable.product_image),
+                    contentScale = ContentScale.Crop,
+                    contentDescription = "Product Image",
                     modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = productName,
-                        fontSize = 25.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Gray,
-                        modifier = Modifier
-                            .padding(top = 15.dp, start = 10.dp)
-                            .alignBy(LastBaseline)
-                            .semantics { testTag = "android:id/ProductName_${productName}" }
-                    )
+                        .width(100.dp)
+                        .fillMaxHeight()
+                )
 
-                    Text(
-                        text = "₱ $price",
-                        fontSize = 20.sp,
-                        color = Gray,
-                        modifier = Modifier
-                            .padding(top = 15.dp, start = 10.dp)
-                            .alignBy(LastBaseline)
-                            .semantics { testTag = "android:id/ProductPrice_${productName}" }
-                    )
-                }
-                Row (
-                    modifier = Modifier
-                        .padding(top = 15.dp, start = 10.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                Column(
+                    Modifier
+                        .clickable { expanded = !expanded }
                 ) {
-                    Text(
-                        text = "Inventory",
-                        fontSize = 20.sp,
-                        fontFamily = mintsansFontFamily,
-                        color = Gray,
-                        modifier = Modifier.semantics { testTag = "android:id/InventoryLabel_${productName}" }
-                    )
-                    Text(
-                        text = "${quantity}kg",
-                        fontSize = 20.sp,
-                        fontFamily = mintsansFontFamily,
-                        color = Gray,
-                        modifier = Modifier.semantics { testTag = "android:id/InventoryQuantity_${productName}" }
-                    )
-                }
-                if (identifier == "monthly") {
                     Row (
                         modifier = Modifier
-                            .padding(top = 15.dp, start = 10.dp)
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Ordered",
-                            fontSize = 20.sp,
-                            fontFamily = mintsansFontFamily,
-                            color = Gray,
-                            modifier = Modifier.semantics { testTag = "android:id/OrderedLabel_${productName}" }
+                            text = productName,
+                            fontSize = 25.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = DarkBlue,
+                            modifier = Modifier
+                                .padding(horizontal = 12.dp)
+                                .padding(vertical = 6.dp)
+                                .weight(1f)
+                                .semantics { testTag = "android:id/ProductName_${productName}" },
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
-                        Text(
-                            text = "-${ordered}kg",
-                            fontSize = 20.sp,
-                            fontFamily = mintsansFontFamily,
-                            color = Gray,
-                            modifier = Modifier.semantics { testTag = "android:id/OrderedQuantity_${productName}" }
-                        )
+
+                        Box (
+                            modifier = Modifier
+                                .background(PaleBlue, shape = RoundedCornerShape(4.dp))
+                                .padding(horizontal = 12.dp, vertical = 2.dp)
+                                .width(70.dp)
+                                .height(30.dp)
+                                .wrapContentSize()
+                        ) {
+                            Text(
+                                text = "₱ $price",
+                                fontSize = 18.sp,
+                                color = DarkBlue,
+                                modifier = Modifier
+                                    .semantics { testTag = "android:id/ProductPrice_${productName}" }
+                                    .align(Alignment.Center)
+                            )
+                        }
                     }
-                }
-            }
-            if (identifier == "current") {
-                IconButton(
-                    onClick = { onEditProductClick(productData) },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(8.dp)
-                        .semantics { testTag = "android:id/EditButton_${productName}" }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit"
-                    )
+                    AdminItemCardDetails("Inventory", "${current}kg")
+
+                    if (identifier == "monthly") {
+                        val pathEffect = PathEffect.dashPathEffect(floatArrayOf(50f, 10f), 0f)
+
+                        AdminItemCardDetails("Ordered", "-${ordered}kg")
+
+                        Canvas(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(5.dp)
+                                .padding(horizontal = 12.dp, vertical = 5.dp)
+                        ) {
+
+                            drawLine(
+                                color = DarkBlue,
+                                start = Offset(0f, 0f),
+                                end = Offset(size.width, 0f),
+                                pathEffect = pathEffect,
+                                strokeWidth = 5f,
+
+                            )
+                        }
+
+                        AdminItemCardDetails("Total", "${monthly}kg")
+                    }
+
+                    if (identifier == "current") {
+                        IconButton(
+                            onClick = { onEditProductClick(productData) },
+                            modifier = Modifier
+                                .align(Alignment.End)
+                                .padding(8.dp)
+                                .semantics { testTag = "android:id/EditButton_${productName}" }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit",
+                                tint = DarkBlue
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
 
+@Composable
+fun AdminItemCardDetails (label: String, value: String) {
+    Row (
+        modifier = Modifier
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            fontSize = 20.sp,
+            fontFamily = mintsansFontFamily,
+            color = DarkBlue
+        )
+        Text(
+            text = value,
+            fontSize = 20.sp,
+            fontFamily = mintsansFontFamily,
+            color = DarkBlue
+        )
+    }
+}
 @Composable
 fun TopBarInventory(onTabSelected: (String) -> Unit) {
     var selectedOption by remember { mutableIntStateOf(0) }

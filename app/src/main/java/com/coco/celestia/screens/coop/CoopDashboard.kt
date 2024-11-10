@@ -1,7 +1,5 @@
 package com.coco.celestia.screens.coop
 
-import android.graphics.Typeface
-import android.graphics.drawable.ColorDrawable
 import android.icu.text.SimpleDateFormat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -56,7 +54,6 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
-import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import java.util.Calendar
 import java.util.Locale
 import kotlin.math.cos
@@ -66,10 +63,12 @@ import kotlin.math.sin
 @Composable
 fun CoopDashboard(
     orderViewModel: OrderViewModel,
-    productViewModel: ProductViewModel
-) {
+    productViewModel: ProductViewModel,
+    role: String,
+
+    ) {
     LaunchedEffect(Unit) {
-        orderViewModel.fetchAllOrders(filter = "", role = "Coop")
+        orderViewModel.fetchAllOrders(filter = "", role = role)
     }
 
     Box(modifier = Modifier
@@ -77,13 +76,13 @@ fun CoopDashboard(
         .fillMaxSize()
         .semantics { testTag = "android:id/CoopDashboardBox" }) {
         Column {
-            OverviewSummaryBox(orderViewModel, productViewModel)
+            OverviewSummaryBox(orderViewModel, productViewModel, role)
         }
     }
 }
 
 @Composable
-fun OverviewSummaryBox(orderViewModel: OrderViewModel, productViewModel: ProductViewModel) {
+fun OverviewSummaryBox(orderViewModel: OrderViewModel, productViewModel: ProductViewModel, role: String) {
     Box(modifier = Modifier
         .padding(8.dp)
         .fillMaxWidth()
@@ -104,7 +103,7 @@ fun OverviewSummaryBox(orderViewModel: OrderViewModel, productViewModel: Product
                     modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    ProductStockTrendsChart(productViewModel)
+                    ProductStockTrendsChart(productViewModel, role)
                     OrderStatusDonutChart(orderViewModel)
                 }
             }
@@ -292,15 +291,24 @@ fun OrderStatusDonutChart(orderViewModel: OrderViewModel) {
 }
 
 @Composable
-fun ProductStockTrendsChart(productViewModel: ProductViewModel) {
+fun ProductStockTrendsChart(productViewModel: ProductViewModel, role: String) {
     val orderViewModel: OrderViewModel = viewModel()
-    val orders by orderViewModel.orderData.observeAsState(emptyList())  // List of orders
-    val products by productViewModel.productData.observeAsState(emptyList())  // List of products
+    val orders by orderViewModel.orderData.observeAsState(emptyList())
+    val products by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
 
+
     LaunchedEffect(Unit) {
-        orderViewModel.fetchAllOrders("Coffee", "Coop")
-        productViewModel.fetchProductByType("Coffee")  // Only fetch coffee products
+        when (role) {
+            "CoopMeat" -> {
+                orderViewModel.fetchAllOrders("Meat", "Coop")
+                productViewModel.fetchProductByType("Meat")
+            }
+            "CoopCoffee" -> {
+                orderViewModel.fetchAllOrders("Coffee", "Coop")
+                productViewModel.fetchProductByType("Coffee")
+            }
+        }
     }
 
     val lastSevenDays = (0..6).map { offset ->
@@ -309,8 +317,12 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel) {
     val dateFormatter = SimpleDateFormat("MM/dd/yyyy", Locale.US)
     val formattedLastSevenDays = lastSevenDays.map { dateFormatter.format(it) }
 
-    // Map and filter data based on your database structure
-    val joinedData = products.map { product ->
+    // Filter data based on the role
+    val filteredProducts = products.filter { product ->
+        (role == "CoopMeat" && product.type == "Meat") || (role == "CoopCoffee" && product.type == "Coffee")
+    }
+
+    val joinedData = filteredProducts.map { product ->
         product to orders.filter { order ->
             val orderDate = dateFormatter.parse(order.orderDate)
             order.orderData.name == product.name && orderDate != null && dateFormatter.format(orderDate) in formattedLastSevenDays
@@ -332,7 +344,7 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel) {
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No coffee data available")
+                Text("No data available for the selected role")
             }
         }
 
@@ -414,6 +426,9 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel) {
                                 "Roasted Beans" -> RoastedBeans.toArgb()
                                 "Packaged Beans" -> Packed.toArgb()
                                 "Sorted Beans" -> Sorted.toArgb()
+                                "Raw Meat" -> RawMeat.toArgb()
+                                "Pork" -> Pork.toArgb()
+                                "Kiniing" -> Kiniing.toArgb()
                                 else -> Color.Gray.toArgb()
                             }
 
@@ -426,6 +441,7 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel) {
                                 mode = LineDataSet.Mode.CUBIC_BEZIER
                                 setDrawFilled(true)
                                 fillColor = color
+                                valueTextSize = 10f
                             }
                         }
 
@@ -441,5 +457,6 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel) {
         }
     }
 }
+
 
 

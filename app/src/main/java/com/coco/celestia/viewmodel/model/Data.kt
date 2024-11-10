@@ -109,7 +109,8 @@ data class MonthlyInventory(
     val productName: String,
     var remainingQuantity: Int,
     val totalOrderedThisMonth: Int,
-    val priceKg: Double
+    val priceKg: Double,
+    val currentInv: Int
 )
 
 data class MostOrdered (

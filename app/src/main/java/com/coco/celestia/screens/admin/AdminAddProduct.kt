@@ -13,20 +13,13 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -50,11 +43,13 @@ import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.model.ProductData
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
-import coil.request.ImageRequest
+import com.coco.celestia.R
 import com.coco.celestia.service.ImageService
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.TransactionData
@@ -65,7 +60,6 @@ import java.util.UUID
 
 @Composable
 fun AdminAddProduct(
-    navController: NavController,
     productPrice: String,
     productName: String,
     onUpdatedProductImage: (Uri?) -> Unit,
@@ -118,58 +112,93 @@ fun AdminAddProduct(
         }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(productImage) {
         onTypeSelected(selectedOption)
+        if (productName.isNotEmpty()) {
+            ImageService.fetchProfilePicture(productName) {
+                productImage = it
+            }
+        }
     }
 
-    Column(
+    Column (
         modifier = Modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 10.dp, vertical = 16.dp)
     ) {
-        Spacer(modifier = Modifier.height(80.dp))
-
-        Row(
+        Row (
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(bottom = 10.dp)
         ) {
-            IconButton(
-                onClick = { navController.navigate(Screen.AdminInventory.route) },
-                modifier = Modifier
-                    .align(Alignment.CenterVertically)
-                    .semantics { testTag = "android:id/BackButton" }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back"
+            Column {
+                Image(
+                    painter = rememberImagePainter(data = productImage ?: R.drawable.product_image),
+                    contentDescription = "Product Image",
+                    modifier = Modifier
+                        .size(150.dp),
+                    contentScale = ContentScale.Crop
                 )
+
+                Button(
+                    onClick = {
+                        openGallery()
+                    },
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 2.dp)
+                ) {
+                    Text("Add Image")
+                }
             }
 
-            Text(
-                text = "Add Product",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.align(Alignment.CenterVertically)
-                    .semantics { testTag = "android:id/AddProductTitle" }
-            )
-        }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Product Name",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 8.dp)
+                )
 
-        OutlinedTextField(
-            value = productName,
-            onValueChange = { onProductNameChanged(it) },
-            label = { Text(text = "Product Name") },
-            singleLine = true,
-            maxLines = 1,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp)
-                .semantics { testTag = "android:id/ProductNameField" }
-        )
+                OutlinedTextField(
+                    value = productName,
+                    onValueChange = { onProductNameChanged(it) },
+                    singleLine = true,
+                    maxLines = 1,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp)
+                        .semantics { testTag = "android:id/ProductNameField" }
+                )
+
+                Text(
+                    text = "Product Price",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 8.dp)
+                )
+
+                OutlinedTextField(
+                    value = productPrice,
+                    onValueChange = { onPriceChanged(it) },
+                    singleLine = true,
+                    maxLines = 1,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp)
+                        .semantics { testTag = "android:id/ProductPriceField" }
+                )
+            }
+        }
 
         Divider(
             modifier = Modifier
-                .padding(horizontal = 16.dp)
                 .padding(vertical = 5.dp),
             thickness = 2.dp
         )
@@ -177,10 +206,12 @@ fun AdminAddProduct(
         Text(
             text = "Type of Product",
             fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .padding(top = 8.dp)
         )
+
         radioOptions.forEach { option ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -213,48 +244,9 @@ fun AdminAddProduct(
 
         Divider(
             modifier = Modifier
-                .padding(horizontal = 16.dp)
                 .padding(top = 5.dp),
             thickness = 2.dp
         )
-
-        OutlinedTextField(
-            value = productPrice,
-            onValueChange = { onPriceChanged(it) },
-            label = { Text(text = "Price/Kg") },
-            singleLine = true,
-            maxLines = 1,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp)
-                .semantics { testTag = "android:id/ProductPriceField" }
-        )
-
-        Button(
-            onClick = {
-                openGallery()
-            },
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-        ) {
-            Text("Add Product Image")
-        }
-
-        productImage?.let {
-            Image(
-                painter = rememberImagePainter(
-                    ImageRequest.Builder(context)
-                        .data(it)
-                        .build()
-                ),
-                contentDescription = "Product Image",
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth()
-                    .aspectRatio(1f),
-                contentScale = ContentScale.Fit
-            )
-        }
     }
 }
 

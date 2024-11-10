@@ -438,7 +438,7 @@ fun UserManagementDashboard(navController: NavController) {
                             userData = result
                         }
                     }
-                    Text("• ${userData.firstname} ${userData.lastname} - ${transaction.description} - ${transaction.date}",
+                    Text("• ${transaction.date} - ${userData.firstname} ${userData.lastname} - ${transaction.description} ",
                         fontSize = 14.sp,
                         fontFamily = mintsansFontFamily,
                         color = DarkBlue,)
