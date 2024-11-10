@@ -16,12 +16,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidthIn
 import androidx.compose.foundation.layout.size
@@ -35,15 +37,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -81,6 +90,7 @@ import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.ClientBG
+import com.coco.celestia.ui.theme.LGContainer
 import com.coco.celestia.util.convertMillisToDate
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
@@ -111,6 +121,10 @@ fun AddOrderPanel(
     val mostOrdered by orderViewModel.mostOrderedData.observeAsState(emptyList())
     val products by productViewModel.productData.observeAsState(emptyList())
     val currentMonth = LocalDate.now().month
+    var text by remember { mutableStateOf("") }
+    var selectedType by remember { mutableStateOf("All") }
+    var expanded by remember { mutableStateOf(false) }
+    val types = listOf("All", "Coffee", "Meat", "Vegetable")
 
     LaunchedEffect(Unit) {
         orderViewModel.fetchMostOrderedItems()
@@ -153,21 +167,142 @@ fun AddOrderPanel(
             .verticalScroll(rememberScrollState())
             .semantics { testTag = "android:id/AddOrderPanel" }
     ) {
-        DisplayMostOrdered(
-            mostOrdered,
-            navController,
-            userViewModel
+        Row {
+            SearchBar(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp)
+                    .offset(y = (-40).dp),
+                query = text,
+                onQueryChange = {
+                    text = it
+                },
+                onSearch = {},
+                active = false,
+                onActiveChange = {},
+                placeholder = {
+                    Text("Search Product")
+                },
+                leadingIcon = {
+                    Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon")
+                },
+                trailingIcon = {
+                    if (text != "") {
+                        Icon(
+                            modifier = Modifier
+                                .clickable {
+                                    text = ""
+                                },
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close Icon"
+                        )
+                    }
+                },
+                content = {}
+            )
+
+            Box {
+                Button(
+                    onClick = { expanded = true },
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .background(LGContainer)
+                            .padding(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.List,
+                            contentDescription = " Filter Icon",
+                            tint = Color.White
+                        )
+                    }
+                }
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                ) {
+                    types.forEach { type ->
+                        DropdownMenuItem(
+                            text = { Text(text = type) },
+                            onClick = {
+                                selectedType = type
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+
+        if (text != "" || selectedType != "All") {
+            DisplaySearchedProduct(
+                text,
+                selectedType,
+                productViewModel,
+                navController,
+                userViewModel
+            )
+        } else {
+            DisplayMostOrdered(
+                mostOrdered,
+                navController,
+                userViewModel
+            )
+            DisplayInSeason(
+                inSeasonProducts,
+                navController,
+                userViewModel
+            )
+            DisplayProducts(
+                productViewModel,
+                navController,
+                userViewModel
+            )
+        }
+    }
+}
+
+@Composable
+fun DisplaySearchedProduct (
+    keyword: String,
+    selectedType: String,
+    productViewModel: ProductViewModel,
+    navController: NavController,
+    userViewModel: UserViewModel
+) {
+    val products by productViewModel.productData.observeAsState(emptyList())
+
+    LaunchedEffect(Unit) {
+        productViewModel.fetchProducts(
+            filter = "",
+            role = "Client"
         )
-        DisplayInSeason(
-            inSeasonProducts,
-            navController,
-            userViewModel
-        )
-        DisplayProducts(
-            productViewModel,
-            navController,
-            userViewModel
-        )
+    }
+    val filteredProducts = products.filter { product ->
+        (product.name.contains(keyword, ignoreCase = true) &&
+                (selectedType == "All" || product.type.equals(selectedType, ignoreCase = true)))
+    }
+
+    Column {
+        filteredProducts.chunked(3).forEach { chunk ->
+            Row (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                chunk.forEach { product ->
+                    ProductCard(
+                        product = product,
+                        navController = navController,
+                        userViewModel = userViewModel,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
     }
 }
 
