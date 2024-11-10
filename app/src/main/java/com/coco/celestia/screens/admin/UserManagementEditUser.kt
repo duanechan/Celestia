@@ -58,7 +58,12 @@ fun EditUser(
 
     AlertDialog(
         onDismissRequest = { onDismiss() },
-        title = { Text(text = "Enter your input", modifier = Modifier.semantics { testTag = "android:id/EditUserDialogTitle" }) }, // Added test tag
+        title = {
+            Text(
+                text = "Enter your input",
+                modifier = Modifier.semantics { testTag = "android:id/EditUserDialogTitle" }
+            ) // Added test tag
+        },
         text = {
             Column(
                 modifier = Modifier.semantics { testTag = "android:id/EditUserForm" }

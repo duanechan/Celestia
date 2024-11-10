@@ -94,7 +94,7 @@ fun AdminAddProduct(
         }
     )
 
-    fun openGallery () {
+    fun openGallery() {
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_IMAGES
         } else {
@@ -121,20 +121,23 @@ fun AdminAddProduct(
         }
     }
 
-    Column (
+    Column(
         modifier = Modifier
             .padding(horizontal = 10.dp, vertical = 16.dp)
+            .semantics { testTag = "AdminAddProductColumn" }
     ) {
-        Row (
+        Row(
             modifier = Modifier
                 .padding(bottom = 10.dp)
+                .semantics { testTag = "ProductImageRow" }
         ) {
             Column {
                 Image(
                     painter = rememberImagePainter(data = productImage ?: R.drawable.product_image),
                     contentDescription = "Product Image",
                     modifier = Modifier
-                        .size(150.dp),
+                        .size(150.dp)
+                        .semantics { testTag = "ProductImage" },
                     contentScale = ContentScale.Crop
                 )
 
@@ -144,6 +147,7 @@ fun AdminAddProduct(
                     },
                     modifier = Modifier
                         .padding(horizontal = 16.dp, vertical = 2.dp)
+                        .semantics { testTag = "AddImageButton" }
                 ) {
                     Text("Add Image")
                 }
@@ -161,6 +165,7 @@ fun AdminAddProduct(
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .padding(top = 8.dp)
+                        .semantics { testTag = "ProductNameLabel" }
                 )
 
                 OutlinedTextField(
@@ -171,7 +176,7 @@ fun AdminAddProduct(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 16.dp)
-                        .semantics { testTag = "android:id/ProductNameField" }
+                        .semantics { testTag = "ProductNameField" }
                 )
 
                 Text(
@@ -181,6 +186,7 @@ fun AdminAddProduct(
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .padding(top = 8.dp)
+                        .semantics { testTag = "ProductPriceLabel" }
                 )
 
                 OutlinedTextField(
@@ -192,14 +198,15 @@ fun AdminAddProduct(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 16.dp)
-                        .semantics { testTag = "android:id/ProductPriceField" }
+                        .semantics { testTag = "ProductPriceField" }
                 )
             }
         }
 
         Divider(
             modifier = Modifier
-                .padding(vertical = 5.dp),
+                .padding(vertical = 5.dp)
+                .semantics { testTag = "Divider1" },
             thickness = 2.dp
         )
 
@@ -210,6 +217,7 @@ fun AdminAddProduct(
             modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .padding(top = 8.dp)
+                .semantics { testTag = "ProductTypeLabel" }
         )
 
         radioOptions.forEach { option ->
@@ -225,6 +233,7 @@ fun AdminAddProduct(
                         }
                     )
                     .padding(start = 16.dp)
+                    .semantics { testTag = "RadioOptionRow_$option" }
             ) {
                 RadioButton(
                     selected = (option == selectedOption),
@@ -232,24 +241,24 @@ fun AdminAddProduct(
                         onOptionSelected(option)
                         onTypeSelected(option)
                     },
-                    modifier = Modifier.semantics { testTag = "android:id/RadioButton_$option" }
+                    modifier = Modifier.semantics { testTag = "RadioButton_$option" }
                 )
 
                 Text(
                     text = option,
-                    modifier = Modifier.semantics { testTag = "android:id/RadioText_$option" }
+                    modifier = Modifier.semantics { testTag = "RadioText_$option" }
                 )
             }
         }
 
         Divider(
             modifier = Modifier
-                .padding(top = 5.dp),
+                .padding(top = 5.dp)
+                .semantics { testTag = "Divider2" },
             thickness = 2.dp
         )
     }
 }
-
 
 @Composable
 fun ConfirmAddProduct(
@@ -278,7 +287,13 @@ fun ConfirmAddProduct(
     LaunchedEffect(productState) {
         when (productState) {
             is ProductState.ERROR -> {
-                onToastEvent(Triple(ToastStatus.FAILED, (productState as ProductState.ERROR).message, System.currentTimeMillis()))
+                onToastEvent(
+                    Triple(
+                        ToastStatus.FAILED,
+                        (productState as ProductState.ERROR).message,
+                        System.currentTimeMillis()
+                    )
+                )
             }
             is ProductState.SUCCESS -> {
                 if (!transactionRecorded.value) {
@@ -293,7 +308,13 @@ fun ConfirmAddProduct(
                     )
                     transactionRecorded.value = true
                 }
-                onToastEvent(Triple(ToastStatus.SUCCESSFUL, "Product Added Successfully", System.currentTimeMillis()))
+                onToastEvent(
+                    Triple(
+                        ToastStatus.SUCCESSFUL,
+                        "Product Added Successfully",
+                        System.currentTimeMillis()
+                    )
+                )
                 navController.navigate(Screen.AdminInventory.route)
             }
             else -> {}
@@ -312,6 +333,46 @@ fun ConfirmAddProduct(
             }
         }
     } else {
-        onToastEvent(Triple(ToastStatus.WARNING, "All Fields must be filled", System.currentTimeMillis()))
+        onToastEvent(
+            Triple(
+                ToastStatus.WARNING,
+                "All Fields must be filled",
+                System.currentTimeMillis()
+            )
+        )
+    }
+
+    // Adding semantic test tags for testing purposes
+    Column(modifier = Modifier.semantics { testTag = "ConfirmAddProductColumn" }) {
+        Text(
+            text = "Confirm Product Details",
+            modifier = Modifier.semantics { testTag = "ConfirmProductDetailsText" }
+        )
+
+        Text(
+            text = "Product Name: $productName",
+            modifier = Modifier.semantics { testTag = "ProductNameText" }
+        )
+
+        Text(
+            text = "Product Type: $productType",
+            modifier = Modifier.semantics { testTag = "ProductTypeText" }
+        )
+
+        Text(
+            text = "Product Price: $productPrice",
+            modifier = Modifier.semantics { testTag = "ProductPriceText" }
+        )
+
+        Button(
+            onClick = {
+                if (productName.isNotEmpty() && productType.isNotEmpty() && productPrice.isNotEmpty()) {
+                    productViewModel.addProduct(product)
+                }
+            },
+            modifier = Modifier.semantics { testTag = "AddProductButton" }
+        ) {
+            Text("Add Product")
+        }
     }
 }

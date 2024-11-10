@@ -17,6 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.coco.celestia.ui.theme.LightBlueGreen
@@ -38,6 +40,7 @@ fun ClientNotification(notifications: List<Notification>, onDismiss: () -> Unit)
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
+                    .semantics { testTag = "android:id/NotificationList" }
             ) {
                 items(notifications.sortedByDescending { notification ->
                     dateFormat.parse(notification.timestamp) ?: Date(0)
@@ -47,7 +50,10 @@ fun ClientNotification(notifications: List<Notification>, onDismiss: () -> Unit)
             }
         },
         confirmButton = {
-            TextButton(onClick = { onDismiss() }) {
+            TextButton(
+                onClick = { onDismiss() },
+                modifier = Modifier.semantics { testTag = "android:id/DismissButton" }
+            ) {
                 Text("OK")
             }
         }
@@ -72,24 +78,30 @@ fun NotificationItem(notification: Notification) {
             .padding(vertical = 8.dp, horizontal = 16.dp)
             .background(MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(8.dp))
             .padding(16.dp)
+            .semantics { testTag = "android:id/NotificationItem_${notification.timestamp}" }
     ) {
         Icon(
             imageVector = Icons.Default.Notifications,
             contentDescription = null,
             tint = statusColor,
             modifier = Modifier.size(24.dp)
+                .semantics { testTag = "android:id/NotificationIcon_${notification.status}" }
         )
         Spacer(modifier = Modifier.width(16.dp))
-        Column {
+        Column(
+            modifier = Modifier.semantics { testTag = "android:id/NotificationContent" }
+        ) {
             Text(
                 text = notification.timestamp,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
+                color = Color.Gray,
+                modifier = Modifier.semantics { testTag = "android:id/NotificationTimestamp" }
             )
             Text(
                 text = notification.message,
                 fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.semantics { testTag = "android:id/NotificationMessage" }
             )
         }
     }

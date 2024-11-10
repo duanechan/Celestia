@@ -320,7 +320,7 @@ fun UserManagementDashboard(navController: NavController) {
         userViewModel.fetchUsers()
         userViewModel.fetchActiveUsers(
             onResult = { activeUsers = it.size },
-            onError = { /* This returns an error message */ activeUsers = 0 }
+            onError = { activeUsers = 0 }
         )
     }
 
@@ -416,7 +416,8 @@ fun UserManagementDashboard(navController: NavController) {
                     text = "See All",
                     color = DarkBlue,
                     fontFamily = mintsansFontFamily,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.semantics { testTag = "android:id/recentActivitySeeAllButton" }
                 )
             }
         }
@@ -444,13 +445,14 @@ fun UserManagementDashboard(navController: NavController) {
                             userData = result
                         }
                     }
-                    Text("• ${transaction.date} - ${userData.firstname} ${userData.lastname} - ${transaction.description} ",
+                    Text(
+                        "• ${transaction.date} - ${userData.firstname} ${userData.lastname} - ${transaction.description}",
                         fontSize = 14.sp,
                         fontFamily = mintsansFontFamily,
-                        color = DarkBlue,)
+                        color = DarkBlue,
+                        modifier = Modifier.semantics { testTag = "android:id/recentActivityTransaction_${transaction.date}" }
+                    )
                 }
         }
     }
 }
-
-

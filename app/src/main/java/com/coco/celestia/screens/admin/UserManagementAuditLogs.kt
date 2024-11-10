@@ -196,24 +196,32 @@ fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
             text = transaction.date,
             fontSize = 13.sp,
             fontFamily = mintsansFontFamily,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .semantics { testTag = "android:id/transactionDate" }
         )
         Text(
             text = if (userData != null) "${userData?.firstname} ${userData?.lastname}- ${userData?.role}" else "Unknown",
             fontSize = 13.sp,
             fontFamily = mintsansFontFamily,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .semantics { testTag = "android:id/userData" }
         )
         Text(
             text = transaction.type,
             fontSize = 12.sp,
             fontFamily = mintsansFontFamily,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .semantics { testTag = "android:id/transactionType" }
         )
 
         IconButton(
             onClick = { showDescriptionDialog = true },
-            modifier = Modifier.weight(0.5f)
+            modifier = Modifier
+                .weight(0.5f)
+                .semantics { testTag = "android:id/viewDetailsButton" }
         ) {
             Icon(
                 painter = painterResource(R.drawable.viewmore),
@@ -228,14 +236,15 @@ fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
             AlertDialog(
                 onDismissRequest = { showDescriptionDialog = false },
                 title = {
-                    Text(text = "Transaction Details", fontFamily = mintsansFontFamily)
+                    Text(text = "Transaction Details", fontFamily = mintsansFontFamily, modifier = Modifier.semantics { testTag = "android:id/dialogTitle" })
                 },
                 text = {
-                    Text(text = transaction.description)
+                    Text(text = transaction.description, modifier = Modifier.semantics { testTag = "android:id/transactionDescription" })
                 },
                 confirmButton = {
                     Button(
-                        onClick = { showDescriptionDialog = false }
+                        onClick = { showDescriptionDialog = false },
+                        modifier = Modifier.semantics { testTag = "android:id/closeDialogButton" }
                     ) {
                         Text("Close", fontFamily = mintsansFontFamily)
                     }
