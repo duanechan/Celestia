@@ -37,7 +37,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -355,6 +354,7 @@ fun ProfileScreen(
                             .size(100.dp)
                             .clip(RoundedCornerShape(50.dp))
                             .background(Color.White)
+                            .clickable { openGallery() }
                     )
                     FloatingActionButton(
                         onClick = { openGallery() },
@@ -382,7 +382,6 @@ fun ProfileScreen(
                         text = role,
                         fontWeight = FontWeight.Normal,
                         fontSize = 18.sp,
-                        fontFamily = mintsansFontFamily,
                         color = Color.White
                     )
                 }
