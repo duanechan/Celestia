@@ -21,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
@@ -79,7 +78,6 @@ fun FarmerItems(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(color = BgColor)
-            .padding(top = 100.dp, bottom = 30.dp)
     ) {
         when (itemState) {
             is ItemState.LOADING -> LoadingFarmerProducts()
@@ -135,9 +133,6 @@ fun FarmerItems(navController: NavController) {
 
 @Composable
 fun FarmerItems(items: List<ProductData>, navController: NavController) {
-    var query by remember { mutableStateOf("") }
-
-    // Get the current month as a string
     val currentMonth = java.time.LocalDate.now().monthValue.toString()
 
     Box(
@@ -145,7 +140,7 @@ fun FarmerItems(items: List<ProductData>, navController: NavController) {
         modifier = Modifier.fillMaxSize()
     ) {
         LazyColumn(
-            contentPadding = PaddingValues(bottom = 100.dp),
+            contentPadding = PaddingValues(bottom = 15.dp),
             modifier = Modifier
                 .fillMaxSize()
                 .semantics { testTag = "android:id/farmerProductsList" }
@@ -159,12 +154,11 @@ fun FarmerItems(items: List<ProductData>, navController: NavController) {
                 }
             }
             itemsIndexed(items.sortedByDescending { it.quantity }) { index, product ->
-                // Pass the currentMonth to FarmerProductTypeInventory
                 FarmerProductTypeInventory(
                     product = product,
                     navController = navController,
                     isFirst = (index == 0),
-                    currentMonth = currentMonth // Add currentMonth here
+                    currentMonth = currentMonth
                 )
             }
         }

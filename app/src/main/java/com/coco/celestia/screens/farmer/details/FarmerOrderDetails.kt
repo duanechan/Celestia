@@ -107,7 +107,7 @@ fun FarmerOrderDetails(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(color = BgColor)
-                    .padding(top = 80.dp)
+//                    .padding(top = 80.dp)
                     .semantics { testTag = "android:id/orderDetailsScreen" }
             ) {
                 OrderDetailsCard(orderData = orderData)
@@ -334,7 +334,7 @@ fun OrderDetailsCard(orderData: OrderData) {
             .fillMaxWidth()
             .height(400.dp)
             .semantics { testTag = "android:id/orderDetailsCard" },
-        shape = RoundedCornerShape(15.dp),
+        shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
         ),
@@ -361,7 +361,7 @@ fun OrderDetailsCard(orderData: OrderData) {
                     Column(
                         horizontalAlignment = Alignment.Start,
                         modifier = Modifier
-                            .weight(1f) // Adjusted weight
+                            .weight(1f)
                             .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(5.dp))
                             .background(Sand2, shape = RoundedCornerShape(5.dp))
                             .padding(top = 8.dp, start = 8.dp, bottom = 30.dp)

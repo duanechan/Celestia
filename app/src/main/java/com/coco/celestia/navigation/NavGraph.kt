@@ -236,8 +236,7 @@ fun NavGraph(
             AdminInventory(
                 orderViewModel = orderViewModel,
                 productViewModel = productViewModel,
-                transactionViewModel = transactionViewModel,
-                navController = navController
+                transactionViewModel = transactionViewModel
             )
         }
         composable(route = Screen.AdminUserManagement.route) {
@@ -298,7 +297,6 @@ fun NavGraph(
             }
 
             AdminAddProduct(
-                navController = navController,
                 productPrice = productPrice,
                 productName = productName,
                 onUpdatedProductImage = { updatedProductImage = it },

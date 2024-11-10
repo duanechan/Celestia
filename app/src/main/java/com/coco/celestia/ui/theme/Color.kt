@@ -26,14 +26,19 @@ val GrayTextField = Color(0XFFdcdcdc)
 //Client Palette
 val LightOrange = Color(0xFFe79857) //top bar
 val ClientBG = Color (0xFFECDFCC)  //client bg
-val ContainerLO = Color (0xFFd4c8b7) //container bg in client dashboard
-val CLightGreen = Color (0xFF84b070) //order card
-val LGContainer = Color (0xff93c47d) //filter and notif
-val CLGText = Color (0xFFF5E1A4) //order status color in client order
-val ContactText = Color (0xFF827d6d) //contact showmore/less text
-val BBGreen = Color (0xffffffff) //icon color bottom bar
-val GreenCircle = Color(0xff9dc98a) //circular indicator in bottom bar
-val RavenBlack = Color (0xFF333333) //TEXT IN CLIENT
+val ContainerLO = Color (0xFFe1cdaf) //container bg in client dashboard
+val CDarkOrange = Color (0xFFDA8359) //order card
+val LGContainer = Color (0xffd98156) //filter and notif
+val CLGText = Color (0xFFa05f49) //order status color in client order
+val ContactText = Color (0xFF964e35) //contact showmore/less text
+val BWhite = Color (0xFFFFFfff) //icon color bottom bar
+val DOrangeCircle = Color(0xffDA8359) //circular indicator in bottom bar
+val CDText = Color (0xFF47210c) //TEXT IN CLIENT
+val BAButton = Color(0xFFe3a383) //BuyAgainButton
+val BABText = Color (0xFFFFFfff) //Buy Again Button Text
+val SoftPeach = Color(0xFFF2C3A2)
+val SoftCOrange = Color(0xFFE1B07E)
+val LightBeige = Color(0xFFF5E3D0)
 
 // Toast Palette
 val JadeGreen = Color(0xFF00bb77)

@@ -94,7 +94,7 @@ fun FarmerManageOrder(
             modifier = Modifier
                 .fillMaxHeight()
                 .background(color = BgColor)
-                .padding(top = 100.dp, bottom = 50.dp)
+//                .padding(top = 100.dp, bottom = 50.dp)
                 .verticalScroll(rememberScrollState())
                 .semantics { testTag = "android:id/farmerManageOrderColumn" }
         ) {

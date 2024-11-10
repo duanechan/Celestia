@@ -34,9 +34,6 @@ import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
@@ -75,7 +72,6 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
     var isLowStock by remember { mutableStateOf(false) }
     var dynamicLowStockThreshold by remember { mutableIntStateOf(0) }
     var isInSeason by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
     var farmerName by remember { mutableStateOf("") }
     val currentDateTime = LocalDateTime.now()
     val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
@@ -115,176 +111,167 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
         } ?: false
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color = BgColor)
-                .verticalScroll(rememberScrollState())
-                .padding(paddingValues)
-                .semantics { testTag = "android:id/farmerItemsDetailsScreen" }
-        ) {
-            when (productState) {
-                ProductState.LOADING -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .semantics { testTag = "android:id/loadingIndicator" }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = BgColor)
+            .verticalScroll(rememberScrollState())
+            .semantics { testTag = "android:id/farmerItemsDetailsScreen" }
+    ) {
+        when (productState) {
+            ProductState.LOADING -> {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .semantics { testTag = "android:id/loadingIndicator" }
+                )
+            }
+            ProductState.SUCCESS -> {
+                val product = productData.find { it.name.equals(productName, ignoreCase = true) }
+                val selectedItemData = itemData.find { it.name.equals(productName, ignoreCase = true) }
+                val selectedItemAsItemData = selectedItemData?.let {
+                    ItemData(
+                        name = it.name,
+                        farmerName = farmerName,
+                        items = listOf(it).toMutableList()
                     )
                 }
-                ProductState.SUCCESS -> {
-                    val product = productData.find { it.name.equals(productName, ignoreCase = true) }
-                    val selectedItemData = itemData.find { it.name.equals(productName, ignoreCase = true) }
-                    val selectedItemAsItemData = selectedItemData?.let {
-                        ItemData(
-                            name = it.name,
+
+                if (product != null && selectedItemAsItemData != null) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                    ) {
+                        ProductDetailsCard(
+                            itemData = selectedItemAsItemData,
+                            productQuantity = productQuantity,
+                            productPricePerKg = productPricePerKg,
+                            isLowStock = isLowStock,
+                            onEditClick = { showEditDialog = true },
+                            uid = uid,
+                            farmerItemViewModel = farmerItemViewModel,
                             farmerName = farmerName,
-                            items = listOf(it).toMutableList()
+                            isInSeason = isInSeason
                         )
-                    }
 
-                    if (product != null && selectedItemAsItemData != null) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .padding(top = 10.dp)
-                        ) {
-                            Spacer(modifier = Modifier.height(20.dp))
-
-                            ProductDetailsCard(
-                                itemData = selectedItemAsItemData,
-                                productQuantity = productQuantity,
-                                productPricePerKg = productPricePerKg,
-                                isLowStock = isLowStock,
-                                onEditClick = { showEditDialog = true },
-                                uid = uid,
-                                farmerItemViewModel = farmerItemViewModel,
-                                farmerName = farmerName,
-                                isInSeason = isInSeason
-                            )
-
-                            when (orderState) {
-                                OrderState.LOADING -> {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier
-                                            .align(Alignment.CenterHorizontally)
-                                            .padding(top = 20.dp)
-                                            .semantics { testTag = "android:id/orderLoadingIndicator" }
-                                    )
+                        when (orderState) {
+                            OrderState.LOADING -> {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                        .semantics { testTag = "android:id/orderLoadingIndicator" }
+                                )
+                            }
+                            OrderState.EMPTY -> {
+                                Text(
+                                    text = "No orders available for this product.",
+                                    fontSize = 16.sp,
+                                    color = Cocoa.copy(alpha = 0.8f),
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                        .padding(16.dp)
+                                        .semantics { testTag = "android:id/noOrdersText" }
+                                )
+                            }
+                            OrderState.SUCCESS -> {
+                                val filteredOrders = allOrders.filter {
+                                    it.orderData.name.equals(productName, ignoreCase = true)
                                 }
-                                OrderState.EMPTY -> {
+
+                                if (filteredOrders.isEmpty()) {
                                     Text(
                                         text = "No orders available for this product.",
                                         fontSize = 16.sp,
-                                        color = Color.Gray,
-                                        modifier = Modifier
-                                            .align(Alignment.CenterHorizontally)
-                                            .padding(top = 20.dp)
-                                            .semantics { testTag = "android:id/noOrdersText" }
-                                    )
-                                }
-                                OrderState.SUCCESS -> {
-                                    val filteredOrders = allOrders.filter {
-                                        it.orderData.name.equals(productName, ignoreCase = true)
-                                    }
-
-                                    if (filteredOrders.isEmpty()) {
-                                        Text(
-                                            text = "No orders available for this product.",
-                                            fontSize = 16.sp,
-                                            color = Color.Gray,
-                                            modifier = Modifier
-                                                .align(Alignment.CenterHorizontally)
-                                                .padding(top = 20.dp)
-                                                .semantics { testTag = "noOrdersForProductText" }
-                                        )
-                                    } else {
-                                        OrderTable(orders = filteredOrders)
-                                    }
-                                }
-                                is OrderState.ERROR -> {
-                                    Text(
-                                        text = "Error loading orders",
-                                        fontSize = 16.sp,
-                                        color = Color.Red,
+                                        color = Cocoa.copy(alpha = 0.8f),
                                         modifier = Modifier
                                             .align(Alignment.CenterHorizontally)
                                             .padding(16.dp)
-                                            .semantics { testTag = "android:id/orderErrorText" }
+                                            .semantics { testTag = "noOrdersForProductText" }
                                     )
+                                } else {
+                                    OrderTable(orders = filteredOrders)
                                 }
                             }
+                            is OrderState.ERROR -> {
+                                Text(
+                                    text = "Error loading orders",
+                                    fontSize = 16.sp,
+                                    color = Color.Red,
+                                    modifier = Modifier
+                                        .align(Alignment.CenterHorizontally)
+                                        .padding(16.dp)
+                                        .semantics { testTag = "android:id/orderErrorText" }
+                                )
+                            }
                         }
-                    } else {
-                        Text(
-                            text = "Product not found",
-                            fontSize = 16.sp,
-                            color = Color.Red,
-                            fontWeight = Bold,
-                            modifier = Modifier
-                                .align(Alignment.Center)
-                                .semantics { testTag = "android:id/productNotFoundText" }
-                        )
                     }
-                }
-                ProductState.EMPTY -> {
+                } else {
                     Text(
-                        text = "No products available",
+                        text = "Product not found",
                         fontSize = 16.sp,
-                        color = Color.Gray,
+                        color = Color.Red,
                         fontWeight = Bold,
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .semantics { testTag = "android:id/noProductsText" }
-                    )
-                }
-                is ProductState.ERROR -> {
-                    Text(
-                        text = "Error loading products",
-                        fontSize = 16.sp,
-                        color = Color.Red,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .semantics { testTag = "android:id/productErrorText" }
+                            .semantics { testTag = "android:id/productNotFoundText" }
                     )
                 }
             }
+            ProductState.EMPTY -> {
+                Text(
+                    text = "No products available",
+                    fontSize = 16.sp,
+                    color = Color.Gray,
+                    fontWeight = Bold,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .semantics { testTag = "android:id/noProductsText" }
+                )
+            }
+            is ProductState.ERROR -> {
+                Text(
+                    text = "Error loading products",
+                    fontSize = 16.sp,
+                    color = Color.Red,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .semantics { testTag = "android:id/productErrorText" }
+                )
+            }
         }
+    }
 
-        if (showEditDialog) {
-            EditQuantityDialog(
-                productName = productName,
-                currentQuantity = productQuantity,
-                currentPrice = productPricePerKg,
-                onDismiss = { showEditDialog = false },
-                onConfirm = { newQuantity, newPrice ->
-                    val quantityDifference = newQuantity - productQuantity
-                    farmerItemViewModel.updateItemQuantity(productName, quantityDifference)
-                    farmerItemViewModel.updateItemPrice(productName, newPrice)
-                    transactionViewModel.recordTransaction(
-                        uid = uid,
-                        transaction = TransactionData(
-                            transactionId = "Transaction-${UUID.randomUUID()}",
-                            type = "ProductUpdated",
-                            date = formattedDateTime,
-                            description = "$productName quantity updated to ${quantityDifference}kg."
-                        )
+    if (showEditDialog) {
+        EditQuantityDialog(
+            productName = productName,
+            currentQuantity = productQuantity,
+            currentPrice = productPricePerKg,
+            onDismiss = { showEditDialog = false },
+            onConfirm = { newQuantity, newPrice ->
+                val quantityDifference = newQuantity - productQuantity
+                farmerItemViewModel.updateItemQuantity(productName, quantityDifference)
+                farmerItemViewModel.updateItemPrice(productName, newPrice)
+                transactionViewModel.recordTransaction(
+                    uid = uid,
+                    transaction = TransactionData(
+                        transactionId = "Transaction-${UUID.randomUUID()}",
+                        type = "ProductUpdated",
+                        date = formattedDateTime,
+                        description = "$productName quantity updated to ${quantityDifference}kg."
                     )
-                    transactionViewModel.recordTransaction(
-                        uid = uid,
-                        transaction = TransactionData(
-                            transactionId = "Transaction-${UUID.randomUUID()}",
-                            type = "ProductUpdated",
-                            date = formattedDateTime,
-                            description = "$productName price updated to ₱$newPrice."
-                        )
+                )
+                transactionViewModel.recordTransaction(
+                    uid = uid,
+                    transaction = TransactionData(
+                        transactionId = "Transaction-${UUID.randomUUID()}",
+                        type = "ProductUpdated",
+                        date = formattedDateTime,
+                        description = "$productName price updated to ₱$newPrice."
                     )
-                    showEditDialog = false
-                }
-            )
-        }
+                )
+                showEditDialog = false
+            }
+        )
     }
 }
 
@@ -318,10 +305,10 @@ fun ProductDetailsCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(350.dp)
+            .height(300.dp)
     ) {
         Card(
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .semantics { testTag = "android:id/productCard_${itemData.name}" },
@@ -377,7 +364,7 @@ private fun ProductDetailsContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(start = 16.dp, top = 60.dp, end = 16.dp)
+            .padding(start = 16.dp, top = 10.dp, end = 16.dp)
     ) {
         // Product Name
         Text(

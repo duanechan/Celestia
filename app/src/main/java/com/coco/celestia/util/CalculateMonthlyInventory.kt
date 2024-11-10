@@ -36,7 +36,8 @@ fun calculateMonthlyInventory(orderData: List<OrderData>, productData: List<Prod
             productName = product.name,
             remainingQuantity = product.quantity - totalOrdered,
             totalOrderedThisMonth = totalOrdered,
-            priceKg = product.priceKg
+            priceKg = product.priceKg,
+            currentInv = product.quantity
         )
     }
 }

@@ -4,9 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -16,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -24,25 +27,29 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.ui.theme.*
-import com.coco.celestia.util.formatDate
 import com.coco.celestia.viewmodel.TransactionState
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.google.firebase.auth.FirebaseAuth
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun FarmerTransactions(navController: NavController) {
-    val uid = FirebaseAuth.getInstance().uid.toString()
     val transactionViewModel: TransactionViewModel = viewModel()
     val transactionData by transactionViewModel.transactionData.observeAsState(hashMapOf())
     val transactionState by transactionViewModel.transactionState.observeAsState(TransactionState.LOADING)
+    val firebaseAuth = FirebaseAuth.getInstance()
+    val currentUser = firebaseAuth.currentUser
+    val userId = currentUser?.uid ?: ""
 
-    LaunchedEffect(Unit, transactionData) {
-        if (transactionData.isEmpty()) {
-            transactionViewModel.fetchTransactions(uid = uid, filter = "")
+    LaunchedEffect(userId) {
+        if (userId.isNotEmpty()) {
+            transactionViewModel.fetchTransactions(uid = userId, filter = "")
         }
     }
 
@@ -60,6 +67,7 @@ fun FarmerTransactions(navController: NavController) {
             }
         }
         is TransactionState.ERROR -> {
+            val errorMessage = (transactionState as TransactionState.ERROR).message
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -68,7 +76,7 @@ fun FarmerTransactions(navController: NavController) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Failed to load transactions: ${(transactionState as TransactionState.ERROR).message}",
+                    text = "Failed to load transactions: $errorMessage",
                     color = Color.Red,
                     modifier = Modifier.semantics { testTag = "android:id/errorMessage" }
                 )
@@ -103,8 +111,14 @@ fun FarmerTransactions(navController: NavController) {
                         .background(color = BgColor)
                         .semantics { testTag = "android:id/transactionList" }
                 ) {
-                    items(transactionData[uid]!!) { transaction ->
-                        TransactionItem(transaction, navController)
+                    transactionData.forEach { (userId, transactions) ->
+                        val sortedTransactions = transactions.sortedByDescending { transaction ->
+                            SimpleDateFormat("MM/dd/yyyy", Locale.getDefault()).parse(transaction.date)
+                        }
+
+                        items(sortedTransactions) { transaction ->
+                            TransactionItem(transaction, navController)
+                        }
                     }
                 }
             }
@@ -114,50 +128,46 @@ fun FarmerTransactions(navController: NavController) {
 
 @Composable
 fun TransactionItem(transaction: TransactionData, navController: NavController) {
-//    val transactionDate = formatDate(transaction.order.orderDate).toString()
-//    val orderStatus = transaction.order.status
-//    val productType = transaction.order.orderData.type
-//    val productQuantity = transaction.order.orderData.quantity
-
     Card(
         modifier = Modifier
-            .padding(20.dp)
+            .padding(start = 20.dp, end = 20.dp, bottom = 15.dp, top = 15.dp)
             .fillMaxWidth()
-            .semantics { testTag = "android:id/transactionCard" }
+            .height(200.dp)
+            .semantics { testTag = "android:id/transactionCard" },
+        shape = RoundedCornerShape(16.dp),
     ) {
-//        StyledText(transactionDate, productQuantity.toString(), productType, orderStatus)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(brush = Brush.verticalGradient(
+                    colors = listOf(PaleGold, GoldenYellow)
+                ))
+                .padding(16.dp)
+        ) {
+            StyledText(
+                transactionDate = transaction.date,
+                productDescription = transaction.description,
+                productType = transaction.type
+            )
+        }
     }
 }
 
 @Composable
-fun StyledText(transactionDate: String, productQuantity: String, productType: String, orderStatus: String) {
+fun StyledText(transactionDate: String, productDescription: String, productType: String) {
     Text(
         text = buildAnnotatedString {
-            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                append("$transactionDate \nYou ")
+            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 20.sp)) {
+                append("$transactionDate \n")
             }
-            withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                append("sold ")
+            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 20.sp)) {
+                append("$productType\n")
             }
-            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                append("${productQuantity}kg of $productType. ")
-            }
-            withStyle(style = SpanStyle(fontWeight = FontWeight.Normal)) {
-                append("Current order status: ")
-            }
-            withStyle(
-                style = SpanStyle(
-                    fontWeight = FontWeight.Bold,
-                    color = when (orderStatus) {
-                        "PENDING" -> Color(0xFFFF4F00)
-                        "PREPARING" -> Color.Green
-                        else -> Color.Red
-                    }
-                )
-            ) {
-                append(orderStatus)
+            withStyle(style = SpanStyle(fontWeight = FontWeight.Normal, fontSize = 18.sp)) {
+                append("$productDescription\n")
             }
         },
+        color = Cocoa,
         modifier = Modifier
             .padding(20.dp)
             .semantics { testTag = "android:id/styledText" }

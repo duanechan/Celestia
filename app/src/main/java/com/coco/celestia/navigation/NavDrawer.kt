@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
@@ -112,7 +113,8 @@ fun NavDrawerTopBar(
                             modifier = Modifier.align(Alignment.Center)
                         )
 
-                        if (currentDestination != Screen.AddOrder.route && currentDestination != Screen.OrderDetails.route) {
+                        if (currentDestination != Screen.AddOrder.route &&
+                            currentDestination != Screen.OrderDetails.route) {
                             IconButton(
                                 onClick = { navController.navigate(Screen.AddOrder.route) },
                                 modifier = Modifier
@@ -135,17 +137,50 @@ fun NavDrawerTopBar(
             )
             ClientHelpOverlay(isVisible = isHelpOverlayVisible)
         }
-        "Admin" -> { TopBar(title = title, navController = navController, gradient = BlueGradientBrush) }
-        "Farmer" -> { GradientTopBar(title = title, navController = navController) }
-        "Coop" -> { TopBar(title = title, navController = navController, gradient = GreenGradientBrush) }
-        "CoopCoffee" -> { TopBar(title = title, navController = navController, gradient = GreenGradientBrush) }
-        "CoopMeat" -> { TopBar(title = title, navController = navController, gradient = GreenGradientBrush) }
+        "Admin" -> {
+            TopBar(
+                title = title,
+                navController = navController,
+                gradient = BlueGradientBrush,
+                currentDestination = currentDestination
+            )
+        }
+        "Farmer" -> {
+            GradientTopBar(
+                title = title,
+                navController = navController
+            )
+        }
+        "Coop" -> {
+            TopBar(
+                title = title,
+                navController = navController,
+                gradient = GreenGradientBrush,
+                currentDestination = currentDestination
+            )
+        }
+        "CoopCoffee" -> {
+            TopBar(
+                title = title,
+                navController = navController,
+                gradient = GreenGradientBrush,
+                currentDestination = currentDestination
+            )
+        }
+        "CoopMeat" -> {
+            TopBar(
+                title = title,
+                navController = navController,
+                gradient = GreenGradientBrush,
+                currentDestination = currentDestination
+            )
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(title: String, navController: NavController, gradient: Brush) {
+fun TopBar(title: String, navController: NavController, gradient: Brush, currentDestination: String?) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -165,6 +200,19 @@ fun TopBar(title: String, navController: NavController, gradient: Brush) {
                         color = Color.White,
                         modifier = Modifier.weight(1f)
                     )
+                }
+            },
+            navigationIcon = {
+                if (currentDestination == Screen.AdminAddProduct.route) {
+                    IconButton(
+                        onClick = { navController.popBackStack() },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back Button",
+                            tint = Color.White
+                        )
+                    }
                 }
             },
             actions = {
@@ -277,7 +325,7 @@ fun NavDrawerBottomBar(
         ) {
             // Dashboard - Default to all roles except Client
             NavigationBarItem(
-                icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard", tint = if (role == "Client") BBGreen else bottomBarColors.second) },
+                icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard", tint = if (role == "Client") BWhite else bottomBarColors.second) },
                 label = { Text("Dashboard", color = if (role == "Client") Color.White else bottomBarColors.second, fontFamily = mintsansFontFamily) },
                 selected = currentDestination == routes.dashboard,
                 onClick = {
@@ -287,14 +335,14 @@ fun NavDrawerBottomBar(
                 },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = if (role == "Client") Color.White else bottomBarColors.second,
-                    indicatorColor = if (role == "Client") GreenCircle else bottomBarColors.first // Apply the custom color for Client
+                    indicatorColor = if (role == "Client") DOrangeCircle else bottomBarColors.first // Apply the custom color for Client
                 ),
                 modifier = Modifier.semantics { testTag = "android:id/dashboardPage" }
             )
 
             if(role == "Coop" || role == "CoopCoffee" || role == "CoopMeat"|| role == "Client" || role == "Farmer") {
                 NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Orders", tint = if (role == "Client") BBGreen else bottomBarColors.second) },
+                    icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Orders", tint = if (role == "Client") BWhite else bottomBarColors.second) },
                     label = { Text("Orders", color = if (role == "Client") Color.White else bottomBarColors.second, fontFamily = mintsansFontFamily) },
                     selected = currentDestination == routes.orders || currentDestination == Screen.ClientOrderDetails.route,
                     onClick = {
@@ -311,7 +359,7 @@ fun NavDrawerBottomBar(
                     },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = if (role == "Client") Color.White else bottomBarColors.second,
-                        indicatorColor = if (role == "Client") GreenCircle else bottomBarColors.first
+                        indicatorColor = if (role == "Client") DOrangeCircle else bottomBarColors.first
                     ),
                     modifier = Modifier
                         .semantics { testTag = "android:id/ordersPage" }
@@ -371,7 +419,7 @@ fun NavDrawerBottomBar(
 
             if (role == "Client") {
                 NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.Call, contentDescription = "Contact", tint = BBGreen) },
+                    icon = { Icon(imageVector = Icons.Default.Call, contentDescription = "Contact", tint = BWhite) },
                     label = { Text("Contact", color = Color.White, fontFamily = mintsansFontFamily) },
                     selected = currentDestination == Screen.ClientContact.route,
                     onClick = {
@@ -380,15 +428,15 @@ fun NavDrawerBottomBar(
                         }
                     },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = if (role == "Client") Color.White else bottomBarColors.second,
-                        indicatorColor = if (role == "Client") GreenCircle else bottomBarColors.first
+                        selectedIconColor = Color.White ,
+                        indicatorColor = DOrangeCircle
                     ),
                     modifier = Modifier.semantics { testTag = "android:id/contactPage" }
                 )
             }
 
             NavigationBarItem(
-                icon = { Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile", tint = if (role == "Client") BBGreen else bottomBarColors.second) },
+                icon = { Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile", tint = if (role == "Client") BWhite else bottomBarColors.second) },
                 label = { Text("Profile", color = if (role == "Client") Color.White else bottomBarColors.second, fontFamily = mintsansFontFamily) },
                 selected = currentDestination == Screen.Profile.route,
                 onClick = {
@@ -398,7 +446,7 @@ fun NavDrawerBottomBar(
                 },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = if (role == "Client") Color.White else bottomBarColors.second,
-                    indicatorColor = if (role == "Client") GreenCircle else bottomBarColors.first
+                    indicatorColor = if (role == "Client") DOrangeCircle else bottomBarColors.first
                 ),
                 modifier = Modifier.semantics { testTag = "android:id/profilePage" }
             )
