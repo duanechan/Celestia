@@ -301,7 +301,7 @@ fun AdminItemCard(
                             text = productName,
                             fontSize = 25.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Gray,
+                            color = DarkBlue,
                             modifier = Modifier
                                 .padding(horizontal = 12.dp)
                                 .padding(vertical = 6.dp)
@@ -313,7 +313,7 @@ fun AdminItemCard(
 
                         Box (
                             modifier = Modifier
-                                .background(Color.Gray, shape = RoundedCornerShape(4.dp))
+                                .background(PaleBlue, shape = RoundedCornerShape(4.dp))
                                 .padding(horizontal = 12.dp, vertical = 2.dp)
                                 .width(70.dp)
                                 .height(30.dp)
@@ -322,14 +322,13 @@ fun AdminItemCard(
                             Text(
                                 text = "₱ $price",
                                 fontSize = 18.sp,
-                                color = Gray,
+                                color = DarkBlue,
                                 modifier = Modifier
                                     .semantics { testTag = "android:id/ProductPrice_${productName}" }
                                     .align(Alignment.Center)
                             )
                         }
                     }
-
                     AdminItemCardDetails("Inventory", "${current}kg")
 
                     if (identifier == "monthly") {
@@ -345,7 +344,7 @@ fun AdminItemCard(
                         ) {
 
                             drawLine(
-                                color = Color.Gray,
+                                color = DarkBlue,
                                 start = Offset(0f, 0f),
                                 end = Offset(size.width, 0f),
                                 pathEffect = pathEffect,
@@ -367,7 +366,8 @@ fun AdminItemCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit"
+                                contentDescription = "Edit",
+                                tint = DarkBlue
                             )
                         }
                     }
@@ -389,13 +389,13 @@ fun AdminItemCardDetails (label: String, value: String) {
             text = label,
             fontSize = 20.sp,
             fontFamily = mintsansFontFamily,
-            color = Gray
+            color = DarkBlue
         )
         Text(
             text = value,
             fontSize = 20.sp,
             fontFamily = mintsansFontFamily,
-            color = Gray
+            color = DarkBlue
         )
     }
 }
