@@ -110,7 +110,9 @@ fun ClientDashboard(
                 notifications.clear()
                 notifications.addAll(it)
             },
-            onError = {}
+            onError = {
+
+            }
         )
         Log.d("Notifs", notifications.toString())
         orderViewModel.fetchAllOrders("", "Client")
@@ -138,7 +140,12 @@ fun ClientDashboard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 27.dp, bottom = 8.dp, start = 25.dp, end = 25.dp)
+                    .padding(
+                        top = 27.dp,
+                        bottom = 8.dp,
+                        start = 25.dp,
+                        end = 25.dp
+                    )
                     .semantics { testTag = "android:id/DashboardHeaderRow" },
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -177,14 +184,11 @@ fun ClientDashboard(
                                 modifier = Modifier
                                     .background(LGContainer)
                                     .padding(17.dp)
-                                    .semantics { testTag = "android:id/NotificationButton" }
                             ) {
                                 Image(
                                     painter = painterResource(id = R.drawable.notification_icon),
                                     contentDescription = "Notification Icon",
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .semantics { testTag = "android:id/NotificationIcon" }
+                                    modifier = Modifier.size(24.dp)
                                 )
                             }
                         }
@@ -353,7 +357,6 @@ fun FeaturedProducts(
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .background(ContainerLO, shape = RoundedCornerShape(8.dp))
             .padding(16.dp)
-            .semantics { testTag = "android:id/FeaturedProducts" }
     ) {
 
         Row(
@@ -405,8 +408,7 @@ fun ProductTypeCard(
             .height(100.dp)
             .clickable {
                 navController.navigate("add_order/${product.type}")
-            }
-            .semantics { testTag = "android:id/ProductTypeCard_${product.name}" },
+            },
         elevation = CardDefaults.cardElevation(4.dp),
     ) {
         Box(
@@ -443,7 +445,6 @@ fun ProductTypeCard(
         }
     }
 }
-
 @Composable
 fun OrderHistory(
     orderData: List<OrderData>,
@@ -547,7 +548,7 @@ fun OrderCardDetails(
                 ) {
                     Text(
                         text = orderStatus,
-                        fontSize = 14.sp,
+                        fontSize = 17.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = CLGText,
                         modifier = Modifier.padding(bottom = 4.dp)

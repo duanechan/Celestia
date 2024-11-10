@@ -21,7 +21,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.coco.celestia.ui.theme.LightBlueGreen
 import com.coco.celestia.ui.theme.LightOrange
 import com.coco.celestia.viewmodel.model.Notification
 import java.text.SimpleDateFormat
@@ -63,11 +62,14 @@ fun ClientNotification(notifications: List<Notification>, onDismiss: () -> Unit)
 @Composable
 fun NotificationItem(notification: Notification) {
     val statusColor = when (notification.status.lowercase()) {
+        "rejected" -> Color.Red
         "pending" -> LightOrange
         "preparing" -> Color.Blue
-        "rejected" -> Color.Red
-        "on the way" -> Color.Cyan
+        "delivering" -> Color.Black
         "completed" -> Color.Green
+        "incomplete" -> Color.Cyan
+        "received" -> Color.Yellow
+        "cancelled" -> Color.Magenta
         else -> Color.Gray
     }
 

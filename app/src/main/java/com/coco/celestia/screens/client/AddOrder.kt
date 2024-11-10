@@ -211,7 +211,7 @@ fun AddOrderPanel(
                     Box(
                         modifier = Modifier
                             .background(LGContainer)
-                            .padding(16.dp)
+                            .padding(17.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.List,

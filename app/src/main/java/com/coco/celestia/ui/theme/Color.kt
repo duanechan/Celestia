@@ -38,6 +38,9 @@ val BAButton = Color(0xFFe3a383) //BuyAgainButton
 val BABText = Color (0xFFFFFfff) //Buy Again Button Text
 val SoftCOrange = Color(0xFFE1B07E) //products in dashboard
 val CProfile = Color (0xfff1c4a0) // profile for client
+val TrackOrder = Color (0xff7d543c) //trackorder color
+val GDivider = Color (0xFF4CAF50) //greendivider
+val ODivider = Color (0xFFe59400) //orangedivider
 
 // Toast Palette
 val JadeGreen = Color(0xFF00bb77)
