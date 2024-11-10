@@ -82,6 +82,7 @@ data class ItemData(
 data class Notification(
     val timestamp: String = "",
     val message: String = "",
+    val status: String = "UNKNOWN"
 )
 
 data class CalendarUIState(

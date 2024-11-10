@@ -280,9 +280,16 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                             horizontalAlignment = Alignment.Start
                         ) {
                             Text(
-                                text = "Order ID: $orderId",
+                                text = orderStatus,
                                 fontSize = 28.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = CLGText,
+                                modifier = Modifier.padding(top = 5.dp, start = 10.dp)
+                            )
+                            Text(
+                                text = "Order ID: $orderId",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Normal,
                                 color = Color.White,
                                 modifier = Modifier.padding(start = 10.dp)
                             )
@@ -294,13 +301,7 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                                 color = Color.White,
                                 modifier = Modifier.padding(top = 5.dp, start = 10.dp)
                             )
-                            Text(
-                                text = orderStatus,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = CLGText,
-                                modifier = Modifier.padding(top = 5.dp, start = 10.dp)
-                            )
+
                         }
                     }
                 }

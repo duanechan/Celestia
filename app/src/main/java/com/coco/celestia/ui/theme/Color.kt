@@ -36,9 +36,8 @@ val DOrangeCircle = Color(0xffDA8359) //circular indicator in bottom bar
 val CDText = Color (0xFF47210c) //TEXT IN CLIENT
 val BAButton = Color(0xFFe3a383) //BuyAgainButton
 val BABText = Color (0xFFFFFfff) //Buy Again Button Text
-val SoftPeach = Color(0xFFF2C3A2)
-val SoftCOrange = Color(0xFFE1B07E)
-val LightBeige = Color(0xFFF5E3D0)
+val SoftCOrange = Color(0xFFE1B07E) //products in dashboard
+val CProfile = Color (0xfff1c4a0) // profile for client
 
 // Toast Palette
 val JadeGreen = Color(0xFF00bb77)

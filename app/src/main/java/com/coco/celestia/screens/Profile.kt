@@ -80,8 +80,10 @@ import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.BGGradientBrush
 import com.coco.celestia.ui.theme.Apricot
 import com.coco.celestia.ui.theme.BlueGradientBrush
+import com.coco.celestia.ui.theme.CProfile
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.ui.theme.Cocoa
+import com.coco.celestia.ui.theme.DOrangeCircle
 import com.coco.celestia.ui.theme.DuskyBlue
 import com.coco.celestia.ui.theme.FarmerGradientBrush
 import com.coco.celestia.ui.theme.GrayGradientBrush
@@ -303,7 +305,7 @@ fun ProfileScreen(
     fun getIconColorForRole(role: String): Color {
         return when (role) {
             "Admin" -> DuskyBlue
-            "Client" -> LightOrange
+            "Client" -> DOrangeCircle
             "Farmer" -> Cocoa
             "Coop", "CoopCoffee", "CoopMeat" -> PreparingStatus
             else -> Color(0x80FFFFFF)
@@ -312,7 +314,7 @@ fun ProfileScreen(
     fun getProfileColorForRole(role: String): Color {
         return when (role) {
             "Admin" -> PaleBlue
-            "Client" -> SoftCOrange
+            "Client" -> CProfile
             "Farmer" -> Apricot
             "Coop", "CoopCoffee", "CoopMeat" -> LightBlueGreen
             else -> Color(0x80FFFFFF)

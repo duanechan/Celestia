@@ -98,24 +98,29 @@ object NotificationService {
             when (item) {
                 is OrderData -> Notification(
                     timestamp = item.orderDate,
-                    message =
-                        "Your Order(#${item.orderId.substring(6,11).uppercase()}) " +
-                        when (item.status) {
-                            "REJECTED" -> "has been rejected (Reason: ${item.rejectionReason})"
-                            "PENDING" -> "is pending. Please wait for further updates."
-                            "PREPARING" -> "is being prepared."
-                            "DELIVERING" -> "is being delivered."
-                            "COMPLETED", "RECEIVED" -> "has been completed. Thank you for ordering!"
-                            "INCOMPLETE" -> "has been partially fulfilled."
-                            "CANCELLED" -> "has been cancelled."
-                            else -> "UNKNOWN STATUS"
-                        }
+                    message = "Your Order(#${
+                        item.orderId.substring(6, 11).uppercase()
+                    }) " + when (item.status) {
+                        "REJECTED" -> "has been rejected (Reason: ${item.rejectionReason})"
+                        "PENDING" -> "is pending. Please wait for further updates."
+                        "PREPARING" -> "is being prepared."
+                        "DELIVERING" -> "is being delivered."
+                        "COMPLETED", "RECEIVED" -> "has been completed. Thank you for ordering!"
+                        "INCOMPLETE" -> "has been partially fulfilled."
+                        "CANCELLED" -> "has been cancelled."
+                        else -> "UNKNOWN STATUS"
+                    },
+                    status = item.status
                 )
+
                 is TransactionData -> Notification(
                     timestamp = item.date,
-                    message = item.description
+                    message = item.description,
+                    status = item.status ?: "UNKNOWN"
+                // If TransactionData has status, otherwise set a default
                 )
-                else -> Notification()
+
+                else -> Notification() // Uses the default status value ("UNKNOWN")
             }
         }
         onProcessed(processed)

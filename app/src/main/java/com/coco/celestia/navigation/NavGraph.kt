@@ -34,6 +34,7 @@ import com.coco.celestia.screens.admin.ConfirmAddProduct
 import com.coco.celestia.screens.admin.UserManagementAuditLogs
 import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientDashboard
+import com.coco.celestia.screens.client.ClientNotification
 import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.client.ClientOrderDetails
 import com.coco.celestia.screens.coop.AddProductForm
@@ -489,4 +490,18 @@ fun NavGraph(
             }
         }
     }
+//    NavHost(navController, startDestination = "client_dashboard") {
+//        composable("client_dashboard") {
+//            ClientDashboard(
+//                navController = navController,
+//                userViewModel = userViewModel,
+//                productViewModel = productViewModel,
+//                orderViewModel = orderViewModel,
+//                transactionViewModel = transactionViewModel
+//            )
+//        }
+//        composable("notifications_screen") {
+//            ClientNotification(notifications = notifications, navController = navController)
+//        }
+//    }
 }
