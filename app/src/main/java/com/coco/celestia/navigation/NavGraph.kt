@@ -297,7 +297,6 @@ fun NavGraph(
             }
 
             AdminAddProduct(
-                navController = navController,
                 productPrice = productPrice,
                 productName = productName,
                 onUpdatedProductImage = { updatedProductImage = it },
