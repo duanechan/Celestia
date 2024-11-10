@@ -107,13 +107,13 @@ val GreenGradientBrush = Brush.linearGradient(
     end = Offset(0f, 500f)
 )
 
-val ButtonGradientBrush = Brush.linearGradient(
+val BGGradientBrush = Brush.linearGradient(
     colors = listOf(
         Color(0xFF9FFEB0),
         Color(0xFF16909B)
     ),
-    start = Offset(1000f, -500f),
-    end = Offset(0f, 500f)
+    start = Offset(1555f, -500f),
+    end = Offset(0f, 255f)
 )
 
 //Client Profile 

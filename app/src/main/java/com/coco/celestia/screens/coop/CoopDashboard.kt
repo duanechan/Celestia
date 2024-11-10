@@ -47,9 +47,13 @@ import androidx.compose.ui.semantics.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
@@ -72,11 +76,12 @@ fun CoopDashboard(
     }
 
     Box(modifier = Modifier
-        .background(GreenGradientBrush)
+        .background(BGGradientBrush)
         .fillMaxSize()
         .semantics { testTag = "android:id/CoopDashboardBox" }) {
         Column {
             OverviewSummaryBox(orderViewModel, productViewModel, role)
+            StockLevelsBarGraph(productViewModel, role)
         }
     }
 }
@@ -311,7 +316,7 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel, role: String) {
         }
     }
 
-    val lastSevenDays = (0..6).map { offset ->
+    val lastSevenDays = (0..29).map { offset ->
         Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -offset) }.time
     }.sortedBy { it }
     val dateFormatter = SimpleDateFormat("MM/dd/yyyy", Locale.US)
@@ -367,7 +372,7 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel, role: String) {
                     .border(1.dp, Color.LightGray, RoundedCornerShape(16.dp))
             ) {
                 Text(
-                    text = "Product Stock Trends (last 7 days)",
+                    text = "Ordered Product Trends (last 7 days)",
                     fontWeight = FontWeight.Bold,
                     color = DarkGreen,
                     modifier = Modifier.padding(start = 15.dp, top = 5.dp),
@@ -449,6 +454,139 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel, role: String) {
                             data = LineData(dataSets)
                             xAxis.valueFormatter = IndexAxisValueFormatter(formattedLastSevenDays.toTypedArray())
                             animateX(1000)
+                            invalidate()
+                        }
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun StockLevelsBarGraph(productViewModel: ProductViewModel, role: String) {
+    val products by productViewModel.productData.observeAsState(emptyList())  // List of products
+    val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
+
+    LaunchedEffect(Unit) {
+        // Fetch data based on the role
+        when (role) {
+            "CoopMeat" -> productViewModel.fetchProductByType("Meat")
+            "CoopCoffee" -> productViewModel.fetchProductByType("Coffee")
+        }
+    }
+
+    when (productState) {
+        ProductState.LOADING -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+        ProductState.EMPTY -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No data available for the selected role")
+            }
+        }
+
+        is ProductState.ERROR -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Error: ${(productState as ProductState.ERROR).message}")
+            }
+        }
+
+        ProductState.SUCCESS -> {
+            Box(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxWidth()
+                    .height(300.dp)
+                    .background(Color.White, RoundedCornerShape(16.dp))
+                    .border(1.dp, Color.LightGray, RoundedCornerShape(16.dp))
+            ) {
+                Text(
+                    text = "Stock Levels",
+                    fontWeight = FontWeight.Bold,
+                    color = DarkGreen,
+                    modifier = Modifier.padding(start = 15.dp, top = 10.dp),
+                    fontSize = 13.sp
+                )
+                AndroidView(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp)
+                        .padding(16.dp),
+                    factory = { context ->
+                        BarChart(context).apply {
+                            description.isEnabled = false
+                            setTouchEnabled(true)
+                            isDragEnabled = true
+                            setScaleEnabled(true)
+                            setPinchZoom(true)
+
+                            axisLeft.apply {
+                                textColor = Color(0xFF6F4E37).toArgb()
+                                setDrawGridLines(true)
+                                gridColor = Color.LightGray.toArgb()
+                                axisMinimum = 0f  // Ensures no negative values are displayed
+                            }
+
+                            xAxis.apply {
+                                position = XAxis.XAxisPosition.BOTTOM
+                                textColor = Color(0xFF6F4E37).toArgb()
+                                setDrawGridLines(false)
+                                granularity = 1f
+                                labelRotationAngle = -45f
+                            }
+
+                            axisRight.isEnabled = false
+                            legend.isEnabled = false
+                        }
+                    },
+                    update = { barChart ->
+                        // Extract stock or quantity from product data based on JSON structure
+                        val entries = products.mapIndexed { index, product ->
+                            val stockQuantity = product.quantity ?: 0  // Replace 'quantity' with the actual field from JSON
+                            BarEntry(index.toFloat(), stockQuantity.toFloat())
+                        }
+
+                        val colors = products.map { product ->
+                            when (product.name) {
+                                "Green Beans" -> GreenBeans.toArgb()
+                                "Roasted Beans" -> RoastedBeans.toArgb()
+                                "Packaged Beans" -> Packed.toArgb()
+                                "Sorted Beans" -> Sorted.toArgb()
+                                "Raw Meat" -> RawMeat.toArgb()
+                                "Pork" -> Pork.toArgb()
+                                "Kiniing" -> Kiniing.toArgb()
+                                else -> Color.Gray.toArgb()
+                            }
+                        }
+
+                        val barDataSet = BarDataSet(entries, "").apply {
+                            setColors(colors)
+                            valueTextColor = Color(0xFF6F4E37).toArgb()
+                            valueTextSize = 10f
+                            setDrawValues(true)
+                        }
+
+                        val barData = BarData(barDataSet).apply {
+                            barWidth = 0.9f
+                        }
+
+                        barChart.apply {
+                            data = barData
+                            xAxis.valueFormatter = IndexAxisValueFormatter(products.map { it.name }.toTypedArray())
+                            animateY(1000)  // Animation for Y-axis
                             invalidate()
                         }
                     }

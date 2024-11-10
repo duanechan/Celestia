@@ -72,6 +72,7 @@ import com.coco.celestia.components.dialogs.SaveInfoDialog
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.ImageService
+import com.coco.celestia.ui.theme.BGGradientBrush
 import com.coco.celestia.ui.theme.BlueGradientBrush
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.ui.theme.FarmerGradientBrush
@@ -272,7 +273,7 @@ fun ProfileScreen(
             "Admin" -> BlueGradientBrush
             "Client" -> OrangeGradientBrush
             "Farmer" -> FarmerGradientBrush
-            "Coop", "CoopCoffee", "CoopMeat" -> GreenGradientBrush
+            "Coop", "CoopCoffee", "CoopMeat" -> BGGradientBrush
             else -> GrayGradientBrush
         }
     }
