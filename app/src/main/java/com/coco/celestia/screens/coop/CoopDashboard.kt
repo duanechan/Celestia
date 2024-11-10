@@ -20,7 +20,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -77,12 +79,13 @@ fun CoopDashboard(
     LaunchedEffect(Unit) {
         orderViewModel.fetchAllOrders(filter = "", role = role)
     }
+    val scrollState = rememberScrollState()
 
     Box(modifier = Modifier
         .background(BGGradientBrush)
         .fillMaxSize()
         .semantics { testTag = "android:id/CoopDashboardBox" }) {
-        Column {
+        Column (modifier = Modifier.verticalScroll(scrollState)) {
             OverviewSummaryBox(orderViewModel, productViewModel, role)
             StockLevelsBarGraph(productViewModel, role)
         }
@@ -499,7 +502,7 @@ fun StockLevelsBarGraph(productViewModel: ProductViewModel, role: String) {
             Box(
                 modifier = Modifier
                     .padding(8.dp)
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .height(300.dp)
                     .background(Color.White, RoundedCornerShape(16.dp))
                     .border(1.dp, Color.LightGray, RoundedCornerShape(16.dp))
