@@ -463,7 +463,6 @@ fun StockLevelsBarGraph(productViewModel: ProductViewModel, role: String) {
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
 
     LaunchedEffect(Unit) {
-        // Fetch data based on the role
         when (role) {
             "CoopMeat" -> productViewModel.fetchProductByType("Meat")
             "CoopCoffee" -> productViewModel.fetchProductByType("Coffee")
@@ -507,88 +506,105 @@ fun StockLevelsBarGraph(productViewModel: ProductViewModel, role: String) {
                     .background(Color.White, RoundedCornerShape(16.dp))
                     .border(1.dp, Color.LightGray, RoundedCornerShape(16.dp))
             ) {
-                Text(
-                    text = "Stock Levels",
-                    fontWeight = FontWeight.Bold,
-                    color = DarkGreen,
-                    modifier = Modifier.padding(start = 15.dp, top = 10.dp),
-                    fontSize = 13.sp
-                )
-                AndroidView(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp)
-                        .padding(16.dp),
-                    factory = { context ->
-                        BarChart(context).apply {
-                            description.isEnabled = false
-                            setTouchEnabled(true)
-                            isDragEnabled = true
-                            setScaleEnabled(true)
-                            setPinchZoom(true)
+                Column(modifier = Modifier.padding(start = 15.dp, top = 10.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+                    ) {
+                        Text(
+                            text = "Stock Levels",
+                            fontWeight = FontWeight.Bold,
+                            color = DarkGreen,
+                            fontSize = 13.sp
+                        )
 
-                            axisLeft.apply {
-                                textColor = Color(0xFF6F4E37).toArgb()
-                                setDrawGridLines(true)
-                                gridColor = Color.LightGray.toArgb()
-                                axisMinimum = 0f  // Ensures no negative values are displayed
-                            }
-
-                            xAxis.apply {
-                                position = XAxis.XAxisPosition.BOTTOM
-                                textColor = Color(0xFF6F4E37).toArgb()
-                                setDrawGridLines(false)
-                                granularity = 1f
-                                labelRotationAngle = -45f
-                            }
-
-                            axisRight.isEnabled = false
-                            legend.isEnabled = false
-                        }
-                    },
-                    update = { barChart ->
-                        // Extract stock or quantity from product data based on JSON structure
-                        val entries = products.mapIndexed { index, product ->
-                            val stockQuantity = product.quantity ?: 0  // Replace 'quantity' with the actual field from JSON
-                            BarEntry(index.toFloat(), stockQuantity.toFloat())
-                        }
-
-                        val colors = products.map { product ->
-                            when (product.name) {
-                                "Green Beans" -> GreenBeans.toArgb()
-                                "Roasted Beans" -> RoastedBeans.toArgb()
-                                "Packaged Beans" -> Packed.toArgb()
-                                "Sorted Beans" -> Sorted.toArgb()
-                                "Raw Meat" -> RawMeat.toArgb()
-                                "Pork" -> Pork.toArgb()
-                                "Kiniing" -> Kiniing.toArgb()
-                                else -> Color.Gray.toArgb()
-                            }
-                        }
-
-                        val barDataSet = BarDataSet(entries, "").apply {
-                            setColors(colors)
-                            valueTextColor = Color(0xFF6F4E37).toArgb()
-                            valueTextSize = 10f
-                            setDrawValues(true)
-                        }
-
-                        val barData = BarData(barDataSet).apply {
-                            barWidth = 0.9f
-                        }
-
-                        barChart.apply {
-                            data = barData
-                            xAxis.valueFormatter = IndexAxisValueFormatter(products.map { it.name }.toTypedArray())
-                            animateY(1000)  // Animation for Y-axis
-                            invalidate()
+                        // Check for low stock products
+                        val lowStockProducts = products.filter { (it.quantity ?: 0) <= 0 }
+                        if (lowStockProducts.isNotEmpty()) {
+                            Text(
+                                text = "⚠️ Low stock alert for: ${lowStockProducts.joinToString { it.name }}",
+                                color = Color.Red,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
                         }
                     }
-                )
+
+                    AndroidView(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp)
+                            .padding(16.dp),
+                        factory = { context ->
+                            BarChart(context).apply {
+                                description.isEnabled = false
+                                setTouchEnabled(true)
+                                isDragEnabled = true
+                                setScaleEnabled(true)
+                                setPinchZoom(true)
+
+                                axisLeft.apply {
+                                    textColor = Color(0xFF6F4E37).toArgb()
+                                    setDrawGridLines(true)
+                                    gridColor = Color.LightGray.toArgb()
+                                    axisMinimum = 0f  // Ensures no negative values are displayed
+                                }
+
+                                xAxis.apply {
+                                    position = XAxis.XAxisPosition.BOTTOM
+                                    textColor = Color(0xFF6F4E37).toArgb()
+                                    setDrawGridLines(false)
+                                    granularity = 1f
+                                    labelRotationAngle = -45f
+                                }
+
+                                axisRight.isEnabled = false
+                                legend.isEnabled = false
+                            }
+                        },
+                        update = { barChart ->
+                            // Extract stock or quantity from product data based on JSON structure
+                            val entries = products.mapIndexed { index, product ->
+                                val stockQuantity = product.quantity ?: 0  // Ensure quantity is not null
+                                BarEntry(index.toFloat(), stockQuantity.toFloat().coerceAtLeast(0f)) // Ensure no negative values
+                            }
+
+                            val colors = products.map { product ->
+                                when (product.name) {
+                                    "Green Beans" -> GreenBeans.toArgb()
+                                    "Roasted Beans" -> RoastedBeans.toArgb()
+                                    "Packaged Beans" -> Packed.toArgb()
+                                    "Sorted Beans" -> Sorted.toArgb()
+                                    "Raw Meat" -> RawMeat.toArgb()
+                                    "Pork" -> Pork.toArgb()
+                                    "Kiniing" -> Kiniing.toArgb()
+                                    else -> Color.Gray.toArgb()
+                                }
+                            }
+
+                            val barDataSet = BarDataSet(entries, "").apply {
+                                setColors(colors)
+                                valueTextColor = Color(0xFF6F4E37).toArgb()
+                                valueTextSize = 10f
+                                setDrawValues(true)
+                            }
+
+                            val barData = BarData(barDataSet).apply {
+                                barWidth = 0.9f
+                            }
+
+                            barChart.apply {
+                                data = barData
+                                xAxis.valueFormatter = IndexAxisValueFormatter(products.map { it.name }.toTypedArray())
+                                animateY(1000)  // Animation for Y-axis
+                                invalidate()
+                            }
+                        }
+                    )
+                }
             }
         }
     }
 }
-
 
 
