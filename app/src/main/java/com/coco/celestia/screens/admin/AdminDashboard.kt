@@ -1,8 +1,5 @@
 package com.coco.celestia.screens.admin
 
-import android.graphics.Typeface
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -11,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,13 +16,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -85,8 +79,20 @@ fun AdminDashboard(userData: UserData?, navController: NavController) {
             val today = dateFormat.format(Date())
             userData?.let { user ->
                 Text(
+                    text = today,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Start,
+                    fontFamily = mintsansFontFamily,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTag = "android:id/currentDate" },
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(
                     text = "Welcome, ${user.firstname} ${user.lastname}!",
-                    fontSize = 20.sp,
+                    fontSize = 23.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Start,
                     fontFamily = mintsansFontFamily,
@@ -96,18 +102,6 @@ fun AdminDashboard(userData: UserData?, navController: NavController) {
                     color = Color.White
                 )
             }
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = today,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Light,
-                textAlign = TextAlign.Start,
-                fontFamily = mintsansFontFamily,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { testTag = "android:id/currentDate" },
-                color = Color.White
-            )
             Spacer(modifier = Modifier.height(30.dp))
             SummaryDashboard(navController)
         }
@@ -214,7 +208,11 @@ fun InventoryPieChart(entries: List<PieEntry>) {
                 .padding(vertical = 8.dp)
                 .semantics { testTag = "android:id/alertsCard" }
         ) {
-            Column(Modifier.padding(16.dp)) {
+            Column(Modifier
+                .background(PaleBlue)
+                .padding(20.dp)
+                .fillMaxWidth()
+            ) {
                 Text("Alerts",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
@@ -340,7 +338,11 @@ fun UserManagementDashboard(navController: NavController) {
                 .padding(vertical = 8.dp)
                 .semantics { testTag = "android:id/totalUsersCard" }
         ) {
-            Column(Modifier.padding(16.dp)) {
+            Column(Modifier
+                .background(PaleBlue)
+                .fillMaxWidth()
+                .padding(20.dp)
+            ) {
                 Text(
                     "Total Users",
                     fontWeight = FontWeight.Bold,
@@ -368,7 +370,11 @@ fun UserManagementDashboard(navController: NavController) {
                 .padding(vertical = 8.dp)
                 .semantics { testTag = "android:id/activeUsersCard" }
         ) {
-            Column(Modifier.padding(16.dp)) {
+            Column(Modifier
+                .background(PaleBlue)
+                .fillMaxWidth()
+                .padding(16.dp)
+            ) {
                 Text(
                     "Active Users",
                     fontWeight = FontWeight.Bold,
