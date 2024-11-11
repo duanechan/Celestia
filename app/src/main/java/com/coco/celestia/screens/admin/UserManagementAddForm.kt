@@ -76,8 +76,6 @@ fun AddUserForm(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -89,7 +87,8 @@ fun AddUserForm(
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back"
+                    contentDescription = "Back",
+                    modifier = Modifier.semantics { testTag = "android:id/backButton" }
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
@@ -97,7 +96,9 @@ fun AddUserForm(
             Text(
                 text = "Add User",
                 style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.align(Alignment.CenterVertically)
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .semantics { testTag = "android:id/addUserLabel" }
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
@@ -125,7 +126,8 @@ fun AddUserForm(
             Text(
                 text = "Invalid email format",
                 color = Color.Red,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.semantics { testTag = "android:id/invalidEmailMessage" }
             )
         }
 
@@ -167,6 +169,7 @@ fun AddUserForm(
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded },
+            modifier = Modifier.semantics { testTag = "android:id/roleDropdownBox" }
         ) {
             OutlinedTextField(
                 readOnly = true,
@@ -184,7 +187,8 @@ fun AddUserForm(
 
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.semantics { testTag = "android:id/roleDropdownMenu" }
             ) {
                 roles.forEach { roleItem ->
                     androidx.compose.material3.DropdownMenuItem(
@@ -192,7 +196,8 @@ fun AddUserForm(
                         onClick = {
                             onRoleChanged(roleItem)
                             expanded = false
-                        }
+                        },
+                        modifier = Modifier.semantics { testTag = "android:id/roleItem_$roleItem" }
                     )
                 }
             }
@@ -248,7 +253,7 @@ fun CheckAddUser(
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = { setShowDialog(false) },
-                title = { Text("Enter Password") },
+                title = { Text("Enter Password", modifier = Modifier.semantics { testTag = "android:id/dialogTitle" }) },
                 text = {
                     TextField(
                         value = passwordInput.value,
@@ -260,33 +265,39 @@ fun CheckAddUser(
                     )
                 },
                 confirmButton = {
-                    Button(onClick = {
-                        setShowDialog(false)
-                        userRole = if (role == "Coffee") {
-                            "CoopCoffee"
-                        } else {
-                            "CoopMeat"
-                        }
-                        userViewModel.addAccount(email, firstname, lastname, placeholderPass, userRole, passwordInput.value)
-                        transactionViewModel.recordTransaction(
-                            uid = FirebaseAuth.getInstance().uid.toString(),
-                            transaction = TransactionData(
-                                transactionId = "Transaction-${UUID.randomUUID()}",
-                                type = "UserAdded",
-                                date = formattedDateTime,
-                                description = "Added $firstname $lastname's account ($email)."
+                    Button(
+                        onClick = {
+                            setShowDialog(false)
+                            userRole = if (role == "Coffee") {
+                                "CoopCoffee"
+                            } else {
+                                "CoopMeat"
+                            }
+                            userViewModel.addAccount(email, firstname, lastname, placeholderPass, userRole, passwordInput.value)
+                            transactionViewModel.recordTransaction(
+                                uid = FirebaseAuth.getInstance().uid.toString(),
+                                transaction = TransactionData(
+                                    transactionId = "Transaction-${UUID.randomUUID()}",
+                                    type = "UserAdded",
+                                    date = formattedDateTime,
+                                    description = "Added $firstname $lastname's account ($email)."
+                                )
                             )
-                        )
-                    }) {
-                        Text("Confirm", modifier = Modifier.semantics { testTag = "android:id/confirmButton" })
+                        },
+                        modifier = Modifier.semantics { testTag = "android:id/confirmButton" }
+                    ) {
+                        Text("Confirm")
                     }
                 },
                 dismissButton = {
-                    Button(onClick = {
-                        setShowDialog(false)
-                        navController.navigate(Screen.AdminUserManagement.route)
-                    }) {
-                        Text("Cancel", modifier = Modifier.semantics { testTag = "android:id/cancelButton" })
+                    Button(
+                        onClick = {
+                            setShowDialog(false)
+                            navController.navigate(Screen.AdminUserManagement.route)
+                        },
+                        modifier = Modifier.semantics { testTag = "android:id/cancelButton" }
+                    ) {
+                        Text("Cancel")
                     }
                 }
             )

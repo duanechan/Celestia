@@ -1,6 +1,8 @@
 package com.coco.celestia.screens.coop
 
 import android.icu.text.SimpleDateFormat
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.Color
@@ -18,7 +20,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -58,6 +62,7 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Locale
 import kotlin.math.cos
@@ -74,12 +79,13 @@ fun CoopDashboard(
     LaunchedEffect(Unit) {
         orderViewModel.fetchAllOrders(filter = "", role = role)
     }
+    val scrollState = rememberScrollState()
 
     Box(modifier = Modifier
         .background(BGGradientBrush)
         .fillMaxSize()
         .semantics { testTag = "android:id/CoopDashboardBox" }) {
-        Column {
+        Column (modifier = Modifier.verticalScroll(scrollState)) {
             OverviewSummaryBox(orderViewModel, productViewModel, role)
             StockLevelsBarGraph(productViewModel, role)
         }
@@ -126,56 +132,44 @@ fun OrderStatusDonutChart(orderViewModel: OrderViewModel) {
     val completed = orders.count { it.status == "COMPLETED" }
     val delivering = orders.count { it.status == "DELIVERING" }
 
-    // Calculate percentages
-    val pendingPercentage = if (totalOrders > 0) (pending / totalOrders) * 100 else 0f
-    val preparingPercentage = if (totalOrders > 0) (preparing / totalOrders) * 100 else 0f
-    val completedPercentage = if (totalOrders > 0) (completed / totalOrders) * 100 else 0f
-    val deliveringPercentage = if (totalOrders > 0) (delivering / totalOrders) * 100 else 0f
+    // Calculate raw percentages
+    val pendingPercentage = if (totalOrders > 0) pending / totalOrders else 0f
+    val preparingPercentage = if (totalOrders > 0) preparing / totalOrders else 0f
+    val completedPercentage = if (totalOrders > 0) completed / totalOrders else 0f
+    val deliveringPercentage = if (totalOrders > 0) delivering / totalOrders else 0f
 
-    // Animation states
-    var targetPendingProgress by remember { mutableStateOf(0f) }
-    var targetPreparingProgress by remember { mutableStateOf(0f) }
-    var targetCompletedProgress by remember { mutableStateOf(0f) }
-    var targetDeliveringProgress by remember { mutableStateOf(0f) }
+    // Calculate total percentage and scale each proportion to ensure the circle is filled
+    val totalPercentage = pendingPercentage + preparingPercentage + completedPercentage + deliveringPercentage
+    val scaleFactor = if (totalPercentage > 0) 100 / totalPercentage else 0f
 
-    // Trigger animations
-    LaunchedEffect(pendingPercentage, preparingPercentage, completedPercentage, deliveringPercentage) {
-        targetPendingProgress = pendingPercentage
-        targetPreparingProgress = preparingPercentage
-        targetCompletedProgress = completedPercentage
-        targetDeliveringProgress = deliveringPercentage
+    val scaledPending = pendingPercentage * scaleFactor
+    val scaledPreparing = preparingPercentage * scaleFactor
+    val scaledCompleted = completedPercentage * scaleFactor
+    val scaledDelivering = deliveringPercentage * scaleFactor
+
+    val animatedPendingProgress = remember { Animatable(0f) }
+    val animatedPreparingProgress = remember { Animatable(0f) }
+    val animatedCompletedProgress = remember { Animatable(0f) }
+    val animatedDeliveringProgress = remember { Animatable(0f) }
+
+    LaunchedEffect(Unit) {
+        launch {
+            animatedPendingProgress.animateTo(scaledPending, animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing))
+            animatedPreparingProgress.animateTo(scaledPreparing, animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing))
+            animatedCompletedProgress.animateTo(scaledCompleted, animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing))
+            animatedDeliveringProgress.animateTo(scaledDelivering, animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing))
+        }
     }
 
-    // Animated values
-    val animatedPendingProgress by animateFloatAsState(
-        targetValue = targetPendingProgress,
-        animationSpec = tween(durationMillis = 750)
-    )
-    val animatedPreparingProgress by animateFloatAsState(
-        targetValue = targetPreparingProgress,
-        animationSpec = tween(durationMillis = 750)
-    )
-    val animatedCompletedProgress by animateFloatAsState(
-        targetValue = targetCompletedProgress,
-        animationSpec = tween(durationMillis = 750)
-    )
-    val animatedDeliveringProgress by animateFloatAsState(
-        targetValue = targetDeliveringProgress,
-        animationSpec = tween(durationMillis = 750)
-    )
-
-    // Prepare status data for both the chart and the legend
     val statusData = listOf(
-        Triple(animatedPendingProgress, PendingStatus, "Pending"),
-        Triple(animatedPreparingProgress, PreparingStatus, "Preparing"),
-        Triple(animatedCompletedProgress, CompletedStatus, "Completed"),
-        Triple(animatedDeliveringProgress, DeliveringStatus, "Delivering")
+        Triple(animatedPendingProgress.value, PendingStatus, "Pending"),
+        Triple(animatedPreparingProgress.value, PreparingStatus, "Preparing"),
+        Triple(animatedCompletedProgress.value, CompletedStatus, "Completed"),
+        Triple(animatedDeliveringProgress.value, DeliveringStatus, "Delivering")
     )
 
     Row(
-        modifier = Modifier
-            .padding(16.dp)
-            .semantics { testTag = "android:id/OrderStatusDonutChartRow" }
+        modifier = Modifier.padding(16.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -202,8 +196,8 @@ fun OrderStatusDonutChart(orderViewModel: OrderViewModel) {
                     var startAngle = 0f
 
                     statusData.forEach { (percentage, color, _) ->
-                        val sweepAngle = percentage * 3.6f
-                        if (percentage > 0) { // Only draw if percentage is greater than zero
+                        val sweepAngle = percentage * 3.6f // Scale each to fill the circle
+                        if (percentage > 0) {
                             drawArc(
                                 color = color,
                                 startAngle = startAngle,
@@ -212,16 +206,15 @@ fun OrderStatusDonutChart(orderViewModel: OrderViewModel) {
                                 style = Stroke(width = strokeWidth)
                             )
 
-                            // Calculate position for percentage text
+                            // Calculate a consistent position for the percentage text
                             val angleInRadians = Math.toRadians(startAngle + (sweepAngle / 2).toDouble())
-                            val textRadius = size.width / 2 * 1.5f
+                            val textRadius = radius + 55f // Fixed distance from the circle for all labels
                             val x = center.x + (textRadius * cos(angleInRadians)).toFloat()
                             val y = center.y + (textRadius * sin(angleInRadians)).toFloat()
 
-                            // Draw percentage text
                             drawContext.canvas.nativeCanvas.apply {
                                 val paint = android.graphics.Paint().apply {
-                                    textSize = 40f
+                                    textSize = 33f
                                     isFakeBoldText = true
                                     textAlign = android.graphics.Paint.Align.CENTER
                                     this.color = color.toArgb()
@@ -238,7 +231,6 @@ fun OrderStatusDonutChart(orderViewModel: OrderViewModel) {
                     }
                 }
 
-                // Total orders in center
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.align(Alignment.Center)
@@ -268,11 +260,11 @@ fun OrderStatusDonutChart(orderViewModel: OrderViewModel) {
         // Legend Column
         Column(
             modifier = Modifier
-                .padding(start = 0.dp)
+                .padding(start = 8.dp)
                 .align(Alignment.CenterVertically)
         ) {
             statusData.forEach { (percentage, color, label) ->
-                if (percentage > 0) { // Only show legend for non-zero percentages
+                if (percentage > 0) { // Only show legend for non-zero proportions
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(vertical = 4.dp)
@@ -294,6 +286,8 @@ fun OrderStatusDonutChart(orderViewModel: OrderViewModel) {
         }
     }
 }
+
+
 
 @Composable
 fun ProductStockTrendsChart(productViewModel: ProductViewModel, role: String) {
@@ -469,7 +463,6 @@ fun StockLevelsBarGraph(productViewModel: ProductViewModel, role: String) {
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
 
     LaunchedEffect(Unit) {
-        // Fetch data based on the role
         when (role) {
             "CoopMeat" -> productViewModel.fetchProductByType("Meat")
             "CoopCoffee" -> productViewModel.fetchProductByType("Coffee")
@@ -508,93 +501,110 @@ fun StockLevelsBarGraph(productViewModel: ProductViewModel, role: String) {
             Box(
                 modifier = Modifier
                     .padding(8.dp)
-                    .fillMaxWidth()
+                    .fillMaxSize()
                     .height(300.dp)
                     .background(Color.White, RoundedCornerShape(16.dp))
                     .border(1.dp, Color.LightGray, RoundedCornerShape(16.dp))
             ) {
-                Text(
-                    text = "Stock Levels",
-                    fontWeight = FontWeight.Bold,
-                    color = DarkGreen,
-                    modifier = Modifier.padding(start = 15.dp, top = 10.dp),
-                    fontSize = 13.sp
-                )
-                AndroidView(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp)
-                        .padding(16.dp),
-                    factory = { context ->
-                        BarChart(context).apply {
-                            description.isEnabled = false
-                            setTouchEnabled(true)
-                            isDragEnabled = true
-                            setScaleEnabled(true)
-                            setPinchZoom(true)
+                Column(modifier = Modifier.padding(start = 15.dp, top = 10.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+                    ) {
+                        Text(
+                            text = "Stock Levels",
+                            fontWeight = FontWeight.Bold,
+                            color = DarkGreen,
+                            fontSize = 13.sp
+                        )
 
-                            axisLeft.apply {
-                                textColor = Color(0xFF6F4E37).toArgb()
-                                setDrawGridLines(true)
-                                gridColor = Color.LightGray.toArgb()
-                                axisMinimum = 0f  // Ensures no negative values are displayed
-                            }
-
-                            xAxis.apply {
-                                position = XAxis.XAxisPosition.BOTTOM
-                                textColor = Color(0xFF6F4E37).toArgb()
-                                setDrawGridLines(false)
-                                granularity = 1f
-                                labelRotationAngle = -45f
-                            }
-
-                            axisRight.isEnabled = false
-                            legend.isEnabled = false
-                        }
-                    },
-                    update = { barChart ->
-                        // Extract stock or quantity from product data based on JSON structure
-                        val entries = products.mapIndexed { index, product ->
-                            val stockQuantity = product.quantity ?: 0  // Replace 'quantity' with the actual field from JSON
-                            BarEntry(index.toFloat(), stockQuantity.toFloat())
-                        }
-
-                        val colors = products.map { product ->
-                            when (product.name) {
-                                "Green Beans" -> GreenBeans.toArgb()
-                                "Roasted Beans" -> RoastedBeans.toArgb()
-                                "Packaged Beans" -> Packed.toArgb()
-                                "Sorted Beans" -> Sorted.toArgb()
-                                "Raw Meat" -> RawMeat.toArgb()
-                                "Pork" -> Pork.toArgb()
-                                "Kiniing" -> Kiniing.toArgb()
-                                else -> Color.Gray.toArgb()
-                            }
-                        }
-
-                        val barDataSet = BarDataSet(entries, "").apply {
-                            setColors(colors)
-                            valueTextColor = Color(0xFF6F4E37).toArgb()
-                            valueTextSize = 10f
-                            setDrawValues(true)
-                        }
-
-                        val barData = BarData(barDataSet).apply {
-                            barWidth = 0.9f
-                        }
-
-                        barChart.apply {
-                            data = barData
-                            xAxis.valueFormatter = IndexAxisValueFormatter(products.map { it.name }.toTypedArray())
-                            animateY(1000)  // Animation for Y-axis
-                            invalidate()
+                        // Check for low stock products
+                        val lowStockProducts = products.filter { (it.quantity ?: 0) <= 0 }
+                        if (lowStockProducts.isNotEmpty()) {
+                            Text(
+                                text = "⚠️ Low stock alert for: ${lowStockProducts.joinToString { it.name }}",
+                                color = Color.Red,
+                                fontSize = 12.sp,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
                         }
                     }
-                )
+
+                    AndroidView(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(300.dp)
+                            .padding(16.dp),
+                        factory = { context ->
+                            BarChart(context).apply {
+                                description.isEnabled = false
+                                setTouchEnabled(true)
+                                isDragEnabled = true
+                                setScaleEnabled(true)
+                                setPinchZoom(true)
+
+                                axisLeft.apply {
+                                    textColor = Color(0xFF6F4E37).toArgb()
+                                    setDrawGridLines(true)
+                                    gridColor = Color.LightGray.toArgb()
+                                    axisMinimum = 0f  // Ensures no negative values are displayed
+                                }
+
+                                xAxis.apply {
+                                    position = XAxis.XAxisPosition.BOTTOM
+                                    textColor = Color(0xFF6F4E37).toArgb()
+                                    setDrawGridLines(false)
+                                    granularity = 1f
+                                    labelRotationAngle = -45f
+                                }
+
+                                axisRight.isEnabled = false
+                                legend.isEnabled = false
+                            }
+                        },
+                        update = { barChart ->
+                            // Extract stock or quantity from product data based on JSON structure
+                            val entries = products.mapIndexed { index, product ->
+                                val stockQuantity = product.quantity ?: 0  // Ensure quantity is not null
+                                BarEntry(index.toFloat(), stockQuantity.toFloat().coerceAtLeast(0f)) // Ensure no negative values
+                            }
+
+                            val colors = products.map { product ->
+                                when (product.name) {
+                                    "Green Beans" -> GreenBeans.toArgb()
+                                    "Roasted Beans" -> RoastedBeans.toArgb()
+                                    "Packaged Beans" -> Packed.toArgb()
+                                    "Sorted Beans" -> Sorted.toArgb()
+                                    "Raw Meat" -> RawMeat.toArgb()
+                                    "Pork" -> Pork.toArgb()
+                                    "Kiniing" -> Kiniing.toArgb()
+                                    else -> Color.Gray.toArgb()
+                                }
+                            }
+
+                            val barDataSet = BarDataSet(entries, "").apply {
+                                setColors(colors)
+                                valueTextColor = Color(0xFF6F4E37).toArgb()
+                                valueTextSize = 10f
+                                setDrawValues(true)
+                            }
+
+                            val barData = BarData(barDataSet).apply {
+                                barWidth = 0.9f
+                            }
+
+                            barChart.apply {
+                                data = barData
+                                xAxis.valueFormatter = IndexAxisValueFormatter(products.map { it.name }.toTypedArray())
+                                animateY(1000)  // Animation for Y-axis
+                                invalidate()
+                            }
+                        }
+                    )
+                }
             }
         }
     }
 }
-
 
 

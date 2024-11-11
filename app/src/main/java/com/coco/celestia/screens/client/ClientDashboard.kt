@@ -70,10 +70,7 @@ import com.coco.celestia.ui.theme.ContainerLO
 import com.coco.celestia.ui.theme.CDText
 import com.coco.celestia.ui.theme.CDarkOrange
 import com.coco.celestia.ui.theme.LGContainer
-import com.coco.celestia.ui.theme.LightBeige
-import com.coco.celestia.ui.theme.LightOrange
 import com.coco.celestia.ui.theme.SoftCOrange
-import com.coco.celestia.ui.theme.SoftPeach
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
@@ -216,48 +213,11 @@ fun ClientDashboard(
                 userData = userData,
                 navController = navController
             )
-            Spacer(modifier = Modifier.height(145.dp))
+            Spacer(modifier = Modifier.height(135.dp))
         }
     }
     if (showDialog) {
-        ShowNotificationsDialog(notifications) {
-            showDialog = false
-        }
-    }
-}
-
-@Composable
-fun ShowNotificationsDialog(notifications: List<Notification>, onDismiss: () -> Unit) {
-    val dateFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
-
-    AlertDialog(
-        onDismissRequest = { onDismiss() },
-        title = { Text(text = "Notifications") },
-        text = {
-            LazyColumn {
-                items(notifications.sortedByDescending { notification ->
-                    dateFormat.parse(notification.timestamp) ?: Date(0)
-                }) { notification ->
-                    NotificationItem(notification)
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onDismiss() }) {
-                Text("OK")
-            }
-        }
-    )
-}
-
-@Composable
-fun NotificationItem(notification: Notification) {
-    Column(
-        verticalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier.padding(vertical = 8.dp)
-    ) {
-        Text(text = notification.timestamp)
-        Text(text = notification.message, fontWeight = FontWeight.SemiBold)
+        ClientNotification(notifications = notifications, onDismiss = { showDialog = false })
     }
 }
 
@@ -298,7 +258,7 @@ fun BrowseCategories(navController: NavController) {
                 )
             }
 
-            // Spacer between header and the category boxes
+
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(
@@ -354,7 +314,7 @@ fun CategoryBox(
             .fillMaxWidth()
             .padding(8.dp)
             .clickable {
-                navController.navigate(Screen.OrderDetails.createRoute(productName))
+                navController.navigate("add_order/$productName")
             }
             .semantics { testTag = "android:id/CategoryBox_$productName" }
     ) {
@@ -395,7 +355,7 @@ fun FeaturedProducts(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .background(ContainerLO, shape = RoundedCornerShape(8.dp))  // Shared background for the entire section
+            .background(ContainerLO, shape = RoundedCornerShape(8.dp))
             .padding(16.dp)
     ) {
 
@@ -447,7 +407,7 @@ fun ProductTypeCard(
             .width(120.dp)
             .height(100.dp)
             .clickable {
-                navController.navigate(Screen.OrderDetails.createRoute(product.type))
+                navController.navigate("add_order/${product.type}")
             },
         elevation = CardDefaults.cardElevation(4.dp),
     ) {
@@ -587,18 +547,17 @@ fun OrderCardDetails(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "Order ID: $orderId",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        text = orderStatus,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = CLGText,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
-
                     Text(
-                        text = orderStatus,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = CLGText,
+                        text = "Order ID: $orderId",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.White,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                 }
@@ -618,7 +577,7 @@ fun OrderCardDetails(
                 .background(BAButton, shape = RoundedCornerShape(8.dp))
                 .padding(8.dp)
                 .clickable {
-                    navController.navigate(Screen.OrderDetails.createRoute(order.orderData.type))
+                    navController.navigate("add_order/${order.orderData.type}")
                 },
             contentAlignment = Alignment.Center
         ) {
@@ -637,7 +596,7 @@ fun OrderCardDetails(
                     text = "Buy Again",
                     color = BABText,
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center
                 )
             }

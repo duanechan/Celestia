@@ -34,6 +34,7 @@ import com.coco.celestia.screens.admin.ConfirmAddProduct
 import com.coco.celestia.screens.admin.UserManagementAuditLogs
 import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientDashboard
+import com.coco.celestia.screens.client.ClientNotification
 import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.client.ClientOrderDetails
 import com.coco.celestia.screens.coop.AddProductForm
@@ -192,7 +193,6 @@ fun NavGraph(
             FarmerItems(navController = navController)
         }
 
-        //TODO: Initial might change
         composable(route = Screen.Client.route) {
             onNavigate("Dashboard")
             ClientDashboard(
@@ -350,7 +350,8 @@ fun NavGraph(
                 navController = navController,
                 orderViewModel = orderViewModel,
                 productViewModel = productViewModel,
-                userViewModel = userViewModel
+                productType = productType ?: "",
+                userViewModel = userViewModel,
             )
         }
         composable(
@@ -488,5 +489,33 @@ fun NavGraph(
                 ClientOrderDetails(navController, it)
             }
         }
+        composable(
+            route = "add_order/{productType}",
+            arguments = listOf(navArgument("productType") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val productType = backStackEntry.arguments?.getString("productType")
+            AddOrderPanel(
+                navController = navController,
+                productType = productType ?: "",
+                orderViewModel = viewModel(),
+                productViewModel = viewModel(),
+                userViewModel = viewModel()
+            )
+        }
     }
+
+//    NavHost(navController, startDestination = "client_dashboard") {
+//        composable("client_dashboard") {
+//            ClientDashboard(
+//                navController = navController,
+//                userViewModel = userViewModel,
+//                productViewModel = productViewModel,
+//                orderViewModel = orderViewModel,
+//                transactionViewModel = transactionViewModel
+//            )
+//        }
+//        composable("notifications_screen") {
+//            ClientNotification(notifications = notifications, navController = navController)
+//        }
+//    }
 }

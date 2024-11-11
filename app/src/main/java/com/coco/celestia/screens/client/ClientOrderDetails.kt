@@ -20,6 +20,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -53,9 +54,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.ui.theme.CDText
 import com.coco.celestia.ui.theme.ClientBG
 import com.coco.celestia.ui.theme.Copper
+import com.coco.celestia.ui.theme.GDivider
+import com.coco.celestia.ui.theme.GreenBeans
 import com.coco.celestia.ui.theme.LightOrange
+import com.coco.celestia.ui.theme.ODivider
+import com.coco.celestia.ui.theme.TrackOrder
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.model.OrderData
@@ -91,7 +97,6 @@ fun ClientOrderDetails(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = ClientBG)
                     .semantics { testTag = "android:id/LoadingIndicator" },
                 contentAlignment = Alignment.Center
             ) {
@@ -103,7 +108,6 @@ fun ClientOrderDetails(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(color = ClientBG)
                     .semantics { testTag = "android:id/OrderNotFound" },
                 contentAlignment = Alignment.Center
             ) {
@@ -191,7 +195,6 @@ fun ClientOrderDetails(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(ClientBG)
                         ) {
                             Column(
                                 modifier = Modifier
@@ -226,7 +229,6 @@ fun ClientOrderDetails(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(ClientBG)
                         ) {
                             // Buttons For Pending and Completed Orders
                             Row(
@@ -436,7 +438,6 @@ fun OrderStatusTracker(status: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(ClientBG)
             .padding(horizontal = 16.dp)
             .semantics { testTag = "android:id/OrderStatusTracker" },
         contentAlignment = Alignment.Center
@@ -444,26 +445,27 @@ fun OrderStatusTracker(status: String) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp)
+                .padding(top = 16.dp, bottom = 0.dp)
         ) {
             Text(
                 text = "Track Order",
                 fontSize = 30.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
             )
 
             Spacer(modifier = Modifier.height(15.dp))
 
-
             if (status in listOf("PREPARING", "DELIVERING", "COMPLETED", "RECEIVED")) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.semantics { testTag = "android:id/PreparingStatus" }
+                    modifier = Modifier
+                        .semantics { testTag = "android:id/PreparingStatus" }
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.warehouse),
                         contentDescription = "Warehouse",
-                        tint = Color(0xFF5A7F54),
+                        tint = TrackOrder,
                         modifier = Modifier.size(50.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -474,12 +476,14 @@ fun OrderStatusTracker(status: String) {
                     )
                 }
             }
+
             Spacer(modifier = Modifier.height(8.dp))
 
             if (status in listOf("DELIVERING", "COMPLETED", "RECEIVED")) {
                 Row(
                     verticalAlignment = Alignment.Top,
-                    modifier = Modifier.semantics { testTag = "android:id/DeliveryDivider" }
+                    modifier = Modifier
+                        .semantics { testTag = "android:id/DeliveryDivider" }
                 ) {
                     Spacer(modifier = Modifier.width(22.dp))
                     Divider(
@@ -494,12 +498,13 @@ fun OrderStatusTracker(status: String) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.semantics { testTag = "android:id/DeliveringStatus" }
+                    modifier = Modifier
+                        .semantics { testTag = "android:id/DeliveringStatus" }
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.deliveryicon),
                         contentDescription = "DeliveryTruck",
-                        tint = Color(0xFF5A7F54),
+                        tint = TrackOrder,
                         modifier = Modifier.size(50.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -510,16 +515,18 @@ fun OrderStatusTracker(status: String) {
                     )
                 }
             }
+
             Spacer(modifier = Modifier.height(8.dp))
 
             if (status in listOf("COMPLETED", "RECEIVED")) {
                 Row(
                     verticalAlignment = Alignment.Top,
-                    modifier = Modifier.semantics { testTag = "android:id/CompletedDivider" }
+                    modifier = Modifier
+                        .semantics { testTag = "android:id/CompletedDivider" }
                 ) {
                     Spacer(modifier = Modifier.width(22.dp))
                     Divider(
-                        color = Color(0xFFFFA500),
+                        color = ODivider,
                         modifier = Modifier
                             .width(2.dp)
                             .height(50.dp)
@@ -530,12 +537,13 @@ fun OrderStatusTracker(status: String) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.semantics { testTag = "android:id/CompletedStatus" }
+                    modifier = Modifier
+                        .semantics { testTag = "android:id/CompletedStatus" }
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocationOn,
                         contentDescription = "Location",
-                        tint = Color(0xFFFFA500),
+                        tint = LightOrange,
                         modifier = Modifier.size(50.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -547,7 +555,44 @@ fun OrderStatusTracker(status: String) {
                 }
             }
 
-            //TODO: Add Received
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (status == "RECEIVED") {
+                Row(
+                    verticalAlignment = Alignment.Top,
+                    modifier = Modifier
+                        .semantics { testTag = "android:id/ReceivedDivider" }
+                ) {
+                    Spacer(modifier = Modifier.width(22.dp))
+                    Divider(
+                        color = GDivider,
+                        modifier = Modifier
+                            .width(2.dp)
+                            .height(50.dp)
+                            .semantics { testTag = "android:id/ReceivedDividerLine" }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .semantics { testTag = "android:id/ReceivedStatus" }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = "Received",
+                        tint = GreenBeans,
+                        modifier = Modifier.size(50.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "You have received your order!",
+                        fontSize = 14.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
         }
     }
 }

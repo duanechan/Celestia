@@ -40,6 +40,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -50,6 +51,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SearchBar
@@ -73,6 +75,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -97,6 +100,7 @@ import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.ItemData
 import com.coco.celestia.viewmodel.model.MostOrdered
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
@@ -114,6 +118,7 @@ import java.util.UUID
 @Composable
 fun AddOrderPanel(
     navController: NavController,
+    productType: String,
     orderViewModel: OrderViewModel,
     productViewModel: ProductViewModel,
     userViewModel: UserViewModel
@@ -209,7 +214,7 @@ fun AddOrderPanel(
                     Box(
                         modifier = Modifier
                             .background(LGContainer)
-                            .padding(16.dp)
+                            .padding(17.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.List,
@@ -265,7 +270,7 @@ fun AddOrderPanel(
 }
 
 @Composable
-fun DisplaySearchedProduct (
+fun DisplaySearchedProduct(
     keyword: String,
     selectedType: String,
     productViewModel: ProductViewModel,
@@ -287,7 +292,7 @@ fun DisplaySearchedProduct (
 
     Column {
         filteredProducts.chunked(3).forEach { chunk ->
-            Row (
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp),
@@ -308,7 +313,7 @@ fun DisplaySearchedProduct (
 
 @Composable
 fun DisplayMostOrdered(
-    products: List <MostOrdered>,
+    products: List<MostOrdered>,
     navController: NavController,
     userViewModel: UserViewModel
 ) {
@@ -318,7 +323,7 @@ fun DisplayMostOrdered(
         fontWeight = FontWeight.Bold
     )
 
-    LazyRow (
+    LazyRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 16.dp),
@@ -326,10 +331,10 @@ fun DisplayMostOrdered(
     ) {
         items(products) { product ->
             ProductCard(
-                product,
-                navController,
-                userViewModel,
-                Modifier
+                product = product,
+                navController = navController,
+                userViewModel = userViewModel,
+                modifier = Modifier
             )
         }
     }
@@ -337,7 +342,7 @@ fun DisplayMostOrdered(
 
 @Composable
 fun DisplayInSeason(
-    products: List <ProductData>,
+    products: List<ProductData>,
     navController: NavController,
     userViewModel: UserViewModel
 ) {
@@ -347,7 +352,7 @@ fun DisplayInSeason(
         fontWeight = FontWeight.Bold,
     )
 
-    LazyRow (
+    LazyRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 16.dp),
@@ -355,17 +360,17 @@ fun DisplayInSeason(
     ) {
         items(products) { product ->
             ProductCard(
-                product,
-                navController,
-                userViewModel,
-                Modifier
+                product = product,
+                navController = navController,
+                userViewModel = userViewModel,
+                modifier = Modifier
             )
         }
     }
 }
 
 @Composable
-fun DisplayProducts (
+fun DisplayProducts(
     productViewModel: ProductViewModel,
     navController: NavController,
     userViewModel: UserViewModel
@@ -378,6 +383,7 @@ fun DisplayProducts (
             role = "Client"
         )
     }
+
     Text(
         text = "Products",
         fontSize = 20.sp,
@@ -386,7 +392,7 @@ fun DisplayProducts (
 
     Column {
         products.chunked(3).forEach { chunk ->
-            Row (
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp),
@@ -410,7 +416,7 @@ fun <T> ProductCard(
     product: T,
     navController: NavController,
     userViewModel: UserViewModel,
-    modifier: Modifier
+    modifier: Modifier,
 ) {
     var orderData by remember { mutableStateOf(OrderData()) }
     var productImage by remember { mutableStateOf<Uri?>(null) }
@@ -418,9 +424,11 @@ fun <T> ProductCard(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var orderConfirmed by remember { mutableStateOf(false) }
     var toastEvent by remember { mutableStateOf(Triple(ToastStatus.INFO, "", 0L)) }
+
     val productName = when (product) {
         is MostOrdered -> product.name
         is ProductData -> product.name
+        is ItemData -> product.name
         else -> ""
     }
 
@@ -443,7 +451,7 @@ fun <T> ProductCard(
     val horizontalSpacing = 8.dp * 2
     val itemWidth = (screenWidth - horizontalPadding - horizontalSpacing) / 3
 
-    Column (
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .width(itemWidth)
@@ -451,7 +459,7 @@ fun <T> ProductCard(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box (
+        Box(
             modifier = Modifier
                 .size(100.dp)
                 .border(
@@ -524,9 +532,10 @@ fun AddOrderForm(
 ) {
     val userData by userViewModel.userData.observeAsState()
     var showDatePicker by remember { mutableStateOf(false) }
+    var showAvailableFarmersDialog by remember { mutableStateOf(false) }
     var targetDateDialog by remember { mutableStateOf(true) }
     val datePickerState = rememberDatePickerState()
-    var selectedDate by remember { mutableStateOf("") } // Track the selected date
+    var selectedDate by remember { mutableStateOf("") }
     var quantity by remember { mutableIntStateOf(0) }
     val currentDateTime = LocalDateTime.now()
     val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
@@ -560,15 +569,35 @@ fun AddOrderForm(
         SummaryDetails("Date Ordered", order.orderDate)
         SummaryDetails("Product", productName.toString())
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(25.dp))
 
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 12.dp)
-                .clickable { /* Empty action */ }
-                .semantics { testTag = "QuantityInputFieldContainer" }
         ) {
+            if (productType == "Vegetable") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showAvailableFarmersDialog = true }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.farmer),
+                        contentDescription = "Show available farmers",
+                        modifier = Modifier.size(40.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Show Farmers"
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
             OutlinedTextField(
                 value = if (quantity == 0) "" else quantity.toString(),
                 onValueChange = { newValue ->
@@ -582,7 +611,9 @@ fun AddOrderForm(
                 label = { Text("Weight (kg)") },
                 placeholder = { Text("e.g. 10.5") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .semantics { testTag = "android:id/QuantityInputField" }
             )
         }
 
@@ -615,6 +646,7 @@ fun AddOrderForm(
                 .fillMaxWidth()
                 .semantics { testTag = "android:id/TargetDateInput" }
         )
+
         AnimatedVisibility(visible = showDatePicker) {
             Box(
                 modifier = Modifier
@@ -636,7 +668,7 @@ fun AddOrderForm(
                 }
             }
         }
-        // Inside your LaunchedEffect or wherever you are using selectedDateMillis
+
         LaunchedEffect(datePickerState.selectedDateMillis) {
             datePickerState.selectedDateMillis?.let { millis ->
                 selectedDate = convertMillisToDate(millis)
@@ -658,7 +690,8 @@ fun AddOrderForm(
         }) {
             Text(
                 text = "Cancel",
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                modifier = Modifier.semantics { testTag = "CancelButton" }
             )
         }
         TextButton(
@@ -677,6 +710,13 @@ fun AddOrderForm(
             )
         }
     }
+
+    if (showAvailableFarmersDialog) {
+        ShowAvailableFarmers(
+            productName = productName ?: "",
+            onDismissRequest = { showAvailableFarmersDialog = false }
+        )
+    }
 }
 
 @Composable
@@ -689,7 +729,8 @@ fun SummaryDetails (label: String, value: String) {
     ) {
         Text(
             text = label,
-            color = Color.Black.copy(alpha = 0.6f)
+            color = Color.Black.copy(alpha = 0.6f),
+            modifier = Modifier.semantics { testTag = "android:id/$label" }
         )
         Text(value)
     }

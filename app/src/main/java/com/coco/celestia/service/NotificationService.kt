@@ -1,24 +1,14 @@
 package com.coco.celestia.service
 
 import android.util.Log
-import com.coco.celestia.util.UserIdentifier
 import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.TransactionData
-import com.coco.celestia.viewmodel.model.UserData
-import com.google.firebase.Timestamp
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import kotlin.reflect.full.memberProperties
 
 object NotificationService {
     private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference()
@@ -98,24 +88,30 @@ object NotificationService {
             when (item) {
                 is OrderData -> Notification(
                     timestamp = item.orderDate,
-                    message =
-                        "Your Order(#${item.orderId.substring(6,11).uppercase()}) " +
-                        when (item.status) {
-                            "REJECTED" -> "has been rejected (Reason: ${item.rejectionReason})"
-                            "PENDING" -> "is pending. Please wait for further updates."
-                            "PREPARING" -> "is being prepared."
-                            "DELIVERING" -> "is being delivered."
-                            "COMPLETED", "RECEIVED" -> "has been completed. Thank you for ordering!"
-                            "INCOMPLETE" -> "has been partially fulfilled."
-                            "CANCELLED" -> "has been cancelled."
-                            else -> "UNKNOWN STATUS"
-                        }
+                    message = "Your Order(#${
+                        item.orderId.substring(6, 11).uppercase()
+                    }) " + when (item.status) {
+                        "REJECTED" -> "has been rejected (Reason: ${item.rejectionReason})"
+                        "PENDING" -> "is pending. Please wait for further updates."
+                        "PREPARING" -> "is being prepared."
+                        "DELIVERING" -> "is being delivered."
+                        "COMPLETED"-> "has been completed. Thank you for ordering!"
+                        "RECEIVED" -> "You have received your order. Thank you for ordering!"
+                        "INCOMPLETE" -> "has been partially fulfilled."
+                        "CANCELLED" -> "has been cancelled."
+                        else -> "UNKNOWN STATUS"
+                    },
+                    status = item.status
                 )
+
                 is TransactionData -> Notification(
                     timestamp = item.date,
-                    message = item.description
+                    message = item.description,
+                    status = item.status ?: "UNKNOWN"
+                // If TransactionData has status, otherwise set a default
                 )
-                else -> Notification()
+
+                else -> Notification() // Uses the default status value ("UNKNOWN")
             }
         }
         onProcessed(processed)

@@ -42,12 +42,11 @@ fun AdminProfile(userViewModel: UserViewModel, navController: NavController) {
             onDismiss = { exitDialog = false },
             onExit = {
                 // Navigate back to the login screen
-//                userViewModel.logout()
                 navController.navigate(Screen.Login.route) {
                     popUpTo(navController.graph.startDestinationId) { inclusive = true }
                 }
                 Toast.makeText(context, "Logged out", Toast.LENGTH_SHORT).show()
-            }
+            },
         )
     }
 
@@ -55,13 +54,13 @@ fun AdminProfile(userViewModel: UserViewModel, navController: NavController) {
         LogoutDialog(
             onDismiss = { logoutDialog = false },
             onLogout = {
-//                userViewModel.logout()
+                // Navigate back to the login screen
                 navController.navigate(Screen.Login.route) {
                     popUpTo(navController.graph.startDestinationId) { inclusive = true }
                 }
                 Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
                 logoutDialog = false
-            }
+            },
         )
     }
 
