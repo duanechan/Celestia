@@ -252,7 +252,7 @@ fun AdminItemCard(
     price: Double,
     current: Int,
     identifier: String,
-    onEditProductClick: (ProductData) -> Unit
+    onEditProductClick: (ProductData) -> Unit,
     productViewModel: ProductViewModel,
     modifier: Modifier = Modifier
 ) {
