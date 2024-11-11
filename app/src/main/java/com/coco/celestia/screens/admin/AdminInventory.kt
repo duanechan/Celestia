@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalCoilApi::class)
+@file:OptIn(ExperimentalCoilApi::class, ExperimentalMaterial3Api::class)
 
 package com.coco.celestia.screens.admin
 
@@ -13,16 +13,20 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -177,7 +181,7 @@ fun AdminInventory(
                     if (selectedTab == "Current Inventory") {
                         AdminItemList(productData, productViewModel, transactionViewModel)
                     } else {
-                        AdminMonthlyInventoryList(monthlyInventory)
+                        AdminMonthlyInventoryList(monthlyInventory, productViewModel)
                     }
                 }
             }
@@ -203,6 +207,7 @@ fun AdminItemList(
                 onEditProductClick = {
                     selectedProduct = item
                 },
+                productViewModel = productViewModel,
                 modifier = Modifier.semantics { testTag = "android:id/AdminItemCard_${item.name}" }
             )
         }
@@ -221,7 +226,7 @@ fun AdminItemList(
 }
 
 @Composable
-fun AdminMonthlyInventoryList(itemList: List<MonthlyInventory>) {
+fun AdminMonthlyInventoryList(itemList: List<MonthlyInventory>, productViewModel: ProductViewModel) {
     if (itemList.isNotEmpty()) {
         itemList.forEach { item ->
             AdminItemCard(
@@ -232,6 +237,7 @@ fun AdminMonthlyInventoryList(itemList: List<MonthlyInventory>) {
                 current = item.currentInv,
                 identifier = "monthly",
                 onEditProductClick = {},
+                productViewModel = productViewModel,
                 modifier = Modifier.semantics { testTag = "android:id/MonthlyInventory_${item.productName}" }
             )
         }
@@ -247,9 +253,12 @@ fun AdminItemCard(
     current: Int,
     identifier: String,
     onEditProductClick: (ProductData) -> Unit,
+    productViewModel: ProductViewModel,
     modifier: Modifier = Modifier // Modifier added for customization
 ) {
     var productImage by remember { mutableStateOf<Uri?>(null) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         if (productName.isNotEmpty()) {
             ImageService.fetchProfilePicture(productName) {
@@ -357,18 +366,59 @@ fun AdminItemCard(
                     }
 
                     if (identifier == "current") {
-                        IconButton(
-                            onClick = { onEditProductClick(productData) },
+                        Row (
                             modifier = Modifier
                                 .align(Alignment.End)
-                                .padding(8.dp)
-                                .semantics { testTag = "android:id/EditButton_${productName}" }
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit",
-                                tint = DarkBlue
-                            )
+                            IconButton(
+                                onClick = { showDeleteDialog = true },
+                                modifier = Modifier
+                                    .padding(vertical = 8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete Product",
+                                    tint = DarkBlue
+                                )
+                            }
+
+                            IconButton(
+                                onClick = { onEditProductClick(productData) },
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .semantics { testTag = "android:id/EditButton_${productName}" }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit",
+                                    tint = DarkBlue
+                                )
+                            }
+
+                            if (showDeleteDialog) {
+                                AlertDialog(
+                                    onDismissRequest = { showDeleteDialog = false},
+                                    title = { Text("Delete Confirmation") },
+                                    text = { Text("Are you sure you want to delete? This action cannot be undone.") },
+                                    confirmButton = {
+                                        TextButton(
+                                            onClick = {
+                                                productViewModel.deleteProduct(productName)
+                                                showDeleteDialog = false
+                                            }
+                                        ) {
+                                            Text("Delete")
+                                        }
+                                    },
+                                    dismissButton = {
+                                        TextButton(
+                                            onClick = { showDeleteDialog = false }
+                                        ) {
+                                            Text("Cancel")
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                 }
