@@ -42,7 +42,8 @@ data class ProductData(
     var plantingDate: String = "",
     var duration: Int = 0,
     var durationUnit: CustomDurationUnit = CustomDurationUnit.DAYS,
-    var plantingQuantity: Int = 0
+    var plantingQuantity: Int = 0,
+    val farmerNames: List<String> = emptyList()
 )
 
 enum class CustomDurationUnit {
