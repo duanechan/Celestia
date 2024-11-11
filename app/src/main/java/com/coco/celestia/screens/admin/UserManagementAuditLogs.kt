@@ -2,14 +2,12 @@ package com.coco.celestia.screens.admin
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,12 +16,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -44,7 +39,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
@@ -52,18 +46,32 @@ import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.UserIdentifier
 import com.coco.celestia.viewmodel.TransactionState
 import com.coco.celestia.viewmodel.TransactionViewModel
-import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.viewmodel.model.UserData
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun UserManagementAuditLogs(navController: NavController, transactionViewModel: TransactionViewModel) {
     val transactionData by transactionViewModel.transactionData.observeAsState(hashMapOf())
     val transactionState by transactionViewModel.transactionState.observeAsState(TransactionState.LOADING)
+    var userData by remember { mutableStateOf<UserData?>(null) }
+    var filteredTransaction by remember { mutableStateOf<Map<String, List<TransactionData>>>(emptyMap()) }
 
     LaunchedEffect(Unit) {
         transactionViewModel.fetchAllTransactions() // Put filter keyword here if search functionality exists
+        val filterTransaction = transactionData.mapNotNull { (userId, transaction) ->
+            UserIdentifier.getUserData(userId) {
+                userData = it
+            }
+
+            if (userData?.role?.contains("Coop") == true) {
+                userId to transaction
+            } else {
+                null
+            }
+        }.toMap()
+
+        filteredTransaction = filterTransaction
     }
 
     Column(
@@ -162,7 +170,7 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                     item { Text("Loading logs...") }
                 }
                 TransactionState.SUCCESS -> {
-                    transactionData.entries.forEach { (userId, transactions) ->
+                    filteredTransaction.entries.forEach { (userId, transactions) ->
                         items(transactions) { transaction ->
                             LogItem(userId, transaction, isEvenRow = transactions.indexOf(transaction) % 2 == 0)
                             Divider()
