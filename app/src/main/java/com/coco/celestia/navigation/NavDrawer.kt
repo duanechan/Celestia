@@ -440,7 +440,8 @@ fun NavDrawerBottomBar(
                         color = DarkBlue,
                         overflow = TextOverflow.Ellipsis) },
                     selected = currentDestination == Screen.AdminUserManagement.route ||
-                            currentDestination == Screen.AdminAddUserManagement.route,
+                            currentDestination == Screen.AdminAddUserManagement.route ||
+                            currentDestination == Screen.AdminUserManagementAuditLogs.route,
                     onClick = {
                         navController.navigate(Screen.AdminUserManagement.route) {
                             popUpTo(navController.graph.startDestinationId)

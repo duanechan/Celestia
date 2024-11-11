@@ -18,6 +18,8 @@ googleGmsGoogleServices = "4.4.2"
 firebaseDatabase = "21.0.0"
 mpandroidchart = "v3.1.0"
 navigationCompose = "2.7.7"
+poi = "5.2.3"
+poiOoxml = "5.2.3"
 protoliteWellKnownTypes = "18.0.0"
 navigationRuntimeKtx = "2.7.7"
 runtimeLivedata = "1.6.8"
@@ -53,6 +55,8 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 mail-javax-mail-api = { module = "javax.mail:javax.mail-api", version.ref = "javaxMailApiVersion" }
 mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpandroidchart" }
+poi = { module = "org.apache.poi:poi", version.ref = "poi" }
+poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "poiOoxml" }
 protolite-well-known-types = { group = "com.google.firebase", name = "protolite-well-known-types", version.ref = "protoliteWellKnownTypes" }
 androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navigation-runtime-ktx", version.ref = "navigationRuntimeKtx" }
 androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtime-livedata", version.ref = "runtimeLivedata" }

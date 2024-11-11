@@ -87,4 +87,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.android.mail)
     implementation(libs.android.activation)
+    implementation(libs.poi)
+    implementation(libs.poi.ooxml)
 }
