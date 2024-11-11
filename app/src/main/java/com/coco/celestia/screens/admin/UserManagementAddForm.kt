@@ -1,6 +1,7 @@
 package com.coco.celestia.screens.admin
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -41,6 +42,7 @@ import androidx.compose.ui.semantics.testTag
 import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.util.isValidEmail
 import com.coco.celestia.util.sendEmail
 import com.coco.celestia.viewmodel.TransactionViewModel
@@ -48,6 +50,7 @@ import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.google.firebase.auth.FirebaseAuth
+import com.google.protobuf.DescriptorProtos.FieldDescriptorProto.Label
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -76,31 +79,6 @@ fun AddUserForm(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Back Button
-            IconButton(
-                onClick = { navController.navigate(Screen.AdminUserManagement.route) },
-                modifier = Modifier.align(Alignment.CenterVertically)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back",
-                    modifier = Modifier.semantics { testTag = "android:id/backButton" }
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Text(
-                text = "Add User",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier
-                    .align(Alignment.CenterVertically)
-                    .semantics { testTag = "android:id/addUserLabel" }
-            )
-        }
         Spacer(modifier = Modifier.height(16.dp))
 
         // Email
@@ -201,6 +179,15 @@ fun AddUserForm(
                     )
                 }
             }
+        }
+        Box(
+            modifier = Modifier.fillMaxWidth().padding(top = 250.dp)
+        ) {
+            Text(
+                text = "Confirm here",
+                fontFamily = mintsansFontFamily,
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
         }
     }
 }
