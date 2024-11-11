@@ -248,7 +248,7 @@ fun CoopItemList(itemList: List<ProductData>) {
                         "Kiniing" -> Kiniing
                         "Raw Meat" -> RawMeat
                         "Pork" -> Pork
-                        else -> Color.White
+                        else -> Color.Gray
                     }
                 ),
                 modifier = Modifier
@@ -318,7 +318,7 @@ fun CoopMonthlyItemList(itemList: List<MonthlyInventory>) {
                         "Kiniing" -> Kiniing
                         "Raw Meat" -> RawMeat
                         "Pork" -> Pork
-                        else -> Color.White // Default color if no match
+                        else -> Color.Gray
                     }
                 ),
                 modifier = Modifier
