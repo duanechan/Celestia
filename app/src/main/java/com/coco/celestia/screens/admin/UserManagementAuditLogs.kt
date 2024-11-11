@@ -1,10 +1,12 @@
 package com.coco.celestia.screens.admin
 
-import androidx.compose.foundation.BorderStroke
+import android.Manifest
+import android.os.Build
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,20 +23,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -48,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -57,15 +54,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.R
-import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.UserIdentifier
+import com.coco.celestia.util.exportToExcel
 import com.coco.celestia.viewmodel.TransactionState
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.viewmodel.model.UserData
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun UserManagementAuditLogs(navController: NavController, transactionViewModel: TransactionViewModel) {
     val transactionData by transactionViewModel.transactionData.observeAsState(hashMapOf())
@@ -77,22 +74,39 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
     var selectedStatus by remember { mutableStateOf("All") }
     var selectedCategory by remember { mutableStateOf("") }
     var filterActionExpanded by remember { mutableStateOf(false) }
+    var filteredOrderDataTran by remember { mutableStateOf<Map<UserData, List<TransactionData>>>(emptyMap()) }
+    val context = LocalContext.current
 
-    LaunchedEffect(Unit) {
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                exportToExcel(context, filteredOrderDataTran)
+            } else {
+                Toast.makeText(context, "Storage permission is required to save the file.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    )
+
+    LaunchedEffect(transactionData) {
         transactionViewModel.fetchAllTransactions() // Put filter keyword here if search functionality exists
-        val filterTransaction = transactionData.mapNotNull { (userId, transaction) ->
+
+        val filterTransaction = mutableMapOf<String, List<TransactionData>>()
+        val filterOrderDataTran = mutableMapOf<UserData, List<TransactionData>>()
+
+        transactionData.forEach { (userId, transaction) ->
             UserIdentifier.getUserData(userId) {
                 userData = it
             }
 
             if (userData?.role?.contains("Coop") == true) {
-                userId to transaction
-            } else {
-                null
+                filterTransaction[userId] = transaction
+                filterOrderDataTran[userData!!] = transaction
             }
-        }.toMap()
+        }
 
         filteredTransaction = filterTransaction
+        filteredOrderDataTran = filterOrderDataTran
     }
 
     Column(
@@ -199,6 +213,27 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                         }
                     }
                 }
+                Spacer(modifier = Modifier.width(12.dp))
+
+                IconButton (
+                    onClick = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            exportToExcel(context, filteredOrderDataTran)
+                        } else {
+                            permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        }
+                    },
+                    modifier = Modifier
+                        .background(color = PaleBlue, shape = RoundedCornerShape(16.dp))
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.download_icon),
+                        contentDescription = "Export to Excel",
+                        tint = DarkBlue,
+                        modifier = Modifier
+                            .padding(5.dp)
+                    )
+                }
             }
         }
 
@@ -267,6 +302,7 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
         }
     }
 }
+
 
 @Composable
 fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
