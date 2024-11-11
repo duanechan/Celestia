@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -159,6 +160,24 @@ class ProductViewModel : ViewModel() {
                     } else {
                         _productState.value =
                             ProductState.ERROR(task.exception?.message ?: "Unknown error")
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    _productState.value = ProductState.ERROR(exception.message ?: "Unknown error")
+                }
+        }
+    }
+
+    fun deleteProduct (product: String) {
+        viewModelScope.launch {
+            _productState.value = ProductState.LOADING
+            val query = database.child(product.lowercase())
+            query.removeValue()
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        _productState.value = ProductState.SUCCESS
+                    } else {
+                        _productState.value = ProductState.ERROR(task.exception?.message ?: "Unknown error")
                     }
                 }
                 .addOnFailureListener { exception ->

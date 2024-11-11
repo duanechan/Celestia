@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -120,6 +121,7 @@ fun LoginScreen(
             singleLine = true,
             maxLines = 1,
             shape = RoundedCornerShape(16.dp),
+            textStyle = TextStyle(color = BrownCoffee2),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
@@ -140,6 +142,7 @@ fun LoginScreen(
             singleLine = true,
             maxLines = 1,
             shape = RoundedCornerShape(16.dp),
+            textStyle = TextStyle(color = BrownCoffee2),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,

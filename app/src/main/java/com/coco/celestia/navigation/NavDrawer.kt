@@ -214,6 +214,39 @@ fun TopBar(title: String, navController: NavController, gradient: Brush, current
                         )
                     }
                 }
+                if (currentDestination == Screen.Calendar.route) {
+                    IconButton(
+                        onClick = { navController.popBackStack() },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back Button",
+                            tint = Color.White
+                        )
+                    }
+                }
+                if (currentDestination == Screen.AdminUserManagementAuditLogs.route) {
+                    IconButton(
+                        onClick = { navController.popBackStack() },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back Button",
+                            tint = Color.White
+                        )
+                    }
+                }
+                if (currentDestination == Screen.AdminAddUserManagement.route) {
+                    IconButton(
+                        onClick = { navController.popBackStack() },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back Button",
+                            tint = Color.White
+                        )
+                    }
+                }
             },
             actions = {
                 Icon(

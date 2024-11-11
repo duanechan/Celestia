@@ -85,7 +85,7 @@ class FarmerItemViewModel : ViewModel() {
 
                         if (existingItem == null) {
                             val itemData = hashMapOf(
-                                "farmerName" to farmerName,
+                                "farmerNames" to listOf(farmerName),
                                 "endSeason" to product.endSeason,
                                 "name" to product.name,
                                 "priceKg" to product.priceKg,
@@ -95,8 +95,15 @@ class FarmerItemViewModel : ViewModel() {
                             )
                             productRef.setValue(itemData)
                         } else {
+                            val updatedFarmerNames = existingItem.farmerNames.toMutableList().apply {
+                                if (!contains(farmerName)) {
+                                    add(farmerName)
+                                }
+                            }
+
                             val newQuantity = existingItem.quantity + product.quantity
                             productRef.child("quantity").setValue(newQuantity)
+                            productRef.child("farmerNames").setValue(updatedFarmerNames)
                         }
                         _itemState.value = ItemState.SUCCESS
                     }
@@ -248,6 +255,47 @@ class FarmerItemViewModel : ViewModel() {
                     _itemState.value = ItemState.SUCCESS
                 } else {
                     _itemState.value = ItemState.ERROR("Product not found.")
+                }
+            } catch (e: Exception) {
+                _itemState.value = ItemState.ERROR(e.message.toString())
+            }
+        }
+    }
+    fun getFarmersWithProduct(productName: String) {
+        viewModelScope.launch {
+            try {
+                _itemState.value = ItemState.LOADING
+
+                val farmersWithProduct = mutableListOf<Pair<String, ProductData>>()
+
+                val snapshot = database.get().await()
+
+                if (snapshot.exists()) {
+                    for (farmerSnapshot in snapshot.children) {
+                        val farmerUid = farmerSnapshot.key
+                        val itemsSnapshot = farmerSnapshot.child("items")
+
+                        if (itemsSnapshot.exists()) {
+                            for (itemSnapshot in itemsSnapshot.children) {
+                                val item = itemSnapshot.getValue(ProductData::class.java)
+                                if (item != null && item.name.equals(productName, ignoreCase = true)) {
+                                    val farmerName = fetchFarmerName(farmerUid.toString())
+                                    farmersWithProduct.add(farmerName to item)
+                                }
+                            }
+                        }
+                    }
+
+                    if (farmersWithProduct.isNotEmpty()) {
+                        _itemData.value = farmersWithProduct.map { it.second }
+                        _itemState.value = ItemState.SUCCESS
+                    } else {
+                        _itemData.value = emptyList()
+                        _itemState.value = ItemState.EMPTY
+                    }
+                } else {
+                    _itemData.value = emptyList()
+                    _itemState.value = ItemState.EMPTY
                 }
             } catch (e: Exception) {
                 _itemState.value = ItemState.ERROR(e.message.toString())

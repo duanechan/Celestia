@@ -1,32 +1,43 @@
 package com.coco.celestia.screens.admin
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,7 +55,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
@@ -52,18 +62,37 @@ import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.UserIdentifier
 import com.coco.celestia.viewmodel.TransactionState
 import com.coco.celestia.viewmodel.TransactionViewModel
-import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.viewmodel.model.UserData
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun UserManagementAuditLogs(navController: NavController, transactionViewModel: TransactionViewModel) {
     val transactionData by transactionViewModel.transactionData.observeAsState(hashMapOf())
     val transactionState by transactionViewModel.transactionState.observeAsState(TransactionState.LOADING)
+    var userData by remember { mutableStateOf<UserData?>(null) }
+    var filteredTransaction by remember { mutableStateOf<Map<String, List<TransactionData>>>(emptyMap()) }
+    var searchQuery by remember { mutableStateOf("") }
+    val actionStatusView by remember { mutableStateOf(true) }
+    var selectedStatus by remember { mutableStateOf("All") }
+    var selectedCategory by remember { mutableStateOf("") }
+    var filterActionExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         transactionViewModel.fetchAllTransactions() // Put filter keyword here if search functionality exists
+        val filterTransaction = transactionData.mapNotNull { (userId, transaction) ->
+            UserIdentifier.getUserData(userId) {
+                userData = it
+            }
+
+            if (userData?.role?.contains("Coop") == true) {
+                userId to transaction
+            } else {
+                null
+            }
+        }.toMap()
+
+        filteredTransaction = filterTransaction
     }
 
     Column(
@@ -73,38 +102,104 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
             .semantics { testTag = "android:id/AuditLogsScreen" },
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .semantics { testTag = "android:id/HeaderRow" },
-            verticalAlignment = Alignment.CenterVertically
+            .padding(10.dp)
         ) {
-            IconButton(
-                onClick = { navController.navigate(Screen.AdminUserManagement.route) },
+            Row(
                 modifier = Modifier
-                    .align(Alignment.CenterVertically)
-                    .padding(top = 5.dp)
-                    .semantics { testTag = "android:id/BackButton" }
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back",
-                    tint = Color.White
+                TextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("Search...", color = DarkBlue) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search Icon",
+                            tint = DarkBlue
+                        )
+                    },
+                    modifier = Modifier
+                        .background(color = Color.White, shape = RoundedCornerShape(20.dp))
+                        .weight(1f)
+                        .padding(horizontal = 8.dp),
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        errorIndicatorColor = Color.Transparent,
+                    )
                 )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(12.dp))
 
-            Text(
-                text = "Audit Logs",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontFamily = mintsansFontFamily,
-                modifier = Modifier
-                    .align(Alignment.CenterVertically)
-                    .padding(top = 5.dp)
-                    .semantics { testTag = "android:id/AuditLogsTitle" }
-            )
+                Box {
+                    IconButton(
+                        onClick = { filterActionExpanded = true },
+                        modifier = Modifier
+                            .background(color = PaleBlue, shape = RoundedCornerShape(16.dp))
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.filter),
+                            contentDescription = "Filter",
+                            tint = DarkBlue
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = filterActionExpanded,
+                        onDismissRequest = { filterActionExpanded = false },
+                        modifier = Modifier
+                            .background(color = PaleBlue, shape = RoundedCornerShape(8.dp))
+                            .heightIn(max = 250.dp)
+                    ) {
+                        if (actionStatusView) {
+                            listOf("All", "Product Updated", "User Updated", "Added Order").forEach { status ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = status,
+                                            color = if (selectedStatus == status) Color.White else DarkBlue // Change text color
+                                        )
+                                    },
+                                    modifier = Modifier
+                                        .background(
+                                            color = if (selectedStatus == status) DarkBlue else Color.Transparent // Change background color
+                                        ),
+                                    onClick = {
+                                        selectedStatus = status
+                                        filterActionExpanded = false
+                                    }
+                                )
+                            }
+                        } else {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "All Actions",
+                                        color = if (selectedCategory.isEmpty()) Color.White else DarkBlue
+                                    )
+                                },
+                                modifier = Modifier
+                                    .background(
+                                        color = if (selectedCategory.isEmpty()) DarkBlue else Color.Transparent
+                                    ),
+                                onClick = {
+                                    selectedCategory = ""
+                                    filterActionExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
         }
 
         LazyColumn(
@@ -131,10 +226,9 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                         textAlign = TextAlign.Start
                     )
                     Text(
-                        text = "USER-ROLE",
+                        text = "USER",
                         modifier = Modifier
                             .weight(1f)
-                            .offset(x = (-25).dp)
                             .semantics { testTag = "android:id/UserHeader" },
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Start
@@ -162,7 +256,7 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                     item { Text("Loading logs...") }
                 }
                 TransactionState.SUCCESS -> {
-                    transactionData.entries.forEach { (userId, transactions) ->
+                    filteredTransaction.entries.forEach { (userId, transactions) ->
                         items(transactions) { transaction ->
                             LogItem(userId, transaction, isEvenRow = transactions.indexOf(transaction) % 2 == 0)
                             Divider()
@@ -196,24 +290,47 @@ fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
             text = transaction.date,
             fontSize = 13.sp,
             fontFamily = mintsansFontFamily,
-            modifier = Modifier.weight(1f)
+            color = DarkBlue,
+            modifier = Modifier
+                .weight(1f)
+                .semantics { testTag = "android:id/transactionDate" }
         )
-        Text(
-            text = if (userData != null) "${userData?.firstname} ${userData?.lastname}- ${userData?.role}" else "Unknown",
-            fontSize = 13.sp,
-            fontFamily = mintsansFontFamily,
-            modifier = Modifier.weight(1f)
-        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .semantics { testTag = "android:id/userDataColumn" }
+        ) {
+            // First name and last name
+            Text(
+                text = if (userData != null) "${userData?.firstname} ${userData?.lastname}" else "Unknown",
+                fontSize = 13.sp,
+                fontFamily = mintsansFontFamily,
+                fontWeight = FontWeight.Bold,
+                color = DarkBlue
+            )
+            // Role
+            Text(
+                text = userData?.role ?: "",
+                fontSize = 13.sp,
+                fontFamily = mintsansFontFamily,
+                color = DarkBlue
+            )
+        }
         Text(
             text = transaction.type,
             fontSize = 12.sp,
             fontFamily = mintsansFontFamily,
-            modifier = Modifier.weight(1f)
+            color = DarkBlue,
+            modifier = Modifier
+                .weight(1f)
+                .semantics { testTag = "android:id/transactionType" }
         )
 
         IconButton(
             onClick = { showDescriptionDialog = true },
-            modifier = Modifier.weight(0.5f)
+            modifier = Modifier
+                .weight(0.5f)
+                .semantics { testTag = "android:id/viewDetailsButton" }
         ) {
             Icon(
                 painter = painterResource(R.drawable.viewmore),
@@ -228,14 +345,15 @@ fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
             AlertDialog(
                 onDismissRequest = { showDescriptionDialog = false },
                 title = {
-                    Text(text = "Transaction Details", fontFamily = mintsansFontFamily)
+                    Text(text = "Transaction Details", fontFamily = mintsansFontFamily, modifier = Modifier.semantics { testTag = "android:id/dialogTitle" })
                 },
                 text = {
-                    Text(text = transaction.description)
+                    Text(text = transaction.description, modifier = Modifier.semantics { testTag = "android:id/transactionDescription" })
                 },
                 confirmButton = {
                     Button(
-                        onClick = { showDescriptionDialog = false }
+                        onClick = { showDescriptionDialog = false },
+                        modifier = Modifier.semantics { testTag = "android:id/closeDialogButton" }
                     ) {
                         Text("Close", fontFamily = mintsansFontFamily)
                     }

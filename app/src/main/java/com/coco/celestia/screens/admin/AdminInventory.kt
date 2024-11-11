@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalCoilApi::class)
+@file:OptIn(ExperimentalCoilApi::class, ExperimentalMaterial3Api::class)
 
 package com.coco.celestia.screens.admin
 
@@ -13,16 +13,20 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -177,7 +181,7 @@ fun AdminInventory(
                     if (selectedTab == "Current Inventory") {
                         AdminItemList(productData, productViewModel, transactionViewModel)
                     } else {
-                        AdminMonthlyInventoryList(monthlyInventory)
+                        AdminMonthlyInventoryList(monthlyInventory, productViewModel)
                     }
                 }
             }
@@ -203,6 +207,7 @@ fun AdminItemList(
                 onEditProductClick = {
                     selectedProduct = item
                 },
+                productViewModel = productViewModel,
                 modifier = Modifier.semantics { testTag = "android:id/AdminItemCard_${item.name}" }
             )
         }
@@ -221,7 +226,7 @@ fun AdminItemList(
 }
 
 @Composable
-fun AdminMonthlyInventoryList(itemList: List<MonthlyInventory>) {
+fun AdminMonthlyInventoryList(itemList: List<MonthlyInventory>, productViewModel: ProductViewModel) {
     if (itemList.isNotEmpty()) {
         itemList.forEach { item ->
             AdminItemCard(
@@ -232,6 +237,7 @@ fun AdminMonthlyInventoryList(itemList: List<MonthlyInventory>) {
                 current = item.currentInv,
                 identifier = "monthly",
                 onEditProductClick = {},
+                productViewModel = productViewModel,
                 modifier = Modifier.semantics { testTag = "android:id/MonthlyInventory_${item.productName}" }
             )
         }
@@ -247,9 +253,12 @@ fun AdminItemCard(
     current: Int,
     identifier: String,
     onEditProductClick: (ProductData) -> Unit,
-    modifier: Modifier = Modifier // Modifier added for customization
+    productViewModel: ProductViewModel,
+    modifier: Modifier = Modifier
 ) {
     var productImage by remember { mutableStateOf<Uri?>(null) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         if (productName.isNotEmpty()) {
             ImageService.fetchProfilePicture(productName) {
@@ -258,14 +267,16 @@ fun AdminItemCard(
         }
     }
 
-    Card(modifier = modifier
-        .fillMaxWidth()
-        .height(if (identifier == "monthly") 220.dp else 180.dp)
-        .padding(16.dp)
-        .semantics { testTag = "android:id/AdminItemCard_${productName}_${identifier}" },
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(if (identifier == "monthly") 220.dp else 180.dp)
+            .padding(16.dp)
+            .semantics { testTag = "android:id/AdminItemCard_${productName}_${identifier}" },
         colors = CardDefaults.cardColors(
             containerColor = Color.White
-        )) {
+        )
+    ) {
         var expanded by remember { mutableStateOf(false) }
         val productData = ProductData(
             name = productName,
@@ -274,8 +285,9 @@ fun AdminItemCard(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .semantics { testTag = "android:id/AdminItemBox_${productName}" }
         ) {
-            Row (
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
@@ -286,13 +298,15 @@ fun AdminItemCard(
                     modifier = Modifier
                         .width(100.dp)
                         .fillMaxHeight()
+                        .semantics { testTag = "android:id/ProductImage_${productName}" }
                 )
 
                 Column(
                     Modifier
                         .clickable { expanded = !expanded }
+                        .semantics { testTag = "android:id/ProductInfoColumn_${productName}" }
                 ) {
-                    Row (
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -311,64 +325,117 @@ fun AdminItemCard(
                             overflow = TextOverflow.Ellipsis
                         )
 
-                        Box (
+                        Box(
                             modifier = Modifier
                                 .background(PaleBlue, shape = RoundedCornerShape(4.dp))
                                 .padding(horizontal = 12.dp, vertical = 2.dp)
                                 .width(70.dp)
                                 .height(30.dp)
                                 .wrapContentSize()
+                                .semantics { testTag = "android:id/ProductPriceContainer_${productName}" }
                         ) {
                             Text(
                                 text = "₱ $price",
                                 fontSize = 18.sp,
                                 color = DarkBlue,
                                 modifier = Modifier
-                                    .semantics { testTag = "android:id/ProductPrice_${productName}" }
                                     .align(Alignment.Center)
+                                    .semantics { testTag = "android:id/ProductPrice_${productName}" }
                             )
                         }
                     }
-                    AdminItemCardDetails("Inventory", "${current}kg")
+                    AdminItemCardDetails(
+                        label = "Inventory",
+                        value = "${current}kg",
+                        modifier = Modifier.semantics { testTag = "android:id/InventoryDetail_${productName}" }
+                    )
 
                     if (identifier == "monthly") {
                         val pathEffect = PathEffect.dashPathEffect(floatArrayOf(50f, 10f), 0f)
 
-                        AdminItemCardDetails("Ordered", "-${ordered}kg")
+                        AdminItemCardDetails(
+                            label = "Ordered",
+                            value = "-${ordered}kg",
+                            modifier = Modifier.semantics { testTag = "android:id/OrderedDetail_${productName}" }
+                        )
 
                         Canvas(
                             Modifier
                                 .fillMaxWidth()
                                 .height(5.dp)
                                 .padding(horizontal = 12.dp, vertical = 5.dp)
+                                .semantics { testTag = "android:id/SeparatorLine_${productName}" }
                         ) {
-
                             drawLine(
                                 color = DarkBlue,
                                 start = Offset(0f, 0f),
                                 end = Offset(size.width, 0f),
                                 pathEffect = pathEffect,
                                 strokeWidth = 5f,
-
                             )
                         }
 
-                        AdminItemCardDetails("Total", "${monthly}kg")
+                        AdminItemCardDetails(
+                            label = "Total",
+                            value = "${monthly}kg",
+                            modifier = Modifier.semantics { testTag = "android:id/TotalDetail_${productName}" }
+                        )
                     }
 
                     if (identifier == "current") {
-                        IconButton(
-                            onClick = { onEditProductClick(productData) },
+                        Row (
                             modifier = Modifier
                                 .align(Alignment.End)
-                                .padding(8.dp)
-                                .semantics { testTag = "android:id/EditButton_${productName}" }
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit",
-                                tint = DarkBlue
-                            )
+                            IconButton(
+                                onClick = { showDeleteDialog = true },
+                                modifier = Modifier
+                                    .padding(vertical = 8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete Product",
+                                    tint = DarkBlue
+                                )
+                            }
+
+                            IconButton(
+                                onClick = { onEditProductClick(productData) },
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .semantics { testTag = "android:id/EditButton_${productName}" }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit",
+                                    tint = DarkBlue
+                                )
+                            }
+
+                            if (showDeleteDialog) {
+                                AlertDialog(
+                                    onDismissRequest = { showDeleteDialog = false},
+                                    title = { Text("Delete Confirmation") },
+                                    text = { Text("Are you sure you want to delete? This action cannot be undone.") },
+                                    confirmButton = {
+                                        TextButton(
+                                            onClick = {
+                                                productViewModel.deleteProduct(productName)
+                                                showDeleteDialog = false
+                                            }
+                                        ) {
+                                            Text("Delete")
+                                        }
+                                    },
+                                    dismissButton = {
+                                        TextButton(
+                                            onClick = { showDeleteDialog = false }
+                                        ) {
+                                            Text("Cancel")
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -378,37 +445,44 @@ fun AdminItemCard(
 }
 
 @Composable
-fun AdminItemCardDetails (label: String, value: String) {
-    Row (
+fun AdminItemCardDetails(label: String, value: String, modifier: Modifier) {
+    Row(
         modifier = Modifier
             .padding(horizontal = 12.dp, vertical = 6.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .semantics { testTag = "AdminItemCardDetailsRow" },
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = label,
             fontSize = 20.sp,
             fontFamily = mintsansFontFamily,
-            color = DarkBlue
+            color = DarkBlue,
+            modifier = Modifier.semantics { testTag = "AdminItemCardDetailsLabel" }
         )
         Text(
             text = value,
             fontSize = 20.sp,
             fontFamily = mintsansFontFamily,
-            color = DarkBlue
+            color = DarkBlue,
+            modifier = Modifier.semantics { testTag = "AdminItemCardDetailsValue" }
         )
     }
 }
+
 @Composable
 fun TopBarInventory(onTabSelected: (String) -> Unit) {
     var selectedOption by remember { mutableIntStateOf(0) }
-    Column (
+    Column(
         modifier = Modifier
             .padding(vertical = 20.dp)
+            .semantics { testTag = "TopBarInventoryColumn" }
     ) {
         TabRow(
             selectedTabIndex = selectedOption,
-            modifier = Modifier.wrapContentHeight()
+            modifier = Modifier
+                .wrapContentHeight()
+                .semantics { testTag = "TopBarInventoryTabRow" }
         ) {
             val tabTitles = listOf("Current Inventory", "Inventory This Month")
             tabTitles.forEachIndexed { index, title ->
@@ -418,7 +492,8 @@ fun TopBarInventory(onTabSelected: (String) -> Unit) {
                             text = title,
                             fontFamily = mintsansFontFamily,
                             fontSize = 13.sp,
-                            fontWeight = if (selectedOption == index) FontWeight.Bold else FontWeight.Normal
+                            fontWeight = if (selectedOption == index) FontWeight.Bold else FontWeight.Normal,
+                            modifier = Modifier.semantics { testTag = "TabText_$title" }
                         )
                     },
                     selected = selectedOption == index,
@@ -428,7 +503,7 @@ fun TopBarInventory(onTabSelected: (String) -> Unit) {
                     },
                     modifier = Modifier
                         .padding(8.dp)
-                        .semantics { testTag = "android:id/Tab_$title" }
+                        .semantics { testTag = "Tab_$title" }
                 )
             }
         }

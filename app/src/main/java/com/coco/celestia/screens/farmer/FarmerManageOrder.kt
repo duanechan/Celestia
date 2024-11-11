@@ -371,7 +371,7 @@ fun FarmerManageRequest(
 fun ManageOrderCards(
     navController: NavController,
     order: OrderData,
-    cardHeight: Dp = 200.dp,
+    cardHeight: Dp = 150.dp,
     showStatus: Boolean = true
 ) {
     val clientName = order.client
@@ -392,13 +392,13 @@ fun ManageOrderCards(
         "PREPARING" -> painterResource(id = R.drawable.preparing)
         "INCOMPLETE" -> painterResource(id = R.drawable.incomplete)
         "DELIVERING" -> painterResource(id = R.drawable.deliveryicon)
+        "CANCELLED" -> painterResource(id = R.drawable.cancelled)
         else -> null
     }
 
     val iconVector: ImageVector = when (displayStatus) {
         "REJECTED" -> Icons.Default.Clear
         "COMPLETED" -> Icons.Default.CheckCircle
-        "CANCELLED" -> Icons.Default.Clear
         else -> Icons.Default.Warning
     }
 
@@ -446,7 +446,7 @@ fun ManageOrderCards(
                         if (showStatus) {
                             Box(
                                 modifier = Modifier
-                                    .background(backgroundColor, shape = RoundedCornerShape(8.dp))
+                                    .background(backgroundColor, shape = RoundedCornerShape(16.dp))
                                     .padding(horizontal = 8.dp, vertical = 4.dp)
                                     .semantics { testTag = "android:id/orderStatusRow_${order.orderId}" }
                             ) {
@@ -477,7 +477,7 @@ fun ManageOrderCards(
 
                                     Text(
                                         text = displayStatus,
-                                        fontSize = 18.sp,
+                                        fontSize = 22.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Cocoa,
                                         modifier = Modifier
@@ -486,11 +486,11 @@ fun ManageOrderCards(
                                 }
                             }
                         }
-                        Spacer(modifier = Modifier.width(20.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 4.dp)
+                                .padding(top = 4.dp, start = 10.dp)
                                 .semantics { testTag = "android:id/orderInfoColumn_${order.orderId}" },
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.Start

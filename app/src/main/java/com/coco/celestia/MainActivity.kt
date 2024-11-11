@@ -134,7 +134,6 @@ fun App() {
         }
     }
 
-
     LaunchedEffect(toastEvent) {
         if (toastEvent.second.isNotEmpty()) {
             toastStatus = toastEvent.first
@@ -148,13 +147,16 @@ fun App() {
             }
         }
     }
+
+    val shouldShowNavigation = currentDestination != null &&
+            currentDestination != Screen.Login.route &&
+            currentDestination != Screen.Register.route &&
+            currentDestination != Screen.Splash.route &&
+            currentDestination != Screen.ForgotPassword.route
+
     Scaffold(
         topBar = {
-            if (currentDestination != null &&
-                currentDestination != Screen.Login.route &&
-                currentDestination != Screen.Register.route &&
-                currentDestination != Screen.Splash.route)
-            {
+            if (shouldShowNavigation) {
                 NavDrawerTopBar(
                     navController = navController,
                     title = topBarTitle,
@@ -164,12 +166,7 @@ fun App() {
             Toast(message = toastMessage, status = toastStatus, visibility = showToast)
         },
         bottomBar = {
-            if (currentDestination != null &&
-                currentDestination != Screen.Login.route &&
-                currentDestination != Screen.Register.route &&
-                currentDestination != Screen.Splash.route &&
-                currentDestination != Screen.ForgotPassword.route)
-            {
+            if (shouldShowNavigation) {
                 NavDrawerBottomBar(
                     role = userData?.role.toString(),
                     navController = navController
@@ -182,7 +179,11 @@ fun App() {
             userRole = userData?.role.toString(),
             onNavigate = { topBarTitle = it },
             onEvent = { toastEvent = Triple(it.first, it.second, it.third) },
-            modifier = Modifier.padding(paddingValues)
+            modifier = if (shouldShowNavigation) {
+                Modifier.padding(paddingValues)
+            } else {
+                Modifier
+            }
         )
     }
 }

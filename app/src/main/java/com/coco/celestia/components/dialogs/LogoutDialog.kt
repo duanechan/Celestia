@@ -11,6 +11,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.text.font.FontWeight
+import com.coco.celestia.ui.theme.mintsansFontFamily
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -18,10 +20,10 @@ fun LogoutDialog(onDismiss: () -> Unit, onLogout: () -> Unit) {
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = {
-            Text(text = "Logging out")
+            Text(text = "Logout", fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily)
         },
         text = {
-            Text(text = "Do you want to log out?")
+            Text(text = "Do you want to log out?", fontFamily = mintsansFontFamily)
         },
         confirmButton = {
             Button(
@@ -30,7 +32,7 @@ fun LogoutDialog(onDismiss: () -> Unit, onLogout: () -> Unit) {
                     .semantics { testTagsAsResourceId = true }
                     .semantics { testTag = "android:id/confirmLogout" }
             ) {
-                Text(text = "Logout")
+                Text(text = "Logout", fontFamily = mintsansFontFamily)
             }
         },
         dismissButton = {
@@ -40,8 +42,9 @@ fun LogoutDialog(onDismiss: () -> Unit, onLogout: () -> Unit) {
                     .semantics { testTagsAsResourceId = true }
                     .semantics { testTag = "android:id/cancelLogout" }
             ) {
-                Text(text = "Cancel")
+                Text(text = "Cancel", fontFamily = mintsansFontFamily)
             }
-        }
+        },
+        modifier = Modifier.semantics { testTag = "android:id/LogoutDialog" }
     )
 }
