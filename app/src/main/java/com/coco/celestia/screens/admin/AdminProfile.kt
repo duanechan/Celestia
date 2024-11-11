@@ -60,7 +60,7 @@ fun AdminProfile(userViewModel: UserViewModel, navController: NavController) {
                 }
                 Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
                 logoutDialog = false
-            },
+            }, role = "Admin"
         )
     }
 

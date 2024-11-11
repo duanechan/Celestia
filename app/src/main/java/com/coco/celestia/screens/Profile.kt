@@ -232,7 +232,7 @@ fun ProfileScreen(
                 }
                 onLogoutEvent(Triple(ToastStatus.INFO, "Logged out.", System.currentTimeMillis()))
                 logoutDialog = false
-            }
+            }, role
         )
     }
 
