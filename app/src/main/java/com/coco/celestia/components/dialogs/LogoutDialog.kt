@@ -44,6 +44,7 @@ fun LogoutDialog(onDismiss: () -> Unit, onLogout: () -> Unit) {
             ) {
                 Text(text = "Cancel", fontFamily = mintsansFontFamily)
             }
-        }
+        },
+        modifier = Modifier.semantics { testTag = "android:id/LogoutDialog" }
     )
 }

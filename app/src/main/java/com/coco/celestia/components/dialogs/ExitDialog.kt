@@ -35,6 +35,7 @@ fun ExitDialog(onDismiss: () -> Unit, onExit: () -> Unit) {
             ) {
                 Text(text = "Cancel", fontFamily = mintsansFontFamily)
             }
-        }
+        },
+        modifier = Modifier.semantics { testTag = "android:id/ExitDialog" }
     )
 }

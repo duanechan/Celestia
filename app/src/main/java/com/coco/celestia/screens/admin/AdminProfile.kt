@@ -47,7 +47,6 @@ fun AdminProfile(userViewModel: UserViewModel, navController: NavController) {
                 }
                 Toast.makeText(context, "Logged out", Toast.LENGTH_SHORT).show()
             },
-            modifier = Modifier.semantics { testTag = "android:id/ExitDialog" }
         )
     }
 
@@ -62,7 +61,6 @@ fun AdminProfile(userViewModel: UserViewModel, navController: NavController) {
                 Toast.makeText(context, "Logout", Toast.LENGTH_SHORT).show()
                 logoutDialog = false
             },
-            modifier = Modifier.semantics { testTag = "android:id/LogoutDialog" }
         )
     }
 
