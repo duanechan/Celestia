@@ -566,7 +566,7 @@ fun DeliveringOrderActions(
                         .fillMaxWidth()
                         .padding(10.dp),
                 ) {
-                    Text(text = "Finish Delivery", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(text = "Finish Delivery", fontSize = 16.sp, fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily)
                 }
             }
         }
