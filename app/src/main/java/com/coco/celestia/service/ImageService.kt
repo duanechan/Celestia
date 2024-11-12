@@ -7,6 +7,7 @@ object ImageService {
     private val storage = FirebaseStorage.getInstance().getReference()
     private val usersReference = storage.child("images/users")
     private val productReference = storage.child("images/products")
+    private val imageCache = mutableMapOf<String, Uri?>()
 
     fun fetchProfilePicture(uid: String, onComplete: (Uri?) -> Unit) {
         val query = usersReference.child(uid).child("profile-pic.jpg")
@@ -29,11 +30,18 @@ object ImageService {
     }
 
     fun fetchProductImage (productName: String, onComplete: (Uri?) -> Unit) {
+        imageCache[productName]?.let {
+            onComplete(it)
+            return
+        }
+
         val query = productReference.child(productName).child("product_image.jpg")
         query.downloadUrl
             .addOnSuccessListener {
+                imageCache[productName] = it
                 onComplete(it)
             }.addOnFailureListener {
+                imageCache[productName] = null
                 onComplete(null)
             }
     }
