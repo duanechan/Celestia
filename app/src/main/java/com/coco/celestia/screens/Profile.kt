@@ -301,7 +301,7 @@ fun ProfileScreen(
         return when (role) {
             "Admin" -> Color(0xFF5362bd)
             "Client" -> Color(0xFFe3a383)
-            "Farmer" -> Color(0xFF88563d)
+            "Farmer" -> Color(0xFFE6B962)
             "Coop", "CoopCoffee", "CoopMeat" -> Color(0xFF47DEB1)
             else -> Color(0x80FFFFFF)
         }
@@ -502,7 +502,7 @@ fun ProfileScreen(
                         modifier = Modifier
                             .align(Alignment.End),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = DuskyBlue,
+                            containerColor = saveInfoColor(role = role),
                             contentColor = Color.White
                         )
                     ) {

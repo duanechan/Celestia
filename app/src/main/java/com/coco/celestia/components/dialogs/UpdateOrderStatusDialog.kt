@@ -25,7 +25,7 @@ fun UpdateOrderStatusDialog(status: String,onDismiss: () -> Unit, onAccept: () -
                 modifier = Modifier
                     .semantics { testTagsAsResourceId = true }
                     .semantics { testTag = "android:id/UpdateStatusConfirmButton" }) {
-                Text(text = "Save", fontFamily = mintsansFontFamily)
+                Text(text = "Yes", fontFamily = mintsansFontFamily)
             }
         },
         dismissButton = {

@@ -451,7 +451,6 @@ fun OrderStatusTracker(status: String) {
                 text = "Track Order",
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
             )
 
             Spacer(modifier = Modifier.height(15.dp))
