@@ -30,7 +30,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
@@ -93,8 +92,8 @@ fun OrderRequest(
     val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
     val formattedDateTime = currentDateTime.format(formatter).toString()
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
+    var filteredOrderData by remember { mutableStateOf<List<OrderData>>(emptyList()) }
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
-    val auth: FirebaseAuth = FirebaseAuth.getInstance()
     var query by remember { mutableStateOf("") }
     var keywords by remember { mutableStateOf("") }
 
@@ -103,7 +102,14 @@ fun OrderRequest(
             filter = keywords,
             role = userRole
         )
+
+        val orders = orderData.filter { order ->
+            order.status != "CANCELLED" && order.status != "REJECTED"
+        }
+
+        filteredOrderData = orders
     }
+
     Column(
         modifier = Modifier.background(CoopBackground)
     ) {
@@ -199,7 +205,7 @@ fun OrderRequest(
             is OrderState.EMPTY -> EmptyOrders()
             is OrderState.SUCCESS -> {
                 LazyColumn (modifier = Modifier.semantics { testTag = "android:id/OrderList" }){
-                    itemsIndexed(orderData) { index, order ->
+                    itemsIndexed(filteredOrderData) { index, order ->
                         OrderItem(
                             order = order,
                             orderViewModel = orderViewModel,
@@ -369,6 +375,7 @@ fun OrderItem(
                             onUpdateOrder = { onUpdateOrder(it) }
                         )
                         "COMPLETED" -> CompletedOrderActions()
+                        "RECEIVED" -> CompletedOrderActions()
                     }
                 }
             }
@@ -416,7 +423,7 @@ fun PreparingOrderActions(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.LightGray)
+            .background(PreparingStatus)
             .padding(8.dp)
             .semantics { testTag = "android:id/PreparingOrderActions" },
         horizontalArrangement = Arrangement.SpaceAround,
@@ -426,7 +433,7 @@ fun PreparingOrderActions(
             text = "Ship this order?",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black,
+            color = Color.White,
             modifier = Modifier
                 .padding(8.dp, 0.dp)
                 .semantics { testTag = "android:id/ShipOrderText" }
@@ -581,7 +588,7 @@ fun PendingOrderActions(
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.LightGray)
+            .background(PendingStatus)
             .padding(15.dp)
             .semantics { testTag = "android:id/PendingOrderActions" },
         horizontalArrangement = Arrangement.SpaceAround,
@@ -609,7 +616,7 @@ fun PendingOrderActions(
                     modifier = Modifier.fillMaxSize()
                 )
             }
-            Text(text = "Reject", modifier = Modifier.padding(top = 16.dp))
+            Text(text = "Reject", modifier = Modifier.padding(top = 16.dp), color = Color.White)
         }
         Column(
             verticalArrangement = Arrangement.Center,
@@ -634,7 +641,7 @@ fun PendingOrderActions(
 
                 )
             }
-            Text(text = "Accept", modifier = Modifier.padding(top = 16.dp))
+            Text(text = "Accept", modifier = Modifier.padding(top = 16.dp), color = Color.White)
         }
     }
 
