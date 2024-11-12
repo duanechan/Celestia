@@ -122,6 +122,7 @@ fun AddOrderPanel(
     productViewModel: ProductViewModel,
     userViewModel: UserViewModel
 ) {
+    val uid = FirebaseAuth.getInstance().uid.toString()
     val mostOrdered by orderViewModel.mostOrderedData.observeAsState(emptyList())
     val products by productViewModel.productData.observeAsState(emptyList())
     val currentMonth = LocalDate.now().month
@@ -131,6 +132,7 @@ fun AddOrderPanel(
     val types = listOf("All", "Coffee", "Meat", "Vegetable")
 
     LaunchedEffect(Unit) {
+//        userViewModel.fetchUser(uid)
         orderViewModel.fetchMostOrderedItems()
         productViewModel.fetchProducts(
             filter = "",
@@ -437,6 +439,12 @@ fun <T> ProductCard(
         else -> ""
     }
 
+    val productPrice = when (product) {
+        is MostOrdered -> product.priceKg
+        is ProductData -> product.priceKg
+        else -> 0.0
+    }
+
     LaunchedEffect(product) {
         if (productName.isNotEmpty()) {
             ImageService.fetchProductImage(productName) {
@@ -497,6 +505,7 @@ fun <T> ProductCard(
                 )
                 AddOrderForm(
                     userViewModel = userViewModel,
+                    productPrice = productPrice,
                     productType = productType,
                     productName = productName,
                     onOrder = {
@@ -523,6 +532,7 @@ fun <T> ProductCard(
 @Composable
 fun AddOrderForm(
     userViewModel: UserViewModel,
+    productPrice: Double,
     productType: String?,
     productName: String?,
     onOrder: (OrderData) -> Unit,
@@ -547,7 +557,7 @@ fun AddOrderForm(
         orderDate = formattedDateTime,
         targetDate = selectedDate,
         status = "PENDING",
-        orderData = ProductData(productName.toString(), quantity, productType.toString()),
+        orderData = ProductData(productName.toString(), quantity, productType.toString(), productPrice.toDouble()),
         client = "${userData?.firstname} ${userData?.lastname}",
         barangay = userData?.barangay.toString(),
         street = userData?.streetNumber.toString()
@@ -567,6 +577,7 @@ fun AddOrderForm(
         SummaryDetails("Address", "${order.barangay}, ${order.street}")
         SummaryDetails("Date Ordered", order.orderDate)
         SummaryDetails("Product", productName.toString())
+        SummaryDetails("Price", "₱${order.orderData.priceKg}")
 
         Spacer(modifier = Modifier.height(25.dp))
 

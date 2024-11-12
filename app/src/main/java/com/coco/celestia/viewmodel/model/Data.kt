@@ -121,5 +121,6 @@ data class MonthlyInventory(
 data class MostOrdered (
     val name: String,
     val quantity: Int,
-    val type: String
+    val type: String,
+    val priceKg: Double
 )

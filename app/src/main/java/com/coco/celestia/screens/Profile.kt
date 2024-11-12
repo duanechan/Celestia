@@ -89,6 +89,7 @@ import com.coco.celestia.ui.theme.OrangeGradientBrush
 import com.coco.celestia.ui.theme.PaleBlue
 import com.coco.celestia.ui.theme.PreparingStatus
 import com.coco.celestia.ui.theme.mintsansFontFamily
+import com.coco.celestia.util.PhoneValidator.isValidPhoneNumber
 import com.coco.celestia.util.isValidEmail
 import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.UserViewModel
@@ -166,7 +167,6 @@ fun ProfileScreen(
     var updatedStreetNumber by remember { mutableStateOf(streetNumber) }
     var updatedBarangay by remember { mutableStateOf(barangay) }
     var updatedProfilePicture by remember { mutableStateOf<Uri?>(null) }
-    var saveButtonEnabled by remember { mutableStateOf(false) }
     var saveInfoDialog by remember { mutableStateOf(false) }
     var logoutDialog by remember { mutableStateOf(false) }
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
@@ -230,21 +230,6 @@ fun ProfileScreen(
         )
     }
 
-    saveButtonEnabled =
-        (updatedEmail != email ||
-                updatedFirstName != firstName ||
-                updatedLastName != lastName ||
-                updatedPhoneNumber != phoneNumber ||
-                updatedStreetNumber != streetNumber ||
-                updatedBarangay != barangay ||
-                (updatedProfilePicture != profilePicture && updatedProfilePicture != null)) &&
-                updatedEmail.isNotEmpty() &&
-                updatedFirstName.isNotEmpty() &&
-                updatedLastName.isNotEmpty() &&
-                updatedPhoneNumber.isNotEmpty() &&
-                updatedStreetNumber.isNotEmpty() &&
-                isValidEmail(updatedEmail)
-
     if (saveInfoDialog) {
         SaveInfoDialog(
             onSave = {
@@ -276,7 +261,6 @@ fun ProfileScreen(
                             Log.d("ProfileScreen", "Profile picture upload failed!")
                         }
                     }
-                    saveButtonEnabled = false
                 }
                 saveInfoDialog = false
             },
@@ -447,7 +431,7 @@ fun ProfileScreen(
                         onValueChange = { updatedPhoneNumber = it },
                         label = "Phone Number",
                         keyboardType = KeyboardType.Phone,
-                        tag = "android:id/updatePhoneNumber"
+                        tag = "android:id/updatePhoneNumber",
                     )
 
                     ProfileField(
@@ -512,7 +496,19 @@ fun ProfileScreen(
             ) {
                 Button(
                     onClick = { saveInfoDialog = true },
-                    enabled = saveButtonEnabled,
+                    enabled = (updatedEmail != email ||
+                            updatedFirstName != firstName ||
+                            updatedLastName != lastName ||
+                            updatedPhoneNumber != phoneNumber ||
+                            updatedStreetNumber != streetNumber ||
+                            updatedBarangay != barangay ||
+                            (updatedProfilePicture != profilePicture && updatedProfilePicture != null)) &&
+                            updatedEmail.isNotEmpty() &&
+                            updatedFirstName.isNotEmpty() &&
+                            updatedLastName.isNotEmpty() &&
+                            updatedPhoneNumber.isNotEmpty() &&
+                            updatedStreetNumber.isNotEmpty() &&
+                            isValidEmail(updatedEmail),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = saveInfoColor(role),
                         contentColor = Color.White

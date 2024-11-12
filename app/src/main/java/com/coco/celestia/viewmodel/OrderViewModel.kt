@@ -122,7 +122,7 @@ class OrderViewModel : ViewModel() {
 
     fun fetchMostOrderedItems () {
         viewModelScope.launch {
-            val productCount = mutableMapOf<String, Pair <Int, String>>()
+            val productCount = mutableMapOf<String, Triple <Int, String, Double>>()
             database.addListenerForSingleValueEvent(object: ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     for (orderSnapshot in snapshot.children) {
@@ -132,17 +132,18 @@ class OrderViewModel : ViewModel() {
                             val productName = orderList.child("name").getValue(String::class.java)
                             val quantity = orderList.child("quantity").getValue(Int::class.java) ?: 0
                             val type = orderList.child("type").getValue(String::class.java)
+                            val price = orderList.child("priceKg").getValue(Double::class.java) ?: 0.0
 
                             productName?.let {
-                                val currentData = productCount[it] ?: Pair(0, type ?: "Unknown Type")
-                                productCount[it] = Pair(currentData.first + quantity, currentData.second)
+                                val currentData = productCount[it] ?: Triple(0, type ?: "Unknown Type", 0.0)
+                                productCount[it] = Triple(currentData.first + quantity, currentData.second, price)
                             }
                         }
                     }
                     val topProducts = productCount.entries
                         .sortedByDescending { it.value.first }
                         .take(6)
-                        .map { MostOrdered (name = it.key, quantity = it.value.first, type = it.value.second) }
+                        .map { MostOrdered (name = it.key, quantity = it.value.first, type = it.value.second, priceKg = it.value.third) }
 
                     _mostOrderedData.value = topProducts
                     _mostOrderedState.value = if (topProducts.isEmpty()) MostOrderedState.EMPTY else MostOrderedState.SUCCESS
