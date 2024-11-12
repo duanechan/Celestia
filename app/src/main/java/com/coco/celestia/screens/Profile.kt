@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.coco.celestia.screens
 
 import android.Manifest
@@ -9,7 +11,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +22,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,11 +37,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,12 +51,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -87,20 +84,15 @@ import com.coco.celestia.ui.theme.DOrangeCircle
 import com.coco.celestia.ui.theme.DuskyBlue
 import com.coco.celestia.ui.theme.FarmerGradientBrush
 import com.coco.celestia.ui.theme.GrayGradientBrush
-import com.coco.celestia.ui.theme.GrayTextField
-import com.coco.celestia.ui.theme.GreenGradientBrush
 import com.coco.celestia.ui.theme.LightBlueGreen
-import com.coco.celestia.ui.theme.LightOrange
 import com.coco.celestia.ui.theme.OrangeGradientBrush
 import com.coco.celestia.ui.theme.PaleBlue
 import com.coco.celestia.ui.theme.PreparingStatus
-import com.coco.celestia.ui.theme.SoftCOrange
 import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.util.isValidEmail
 import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
-
 
 @Preview
 @Composable
@@ -167,6 +159,8 @@ fun ProfileScreen(
     val locationData by locationViewModel.locationData.observeAsState()
     var profilePicture by remember { mutableStateOf<Uri?>(null) }
     var expanded by remember { mutableStateOf(false) }
+    var updatedFirstName by remember { mutableStateOf(firstName) }
+    var updatedLastName by remember { mutableStateOf(lastName) }
     var updatedEmail by remember { mutableStateOf(email) }
     var updatedPhoneNumber by remember { mutableStateOf(phoneNumber) }
     var updatedStreetNumber by remember { mutableStateOf(streetNumber) }
@@ -238,11 +232,15 @@ fun ProfileScreen(
 
     saveButtonEnabled =
         (updatedEmail != email ||
+                updatedFirstName != firstName ||
+                updatedLastName != lastName ||
                 updatedPhoneNumber != phoneNumber ||
                 updatedStreetNumber != streetNumber ||
                 updatedBarangay != barangay ||
                 (updatedProfilePicture != profilePicture && updatedProfilePicture != null)) &&
                 updatedEmail.isNotEmpty() &&
+                updatedFirstName.isNotEmpty() &&
+                updatedLastName.isNotEmpty() &&
                 updatedPhoneNumber.isNotEmpty() &&
                 updatedStreetNumber.isNotEmpty() &&
                 isValidEmail(updatedEmail)
@@ -255,6 +253,8 @@ fun ProfileScreen(
                         uid,
                         it.copy(
                             email = updatedEmail,
+                            firstname = updatedFirstName,
+                            lastname = updatedLastName,
                             phoneNumber = updatedPhoneNumber,
                             streetNumber = updatedStreetNumber,
                             barangay = updatedBarangay
@@ -418,52 +418,44 @@ fun ProfileScreen(
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    OutlinedTextField(
+                    ProfileField(
+                        value = updatedFirstName,
+                        onValueChange = { updatedFirstName = it },
+                        label = "First Name",
+                        keyboardType = KeyboardType.Text,
+                        tag = "android:id/updateFirstName"
+                    )
+
+                    ProfileField(
+                        value = updatedLastName,
+                        onValueChange = { updatedLastName = it },
+                        label = "Last Name",
+                        keyboardType = KeyboardType.Text,
+                        tag = "android:id/updateLastName"
+                    )
+
+                    ProfileField(
                         value = updatedEmail,
                         onValueChange = { updatedEmail = it },
-                        label = { Text(text = "Email") },
-                        singleLine = true,
-                        maxLines = 1,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
-                            .semantics { testTag = "android:id/updateEmailField" },
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            containerColor = Color.White
-                        )
+                        label = "Email",
+                        keyboardType = KeyboardType.Email,
+                        tag = "android:id/updateEmailField"
                     )
 
-                    OutlinedTextField(
+                    ProfileField(
                         value = updatedPhoneNumber,
                         onValueChange = { updatedPhoneNumber = it },
-                        label = { Text(text = "Phone Number") },
-                        singleLine = true,
-                        maxLines = 1,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
-                            .semantics { testTag = "android:id/updatePhoneNumber" },
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            containerColor = Color.White
-                        )
+                        label = "Phone Number",
+                        keyboardType = KeyboardType.Phone,
+                        tag = "android:id/updatePhoneNumber"
                     )
 
-                    OutlinedTextField(
+                    ProfileField(
                         value = updatedStreetNumber,
                         onValueChange = { updatedStreetNumber = it },
-                        label = { Text(text = "Street No.") },
-                        singleLine = true,
-                        maxLines = 1,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
-                            .semantics { testTag = "android:id/updateStreetNumber" },
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            containerColor = Color.White
-                        )
+                        label = "Street No.",
+                        keyboardType = KeyboardType.Text,
+                        tag = "android:id/updateStreetNumber"
                     )
 
                     ExposedDropdownMenuBox(
@@ -480,8 +472,10 @@ fun ProfileScreen(
                                 .fillMaxWidth()
                                 .menuAnchor()
                                 .semantics { testTag = "android:id/updateBarangay" },
-                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                containerColor = Color.White
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                disabledContainerColor = Color.White,
                             )
                         )
                         ExposedDropdownMenu(
@@ -551,6 +545,33 @@ fun ProfileScreen(
             }
         }
     }
+}
+
+@Composable
+fun ProfileField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    keyboardType: KeyboardType,
+    tag: String
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(text = label) },
+        singleLine = true,
+        maxLines = 1,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)
+            .semantics { testTag = tag },
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = Color.White,
+            unfocusedContainerColor = Color.White,
+            disabledContainerColor = Color.White,
+        )
+    )
 }
 
 @Composable
