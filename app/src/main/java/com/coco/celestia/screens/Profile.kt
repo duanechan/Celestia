@@ -566,7 +566,6 @@ fun ProfileScreen(
                                 Button(
                                     onClick = {
                                         showPasswordDialog = false
-                                        navController.navigate(Screen.AdminUserManagement.route)
                                     },
                                     modifier = Modifier.semantics { testTag = "android:id/cancelButton" },
                                     colors = ButtonDefaults.buttonColors(
