@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -57,7 +56,6 @@ import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.MonthlyInventory
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.viewmodel.model.UserData
-import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -257,7 +255,7 @@ fun InventoryOverview(monthlyInventory: List<MonthlyInventory>) {
         ) {
             Column(Modifier
                 .background(PaleBlue)
-                .padding(20.dp)
+                .padding(12.dp)
                 .fillMaxWidth()
             ) {
                 Text("Inventory",
@@ -269,13 +267,51 @@ fun InventoryOverview(monthlyInventory: List<MonthlyInventory>) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(PaleBlue),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .background(PaleBlue)
+                    .padding(horizontal = 12.dp)
             ) {
-                monthlyInventory.chunked(2).forEach  { chunk ->
+                val monthlyCoffee = monthlyInventory.filter { monthly ->
+                    monthly.type == "Coffee"
+                }
+                val monthlyMeat = monthlyInventory.filter { monthly ->
+                    monthly.type == "Meat"
+                }
+
+                Text("Coffee",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = DarkBlue)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                monthlyCoffee.chunked(2).forEach  { chunk ->
                     Row(
                         modifier = Modifier
-                            .padding(horizontal = 12.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+
+                    ) {
+                        chunk.forEach { monthly ->
+                            Card (
+                                modifier = Modifier
+                                    .width(135.dp)
+                                    .height(140.dp)
+                                    .padding(bottom = 10.dp)
+                            ){
+                                InventorySummary(monthly.productName, monthly.currentInv.toString())
+                            }
+                        }
+                    }
+                }
+
+                Text("Meat",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = DarkBlue)
+                Spacer(modifier = Modifier.height(8.dp))
+
+                monthlyMeat.chunked(2).forEach  { chunk ->
+                    Row(
+                        modifier = Modifier
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
 
