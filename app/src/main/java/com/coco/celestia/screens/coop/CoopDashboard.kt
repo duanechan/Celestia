@@ -1,15 +1,19 @@
+@file:OptIn(ExperimentalCoilApi::class)
+
 package com.coco.celestia.screens.coop
 
+import android.annotation.SuppressLint
 import android.icu.text.SimpleDateFormat
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,15 +27,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,12 +46,18 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.OrderViewModel
-// Add these imports
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
+import com.coco.celestia.R
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.github.mikephil.charting.charts.BarChart
@@ -87,11 +96,129 @@ fun CoopDashboard(
         .semantics { testTag = "android:id/CoopDashboardBox" }) {
         Column (modifier = Modifier.verticalScroll(scrollState)) {
             OverviewSummaryBox(orderViewModel, productViewModel, role)
+            OrderStatusSummary(orderViewModel)
             StockLevelsBarGraph(productViewModel, role)
         }
     }
 }
 
+@Composable
+fun OrderStatusSummary (
+    orderViewModel: OrderViewModel
+) {
+    val orders by orderViewModel.orderData.observeAsState(emptyList())
+
+    val pending = orders.count { it.status == "PENDING" }
+    val preparing = orders.count { it.status == "PREPARING" }
+    val completed = orders.count { it.status == "COMPLETED" }
+    val delivering = orders.count { it.status == "DELIVERING" }
+
+    Box (
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+            .border(BorderStroke(3.dp, Color.White), shape = RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color.White)
+    ) {
+        Column {
+            Text(
+                text = "Order Status Overview",
+                fontWeight = FontWeight.Bold,
+                color = DarkGreen,
+                modifier = Modifier.padding(8.dp)
+            )
+
+            Row (
+              modifier = Modifier
+                  .fillMaxWidth()
+                  .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                OrderStatusCard("Pending", pending, "pending")
+                OrderStatusCard("Preparing", preparing, "preparing")
+            }
+
+            Row (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                OrderStatusCard("Delivering", delivering, "delivering")
+                OrderStatusCard("Completed", completed, "completed")
+            }
+        }
+    }
+}
+
+@Composable
+fun OrderStatusCard (label: String, value: Int, status: String) {
+    val color = when (status) {
+        "pending" -> PendingStatus
+        "preparing" -> PreparingStatus
+        "completed" -> CompletedStatus
+        "delivering" -> DeliveringStatus
+        else -> Color.Transparent
+    }
+    Box (
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+    ) {
+        Card (
+            modifier = Modifier
+                .width(135.dp)
+                .height(140.dp)
+                .padding(bottom = 10.dp)
+        ) {
+            Column (
+                modifier = Modifier
+                    .background(color)
+                    .fillMaxSize()
+                    .padding(12.dp)
+            ) {
+                Row (
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = rememberImagePainter(R.drawable.box),
+                        contentScale = ContentScale.Crop,
+                        contentDescription = "Product Image",
+                        colorFilter = ColorFilter.tint(Color.White),
+                        modifier = Modifier
+                            .size(50.dp)
+                    )
+                    Text(
+                        value.toString(),
+                        color = Color.White,
+                        fontSize = 25.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .padding(start = 6.dp)
+                            .align(Alignment.CenterVertically)
+                    )
+                }
+                Text(
+                    label,
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
 @Composable
 fun OverviewSummaryBox(orderViewModel: OrderViewModel, productViewModel: ProductViewModel, role: String) {
     Box(modifier = Modifier
@@ -122,6 +249,7 @@ fun OverviewSummaryBox(orderViewModel: OrderViewModel, productViewModel: Product
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun OrderStatusDonutChart(orderViewModel: OrderViewModel) {
     val orders by orderViewModel.orderData.observeAsState(emptyList())
@@ -519,7 +647,7 @@ fun StockLevelsBarGraph(productViewModel: ProductViewModel, role: String) {
                         )
 
                         // Check for low stock products
-                        val lowStockProducts = products.filter { (it.quantity ?: 0) <= 0 }
+                        val lowStockProducts = products.filter { it.quantity <= 0 }
                         if (lowStockProducts.isNotEmpty()) {
                             Text(
                                 text = "⚠️ Low stock alert for: ${lowStockProducts.joinToString { it.name }}",
@@ -565,7 +693,7 @@ fun StockLevelsBarGraph(productViewModel: ProductViewModel, role: String) {
                         update = { barChart ->
                             // Extract stock or quantity from product data based on JSON structure
                             val entries = products.mapIndexed { index, product ->
-                                val stockQuantity = product.quantity ?: 0  // Ensure quantity is not null
+                                val stockQuantity = product.quantity  // Ensure quantity is not null
                                 BarEntry(index.toFloat(), stockQuantity.toFloat().coerceAtLeast(0f)) // Ensure no negative values
                             }
 
