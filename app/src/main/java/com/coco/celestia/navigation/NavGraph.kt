@@ -227,7 +227,12 @@ fun NavGraph(
             if (userData == null) {
                 LoadingIndicator()
             } else {
-                AdminDashboard(userData = userData, navController = navController)
+                AdminDashboard(
+                    userData = userData,
+                    productViewModel = productViewModel,
+                    orderViewModel = orderViewModel,
+                    navController = navController
+                )
             }
         }
 
