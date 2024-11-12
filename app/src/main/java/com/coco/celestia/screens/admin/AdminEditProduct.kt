@@ -158,7 +158,7 @@ fun EditProduct(
                         uid = uid,
                         transaction = TransactionData(
                             transactionId = "Transaction-${UUID.randomUUID()}",
-                            type = "ProductUpdated",
+                            type = "Product_Updated",
                             date = formattedDateTime,
                             description = "$productName price updated to ₱${updatedPrice.toDouble()}."
                         )

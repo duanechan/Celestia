@@ -1,5 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class,
-    ExperimentalFoundationApi::class, ExperimentalFoundationApi::class, ExperimentalCoilApi::class
+    ExperimentalFoundationApi::class, ExperimentalFoundationApi::class, ExperimentalCoilApi::class,
+    ExperimentalFoundationApi::class
 )
 
 package com.coco.celestia.screens.client
@@ -40,7 +41,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -51,7 +51,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SearchBar
@@ -440,7 +439,7 @@ fun <T> ProductCard(
 
     LaunchedEffect(product) {
         if (productName.isNotEmpty()) {
-            ImageService.fetchProfilePicture(productName) {
+            ImageService.fetchProductImage(productName) {
                 productImage = it
             }
         }

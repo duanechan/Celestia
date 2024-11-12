@@ -143,7 +143,7 @@ fun EditUser(
                                         uid = FirebaseAuth.getInstance().uid.toString(),
                                         transaction = TransactionData(
                                             transactionId = "Transaction-${UUID.randomUUID()}",
-                                            type = "UserUpdated",
+                                            type = "User_Updated",
                                             date = formattedDateTime,
                                             description = "User ${it.firstname}'s email updated to $updatedEmail"
                                         )
@@ -154,7 +154,7 @@ fun EditUser(
                                         uid = FirebaseAuth.getInstance().uid.toString(),
                                         transaction = TransactionData(
                                             transactionId = "Transaction-${UUID.randomUUID()}",
-                                            type = "UserUpdated",
+                                            type = "User_Updated",
                                             date = formattedDateTime,
                                             description = "${it.firstname} ${it.lastname}'s role updated to $updatedRole"
                                         )

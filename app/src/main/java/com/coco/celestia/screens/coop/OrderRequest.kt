@@ -218,7 +218,7 @@ fun OrderRequest(
                                     uid = uid,
                                     transaction = TransactionData(
                                         transactionId = "Transaction-${UUID.randomUUID()}",
-                                        type = "OrderUpdated",
+                                        type = "Order_Updated",
                                         date = formattedDateTime,
                                         description = "Order#${order.orderId.substring(6, 11).uppercase()} status updated to ${
                                             when(order.status) {

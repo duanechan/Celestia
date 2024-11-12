@@ -195,7 +195,7 @@ fun CoopAddInventory(
                     uid = uid,
                     transaction = TransactionData(
                         transactionId = "Transaction-${UUID.randomUUID()}",
-                        type = "ProductAdded",
+                        type = "Product_Added",
                         date = formattedDateTime,
                         description = "Added ${product.quantity}kg of ${product.name}."
                     )

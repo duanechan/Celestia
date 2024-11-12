@@ -75,6 +75,9 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
     var selectedCategory by remember { mutableStateOf("") }
     var filterActionExpanded by remember { mutableStateOf(false) }
     var filteredOrderDataTran by remember { mutableStateOf<Map<UserData, List<TransactionData>>>(emptyMap()) }
+    var filteredSearch by remember { mutableStateOf<Map<String, Pair<UserData, List<TransactionData>>>>(
+        emptyMap()
+    ) }
     val context = LocalContext.current
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -93,6 +96,7 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
 
         val filterTransaction = mutableMapOf<String, List<TransactionData>>()
         val filterOrderDataTran = mutableMapOf<UserData, List<TransactionData>>()
+        val filterSearch = mutableMapOf<String, Pair<UserData, List<TransactionData>>>()
 
         transactionData.forEach { (userId, transaction) ->
             UserIdentifier.getUserData(userId) {
@@ -102,11 +106,13 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
             if (userData?.role?.contains("Coop") == true) {
                 filterTransaction[userId] = transaction
                 filterOrderDataTran[userData!!] = transaction
+                filterSearch[userId] = userData!! to transaction
             }
         }
 
         filteredTransaction = filterTransaction
         filteredOrderDataTran = filterOrderDataTran
+        filteredSearch = filterSearch
     }
 
     Column(
@@ -175,7 +181,7 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                             .heightIn(max = 250.dp)
                     ) {
                         if (actionStatusView) {
-                            listOf("All", "Product Updated", "User Updated", "Added Order").forEach { status ->
+                            listOf("All", "Product Updated", "Order Updated", "Product Added").forEach { status ->
                                 DropdownMenuItem(
                                     text = {
                                         Text(
@@ -291,8 +297,14 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                     item { Text("Loading logs...") }
                 }
                 TransactionState.SUCCESS -> {
-                    filteredTransaction.entries.forEach { (userId, transactions) ->
-                        items(transactions) { transaction ->
+                    filteredSearch.entries.forEach { (userId, pair) ->
+                        val (user, transactions) = pair
+                        items(transactions.filter { transaction ->
+                            val formattedStatus = selectedStatus.replace(" ", "_")
+                            val fullName = "${user.firstname} ${user.lastname}"
+                            (transaction.type == formattedStatus || formattedStatus == "All") &&
+                                    (fullName.contains(searchQuery, ignoreCase = true) || searchQuery == "")
+                        }) { transaction ->
                             LogItem(userId, transaction, isEvenRow = transactions.indexOf(transaction) % 2 == 0)
                             Divider()
                         }
@@ -314,6 +326,7 @@ fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
             userData = result
         }
     }
+    val formattedType = transaction.type.replace("_", " ")
 
     Row(
         modifier = Modifier
@@ -353,7 +366,7 @@ fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
             )
         }
         Text(
-            text = transaction.type,
+            text = formattedType,
             fontSize = 12.sp,
             fontFamily = mintsansFontFamily,
             color = DarkBlue,

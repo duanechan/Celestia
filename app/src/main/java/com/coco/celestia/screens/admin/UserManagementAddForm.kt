@@ -265,7 +265,7 @@ fun CheckAddUser(
                                 uid = FirebaseAuth.getInstance().uid.toString(),
                                 transaction = TransactionData(
                                     transactionId = "Transaction-${UUID.randomUUID()}",
-                                    type = "UserAdded",
+                                    type = "User_Added",
                                     date = formattedDateTime,
                                     description = "Added $firstname $lastname's account ($email)."
                                 )

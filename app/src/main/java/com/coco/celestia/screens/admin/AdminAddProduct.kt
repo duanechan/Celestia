@@ -301,7 +301,7 @@ fun ConfirmAddProduct(
                         uid = uid,
                         transaction = TransactionData(
                             transactionId = "Transaction-${UUID.randomUUID()}",
-                            type = "ProductAdded",
+                            type = "Product_Added",
                             date = formattedDateTime,
                             description = "${product.name} product added to the inventory."
                         )

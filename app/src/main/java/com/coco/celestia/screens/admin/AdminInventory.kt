@@ -261,7 +261,7 @@ fun AdminItemCard(
 
     LaunchedEffect(Unit) {
         if (productName.isNotEmpty()) {
-            ImageService.fetchProfilePicture(productName) {
+            ImageService.fetchProductImage(productName) {
                 productImage = it
             }
         }
