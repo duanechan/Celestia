@@ -94,6 +94,7 @@ import com.coco.celestia.ui.theme.OrangeGradientBrush
 import com.coco.celestia.ui.theme.PaleBlue
 import com.coco.celestia.ui.theme.PreparingStatus
 import com.coco.celestia.ui.theme.mintsansFontFamily
+import com.coco.celestia.util.PhoneValidator.isValidPhoneNumber
 import com.coco.celestia.util.isValidEmail
 import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.PasswordState
@@ -437,7 +438,12 @@ fun ProfileScreen(
 
                     ProfileField(
                         value = updatedPhoneNumber,
-                        onValueChange = { updatedPhoneNumber = it },
+                        prefix = { Text(text = "+63") },
+                        onValueChange = {
+                            if (it.length <= 10) {
+                                updatedPhoneNumber = it
+                            }
+                        },
                         label = "Phone Number",
                         keyboardType = KeyboardType.Phone,
                         tag = "android:id/updatePhoneNumber",
@@ -518,6 +524,8 @@ fun ProfileScreen(
                             },
                             title = { Text("Change Password", modifier = Modifier.semantics { testTag = "android:id/dialogTitle" }) },
                             text = {
+                                var isValidPassword by remember { mutableStateOf(listOf("Password is valid!")) }
+
                                 Column {
                                     TextField(
                                         value = passwordInput.value,
@@ -534,6 +542,7 @@ fun ProfileScreen(
                                         value = newPasswordInput.value,
                                         onValueChange = { newPasswordInput.value = it },
                                         label = { Text("New Password") },
+                                        isError = "Password is valid!" !in isValidPassword,
                                         visualTransformation = PasswordVisualTransformation(),
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                                         modifier = Modifier.semantics { testTag = "android:id/passwordInputField" }
@@ -628,6 +637,7 @@ fun ProfileScreen(
                             updatedLastName.isNotEmpty() &&
                             updatedPhoneNumber.isNotEmpty() &&
                             updatedStreetNumber.isNotEmpty() &&
+                            isValidPhoneNumber(updatedPhoneNumber) &&
                             isValidEmail(updatedEmail),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = saveInfoColor(role),
@@ -666,6 +676,7 @@ fun ProfileScreen(
 @Composable
 fun ProfileField(
     value: String,
+    prefix: @Composable (() -> Unit)? = null,
     onValueChange: (String) -> Unit,
     label: String,
     keyboardType: KeyboardType,
@@ -675,6 +686,7 @@ fun ProfileField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(text = label) },
+        prefix = prefix,
         singleLine = true,
         maxLines = 1,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),

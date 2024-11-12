@@ -59,6 +59,7 @@ import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.isValidEmail
+import com.coco.celestia.util.isValidPassword
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 
@@ -70,7 +71,7 @@ fun RegisterScreen(
     onRegisterEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
-    val maxChar = 25
+    val maxChar = 30
     var showPrivacyPolicy by remember { mutableStateOf(false) }
     var privacyPolicyRead by remember { mutableStateOf(false) }
     var email by remember { mutableStateOf("") }
@@ -81,6 +82,7 @@ fun RegisterScreen(
     var showRoleDialog by remember { mutableStateOf(true) }
     var selectedRole by remember { mutableStateOf("") }
     var isValidEmail by remember { mutableStateOf(true) }
+    var isValidPassword by remember { mutableStateOf(listOf("Password is valid!")) }
 
     LaunchedEffect(userState) {
         when (userState) {
@@ -262,9 +264,11 @@ fun RegisterScreen(
                     onValueChange = {
                         if (it.length <= maxChar) {
                             password = it
+                            isValidPassword = isValidPassword(it)
                         }
                     },
                     label = { Text(text = "Password", color = BrownCoffee2) },
+                    isError = "Password is valid!" !in isValidPassword,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
@@ -278,6 +282,18 @@ fun RegisterScreen(
                     ),
                     modifier = Modifier.semantics { testTag = "android:id/passwordField" }
                 )
+
+                if ("Password is valid!" !in isValidPassword) {
+                    Column {
+                        isValidPassword.forEach { error ->
+                            Text(
+                                text = error,
+                                color = Color.Red,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(2.dp))
 
@@ -341,7 +357,6 @@ fun RegisterScreen(
                         } else if (!privacyPolicyRead) {
                             onRegisterEvent(Triple(ToastStatus.WARNING, "Please read and check the privacy policy first.", System.currentTimeMillis()))
                         } else {
-                            Log.d("Registration", selectedRole)
                             userViewModel.register(email, firstName, lastName, password, selectedRole)
                         }
                     },
