@@ -56,6 +56,7 @@ fun FarmerDashboard(
     val itemData by itemViewModel.itemData.observeAsState(emptyList())
     val itemState by itemViewModel.itemState.observeAsState(ItemState.LOADING)
     val products by productViewModel.productData.observeAsState(emptyList())
+    val farmerItemViewModel: FarmerItemViewModel = viewModel()
     val dateFormat = remember { SimpleDateFormat("EEEE, MMMM d yyyy", Locale.getDefault()) }
     val today = dateFormat.format(Date())
     val scrollState = rememberScrollState()
@@ -69,11 +70,18 @@ fun FarmerDashboard(
 
     var showInSeasonDialog by remember { mutableStateOf(false) }
     var showAllDialog by remember { mutableStateOf(false) }
+    var farmerName by remember { mutableStateOf("") }
 
     LaunchedEffect(uid) {
         itemViewModel.getItems(uid = uid)
         productViewModel.fetchProducts(filter = "", role = "Farmer")
         itemViewModel.fetchFarmerName(uid)
+    }
+
+    LaunchedEffect (Unit) {
+        if (uid.isNotEmpty()) {
+            farmerName = farmerItemViewModel.fetchFarmerName(uid)
+        }
     }
 
     val inSeasonProducts = products.filter { product ->
@@ -239,7 +247,8 @@ fun FarmerDashboard(
                             navController = navController,
                             orderData = orderData,
                             orderState = orderState,
-                            searchQuery = searchQuery
+                            searchQuery = searchQuery,
+                            farmerName = farmerName
                         )
                     }
                 }
@@ -385,6 +394,7 @@ fun OrderStatusSection(
     orderData: List<OrderData>,
     orderState: OrderState,
     searchQuery: String,
+    farmerName: String
 ) {
     when (orderState) {
         is OrderState.LOADING -> {
@@ -414,8 +424,9 @@ fun OrderStatusSection(
         }
         is OrderState.SUCCESS -> {
             val filteredOrders = orderData.filter { order ->
-                order.status !in listOf("PENDING", "REJECTED", "COMPLETED") &&
+                order.status !in listOf("PENDING", "REJECTED", "COMPLETED", "CANCELLED") &&
                         order.orderId.contains(searchQuery, ignoreCase = true)
+                order.fulfilledBy.contains(farmerName)
             }.take(2)
 
             if (filteredOrders.isEmpty()) {
@@ -425,7 +436,7 @@ fun OrderStatusSection(
                         .padding(start = 5.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No matching orders found.")
+                    Text("No orders found.", color = Cocoa.copy(alpha = 0.7f))
                 }
             } else {
                 Column {

@@ -1,12 +1,12 @@
 package com.coco.celestia.screens.farmer.dialogs
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -37,6 +37,7 @@ fun FarmerFulfillDialog(
 
     val farmerStock = productInInventory?.quantity ?: 0
     val canFulfill = remainingQuantity <= farmerStock
+    println("Farmer Name: $farmerName")
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -52,17 +53,15 @@ fun FarmerFulfillDialog(
                     imageVector = Icons.Default.Warning,
                     contentDescription = "Warning Icon",
                     tint = Cocoa,
-                    modifier = Modifier
-                        .size(30.dp)
-                        .semantics { testTag = "android:id/dialogIcon" }
+                    modifier = Modifier.size(30.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Fulfill Order Request",
+                    fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     color = Cocoa,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.semantics { testTag = "android:id/dialogTitleText" }
+                    textAlign = TextAlign.Center
                 )
             }
         },
@@ -71,51 +70,59 @@ fun FarmerFulfillDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = farmerName,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Cocoa,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.semantics { testTag = "android:id/dialogFarmerName" }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(color = Apricot, shape = RoundedCornerShape(8.dp))
+                        .padding(16.dp)
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = "Client", fontSize = 17.sp, color = Cocoa)
+                            Text(text = orderData.client, fontSize = 17.sp, color = Cocoa)
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = "Product: ${orderData.orderData.name}",
-                    fontSize = 14.sp,
-                    color = Cocoa,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.semantics { testTag = "android:id/dialogProductName" }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = "Product", fontSize = 17.sp, color = Cocoa)
+                            Text(text = orderData.orderData.name, fontSize = 17.sp, color = Cocoa)
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = "Ordered: ${orderData.orderData.quantity} kg",
-                    fontSize = 13.sp,
-                    color = Cocoa,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.semantics { testTag = "android:id/dialogOrderQuantity" }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = "Ordered", fontSize = 17.sp, color = Cocoa)
+                            Text(text = "${orderData.orderData.quantity} kg", fontSize = 17.sp, color = Cocoa)
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = "Your Current Stock: $farmerStock kg",
-                    fontSize = 13.sp,
-                    color = Cocoa,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.semantics { testTag = "android:id/dialogFarmerStock" }
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = "Your Current Stock", fontSize = 17.sp, color = Cocoa, fontWeight = FontWeight.Bold)
+                            Text(text = "$farmerStock kg", fontSize = 17.sp, color = Cocoa, fontWeight = FontWeight.Bold)
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = "Remaining to Fulfill: $remainingQuantity kg",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Cocoa,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.semantics { testTag = "android:id/dialogRemainingQuantity" }
-                )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = "Remaining to Fulfill", fontSize = 17.sp, color = Cocoa, fontWeight = FontWeight.Bold)
+                            Text(text = "$remainingQuantity kg", fontSize = 17.sp, color = Cocoa, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
@@ -127,48 +134,45 @@ fun FarmerFulfillDialog(
                     color = if (canFulfill) OliveGreen else Copper,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.semantics { testTag = "android:id/dialogStatusMessage" }
+                    textAlign = TextAlign.Center
                 )
             }
         },
         dismissButton = {
-            TextButton(
+            Button(
                 onClick = {
                     if (canFulfill) {
                         onReject()
                     }
                     navController.popBackStack()
                 },
-                modifier = Modifier.semantics {
-                    testTag = if (canFulfill) "android:id/dialogRejectButton" else "android:id/dialogOkButton"
-                }
+                colors = ButtonDefaults.buttonColors(containerColor = Sand2),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.padding(8.dp)
             ) {
                 Text(
                     text = if (canFulfill) "Refuse" else "Ok",
-                    color = Copper,
-                    fontSize = 16.sp,
+                    color = Cocoa,
+                    fontSize = 16.sp
                 )
             }
         },
         confirmButton = {
             if (canFulfill) {
-                TextButton(
+                Button(
                     onClick = {
                         onAccept()
                         navController.popBackStack()
                     },
-                    modifier = Modifier.semantics { testTag = "android:id/dialogAcceptButton" }
+                    colors = ButtonDefaults.buttonColors(containerColor = OliveGreen),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.padding(8.dp)
                 ) {
-                    Text(
-                        text = "Accept",
-                        color = OliveGreen,
-                        fontSize = 16.sp,
-                    )
+                    Text(text = "Accept", color = Apricot, fontSize = 14.sp)
                 }
             }
         },
         shape = RoundedCornerShape(16.dp),
-        containerColor = Color(0xFFF2E3DB)
+        containerColor = Sand2
     )
 }

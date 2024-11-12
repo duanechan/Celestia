@@ -77,6 +77,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
     val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
     val formattedDateTime = currentDateTime.format(formatter).toString()
     val transactionViewModel: TransactionViewModel = viewModel()
+    val productDateAdded by remember { mutableStateOf(LocalDate.now().format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))) }
 
     LaunchedEffect(Unit) {
         farmerItemViewModel.getItems(uid = uid)
@@ -151,7 +152,8 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                             uid = uid,
                             farmerItemViewModel = farmerItemViewModel,
                             farmerName = farmerName,
-                            isInSeason = isInSeason
+                            isInSeason = isInSeason,
+                            productDateAdded = productDateAdded
                         )
 
                         when (orderState) {
@@ -189,7 +191,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                                             .semantics { testTag = "noOrdersForProductText" }
                                     )
                                 } else {
-                                    OrderTable(orders = filteredOrders)
+                                    OrderTable(orders = filteredOrders, farmerName = farmerName)
                                 }
                             }
                             is OrderState.ERROR -> {
@@ -286,7 +288,8 @@ fun ProductDetailsCard(
     farmerItemViewModel: FarmerItemViewModel,
     uid: String,
     farmerName: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    productDateAdded: String
 ) {
     var showHarvestDialog by remember { mutableStateOf(false) }
     val firstProduct = itemData.items.firstOrNull()
@@ -331,7 +334,8 @@ fun ProductDetailsCard(
                     isLowStock = isLowStock,
                     isInSeason = isInSeason,
                     onHarvestClick = { showHarvestDialog = true },
-                    onEditClick = onEditClick
+                    onEditClick = onEditClick,
+                    productDateAdded = productDateAdded
                 )
             }
         }
@@ -355,6 +359,7 @@ private fun ProductDetailsContent(
     productQuantity: Int,
     productPricePerKg: Double,
     estimatedHarvestTime: String,
+    productDateAdded: String,
     isLowStock: Boolean,
     isInSeason: Boolean,
     onHarvestClick: () -> Unit,
@@ -454,33 +459,70 @@ private fun ProductDetailsContent(
 
             Spacer(modifier = Modifier.height(15.dp))
 
-            // Estimated Harvest Time Box
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Sand2, RoundedCornerShape(8.dp))
-                    .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-                    .padding(vertical = 8.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
+                // Estimated Harvest Time
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 4.dp)
+                        .background(Sand2, RoundedCornerShape(8.dp))
+                        .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                        .padding(vertical = 8.dp)
                 ) {
-                    Text(
-                        text = "Estimated Harvest Time",
-                        fontSize = 14.sp,
-                        fontWeight = Medium,
-                        color = Cocoa,
-                        modifier = Modifier.semantics { testTag = "android:id/harvestTimeTitleText" }
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = estimatedHarvestTime,
-                        fontSize = 16.sp,
-                        fontWeight = Bold,
-                        color = Cocoa,
-                        modifier = Modifier.semantics { testTag = "android:id/harvestTimeValueText" }
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Estimated Harvest Time",
+                            fontSize = 14.sp,
+                            fontWeight = Medium,
+                            color = Cocoa,
+                            modifier = Modifier.semantics { testTag = "android:id/harvestTimeTitleText" }
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = estimatedHarvestTime,
+                            fontSize = 16.sp,
+                            fontWeight = Bold,
+                            color = Cocoa,
+                            modifier = Modifier.semantics { testTag = "android:id/harvestTimeValueText" }
+                        )
+                    }
+                }
+
+                // Product Added
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 4.dp)
+                        .background(Sand2, RoundedCornerShape(8.dp))
+                        .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                        .padding(vertical = 8.dp)
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Date Added",
+                            fontSize = 14.sp,
+                            fontWeight = Medium,
+                            color = Cocoa,
+                            modifier = Modifier.semantics { testTag = "android:id/productAddedTitleText" }
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = productDateAdded,
+                            fontSize = 16.sp,
+                            fontWeight = Bold,
+                            color = Cocoa,
+                            modifier = Modifier.semantics { testTag = "android:id/productAddedValueText" }
+                        )
+                    }
                 }
             }
         }
@@ -576,7 +618,14 @@ private fun ProductDetailsContent(
 }
 
 @Composable
-fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp = 450.dp) {
+fun OrderTable(
+    orders: List<OrderData>,
+    rowHeight: Dp = 80.dp,
+    tableHeight: Dp = 450.dp,
+    farmerName: String
+) {
+    val filteredOrders = orders.filter { farmerName in it.fulfilledBy }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -634,14 +683,18 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                 .height(tableHeight)
                 .verticalScroll(rememberScrollState())
                 .semantics { testTag = "android:id/orderList" }
+                .background(SoftOrange)  // Added background here
         ) {
-            Column {
-                if (orders.isNotEmpty()) {
-                    orders.forEach { order ->
+            if (filteredOrders.isNotEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight()
+                ) {
+                    filteredOrders.forEach { order ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(color = SoftOrange)
                                 .padding(50.dp)
                                 .semantics { testTag = "android:id/orderRow_${order.orderId}" }
                         ) {
@@ -679,13 +732,12 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                     }
 
                     val totalRows = (tableHeight / rowHeight).toInt()
-                    val blankRows = totalRows - orders.size
+                    val blankRows = totalRows - filteredOrders.size
 
                     repeat(blankRows) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(color = SoftOrange)
                                 .padding(50.dp)
                                 .semantics { testTag = "android:id/blankRow_$it" }
                         ) {
@@ -714,16 +766,20 @@ fun OrderTable(orders: List<OrderData>, rowHeight: Dp = 80.dp, tableHeight: Dp =
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
-                } else {
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
                         text = "No orders available",
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
+                            .padding(10.dp)
                             .semantics { testTag = "android:id/noOrdersAvailableText" },
                         textAlign = TextAlign.Center,
-                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                        color = Color.Gray
+                        color = Cocoa.copy(alpha = 0.7f)
                     )
                 }
             }

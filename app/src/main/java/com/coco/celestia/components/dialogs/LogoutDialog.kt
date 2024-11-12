@@ -20,8 +20,6 @@ import com.coco.celestia.ui.theme.*
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun LogoutDialog(onDismiss: () -> Unit, onLogout: () -> Unit, role: String) {
-    val buttonColor = logoutColorForRole(role) // Get the color for the role
-
     AlertDialog(
         onDismissRequest = { onDismiss() },
         title = {
@@ -33,23 +31,23 @@ fun LogoutDialog(onDismiss: () -> Unit, onLogout: () -> Unit, role: String) {
         confirmButton = {
             Button(
                 onClick = { onLogout() },
-                colors = ButtonDefaults.buttonColors(logoutColorForRole(role)), // Apply color
+                colors = ButtonDefaults.buttonColors(logoutColorForRole(role)),
                 modifier = Modifier
                     .semantics { testTagsAsResourceId = true }
                     .semantics { testTag = "android:id/confirmLogout" }
             ) {
-                Text(text = "Logout", fontFamily = mintsansFontFamily, color = Color.White) // Optional text color
+                Text(text = "Logout", fontFamily = mintsansFontFamily, color = Color.White)
             }
         },
         dismissButton = {
             Button(
                 onClick = { onDismiss() },
-                colors = ButtonDefaults.buttonColors(logoutColorForRole(role)), // Apply color
+                colors = ButtonDefaults.buttonColors(Color.Gray),
                 modifier = Modifier
                     .semantics { testTagsAsResourceId = true }
                     .semantics { testTag = "android:id/cancelLogout" }
             ) {
-                Text(text = "Cancel", fontFamily = mintsansFontFamily, color = Color.White) // Optional text color
+                Text(text = "Cancel", fontFamily = mintsansFontFamily, color = Color.White)
             }
         },
         modifier = Modifier.semantics { testTag = "android:id/LogoutDialog" }

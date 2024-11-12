@@ -358,8 +358,28 @@ fun NavDrawerBottomBar(
         ) {
             // Dashboard - Default to all roles except Client
             NavigationBarItem(
-                icon = { Icon(imageVector = Icons.Default.Home, contentDescription = "Dashboard", tint = if (role == "Client") BWhite else bottomBarColors.second) },
-                label = { Text("Dashboard", color = if (role == "Client") Color.White else bottomBarColors.second, fontFamily = mintsansFontFamily) },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Home,
+                        contentDescription = "Dashboard",
+                        tint = when {
+                            role == "Client" -> BWhite
+                            role == "Farmer" && currentDestination == routes.dashboard -> Cocoa
+                            else -> bottomBarColors.second
+                        }
+                    )
+                },
+                label = {
+                    Text(
+                        "Dashboard",
+                        color = when {
+                            role == "Client" -> Color.White
+                            role == "Farmer" && currentDestination == routes.dashboard -> Cocoa
+                            else -> bottomBarColors.second
+                        },
+                        fontFamily = mintsansFontFamily
+                    )
+                },
                 selected = currentDestination == routes.dashboard,
                 onClick = {
                     navController.navigate(routes.dashboard) {
@@ -367,20 +387,47 @@ fun NavDrawerBottomBar(
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = if (role == "Client") Color.White else bottomBarColors.second,
-                    indicatorColor = if (role == "Client") DOrangeCircle else bottomBarColors.first // Apply the custom color for Client
+                    selectedIconColor = when (role) {
+                        "Farmer" -> Sand2
+                        "Client" -> Color.White
+                        else -> bottomBarColors.second
+                    },
+                    indicatorColor = when (role) {
+                        "Farmer" -> Sand2
+                        "Client" -> DOrangeCircle
+                        else -> bottomBarColors.first
+                    }
                 ),
                 modifier = Modifier.semantics { testTag = "android:id/dashboardPage" }
             )
 
-            if(role == "Coop" || role == "CoopCoffee" || role == "CoopMeat"|| role == "Client" || role == "Farmer") {
+            if (role == "Coop" || role == "CoopCoffee" || role == "CoopMeat" || role == "Client" || role == "Farmer") {
                 NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.ShoppingCart, contentDescription = "Orders", tint = if (role == "Client") BWhite else bottomBarColors.second) },
-                    label = { Text("Orders", color = if (role == "Client") Color.White else bottomBarColors.second, fontFamily = mintsansFontFamily) },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = "Orders",
+                            tint = when {
+                                role == "Client" -> BWhite
+                                role == "Farmer" && currentDestination == routes.orders -> Cocoa
+                                else -> bottomBarColors.second
+                            }
+                        )
+                    },
+                    label = {
+                        Text(
+                            "Orders",
+                            color = when {
+                                role == "Client" -> Color.White
+                                role == "Farmer" && currentDestination == routes.orders -> Cocoa
+                                else -> bottomBarColors.second
+                            },
+                            fontFamily = mintsansFontFamily
+                        )
+                    },
                     selected = currentDestination == routes.orders || currentDestination == Screen.ClientOrderDetails.route,
                     onClick = {
                         if (role == "Farmer") {
-                            // Directly navigate to Order Status
                             navController.navigate(Screen.FarmerManageOrder.route) {
                                 popUpTo(navController.graph.startDestinationId)
                             }
@@ -391,8 +438,16 @@ fun NavDrawerBottomBar(
                         }
                     },
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = if (role == "Client") Color.White else bottomBarColors.second,
-                        indicatorColor = if (role == "Client") DOrangeCircle else bottomBarColors.first
+                        selectedIconColor = when (role) {
+                            "Farmer" -> Sand2
+                            "Client" -> Color.White
+                            else -> bottomBarColors.second
+                        },
+                        indicatorColor = when (role) {
+                            "Farmer" -> Sand2
+                            "Client" -> DOrangeCircle
+                            else -> bottomBarColors.first
+                        }
                     ),
                     modifier = Modifier
                         .semantics { testTag = "android:id/ordersPage" }
@@ -407,10 +462,22 @@ fun NavDrawerBottomBar(
                         Icon(
                             imageVector = Icons.Default.List,
                             contentDescription = "Items",
-                            tint = contentColor
+                            tint = when {
+                                role == "Farmer" && currentDestination == routes.inventory -> Cocoa
+                                else -> contentColor
+                            }
                         )
                     },
-                    label = { Text("Items", color = contentColor, fontFamily = mintsansFontFamily) },
+                    label = {
+                        Text(
+                            "Items",
+                            color = when {
+                                role == "Farmer" && currentDestination == routes.inventory -> Cocoa
+                                else -> contentColor
+                            },
+                            fontFamily = mintsansFontFamily
+                        )
+                    },
                     selected = currentDestination == routes.inventory ||
                             currentDestination == Screen.AdminAddProduct.route ||
                             currentDestination == Screen.CoopProductInventory.route ||
@@ -420,6 +487,16 @@ fun NavDrawerBottomBar(
                             popUpTo(navController.graph.startDestinationId)
                         }
                     },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = when (role) {
+                            "Farmer" -> Sand2
+                            else -> contentColor
+                        },
+                        indicatorColor = when (role) {
+                            "Farmer" -> Sand2
+                            else -> bottomBarColors.first
+                        }
+                    ),
                     modifier = Modifier.semantics { testTag = "android:id/itemsPage" }
                 )
             }
@@ -470,8 +547,28 @@ fun NavDrawerBottomBar(
             }
 
             NavigationBarItem(
-                icon = { Icon(imageVector = Icons.Default.AccountCircle, contentDescription = "Profile", tint = if (role == "Client") BWhite else bottomBarColors.second) },
-                label = { Text("Profile", color = if (role == "Client") Color.White else bottomBarColors.second, fontFamily = mintsansFontFamily) },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = "Profile",
+                        tint = when {
+                            role == "Farmer" && currentDestination == Screen.Profile.route -> Cocoa
+                            role == "Client" -> BWhite
+                            else -> bottomBarColors.second
+                        }
+                    )
+                },
+                label = {
+                    Text(
+                        "Profile",
+                        color = when {
+                            role == "Farmer" && currentDestination == Screen.Profile.route -> Cocoa
+                            role == "Client" -> Color.White
+                            else -> bottomBarColors.second
+                        },
+                        fontFamily = mintsansFontFamily
+                    )
+                },
                 selected = currentDestination == Screen.Profile.route,
                 onClick = {
                     navController.navigate(Screen.Profile.route) {
@@ -479,8 +576,16 @@ fun NavDrawerBottomBar(
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = if (role == "Client") Color.White else bottomBarColors.second,
-                    indicatorColor = if (role == "Client") DOrangeCircle else bottomBarColors.first
+                    selectedIconColor = when (role) {
+                        "Farmer" -> Sand2
+                        "Client" -> Color.White
+                        else -> bottomBarColors.second
+                    },
+                    indicatorColor = when (role) {
+                        "Farmer" -> Sand2
+                        "Client" -> DOrangeCircle
+                        else -> bottomBarColors.first
+                    }
                 ),
                 modifier = Modifier.semantics { testTag = "android:id/profilePage" }
             )

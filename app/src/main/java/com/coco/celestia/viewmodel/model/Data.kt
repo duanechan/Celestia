@@ -4,6 +4,7 @@ import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 data class UserData(
@@ -43,7 +44,8 @@ data class ProductData(
     var duration: Int = 0,
     var durationUnit: CustomDurationUnit = CustomDurationUnit.DAYS,
     var plantingQuantity: Int = 0,
-    val farmerNames: List<String> = emptyList()
+    val farmerNames: List<String> = emptyList(),
+    val dateAdded: String = ""
 )
 
 enum class CustomDurationUnit {

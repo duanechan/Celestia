@@ -60,7 +60,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.viewmodel.FarmerItemViewModel
 
 @Composable
 fun FarmerManageOrder(
@@ -74,17 +76,22 @@ fun FarmerManageOrder(
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     val productData by productViewModel.productData.observeAsState()
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+    val farmerItemViewModel: FarmerItemViewModel = viewModel()
 
     var isOrderStatusView by remember { mutableStateOf(true) }
     var selectedStatus by remember { mutableStateOf("All") }
     var selectedCategory by remember { mutableStateOf("") }
     var filterMenuExpanded by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    var farmerName by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         orderViewModel.fetchAllOrders(filter = "", role = "Farmer")
         productViewModel.fetchProducts(filter = "", role = "Farmer")
         userViewModel.fetchUser(uid)
+        if (uid.isNotEmpty()) {
+            farmerName = farmerItemViewModel.fetchFarmerName(uid)
+        }
     }
 
     Spacer(modifier = Modifier.width(30.dp))
@@ -259,11 +266,19 @@ fun FarmerManageOrder(
                     }
                     is OrderState.SUCCESS -> {
                         val filteredOrders = orderData.filter { order ->
-                            order.orderId.contains(searchQuery, ignoreCase = true) &&
-                                    (selectedStatus == "All" ||
-                                            (selectedStatus == "Completed" && (order.status == "COMPLETED" || order.status == "RECEIVED")) ||
-                                            order.status.equals(selectedStatus, ignoreCase = true)) &&
-                                    order.status != "PENDING"
+                            val matchesSearchQuery = order.orderId.contains(searchQuery, ignoreCase = true)
+                            val matchesStatus = when {
+                                selectedStatus == "All" -> true
+                                selectedStatus == "Completed" -> order.status == "COMPLETED" || order.status == "RECEIVED"
+                                selectedStatus == "Rejected" -> order.status == "REJECTED"
+                                selectedStatus == "Cancelled" -> order.status == "CANCELLED"
+                                selectedStatus == "Incomplete" -> order.status == "INCOMPLETE"
+                                else -> order.status.equals(selectedStatus, ignoreCase = true)
+                            }
+                            val isFulfilledByFarmer = order.fulfilledBy.contains(farmerName)
+
+                            matchesSearchQuery && matchesStatus &&
+                                    (order.status == "INCOMPLETE" || isFulfilledByFarmer || selectedStatus == "Rejected" || selectedStatus == "Cancelled")
                         }
 
                         if (filteredOrders.isEmpty()) {

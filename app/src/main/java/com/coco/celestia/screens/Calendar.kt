@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.util.DateUtil
 import com.coco.celestia.util.getDisplayName
 import com.coco.celestia.viewmodel.CalendarViewModel
@@ -50,6 +51,8 @@ import java.text.SimpleDateFormat
 import java.time.YearMonth
 import java.util.Locale
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.viewmodel.FarmerItemViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun Calendar(
@@ -58,17 +61,23 @@ fun Calendar(
     viewModel: CalendarViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     val orderState by orderViewModel.orderState.observeAsState(OrderState.EMPTY)
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     var targetDate by remember { mutableStateOf("") }
     val inputFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
     val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val farmerItemViewModel: FarmerItemViewModel = viewModel()
+    var farmerName by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         orderViewModel.fetchAllOrders(
             "",
             userRole
         )
+        if (uid.isNotEmpty()) {
+            farmerName = farmerItemViewModel.fetchFarmerName(uid)
+        }
     }
 
     val calendarBackgroundColor = when (userRole) {
@@ -97,7 +106,8 @@ fun Calendar(
                     onDateClickListener = { selectedDate ->
                         targetDate = selectedDate.fullDate.toString()
                     },
-                    userRole = userRole
+                    userRole = userRole,
+                    farmerName = farmerName
                 )
             }
 
@@ -349,7 +359,8 @@ fun CalendarWidget(
     onPreviousMonthButtonClicked: (YearMonth) -> Unit,
     onNextMonthButtonClicked: (YearMonth) -> Unit,
     onDateClickListener: (CalendarUIState.Date) -> Unit,
-    userRole: String
+    userRole: String,
+    farmerName: String
 ) {
     Column(
         modifier = Modifier
@@ -371,7 +382,8 @@ fun CalendarWidget(
             orderViewModel = orderViewModel,
             dates = dates,
             onDateClickListener = onDateClickListener,
-            userRole = userRole
+            userRole = userRole,
+            farmerName = farmerName
         )
     }
 }
@@ -429,7 +441,8 @@ fun Content(
     orderViewModel: OrderViewModel,
     dates: List<CalendarUIState.Date>,
     onDateClickListener: (CalendarUIState.Date) -> Unit,
-    userRole: String
+    userRole: String,
+    farmerName: String
 ) {
     Column {
         var index = 0
@@ -443,7 +456,8 @@ fun Content(
                         date = item,
                         onClickListener = onDateClickListener,
                         userRole = userRole,
-                        modifier = Modifier.weight(2f)
+                        modifier = Modifier.weight(2f),
+                        farmerName = farmerName
                     )
                     index++
                 }
@@ -458,6 +472,7 @@ fun ContentItem(
     date: CalendarUIState.Date,
     onClickListener: (CalendarUIState.Date) -> Unit,
     userRole: String,
+    farmerName: String,
     modifier: Modifier = Modifier
 ) {
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
@@ -469,7 +484,14 @@ fun ContentItem(
     }
 
     val targetDates = orderData
-        .filter { it.status != "PENDING" && it.status != "CANCELLED" }
+        .filter {
+            it.status != "PENDING" && it.status != "CANCELLED" &&
+                    if (userRole == "Farmer") {
+                        it.fulfilledBy.contains(farmerName)
+                    } else {
+                        true
+                    }
+        }
         .mapNotNull { order ->
             val parsedDate = inputFormat.parse(order.targetDate)
             parsedDate?.let { outputFormat.format(it) }

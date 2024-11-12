@@ -15,6 +15,8 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 sealed class ItemState {
     data object LOADING : ItemState()
@@ -76,8 +78,10 @@ class FarmerItemViewModel : ViewModel() {
                 _itemState.value = ItemState.LOADING
 
                 val farmerName = fetchFarmerName(uid)
+                val currentDateAdded = LocalDate.now().format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+                val updatedProduct = product.copy(dateAdded = currentDateAdded)
 
-                val productRef = database.child(uid).child("items").child(product.name.lowercase())
+                val productRef = database.child(uid).child("items").child(updatedProduct.name.lowercase())
 
                 productRef.addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
@@ -86,12 +90,13 @@ class FarmerItemViewModel : ViewModel() {
                         if (existingItem == null) {
                             val itemData = hashMapOf(
                                 "farmerNames" to listOf(farmerName),
-                                "endSeason" to product.endSeason,
-                                "name" to product.name,
-                                "priceKg" to product.priceKg,
-                                "quantity" to product.quantity,
-                                "startSeason" to product.startSeason,
-                                "type" to product.type
+                                "endSeason" to updatedProduct.endSeason,
+                                "dateAdded" to updatedProduct.dateAdded,
+                                "name" to updatedProduct.name,
+                                "priceKg" to updatedProduct.priceKg,
+                                "quantity" to updatedProduct.quantity,
+                                "startSeason" to updatedProduct.startSeason,
+                                "type" to updatedProduct.type
                             )
                             productRef.setValue(itemData)
                         } else {
@@ -101,7 +106,7 @@ class FarmerItemViewModel : ViewModel() {
                                 }
                             }
 
-                            val newQuantity = existingItem.quantity + product.quantity
+                            val newQuantity = existingItem.quantity + updatedProduct.quantity
                             productRef.child("quantity").setValue(newQuantity)
                             productRef.child("farmerNames").setValue(updatedFarmerNames)
                         }
