@@ -113,6 +113,7 @@ fun FarmerDashboard(
                 CircularProgressIndicator()
             }
         }
+        is ItemState.EMPTY,
         is ItemState.SUCCESS -> {
             Column(
                 modifier = Modifier
@@ -261,11 +262,6 @@ fun FarmerDashboard(
                     color = Color.Red,
                     modifier = Modifier.padding(16.dp)
                 )
-            }
-        }
-        is ItemState.EMPTY -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No items available", modifier = Modifier.padding(16.dp))
             }
         }
     }
