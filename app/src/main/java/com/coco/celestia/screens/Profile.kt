@@ -38,6 +38,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -96,6 +97,7 @@ import com.coco.celestia.ui.theme.PreparingStatus
 import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.util.PhoneValidator.isValidPhoneNumber
 import com.coco.celestia.util.isValidEmail
+import com.coco.celestia.util.isValidPassword
 import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.PasswordState
 import com.coco.celestia.viewmodel.UserViewModel
@@ -234,7 +236,7 @@ fun ProfileScreen(
                 navController.navigate(Screen.Login.route) {
                     popUpTo(0)
                 }
-                onLogoutEvent(Triple(ToastStatus.INFO, "Logged out.", System.currentTimeMillis()))
+                onLogoutEvent(Triple(ToastStatus.SUCCESSFUL, "Logged out.", System.currentTimeMillis()))
                 logoutDialog = false
             }, role
         )
@@ -540,13 +542,28 @@ fun ProfileScreen(
 
                                     TextField(
                                         value = newPasswordInput.value,
-                                        onValueChange = { newPasswordInput.value = it },
+                                        onValueChange = {
+                                            newPasswordInput.value = it
+                                            isValidPassword = isValidPassword(it)
+                                        },
                                         label = { Text("New Password") },
                                         isError = "Password is valid!" !in isValidPassword,
                                         visualTransformation = PasswordVisualTransformation(),
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                                         modifier = Modifier.semantics { testTag = "android:id/passwordInputField" }
                                     )
+
+                                    if ("Password is valid!" !in isValidPassword) {
+                                        Column {
+                                            isValidPassword.forEach { error ->
+                                                Text(
+                                                    text = error,
+                                                    color = Color.Red,
+                                                    style = MaterialTheme.typography.bodySmall
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
                             },
                             confirmButton = {

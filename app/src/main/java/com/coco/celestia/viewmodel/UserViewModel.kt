@@ -385,9 +385,9 @@ class UserViewModel : ViewModel() {
         viewModelScope.launch {
             _userState.value = UserState.LOADING
             try {
-                auth.signOut()
                 database.child(uid).child("online").setValue(false)
                     .addOnSuccessListener {
+                        auth.signOut()
                         _userData.value = UserData()
                         _userState.value = UserState.SUCCESS
                     }.addOnFailureListener {
