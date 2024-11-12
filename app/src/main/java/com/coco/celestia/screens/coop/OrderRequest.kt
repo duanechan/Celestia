@@ -67,14 +67,7 @@ import com.coco.celestia.components.dialogs.PendingOrderDialog
 import com.coco.celestia.components.dialogs.UpdateOrderStatusDialog
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.client.OrderStatusTracker
-import com.coco.celestia.ui.theme.Cinnabar
-import com.coco.celestia.ui.theme.CompletedStatus
-import com.coco.celestia.ui.theme.CoopBackground
-import com.coco.celestia.ui.theme.DeliveringStatus
-import com.coco.celestia.ui.theme.JadeGreen
-import com.coco.celestia.ui.theme.PendingStatus
-import com.coco.celestia.ui.theme.PreparingStatus
-import com.coco.celestia.ui.theme.mintsansFontFamily
+import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.formatDate
 import com.coco.celestia.util.orderStatusConfig
 import com.coco.celestia.viewmodel.OrderState
@@ -234,7 +227,6 @@ fun OrderRequest(
                             }
                         )
                     }
-                    item { Spacer(modifier = Modifier.height(175.dp)) }
                 }
             }
         }
@@ -321,15 +313,7 @@ fun OrderItem(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text(
-                        text = orderCount.toString(),
-                        fontSize = 80.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .padding(5.dp)
-                            .semantics { testTag = "android:id/OrderID_$orderCount" }
-                    )
-                    Column (modifier = Modifier.padding(16.dp)) {
+                    Column (modifier = Modifier.padding(top = 10.dp)) {
                         Text(text = "Order ID: $orderId",
                             modifier = Modifier.semantics { testTag = "android:id/OrderIdText_$orderCount" }) //testing
                         Text(

@@ -247,6 +247,17 @@ fun TopBar(title: String, navController: NavController, gradient: Brush, current
                         )
                     }
                 }
+                if (currentDestination == Screen.AddProductInventory.route) {
+                    IconButton(
+                        onClick = { navController.popBackStack() },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back Button",
+                            tint = Color.White
+                        )
+                    }
+                }
             },
             actions = {
                 Icon(

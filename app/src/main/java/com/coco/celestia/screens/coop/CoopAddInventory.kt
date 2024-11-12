@@ -75,17 +75,16 @@ fun AddProductForm(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 100.dp)
             .padding(10.dp)
             .semantics { testTag = "android:id/AddProductFormColumn" },
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text = "Add Product",
-            fontWeight = FontWeight.Bold,
-            fontSize = 22.sp,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
+//        Text(
+//            text = "Add Product",
+//            fontWeight = FontWeight.Bold,
+//            fontSize = 22.sp,
+//            modifier = Modifier.align(Alignment.CenterHorizontally)
+//        )
         // From
         OutlinedTextField(
             value = from,
