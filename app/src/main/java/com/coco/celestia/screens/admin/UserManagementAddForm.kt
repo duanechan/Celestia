@@ -176,11 +176,6 @@ fun AddUserForm(
         Box(
             modifier = Modifier.fillMaxWidth().padding(top = 250.dp)
         ) {
-            Text(
-                text = "Confirm here",
-                fontFamily = mintsansFontFamily,
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
         }
     }
 }
