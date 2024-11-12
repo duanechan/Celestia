@@ -118,7 +118,6 @@ fun AdminDashboard(
                     color = Color.White
                 )
             }
-            Spacer(modifier = Modifier.height(30.dp))
             SummaryDashboard(navController, monthlyInventory)
         }
     }
@@ -230,19 +229,29 @@ fun InventoryOverview(monthlyInventory: List<MonthlyInventory>) {
                 Spacer(modifier = Modifier.height(4.dp))
 
                 if (totalMonthly) {
-                    Text("• Not Enough Supply this Month", fontSize = 14.sp, color = DuskyBlue)
+                    Text(
+                        "• Low Stock this Month",
+                        fontSize = 14.sp,
+                        color = Color.Red,
+                        fontWeight = FontWeight.Bold
+                    )
                     monthlyInventory.forEach { monthly ->
                         if (monthly.remainingQuantity < 0) {
                             Text(
                                 "• ${monthly.productName}: ${monthly.remainingQuantity}kg",
                                 fontSize = 14.sp,
-                                color = DuskyBlue,
+                                color = Color.Red,
                                 modifier = Modifier.padding(start = 10.dp)
                             )
                         }
                     }
                 } else {
-                    Text("• Supply is Enough this Month", fontSize = 14.sp, color = DuskyBlue)
+                    Text(
+                        "• Supply is Enough this Month",
+                        fontSize = 14.sp,
+                        color = LightGreen,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
             //
