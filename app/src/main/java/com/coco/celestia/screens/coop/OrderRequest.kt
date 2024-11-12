@@ -140,7 +140,13 @@ fun OrderRequest(
             horizontalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             Button(
-                onClick = { keywords = "PENDING" },
+                onClick = {
+                    keywords = if (keywords == "PENDING") {
+                        ""
+                    } else {
+                        "PENDING"
+                    }
+                },
                 modifier = Modifier
                     .padding(end = 8.dp)
                     .height(40.dp)
@@ -153,7 +159,13 @@ fun OrderRequest(
                 Text("Pending", fontFamily = mintsansFontFamily, fontWeight = FontWeight.Bold)
             }
             Button(
-                onClick = { keywords = "PREPARING" },
+                onClick = {
+                    keywords = if (keywords == "PREPARING") {
+                        ""
+                    } else {
+                        "PREPARING"
+                    }
+                },
                 modifier = Modifier
                     .padding(end = 8.dp)
                     .height(40.dp)
@@ -166,7 +178,13 @@ fun OrderRequest(
                 Text("Preparing", fontFamily = mintsansFontFamily, fontWeight = FontWeight.Bold)
             }
             Button(
-                onClick = { keywords = "DELIVERING" },
+                onClick = {
+                    keywords = if (keywords == "DELIVERING") {
+                        ""
+                    } else {
+                        "DELIVERING"
+                    }
+                },
                 modifier = Modifier
                     .padding(end = 8.dp)
                     .height(40.dp)
@@ -179,7 +197,13 @@ fun OrderRequest(
                 Text("Delivering", fontFamily = mintsansFontFamily, fontWeight = FontWeight.Bold)
             }
             Button(
-                onClick = { keywords = "COMPLETED" },
+                onClick = {
+                    keywords = if (keywords == "COMPLETED") {
+                        ""
+                    } else {
+                        "COMPLETED"
+                    }
+                },
                 modifier = Modifier
                     .height(40.dp)
                     .semantics { testTag = "android:id/CompletedButton" },
