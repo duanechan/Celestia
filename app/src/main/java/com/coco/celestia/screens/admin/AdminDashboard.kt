@@ -1,6 +1,7 @@
 package com.coco.celestia.screens.admin
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -8,10 +9,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -29,14 +33,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
+import com.coco.celestia.R
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.UserIdentifier
 import com.coco.celestia.util.calculateMonthlyInventory
@@ -47,6 +57,7 @@ import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.MonthlyInventory
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.viewmodel.model.UserData
+import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -236,12 +247,103 @@ fun InventoryOverview(monthlyInventory: List<MonthlyInventory>) {
                     Text("• Supply is Enough this Month", fontSize = 14.sp, color = DuskyBlue)
                 }
             }
-
             //
+        }
+        //Inventory
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp)
+        ) {
+            Column(Modifier
+                .background(PaleBlue)
+                .padding(20.dp)
+                .fillMaxWidth()
+            ) {
+                Text("Inventory",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = DarkBlue)
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(PaleBlue),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                monthlyInventory.chunked(2).forEach  { chunk ->
+                    Row(
+                        modifier = Modifier
+                            .padding(horizontal = 12.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+
+                    ) {
+                        chunk.forEach { monthly ->
+                            Card (
+                                modifier = Modifier
+                                    .width(135.dp)
+                                    .height(140.dp)
+                                    .padding(bottom = 10.dp)
+                            ){
+                                InventorySummary(monthly.productName, monthly.currentInv.toString())
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
+@Composable
+fun InventorySummary(label: String, value: String) {
+    Box {
+        Column (
+            modifier = Modifier
+                .background(DuskyBlue)
+                .fillMaxSize()
+                .padding(12.dp)
+        ) {
+            Row (
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                Image(
+                    painter = rememberImagePainter(R.drawable.box),
+                    contentScale = ContentScale.Crop,
+                    contentDescription = "Product Image",
+                    colorFilter = ColorFilter.tint(Color.White),
+                    modifier = Modifier
+                        .size(50.dp)
+                )
+                Text(
+                    "${value}kg",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(start = 6.dp)
+                        .align(Alignment.CenterVertically)
+                )
+            }
+            Text(
+                label,
+                color = Color.White,
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Medium,
+                fontFamily = mintsansFontFamily,
+                modifier = Modifier
+                    .padding(top = 8.dp),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
 
 @Composable
 fun UserManagementDashboard(navController: NavController) {
