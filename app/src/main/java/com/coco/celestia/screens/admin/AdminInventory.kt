@@ -91,7 +91,9 @@ fun AdminInventory(
                 .verticalScroll(rememberScrollState())
         ) {
             TopBarInventory(
-                onTabSelected = { selectedTab = it }
+                onTabSelected = {
+                    selectedTab = it
+                }
             )
 
             Row(
@@ -259,7 +261,7 @@ fun AdminItemCard(
     var productImage by remember { mutableStateOf<Uri?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(productName) {
         if (productName.isNotEmpty()) {
             ImageService.fetchProductImage(productName) {
                 productImage = it
