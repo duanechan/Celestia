@@ -30,6 +30,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -41,6 +42,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -59,6 +61,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -89,9 +92,9 @@ import com.coco.celestia.ui.theme.OrangeGradientBrush
 import com.coco.celestia.ui.theme.PaleBlue
 import com.coco.celestia.ui.theme.PreparingStatus
 import com.coco.celestia.ui.theme.mintsansFontFamily
-import com.coco.celestia.util.PhoneValidator.isValidPhoneNumber
 import com.coco.celestia.util.isValidEmail
 import com.coco.celestia.viewmodel.LocationViewModel
+import com.coco.celestia.viewmodel.PasswordState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -157,6 +160,7 @@ fun ProfileScreen(
     val context = LocalContext.current
     val userData by userViewModel.userData.observeAsState()
     val userState by userViewModel.userState.observeAsState()
+    val passwordState by userViewModel.passwordState.observeAsState()
     val locationData by locationViewModel.locationData.observeAsState()
     var profilePicture by remember { mutableStateOf<Uri?>(null) }
     var expanded by remember { mutableStateOf(false) }
@@ -168,7 +172,10 @@ fun ProfileScreen(
     var updatedBarangay by remember { mutableStateOf(barangay) }
     var updatedProfilePicture by remember { mutableStateOf<Uri?>(null) }
     var saveInfoDialog by remember { mutableStateOf(false) }
+    var showPasswordDialog by remember { mutableStateOf(false) }
     var logoutDialog by remember { mutableStateOf(false) }
+    val passwordInput = remember { mutableStateOf("") }
+    val newPasswordInput = remember { mutableStateOf("") }
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
         updatedProfilePicture = it
     }
@@ -483,6 +490,98 @@ fun ProfileScreen(
                                 )
                             }
                         }
+                    }
+
+                    Button(
+                        onClick = {
+                            showPasswordDialog = true
+                        }
+                    ) {
+                        Text("Change Password")
+                    }
+
+                    if (showPasswordDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showPasswordDialog = false },
+                            title = { Text("Change Password", modifier = Modifier.semantics { testTag = "android:id/dialogTitle" }) },
+                            text = {
+                                Column {
+                                    TextField(
+                                        value = passwordInput.value,
+                                        onValueChange = { passwordInput.value = it },
+                                        label = { Text("Password") },
+                                        visualTransformation = PasswordVisualTransformation(),
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                        modifier = Modifier.semantics { testTag = "android:id/passwordInputField" }
+                                    )
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    TextField(
+                                        value = newPasswordInput.value,
+                                        onValueChange = { newPasswordInput.value = it },
+                                        label = { Text("New Password") },
+                                        visualTransformation = PasswordVisualTransformation(),
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                                        modifier = Modifier.semantics { testTag = "android:id/passwordInputField" }
+                                    )
+                                }
+                            },
+                            confirmButton = {
+                                var isButtonEnabled by remember { mutableStateOf(true) }
+
+                                Button(
+                                    onClick = {
+                                        if (isButtonEnabled) {
+                                            isButtonEnabled = false
+                                            userViewModel.changePassword(passwordInput.value, newPasswordInput.value)
+                                            passwordInput.value = ""
+                                            newPasswordInput.value = ""
+                                        }
+                                    },
+                                    modifier = Modifier.semantics { testTag = "android:id/confirmButton" }
+                                ) {
+                                    Text("Confirm")
+                                }
+                            },
+                            dismissButton = {
+                                Button(
+                                    onClick = {
+                                        showPasswordDialog = false
+                                        navController.navigate(Screen.AdminUserManagement.route)
+                                    },
+                                    modifier = Modifier.semantics { testTag = "android:id/cancelButton" }
+                                ) {
+                                    Text("Cancel")
+                                }
+                            }
+                        )
+                    }
+
+                    LaunchedEffect(passwordState) {
+                        when (passwordState) {
+                            is PasswordState.SUCCESS -> {
+                                onProfileUpdateEvent(
+                                    Triple(
+                                        ToastStatus.SUCCESSFUL,
+                                        "Password Changed Successfully!",
+                                        System.currentTimeMillis()
+                                    )
+                                )
+                                showPasswordDialog = false
+                            }
+                            is PasswordState.ERROR -> {
+                                onProfileUpdateEvent(
+                                    Triple(
+                                        ToastStatus.WARNING,
+                                        (passwordState as PasswordState.ERROR).message,
+                                        System.currentTimeMillis()
+                                    )
+                                )
+                                showPasswordDialog = false
+                            } else -> {}
+                        }
+                        userViewModel.resetPasswordState()
                     }
                 }
             }

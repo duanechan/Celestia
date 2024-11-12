@@ -1,5 +1,6 @@
 package com.coco.celestia.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -30,18 +31,30 @@ sealed class UserState {
     data class ERROR (val message: String) : UserState()
 }
 
+sealed class PasswordState {
+    data object LOADING : PasswordState()
+    data object SUCCESS : PasswordState()
+    data class ERROR (val message: String) : PasswordState()
+}
+
 class UserViewModel : ViewModel() {
     private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("users")
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val _userData = MutableLiveData<UserData>()
     private val _usersData = MutableLiveData<List<UserData>>()
     private val _userState = MutableLiveData<UserState>()
+    private val _passwordState = MutableLiveData<PasswordState>()
     val userData: LiveData<UserData> = _userData
     val usersData: LiveData<List<UserData>> = _usersData
     val userState: LiveData<UserState> = _userState
+    val passwordState: LiveData<PasswordState> = _passwordState
 
     fun resetUserState() {
         _userState.value = UserState.LOADING
+    }
+
+    fun resetPasswordState() {
+        _passwordState.value = PasswordState.LOADING
     }
 
     /**
@@ -216,7 +229,7 @@ class UserViewModel : ViewModel() {
                 task.await()
 
                 if (task.isSuccessful) {
-                    // Re-authentication was successful
+                    _userState.value = UserState.SUCCESS
                 } else {
                     _userState.value = UserState.ERROR("Re-authentication failed. Please try again.")
                 }
@@ -248,6 +261,33 @@ class UserViewModel : ViewModel() {
         }
     }
 
+    fun changePassword (currentPassword: String, newPassword: String) {
+        viewModelScope.launch {
+            val user = auth.currentUser
+            _passwordState.value = PasswordState.LOADING
+            if (user != null) {
+                Log.d("userMail", "$currentPassword $newPassword")
+                val credential = EmailAuthProvider.getCredential(user.email!!, currentPassword)
+                user.reauthenticate(credential)
+                    .addOnCompleteListener { reAuthTask ->
+                        if (reAuthTask.isSuccessful) {
+                            user.updatePassword(newPassword)
+                                .addOnCompleteListener { updateTask ->
+                                    if (updateTask.isSuccessful) {
+                                        _passwordState.value = PasswordState.SUCCESS
+                                    } else {
+                                        _passwordState.value = PasswordState.ERROR("Password Update Failed")
+                                    }
+                                }
+                        } else {
+                            _passwordState.value = PasswordState.ERROR("Re-authentication failed. Wrong Password")
+                        }
+                    }
+            } else {
+                _passwordState.value = PasswordState.ERROR("User not found.")
+            }
+        }
+    }
     /**
      * Logs in a user with the provided email and password.
      */
