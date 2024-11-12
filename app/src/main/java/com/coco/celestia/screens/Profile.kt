@@ -55,6 +55,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.semantics
@@ -87,6 +88,7 @@ import com.coco.celestia.ui.theme.DOrangeCircle
 import com.coco.celestia.ui.theme.DuskyBlue
 import com.coco.celestia.ui.theme.FarmerGradientBrush
 import com.coco.celestia.ui.theme.GrayGradientBrush
+import com.coco.celestia.ui.theme.LightBlue
 import com.coco.celestia.ui.theme.LightBlueGreen
 import com.coco.celestia.ui.theme.OrangeGradientBrush
 import com.coco.celestia.ui.theme.PaleBlue
@@ -462,6 +464,7 @@ fun ProfileScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .menuAnchor()
+                                .padding(bottom = 8.dp)
                                 .semantics { testTag = "android:id/updateBarangay" },
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedContainerColor = Color.White,
@@ -495,14 +498,24 @@ fun ProfileScreen(
                     Button(
                         onClick = {
                             showPasswordDialog = true
-                        }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.End),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = DuskyBlue,
+                            contentColor = Color.White
+                        )
                     ) {
                         Text("Change Password")
                     }
 
                     if (showPasswordDialog) {
                         AlertDialog(
-                            onDismissRequest = { showPasswordDialog = false },
+                            onDismissRequest = {
+                                showPasswordDialog = false
+                                passwordInput.value = ""
+                                newPasswordInput.value = ""
+                            },
                             title = { Text("Change Password", modifier = Modifier.semantics { testTag = "android:id/dialogTitle" }) },
                             text = {
                                 Column {
@@ -539,7 +552,12 @@ fun ProfileScreen(
                                             newPasswordInput.value = ""
                                         }
                                     },
-                                    modifier = Modifier.semantics { testTag = "android:id/confirmButton" }
+                                    modifier = Modifier
+                                        .semantics { testTag = "android:id/confirmButton" },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = LightBlue,
+                                        contentColor = Color.White
+                                    )
                                 ) {
                                     Text("Confirm")
                                 }
@@ -550,7 +568,11 @@ fun ProfileScreen(
                                         showPasswordDialog = false
                                         navController.navigate(Screen.AdminUserManagement.route)
                                     },
-                                    modifier = Modifier.semantics { testTag = "android:id/cancelButton" }
+                                    modifier = Modifier.semantics { testTag = "android:id/cancelButton" },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = LightBlue,
+                                        contentColor = Color.White
+                                    )
                                 ) {
                                     Text("Cancel")
                                 }
