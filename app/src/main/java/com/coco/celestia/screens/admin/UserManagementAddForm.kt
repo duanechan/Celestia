@@ -3,23 +3,17 @@ package com.coco.celestia.screens.admin
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -50,7 +44,6 @@ import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.google.firebase.auth.FirebaseAuth
-import com.google.protobuf.DescriptorProtos.FieldDescriptorProto.Label
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -240,7 +233,7 @@ fun CheckAddUser(
         if (showDialog) {
             AlertDialog(
                 onDismissRequest = { setShowDialog(false) },
-                title = { Text("Enter Password", modifier = Modifier.semantics { testTag = "android:id/dialogTitle" }) },
+                title = { Text("Enter Admin Password", modifier = Modifier.semantics { testTag = "android:id/dialogTitle" }) },
                 text = {
                     TextField(
                         value = passwordInput.value,
@@ -252,24 +245,29 @@ fun CheckAddUser(
                     )
                 },
                 confirmButton = {
+                    var isButtonEnabled by remember { mutableStateOf(true) }
+
                     Button(
                         onClick = {
-                            setShowDialog(false)
-                            userRole = if (role == "Coffee") {
-                                "CoopCoffee"
-                            } else {
-                                "CoopMeat"
-                            }
-                            userViewModel.addAccount(email, firstname, lastname, placeholderPass, userRole, passwordInput.value)
-                            transactionViewModel.recordTransaction(
-                                uid = FirebaseAuth.getInstance().uid.toString(),
-                                transaction = TransactionData(
-                                    transactionId = "Transaction-${UUID.randomUUID()}",
-                                    type = "User_Added",
-                                    date = formattedDateTime,
-                                    description = "Added $firstname $lastname's account ($email)."
+                            if (isButtonEnabled) {
+                                isButtonEnabled = false
+                                setShowDialog(false)
+                                userRole = if (role == "Coffee") {
+                                    "CoopCoffee"
+                                } else {
+                                    "CoopMeat"
+                                }
+                                userViewModel.addAccount(email, firstname, lastname, placeholderPass, userRole, passwordInput.value)
+                                transactionViewModel.recordTransaction(
+                                    uid = FirebaseAuth.getInstance().uid.toString(),
+                                    transaction = TransactionData(
+                                        transactionId = "Transaction-${UUID.randomUUID()}",
+                                        type = "User_Added",
+                                        date = formattedDateTime,
+                                        description = "Added $firstname $lastname's account ($email)."
+                                    )
                                 )
-                            )
+                            }
                         },
                         modifier = Modifier.semantics { testTag = "android:id/confirmButton" }
                     ) {
@@ -302,10 +300,12 @@ fun CheckAddUser(
 
     LaunchedEffect(userState) {
         when (userState) {
+            is UserState.LOADING -> {
+                onRegisterEvent(Triple(ToastStatus.INFO, "Loading...", System.currentTimeMillis()))
+            }
             is UserState.REGISTER_SUCCESS -> {
                 sendEmail(email, subject, body)
                 onRegisterEvent(Triple(ToastStatus.SUCCESSFUL, "Registration Successful", System.currentTimeMillis()))
-                userViewModel.resetUserState()
                 navController.navigate(Screen.AdminUserManagement.route)
             }
             is UserState.ERROR -> {
