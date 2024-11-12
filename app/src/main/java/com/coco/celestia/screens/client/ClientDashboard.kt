@@ -213,7 +213,7 @@ fun ClientDashboard(
                 userData = userData,
                 navController = navController
             )
-            Spacer(modifier = Modifier.height(135.dp))
+            Spacer(modifier = Modifier.height(10.dp))
         }
     }
     if (showDialog) {
@@ -491,7 +491,7 @@ fun OrderHistory(
             is OrderState.SUCCESS -> {
                 if (receivedOrders.isNotEmpty()) {
                     Column {
-                        receivedOrders.forEach { order ->
+                        receivedOrders.take(3).forEach { order ->
                             OrderCardDetails(
                                 order = order,
                                 user = userData,

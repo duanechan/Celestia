@@ -388,6 +388,7 @@ fun NavDrawerBottomBar(
                         tint = when {
                             role == "Client" -> BWhite
                             role == "Farmer" && currentDestination == routes.dashboard -> Cocoa
+                            role == "CoopCoffee" && currentDestination == routes.dashboard -> Color.White
                             else -> bottomBarColors.second
                         }
                     )
@@ -398,6 +399,7 @@ fun NavDrawerBottomBar(
                         color = when {
                             role == "Client" -> Color.White
                             role == "Farmer" && currentDestination == routes.dashboard -> Cocoa
+                            role == "CoopCoffee" && currentDestination == routes.dashboard -> PendingStatus
                             else -> bottomBarColors.second
                         },
                         fontFamily = mintsansFontFamily
@@ -413,11 +415,13 @@ fun NavDrawerBottomBar(
                     selectedIconColor = when (role) {
                         "Farmer" -> Sand2
                         "Client" -> Color.White
+                        "CoopCoffee" -> Color.White
                         else -> bottomBarColors.second
                     },
                     indicatorColor = when (role) {
                         "Farmer" -> Sand2
                         "Client" -> DOrangeCircle
+                        "CoopCoffee" -> DeliveringStatus
                         else -> bottomBarColors.first
                     }
                 ),
@@ -433,6 +437,7 @@ fun NavDrawerBottomBar(
                             tint = when {
                                 role == "Client" -> BWhite
                                 role == "Farmer" && currentDestination == routes.orders -> Cocoa
+                                role == "CoopCoffee" && currentDestination == routes.orders -> Color.White
                                 else -> bottomBarColors.second
                             }
                         )
@@ -443,6 +448,7 @@ fun NavDrawerBottomBar(
                             color = when {
                                 role == "Client" -> Color.White
                                 role == "Farmer" && currentDestination == routes.orders -> Cocoa
+                                role == "CoopCoffee" && currentDestination == routes.orders-> PendingStatus
                                 else -> bottomBarColors.second
                             },
                             fontFamily = mintsansFontFamily
@@ -464,11 +470,13 @@ fun NavDrawerBottomBar(
                         selectedIconColor = when (role) {
                             "Farmer" -> Sand2
                             "Client" -> Color.White
+                            "CoopCoffee" -> Color.White
                             else -> bottomBarColors.second
                         },
                         indicatorColor = when (role) {
                             "Farmer" -> Sand2
                             "Client" -> DOrangeCircle
+                            "CoopCoffee" -> DeliveringStatus
                             else -> bottomBarColors.first
                         }
                     ),
@@ -487,6 +495,7 @@ fun NavDrawerBottomBar(
                             contentDescription = "Items",
                             tint = when {
                                 role == "Farmer" && currentDestination == routes.inventory -> Cocoa
+                                role == "CoopCoffee" && currentDestination == routes.inventory -> Color.White
                                 else -> contentColor
                             }
                         )
@@ -496,6 +505,7 @@ fun NavDrawerBottomBar(
                             "Items",
                             color = when {
                                 role == "Farmer" && currentDestination == routes.inventory -> Cocoa
+                                role == "CoopCoffee" && currentDestination == routes.inventory -> PendingStatus
                                 else -> contentColor
                             },
                             fontFamily = mintsansFontFamily
@@ -513,10 +523,12 @@ fun NavDrawerBottomBar(
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = when (role) {
                             "Farmer" -> Sand2
+                            "CoopCoffee" -> Color.White
                             else -> contentColor
                         },
                         indicatorColor = when (role) {
                             "Farmer" -> Sand2
+                            "CoopCoffee" -> DeliveringStatus
                             else -> bottomBarColors.first
                         }
                     ),
@@ -577,6 +589,7 @@ fun NavDrawerBottomBar(
                         tint = when {
                             role == "Farmer" && currentDestination == Screen.Profile.route -> Cocoa
                             role == "Client" -> BWhite
+                            role == "CoopCoffee" && currentDestination == Screen.Profile.route -> Color.White
                             else -> bottomBarColors.second
                         }
                     )
@@ -587,6 +600,7 @@ fun NavDrawerBottomBar(
                         color = when {
                             role == "Farmer" && currentDestination == Screen.Profile.route -> Cocoa
                             role == "Client" -> Color.White
+                            role == "CoopCoffee" && currentDestination == Screen.Profile.route -> PendingStatus
                             else -> bottomBarColors.second
                         },
                         fontFamily = mintsansFontFamily
@@ -602,11 +616,13 @@ fun NavDrawerBottomBar(
                     selectedIconColor = when (role) {
                         "Farmer" -> Sand2
                         "Client" -> Color.White
+                        "CoopCoffee" -> Color.White
                         else -> bottomBarColors.second
                     },
                     indicatorColor = when (role) {
                         "Farmer" -> Sand2
                         "Client" -> DOrangeCircle
+                        "CoopCoffee" -> DeliveringStatus
                         else -> bottomBarColors.first
                     }
                 ),
