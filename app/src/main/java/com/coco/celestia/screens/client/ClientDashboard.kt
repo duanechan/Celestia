@@ -445,6 +445,7 @@ fun ProductTypeCard(
         }
     }
 }
+
 @Composable
 fun OrderHistory(
     orderData: List<OrderData>,
@@ -467,7 +468,9 @@ fun OrderHistory(
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
         ) {
             Image(
                 painter = painterResource(id = R.drawable.orderhistory),
@@ -480,8 +483,16 @@ fun OrderHistory(
                 text = "Order History",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = CDText
+                color = CDText,
+                modifier = Modifier.weight(1f)
             )
+            TextButton(
+                onClick = {
+                    navController.navigate("client_order")
+                }
+            ) {
+                Text(text = "See All", color = CLGText)
+            }
         }
 
         when (orderState) {
@@ -491,7 +502,7 @@ fun OrderHistory(
             is OrderState.SUCCESS -> {
                 if (receivedOrders.isNotEmpty()) {
                     Column {
-                        receivedOrders.take(3).forEach { order ->
+                        receivedOrders.take(3).forEach { order ->  // Limit to 3 cards
                             OrderCardDetails(
                                 order = order,
                                 user = userData,
