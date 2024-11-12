@@ -188,10 +188,11 @@ class OrderViewModel : ViewModel() {
                                     value.contains(keyword, ignoreCase = true)
                                 }
                             }
+                            val removeCancelReject = (order.status != "CANCELLED" && order.status != "REJECTED")
                             when (role) {
                                 "Coop", "Admin" -> isCoffeeOrMeat && matchesFilter
-                                "CoopCoffee" -> isCoffee && matchesFilter
-                                "CoopMeat" -> isMeat && matchesFilter
+                                "CoopCoffee" -> isCoffee && matchesFilter && removeCancelReject
+                                "CoopMeat" -> isMeat && matchesFilter && removeCancelReject
                                 "Farmer" -> isVegetable && matchesFilter
                                 "Client" -> matchesFilter
                                 // "Client" -> order.status.equals("completed", ignoreCase = true) && matchesFilter

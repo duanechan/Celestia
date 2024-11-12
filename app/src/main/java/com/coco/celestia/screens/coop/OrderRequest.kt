@@ -92,7 +92,6 @@ fun OrderRequest(
     val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
     val formattedDateTime = currentDateTime.format(formatter).toString()
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
-    var filteredOrderData by remember { mutableStateOf<List<OrderData>>(emptyList()) }
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     var query by remember { mutableStateOf("") }
     var keywords by remember { mutableStateOf("") }
@@ -102,12 +101,6 @@ fun OrderRequest(
             filter = keywords,
             role = userRole
         )
-
-        val orders = orderData.filter { order ->
-            order.status != "CANCELLED" && order.status != "REJECTED"
-        }
-
-        filteredOrderData = orders
     }
 
     Column(
@@ -205,7 +198,7 @@ fun OrderRequest(
             is OrderState.EMPTY -> EmptyOrders()
             is OrderState.SUCCESS -> {
                 LazyColumn (modifier = Modifier.semantics { testTag = "android:id/OrderList" }){
-                    itemsIndexed(filteredOrderData) { index, order ->
+                    itemsIndexed(orderData) { index, order ->
                         OrderItem(
                             order = order,
                             orderViewModel = orderViewModel,
