@@ -93,6 +93,8 @@ fun AdminInventory(
             TopBarInventory(
                 onTabSelected = {
                     selectedTab = it
+                    selectedButton = "Coffee"
+                    query = "Coffee"
                 }
             )
 
