@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -74,7 +75,7 @@ fun NavDrawerTopBar(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(end = 20.dp),
+                            .padding(end = 0.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         if (currentDestination == "${role.lowercase()}_dashboard") {
@@ -301,13 +302,14 @@ fun GradientTopBar(title: String, navController: NavController) {
         TopAppBar(
             title = {
                 Box(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = title,
                         fontWeight = FontWeight.Bold,
-                        color = Cocoa
+                        color = Cocoa,
                     )
                 }
             },
@@ -340,6 +342,16 @@ fun GradientTopBar(title: String, navController: NavController) {
                             .clickable {
                                 navController.navigate(Screen.Calendar.route)
                             }
+                    )
+                }
+                else{
+                    Icon(
+                        imageVector = Icons.Default.DateRange,
+                        tint = Color.Transparent,
+                        contentDescription = "Calendar Icon",
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .size(30.dp)
                     )
                 }
             },
