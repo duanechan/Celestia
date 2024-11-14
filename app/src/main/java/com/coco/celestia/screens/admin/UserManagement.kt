@@ -129,18 +129,6 @@ fun AdminUserManagement(
                     )
                 }
             }
-
-//            Spacer(modifier = Modifier.height(8.dp))
-//
-//            DropdownMenu(
-//                expanded = expanded,
-//                onDismissRequest = { expanded = false },
-//                modifier = Modifier
-//                    .background(Gray)
-//                    .semantics { testTag = "android:id/roleDropdownMenu" }
-//            ) {
-//                // Dropdown items can be added here
-//            }
         }
 
         UserTable(

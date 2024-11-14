@@ -164,7 +164,7 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                     IconButton(
                         onClick = { filterActionExpanded = true },
                         modifier = Modifier
-                            .background(color = PaleBlue, shape = RoundedCornerShape(16.dp))
+                            .background(color = LightBlue, shape = RoundedCornerShape(16.dp))
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.filter),
@@ -230,12 +230,12 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                         }
                     },
                     modifier = Modifier
-                        .background(color = PaleBlue, shape = RoundedCornerShape(16.dp))
+                        .background(color = LightBlue , shape = RoundedCornerShape(16.dp))
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.download_icon),
                         contentDescription = "Export to Excel",
-                        tint = DarkBlue,
+                        tint = Color.White,
                         modifier = Modifier
                             .padding(5.dp)
                     )
