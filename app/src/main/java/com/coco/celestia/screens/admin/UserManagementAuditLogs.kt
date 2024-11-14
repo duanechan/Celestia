@@ -135,7 +135,7 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                 TextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search...", color = DarkBlue) },
+                    placeholder = { Text("Search user...", color = DarkBlue) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Search,

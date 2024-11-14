@@ -58,21 +58,25 @@ import com.coco.celestia.viewmodel.TransactionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminUserManagement(navController: NavController, userViewModel: UserViewModel, transactionViewModel: TransactionViewModel) {
+fun AdminUserManagement(
+    navController: NavController,
+    userViewModel: UserViewModel,
+    transactionViewModel: TransactionViewModel
+) {
     var text by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     var selectedUser by remember { mutableStateOf(UserData()) }
     val usersData by userViewModel.usersData.observeAsState(emptyList())
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
-    val users: MutableList<UserData> = mutableListOf()
+
+    // Filter users by role and search text
+    val filteredUsers = usersData.filter {
+        (it.role == "CoopCoffee" || it.role == "CoopMeat") &&
+                ("${it.firstname} ${it.lastname}".contains(text, ignoreCase = true))
+    }
 
     LaunchedEffect(userState) {
         userViewModel.fetchUsers()
-    }
-    usersData.forEach { user ->
-        if (user.role == "CoopCoffee" || user.role == "CoopMeat") {
-            users.add(user)
-        }
     }
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -93,24 +97,24 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
                 SearchBar(
                     query = text,
                     onQueryChange = { text = it },
-                    onSearch = { text = it },
+                    onSearch = { query -> text = query },
                     active = false,
                     onActiveChange = {},
-                    placeholder = { Text(text = "Search", color = DarkBlue) },
+                    placeholder = { Text(text = "Search name...", color = DarkBlue) },
                     leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon", tint = DarkBlue) },
                     modifier = Modifier
                         .width(screenWidth * 0.75f)
                         .offset(y = (-20).dp)
                         .semantics { testTag = "android:id/searchBar" }
                 ) {}
+
                 Spacer(modifier = Modifier.width(5.dp))
+
                 Button(
                     onClick = {
                         navController.navigate(Screen.AdminUserManagementAuditLogs.route)
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = LightBlue
-                    ),
+                    colors = ButtonDefaults.buttonColors(containerColor = LightBlue),
                     modifier = Modifier
                         .padding(top = 25.dp)
                         .semantics { testTag = "android:id/auditLogsButton" }
@@ -125,21 +129,22 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
 
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                modifier = Modifier
-                    .background(Gray)
-                    .semantics { testTag = "android:id/roleDropdownMenu" }
-            ) {
-                // Dropdown items can be added here
-            }
+//            Spacer(modifier = Modifier.height(8.dp))
+//
+//            DropdownMenu(
+//                expanded = expanded,
+//                onDismissRequest = { expanded = false },
+//                modifier = Modifier
+//                    .background(Gray)
+//                    .semantics { testTag = "android:id/roleDropdownMenu" }
+//            ) {
+//                // Dropdown items can be added here
+//            }
         }
 
         UserTable(
-            users = users,
+            users = filteredUsers,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 100.dp)
@@ -148,9 +153,10 @@ fun AdminUserManagement(navController: NavController, userViewModel: UserViewMod
                 selectedUser = user
             }
         )
+
         Spacer(modifier = Modifier.height(100.dp))
 
-        if(selectedUser != UserData()) {
+        if (selectedUser != UserData()) {
             EditUser(
                 userViewModel = userViewModel,
                 transactionViewModel = transactionViewModel,
