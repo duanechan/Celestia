@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.farmer.dialogs
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,43 +14,49 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.coco.celestia.ui.theme.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.coco.celestia.viewmodel.FarmerItemViewModel
+import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.model.OrderData
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun FarmerDecisionDialog(
     decisionType: String,
-    farmerName: String,
-    availableQuantity: Int,
-    orderedQuantity: Int,
-    onConfirm: (String?, Boolean?, Int?) -> Unit,
-    onDismiss: () -> Unit
+    orderData: OrderData,
+    orderViewModel: OrderViewModel,
+    onDismiss: () -> Unit,
+    farmerItemViewModel: FarmerItemViewModel = viewModel()
 ) {
-    println("Farmer Name: $farmerName")
-
+    val uid = FirebaseAuth.getInstance().uid.toString()
+    var farmerName by remember { mutableStateOf("") }
     var selectedReason by remember { mutableStateOf<String?>(null) }
     var showReasonDropdown by remember { mutableStateOf(false) }
+    var showFulfillmentDialog by remember { mutableStateOf(false) }
     var isPartialFulfillment by remember { mutableStateOf<Boolean?>(null) }
     var partialQuantity by remember { mutableStateOf("0") }
-    var showMaxMessage by remember { mutableStateOf(false) }
+    val maxPartial = (orderData.orderData.quantity - orderData.fulfilled) * 0.8f
 
     val rejectionReasons = listOf("Not in season", "Too Far", "Not Available")
-    val maxPartialQuantity = orderedQuantity / 2
 
     val title = when (decisionType) {
-        "ACCEPT" -> "Accept Order"
-        "REJECT" -> "Reject Order"
+        "Accept" -> "Accept Order"
+        "Reject" -> "Reject Order"
         else -> ""
     }
 
     val message = when (decisionType) {
-        "ACCEPT" -> "Are you sure you want to accept this order?"
-        "REJECT" -> "Are you sure you want to reject this order?"
+        "Accept" -> "Are you sure you want to accept this order?"
+        "Reject" -> "Are you sure you want to reject this order?"
         else -> ""
+    }
+
+    LaunchedEffect(Unit) {
+        farmerName = farmerItemViewModel.fetchFarmerName(uid)
     }
 
     AlertDialog(
@@ -71,67 +78,105 @@ fun FarmerDecisionDialog(
                     fontSize = 16.sp,
                     color = Cocoa
                 )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    showFulfillmentDialog = true
+                },
+                shape = RoundedCornerShape(8.dp),
+            ) {
+                Text(
+                    text = "Confirm",
+                    fontWeight = FontWeight.Bold,
+                    color = Cocoa,
+                    fontSize = 16.sp
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(8.dp),
+            ) {
+                Text(
+                    text = "Cancel",
+                    fontWeight = FontWeight.Bold,
+                    color = Cocoa,
+                    fontSize = 16.sp
+                )
+            }
+        },
+        shape = RoundedCornerShape(16.dp),
+        containerColor = Sand2
+    )
 
-                if (decisionType == "REJECT") {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "Reason",
-                        fontSize = 20.sp,
-                        color = Cocoa,
-                        fontWeight = FontWeight.Bold
-                    )
+    if (showFulfillmentDialog) {
+        AlertDialog(
+            onDismissRequest = { showFulfillmentDialog = false },
+            text = {
+                Column {
+                    Log.d("decision", decisionType)
+                    if (decisionType == "Reject") {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Reason",
+                            fontSize = 20.sp,
+                            color = Cocoa,
+                            fontWeight = FontWeight.Bold
+                        )
 
-                    Box {
-                        OutlinedButton(
-                            onClick = { showReasonDropdown = true },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = Apricot,
-                                contentColor = Cocoa
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, color = Apricot)
-                        ) {
-                            Text(
-                                text = selectedReason ?: "Select reason",
-                                color = if (selectedReason == null) Cocoa.copy(alpha = 0.8f) else Cocoa
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = showReasonDropdown,
-                            onDismissRequest = { showReasonDropdown = false }
-                        ) {
-                            rejectionReasons.forEach { reason ->
-                                DropdownMenuItem(
-                                    text = { Text(text = reason) },
-                                    onClick = {
-                                        selectedReason = reason
-                                        showReasonDropdown = false
-                                    }
+                        Box {
+                            OutlinedButton(
+                                onClick = { showReasonDropdown = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = Apricot,
+                                    contentColor = Cocoa
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, color = Apricot)
+                            ) {
+                                Text(
+                                    text = selectedReason ?: "Select reason",
+                                    color = if (selectedReason == null) Cocoa.copy(alpha = 0.8f) else Cocoa
                                 )
                             }
+                            DropdownMenu(
+                                expanded = showReasonDropdown,
+                                onDismissRequest = { showReasonDropdown = false }
+                            ) {
+                                rejectionReasons.forEach { reason ->
+                                    DropdownMenuItem(
+                                        text = { Text(text = reason) },
+                                        onClick = {
+                                            selectedReason = reason
+                                            showReasonDropdown = false
+                                        }
+                                    )
+                                }
+                            }
                         }
-                    }
 
-                    if (selectedReason == null) {
-                        Spacer(modifier = Modifier.height(15.dp))
+                        if (selectedReason == null) {
+                            Spacer(modifier = Modifier.height(15.dp))
+                            Text(
+                                text = "You must select a reason before rejecting.",
+                                color = Cinnabar,
+                                fontSize = 12.sp
+                            )
+                        }
+                    } else if (decisionType == "Accept") {
+                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "You must select a reason before rejecting.",
-                            color = Cinnabar,
-                            fontSize = 12.sp
+                            text = "Fulfillment Type:",
+                            color = Cocoa,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
                         )
-                    }
-                } else if (decisionType == "ACCEPT") {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "Fulfillment Type:",
-                        color = Cocoa,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
 
-                    Column {
-                        if (availableQuantity >= orderedQuantity) {
+                        Column {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -174,7 +219,6 @@ fun FarmerDecisionDialog(
                                             val currentValue = partialQuantity.toIntOrNull() ?: 0
                                             if (currentValue > 0) {
                                                 partialQuantity = (currentValue - 1).toString()
-                                                showMaxMessage = false
                                             }
                                         },
                                         modifier = Modifier.size(40.dp)
@@ -186,14 +230,7 @@ fun FarmerDecisionDialog(
                                         onValueChange = { newValue ->
                                             if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
                                                 val newQuantity = newValue.toIntOrNull() ?: 0
-
-                                                if (newQuantity == maxPartialQuantity) {
-                                                    showMaxMessage = true
-                                                } else {
-                                                    showMaxMessage = false
-                                                }
-
-                                                if (newQuantity <= maxPartialQuantity) {
+                                                if (newQuantity <= maxPartial) {
                                                     partialQuantity = newValue
                                                 }
                                             }
@@ -217,168 +254,86 @@ fun FarmerDecisionDialog(
                                     IconButton(
                                         onClick = {
                                             val currentValue = partialQuantity.toIntOrNull() ?: 0
-                                            if (currentValue < maxPartialQuantity) {
+                                            if (currentValue <= maxPartial) {
                                                 partialQuantity = (currentValue + 1).toString()
-                                                showMaxMessage = false
                                             }
                                         },
                                         modifier = Modifier.size(40.dp)
                                     ) {
                                         Text("+", fontSize = 20.sp, color = Cocoa)
                                     }
-                                }
-                                if (showMaxMessage) {
-                                    Text(
-                                        text = "You have reached the max partial quantity to fulfill.",
-                                        color = Color.Red,
-                                        fontSize = 12.sp
-                                    )
-                                }
-                            }
-                        } else {
-                            // Only show partial fulfill option if inventory is insufficient
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = isPartialFulfillment == true,
-                                    onClick = { isPartialFulfillment = true }
-                                )
-                                Spacer(modifier = Modifier.width(5.dp))
-                                Text(
-                                    text = "Partial Fulfill",
-                                    color = Cocoa,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-
-                            if (isPartialFulfillment == true) {
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    IconButton(
-                                        onClick = {
-                                            val currentValue = partialQuantity.toIntOrNull() ?: 0
-                                            if (currentValue > 0) {
-                                                partialQuantity = (currentValue - 1).toString()
-                                                showMaxMessage = false
-                                            }
-                                        },
-                                        modifier = Modifier.size(40.dp)
-                                    ) {
-                                        Text("-", fontSize = 20.sp, color = Cocoa)
-                                    }
-
-                                    TextField(
-                                        value = partialQuantity,
-                                        onValueChange = { newValue ->
-                                            if (newValue.isEmpty() || newValue.all { it.isDigit() }) {
-                                                val newQuantity = newValue.toIntOrNull() ?: 0
-
-                                                if (newQuantity == availableQuantity) {
-                                                    showMaxMessage = true
-                                                } else {
-                                                    showMaxMessage = false
-                                                }
-
-                                                if (newQuantity <= availableQuantity) {
-                                                    partialQuantity = newValue
-                                                }
-                                            }
-                                        },
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .background(color = Apricot, shape = RoundedCornerShape(8.dp)),
-                                        colors = TextFieldDefaults.colors(
-                                            focusedContainerColor = Apricot,
-                                            unfocusedContainerColor = Apricot,
-                                            disabledContainerColor = Apricot,
-                                            focusedIndicatorColor = Color.Transparent,
-                                            unfocusedIndicatorColor = Color.Transparent,
-                                        ),
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        singleLine = true,
-                                        label = { Text("Quantity", color = Cocoa, textAlign = TextAlign.Center) },
-                                        textStyle = TextStyle(color = Cocoa, textAlign = TextAlign.Center)
-                                    )
-
-                                    IconButton(
-                                        onClick = {
-                                            val currentValue = partialQuantity.toIntOrNull() ?: 0
-                                            if (currentValue < availableQuantity) {
-                                                partialQuantity = (currentValue + 1).toString()
-                                                showMaxMessage = false
-                                            }
-                                        },
-                                        modifier = Modifier.size(40.dp)
-                                    ) {
-                                        Text("+", fontSize = 20.sp, color = Cocoa)
-                                    }
-                                }
-                                if (showMaxMessage) {
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text(
-                                        text = "You have reached the maximum partial quantity to fulfill.",
-                                        color = Cinnabar,
-                                        fontSize = 12.sp
-                                    )
                                 }
                             }
                         }
-                    }
 
-                    if (isPartialFulfillment == null) {
-                        Spacer(modifier = Modifier.height(15.dp))
-                        Text(
-                            text = "You must select a fulfillment type.",
-                            color = Color.Red,
-                            fontSize = 12.sp
-                        )
+                        if (isPartialFulfillment == null) {
+                            Spacer(modifier = Modifier.height(15.dp))
+                            Text(
+                                text = "You must select a fulfillment type.",
+                                color = Color.Red,
+                                fontSize = 12.sp
+                            )
+                        }
                     }
                 }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (decisionType == "Reject" && selectedReason != null) {
+                            val updatedOrder = orderData.copy(
+                                status = "REJECTED",
+                                rejectionReason = selectedReason
+                            )
+                            orderViewModel.updateOrder(updatedOrder)
+                            showFulfillmentDialog = false
+                        } else if (decisionType == "Accept" && isPartialFulfillment != null) {
+                            if (isPartialFulfillment == true) {
+                                val partialToInt = partialQuantity.toIntOrNull() ?: 0
+                                val fulfilled = orderData.fulfilled + partialToInt
+                                val updatedOrder = orderData.copy(
+                                    status = "PREPARING",
+                                    fulfilledBy = orderData.fulfilledBy + "${farmerName}_$partialToInt",
+                                    fulfilled = fulfilled
+                                )
+                                orderViewModel.updateOrder(updatedOrder)
+                            } else {
+                                val unfulfilled = orderData.orderData.quantity - orderData.fulfilled
+                                val updatedOrder = orderData.copy(
+                                    status = "PREPARING",
+                                    fulfilledBy = orderData.fulfilledBy + "${farmerName}_$unfulfilled",
+                                    fulfilled = 0
+                                )
+                                orderViewModel.updateOrder(updatedOrder)
+                            }
+                            showFulfillmentDialog = false
+                        }
+                    },
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = OliveGreen),
+                    enabled = (decisionType == "Reject" && selectedReason != null) || (decisionType == "Accept" && isPartialFulfillment != null)
+                ) {
+                    Text(
+                        text = "Confirm",
+                        fontWeight = FontWeight.Bold,
+                        color = Apricot,
+                        fontSize = 16.sp
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showFulfillmentDialog = false },
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Text(
+                        text = "Cancel",
+                        fontWeight = FontWeight.Bold,
+                        color = Cocoa,
+                        fontSize = 16.sp
+                    )
+                }
             }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    if (decisionType == "REJECT" && selectedReason != null) {
-                        onConfirm(selectedReason, null, null)
-                    } else if (decisionType == "ACCEPT" && isPartialFulfillment != null) {
-                        val quantity = if (isPartialFulfillment == true) {
-                            partialQuantity.toIntOrNull() ?: 0
-                        } else orderedQuantity
-                        onConfirm(null, isPartialFulfillment, quantity)
-                    }
-                },
-                shape = RoundedCornerShape(8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = OliveGreen),
-                enabled = (decisionType == "REJECT" && selectedReason != null) || (decisionType == "ACCEPT" && isPartialFulfillment != null)
-            ) {
-                Text(
-                    text = "Confirm",
-                    fontWeight = FontWeight.Bold,
-                    color = Apricot,
-                    fontSize = 16.sp
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                shape = RoundedCornerShape(8.dp),
-            ) {
-                Text(
-                    text = "Cancel",
-                    fontWeight = FontWeight.Bold,
-                    color = Cocoa,
-                    fontSize = 16.sp
-                )
-            }
-        },
-        shape = RoundedCornerShape(16.dp),
-        containerColor = Sand2
-    )
+        )
+    }
 }

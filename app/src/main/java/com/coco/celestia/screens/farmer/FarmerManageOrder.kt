@@ -275,8 +275,7 @@ fun FarmerManageOrder(
                                 selectedStatus == "Incomplete" -> order.status == "INCOMPLETE"
                                 else -> order.status.equals(selectedStatus, ignoreCase = true)
                             }
-                            val isFulfilledByFarmer = order.fulfilledBy.contains(farmerName)
-
+                            val isFulfilledByFarmer = order.fulfilledBy.any { it.startsWith(farmerName)}
                             matchesSearchQuery && matchesStatus &&
                                     (order.status == "INCOMPLETE" || isFulfilledByFarmer || selectedStatus == "Rejected" || selectedStatus == "Cancelled")
                         }
@@ -397,7 +396,7 @@ fun ManageOrderCards(
         "PREPARING" -> Brown1
         "INCOMPLETE" -> Tangerine
         "REJECTED" -> Copper.copy(alpha = 0.4f)
-        "DELIVERING" -> Blue.copy(alpha = 0.7f)
+        "DELIVERING" -> Green
         "COMPLETED" -> SageGreen.copy(alpha = 0.7f)
         "CANCELLED" -> Copper3
         else -> Color.Gray

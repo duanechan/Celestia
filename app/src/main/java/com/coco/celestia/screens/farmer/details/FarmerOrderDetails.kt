@@ -2,7 +2,6 @@ package com.coco.celestia.screens.farmer.details
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Alignment
@@ -22,12 +21,17 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
+import com.coco.celestia.screens.farmer.dialogs.CompletedStatusDialog
+import com.coco.celestia.screens.farmer.dialogs.DeliveringStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.FarmerFulfillDialog
+import com.coco.celestia.screens.farmer.dialogs.PendingStatusDialog
+import com.coco.celestia.screens.farmer.dialogs.PreparingStatusDialog
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.model.OrderData
@@ -109,7 +113,7 @@ fun FarmerOrderDetails(
                     .background(color = BgColor)
                     .semantics { testTag = "android:id/orderDetailsScreen" }
             ) {
-                OrderDetailsCard(orderData = orderData)
+                OrderDetailsCard(orderData = orderData, orderViewModel = orderViewModel)
                 Spacer(modifier = Modifier.height(20.dp))
 
                 when (orderData.status) {
@@ -138,7 +142,9 @@ fun FarmerOrderDetails(
                         )
                     }
                     else -> {
-                        OrderStatusDropdown(orderData = orderData, orderViewModel = orderViewModel)
+                        if (orderData.status == "PREPARING") {
+                            OrderStatusDropdown(orderData = orderData, orderViewModel = orderViewModel)
+                        }
                         OrderStatusUpdates(orderData = orderData)
                     }
                 }
@@ -170,19 +176,21 @@ fun FarmerOrderDetails(
 @Composable
 fun OrderStatusDropdown(orderData: OrderData, orderViewModel: OrderViewModel) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedStatus by remember { mutableStateOf(orderData.status) }
+    var selectedStatus by remember { mutableStateOf(orderData.statusDetail) }
 
-    val statusOptions = when (orderData.status) {
-        "PREPARING" -> listOf("DELIVERING")
-        "DELIVERING" -> listOf("COMPLETED")
-        "COMPLETED" -> emptyList()
+    val statusOptions = when (orderData.statusDetail) {
+        "PREPARING" -> listOf("PLANTING")
+        "PLANTING" -> listOf("HARVESTING")
+        "HARVESTING" -> listOf("READY_TO_DELIVER")
+        "READY_TO_DELIVER" -> emptyList()
         else -> emptyList()
     }
 
     val statusColor = when (selectedStatus) {
         "PREPARING" -> Brown1
-        "DELIVERING" -> Blue
-        "COMPLETED" -> SageGreen
+        "PLANTING" -> OliveGreen
+        "HARVESTING" -> Green
+        "READY_TO_DELIVER" -> SageGreen
         else -> Color.Gray.copy(alpha = 0.3f)
     }
 
@@ -206,7 +214,7 @@ fun OrderStatusDropdown(orderData: OrderData, orderViewModel: OrderViewModel) {
             horizontalArrangement = Arrangement.Start
         ) {
             Text(
-                text = "Current Status: ",
+                text = "Status Detail: ",
                 fontSize = 18.sp,
                 color = Cocoa
             )
@@ -268,7 +276,7 @@ fun OrderStatusDropdown(orderData: OrderData, orderViewModel: OrderViewModel) {
                                 onClick = {
                                     selectedStatus = status
                                     expanded = false
-                                    orderViewModel.updateOrder(orderData.copy(status = status))
+                                    //orderViewModel.updateOrder(orderData.copy(status = status))
                                 }
                             )
                         }
@@ -325,13 +333,15 @@ fun DisplayFarmerFulfillDialog(
 }
 
 @Composable
-fun OrderDetailsCard(orderData: OrderData) {
+fun OrderDetailsCard(
+    orderData: OrderData,
+    orderViewModel: OrderViewModel
+) {
     val product = orderData.orderData
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(400.dp)
             .semantics { testTag = "android:id/orderDetailsCard" },
         shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp),
         colors = CardDefaults.cardColors(
@@ -341,234 +351,79 @@ fun OrderDetailsCard(orderData: OrderData) {
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(Yellow4, Sand)
                     )
                 )
         ) {
-            Column(
-                modifier = Modifier.padding(30.dp)
-            ) {
-                Spacer(modifier = Modifier.height(5.dp))
+            Column {
+                DisplayOrderDetail("Order ID", orderData.orderId.substring(6, 10).uppercase())
+                DisplayOrderDetail("Item", product.name)
+                DisplayOrderDetail("Target Date", orderData.targetDate)
+                DisplayOrderDetail("Client Name", orderData.client)
+                DisplayOrderDetail("Address", "${orderData.street}, ${orderData.barangay}")
 
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.Start,
-                        modifier = Modifier
-                            .weight(1f)
-                            .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(5.dp))
-                            .background(Sand2, shape = RoundedCornerShape(5.dp))
-                            .padding(top = 8.dp, start = 8.dp, bottom = 30.dp)
-                    ) {
-                        Text(
-                            text = "Order ID",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            color = Cocoa,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/orderIdLabel" }
-                        )
-                        Spacer(modifier = Modifier.height(15.dp))
-                        Text(
-                            text = orderData.orderId.substring(6, 10).uppercase(),
-                            fontSize = 30.sp,
-                            color = Cocoa,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/orderIdText" }
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(15.dp))
-
-                    Column(
-                        horizontalAlignment = Alignment.Start,
-                        modifier = Modifier
-                            .weight(1f)
-                            .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(5.dp))
-                            .background(Sand2, shape = RoundedCornerShape(5.dp))
-                            .padding(top = 8.dp, start = 8.dp, bottom = 18.dp)
-                            .semantics { testTag = "android:id/orderedProductSection" }
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                        ) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Item",
-                                color = Cocoa,
-                                textAlign = TextAlign.Center,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .semantics { testTag = "android:id/orderedProductLabel" }
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = product.name,
-                            fontSize = 18.sp,
-                            color = Cocoa,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/productNameText" }
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = "${product.quantity} kg",
-                            fontSize = 18.sp,
-                            color = Cocoa,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/productQuantityText" }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(15.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.Start,
-                        modifier = Modifier
-                            .weight(1f)
-                            .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(5.dp))
-                            .background(Sand2, shape = RoundedCornerShape(5.dp))
-                            .padding(top = 8.dp, start = 8.dp, bottom = 25.dp)
-                    ) {
-                        Text(
-                            text = "Target Date",
-                            fontSize = 20.sp,
-                            color = Cocoa,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/targetDateLabel" }
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = orderData.targetDate,
-                            fontSize = 15.sp,
-                            color = Cocoa,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/targetDateText" }
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(15.dp))
-
-                    Column(
-                        horizontalAlignment = Alignment.Start,
-                        modifier = Modifier
-                            .weight(1f)
-                            .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(5.dp))
-                            .background(Sand2, shape = RoundedCornerShape(5.dp))
-                            .padding(top = 8.dp, start = 8.dp, bottom = 25.dp)
-                    ) {
-                        Text(
-                            text = "Client Name",
-                            fontSize = 20.sp,
-                            color = Cocoa,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/clientNameLabel" }
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = orderData.client,
-                            fontSize = 15.sp,
-                            color = Cocoa,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/clientNameText" }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(15.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.Start,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .weight(1f)
-                            .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(5.dp))
-                            .background(Sand2, shape = RoundedCornerShape(5.dp))
-                            .padding(8.dp)
-                    ) {
-                        Text(
-                            text = "Fulfilled By",
-                            fontSize = 20.sp,
-                            color = Cocoa,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/fulfilledByLabel" }
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        if (orderData.fulfilledBy.isNotEmpty()) {
-                            orderData.fulfilledBy.forEach { name ->
-                                Text(
-                                    text = name,
-                                    fontSize = 15.sp,
-                                    color = Cocoa,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .semantics { testTag = "android:id/fulfilledByText" }
-                                        .padding(vertical = 2.dp)
-                                )
-                            }
-                        } else {
-                            Text(
-                                text = "None",
-                                fontSize = 15.sp,
-                                color = Cocoa,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/fulfilledByText" }
+                when (orderData.status) {
+                    "PENDING" -> PendingStatusDialog(
+                        orderData,
+                        orderViewModel
+                    )
+                    "PREPARING" -> {
+                        if (orderData.statusDetail == "READY_TO_DELIVER") {
+                            PreparingStatusDialog(
+                                orderData,
+                                orderViewModel
                             )
                         }
                     }
-
-                    Spacer(modifier = Modifier.width(15.dp))
-
-                    Column(
-                        horizontalAlignment = Alignment.Start,
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .weight(1f)
-                            .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(5.dp))
-                            .background(Sand2, shape = RoundedCornerShape(5.dp))
-                            .padding(top = 8.dp, start = 8.dp, bottom = 20.dp)
-                    ) {
-                        Text(
-                            text = "Address",
-                            fontSize = 20.sp,
-                            color = Cocoa,
-                            textAlign = TextAlign.Center,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/deliveryAddressLabel" }
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = "${orderData.street}, ${orderData.barangay}",
-                            fontSize = 15.sp,
-                            color = Cocoa,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth().semantics { testTag = "android:id/deliveryAddressText" }
-                        )
-                    }
+                    "DELIVERING" -> DeliveringStatusDialog(
+                        orderData,
+                        orderViewModel
+                    )
+                    "COMPLETED" -> CompletedStatusDialog()
                 }
             }
         }
+    }
+}
+
+@Composable
+fun DisplayOrderDetail (
+    label: String,
+    value: String
+) {
+    Row (
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Text(
+            text = label,
+            fontSize = 20.sp,
+            color = Cocoa,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 16.dp)
+                .semantics { testTag = "android:id/deliveryAddressLabel" },
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
+        Text(
+            text = value,
+            fontSize = 20.sp,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .weight(1f)
+                .semantics { testTag = "android:id/deliveryAddressText" },
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 

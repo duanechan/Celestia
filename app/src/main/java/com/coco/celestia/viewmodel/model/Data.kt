@@ -1,11 +1,7 @@
 package com.coco.celestia.viewmodel.model
 
-import com.google.firebase.Timestamp
-import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.YearMonth
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 data class UserData(
     val email: String = "",
@@ -30,7 +26,9 @@ data class OrderData(
     val street: String = "",
     val rejectionReason: String? = null,
     val fulfilledBy: List<String> = emptyList(),
-    val partialQuantity: Int? = null
+    val partialQuantity: Int? = null,
+    val statusDetail: String = "",
+    val fulfilled: Int = 0
 )
 
 data class ProductData(

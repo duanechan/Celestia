@@ -34,7 +34,6 @@ import com.coco.celestia.screens.admin.ConfirmAddProduct
 import com.coco.celestia.screens.admin.UserManagementAuditLogs
 import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientDashboard
-import com.coco.celestia.screens.client.ClientNotification
 import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.client.ClientOrderDetails
 import com.coco.celestia.screens.coop.AddProductForm
@@ -445,9 +444,7 @@ fun NavGraph(
                 onNavigate("Order Requests")
                 FarmerRequestDetails(
                     navController = navController,
-                    orderId = orderId,
-                    onAccept = { },
-                    onReject = { }
+                    orderId = orderId
                 )
             }
         }
