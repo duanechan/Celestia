@@ -17,6 +17,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Menu
@@ -163,7 +165,14 @@ fun Calendar(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Product Name",
+                        text = "Status",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Start,
+                        color = textColor
+                    )
+                    Text(
+                        text = "Name",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Start,
@@ -175,7 +184,7 @@ fun Calendar(
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Start,
                         color = textColor,
-                        modifier = Modifier.offset(x = (-10).dp)
+
                     )
                     Text(
                         text = "Price",
@@ -183,7 +192,7 @@ fun Calendar(
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Start,
                         color = textColor,
-                        modifier = Modifier.offset(x = (-25).dp)
+                        modifier = Modifier.offset((-5).dp)
                     )
                     Spacer(modifier = Modifier)
                 }
@@ -342,25 +351,36 @@ fun OrderItem(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = order.orderData.name,
+                text = order.status.lowercase().replaceFirstChar { it.uppercase() },
+                fontSize = 14.sp,
                 color = textColor,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = order.orderData.name,
+                fontSize = 14.sp,
+                color = textColor,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.weight(1f).offset(15.dp)
             )
             Text(
                 text = "${order.orderData.quantity}",
+                fontSize = 14.sp,
                 color = textColor,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).offset((-8).dp)
             )
             Text(
                 text = "₱${price * order.orderData.quantity}",
+                fontSize = 14.sp,
                 color = textColor,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Start,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f).offset(10.dp)
             )
             IconButton(
                 onClick = { showFulfillers = true },
@@ -415,8 +435,18 @@ fun OrderItem(
             title = { Text(text = "Supplier/s", fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily) },
             text = {
                 LazyColumn {
-                    itemsIndexed(order.fulfilledBy) { _, fulfiller ->
-                        Text(text = fulfiller, fontFamily = mintsansFontFamily)
+                    if (order.fulfilledBy.isNotEmpty()) {
+                        itemsIndexed(order.fulfilledBy) { _, fulfiller ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(text = "• $fulfiller", fontFamily = mintsansFontFamily)
+                            }
+                        }
+                    } else {
+                        item {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(text = "No one here.", fontFamily = mintsansFontFamily)
+                            }
+                        }
                     }
                 }
             }
