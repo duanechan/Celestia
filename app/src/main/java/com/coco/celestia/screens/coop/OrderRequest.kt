@@ -67,6 +67,7 @@ import com.coco.celestia.components.dialogs.UpdateOrderStatusDialog
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.client.OrderStatusTracker
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.util.UserIdentifier
 import com.coco.celestia.util.formatDate
 import com.coco.celestia.util.orderStatusConfig
 import com.coco.celestia.viewmodel.OrderState
@@ -74,6 +75,8 @@ import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.TransactionData
+import com.coco.celestia.viewmodel.model.UserData
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -226,7 +229,6 @@ fun OrderRequest(
                         OrderItem(
                             order = order,
                             orderViewModel = orderViewModel,
-                            transactionViewModel = transactionViewModel,
                             orderCount = index + 1,
                             onUpdateOrder = {
                                 onUpdateOrder(it)
@@ -311,7 +313,6 @@ fun OrderItem(
     order: OrderData,
     orderCount: Int,
     orderViewModel: OrderViewModel,
-    transactionViewModel: TransactionViewModel,
     onUpdateOrder: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val orderStatus = order.status
@@ -601,6 +602,12 @@ fun PendingOrderActions(
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var action by remember { mutableStateOf("") }
+    val uid = FirebaseAuth.getInstance().uid.toString()
+    var fulfiller by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        UserIdentifier.getUserData(uid) { fulfiller = "${it.firstname} ${it.lastname}" }
+    }
 
     Row(
         modifier = Modifier
@@ -669,7 +676,7 @@ fun PendingOrderActions(
             onDismiss = { showDialog = false },
             onAccept = {
                 if (action == "Accept") {
-                    orderViewModel.updateOrder(order.copy(status = "PREPARING"))
+                    orderViewModel.updateOrder(order.copy(status = "PREPARING", fulfilledBy = order.fulfilledBy.plus(fulfiller)))
                 } else {
                     orderViewModel.updateOrder(order.copy(status = "REJECTED"))
                 }

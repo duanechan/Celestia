@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,8 +19,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,31 +43,45 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.coco.celestia.ui.theme.BgColor
+import com.coco.celestia.ui.theme.Cocoa
+import com.coco.celestia.ui.theme.CompletedStatus
+import com.coco.celestia.ui.theme.DeliveringStatus
+import com.coco.celestia.ui.theme.DuskyBlue
+import com.coco.celestia.ui.theme.GoldenYellow
+import com.coco.celestia.ui.theme.PendingStatus
+import com.coco.celestia.ui.theme.Sand
+import com.coco.celestia.ui.theme.Sand2
+import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.util.DateUtil
 import com.coco.celestia.util.getDisplayName
 import com.coco.celestia.viewmodel.CalendarViewModel
+import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.model.CalendarUIState
 import com.coco.celestia.viewmodel.model.OrderData
+import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
 import java.time.YearMonth
 import java.util.Locale
-import com.coco.celestia.ui.theme.*
-import com.coco.celestia.viewmodel.FarmerItemViewModel
-import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun Calendar(
     userRole: String,
     orderViewModel: OrderViewModel,
-    viewModel: CalendarViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    productViewModel: ProductViewModel,
+    viewModel: CalendarViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     val orderState by orderViewModel.orderState.observeAsState(OrderState.EMPTY)
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
+    val productData by productViewModel.productData.observeAsState(emptyList())
+    val priceMap = remember { mutableMapOf<String, Double>() }
     var targetDate by remember { mutableStateOf("") }
     val inputFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
     val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
@@ -75,6 +93,18 @@ fun Calendar(
             "",
             userRole
         )
+        productViewModel.fetchProducts(
+            "",
+            userRole
+        )
+        if (orderData.isNotEmpty() && productData.isNotEmpty()) {
+            orderData.forEach { order ->
+                val orderedProduct = order.orderData.name
+                val productPrice = productData
+                    .find { product -> product.name == orderedProduct }?.priceKg
+                priceMap[order.orderData.name] = productPrice!!
+            }
+        }
         if (uid.isNotEmpty()) {
             farmerName = farmerItemViewModel.fetchFarmerName(uid)
         }
@@ -128,28 +158,34 @@ fun Calendar(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(backgroundColor)
-                        .padding(top = 15.dp, start = 16.dp, bottom = 15.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(vertical = 15.dp, horizontal = 25.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
                         text = "Product Name",
-                        modifier = Modifier
-                            .weight(2f)
-                            .fillMaxWidth()
-                            .offset(x = 5.dp),
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Start,
                         color = textColor
                     )
                     Text(
-                        text = "Quantity",
-                        modifier = Modifier
-                            .weight(2f)
-                            .fillMaxWidth(),
+                        text = "Qty.",
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        color = textColor
+                        textAlign = TextAlign.Start,
+                        color = textColor,
+                        modifier = Modifier.offset(x = (-10).dp)
                     )
+                    Text(
+                        text = "Price",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Start,
+                        color = textColor,
+                        modifier = Modifier.offset(x = (-25).dp)
+                    )
+                    Spacer(modifier = Modifier)
                 }
                 Divider(color = textColor, thickness = 2.dp)
             }
@@ -175,8 +211,10 @@ fun Calendar(
                     }
                     if (sameDate.isNotEmpty()) {
                         itemsIndexed(sameDate) { index, order ->
+                            val orderPrice = priceMap[order.orderData.name]!!
                             OrderItem(
                                 order = order,
+                                price = orderPrice,
                                 rowIndex = index,
                                 userRole = userRole,
                                 totalItems = sameDate.size
@@ -256,13 +294,17 @@ fun ErrorOrderState(userRole: String, message: String) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderItem(
     order: OrderData,
+    price: Double,
     rowIndex: Int,
     userRole: String,
     totalItems: Int
 ) {
+    var showFulfillers by remember { mutableStateOf(false) }
+
     @Composable
     fun getBackgroundColor(index: Int): Color {
         return when {
@@ -296,25 +338,40 @@ fun OrderItem(
                 .fillMaxWidth()
                 .background(color = backgroundColor)
                 .padding(vertical = 30.dp, horizontal = 20.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = order.orderData.name,
                 color = textColor,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .weight(2f)
-                    .fillMaxWidth(),
                 textAlign = TextAlign.Start,
+                modifier = Modifier.weight(1f)
             )
             Text(
                 text = "${order.orderData.quantity}",
                 color = textColor,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .weight(2f)
-                    .fillMaxWidth(),
                 textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = "₱${price * order.orderData.quantity}",
+                color = textColor,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Start,
+                modifier = Modifier.weight(1f)
+            )
+            IconButton(
+                onClick = { showFulfillers = true },
+                content = {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "Supplier/s",
+                        tint = textColor
+                    )
+                },
+                modifier = Modifier.size(25.dp)
             )
         }
 
@@ -326,27 +383,44 @@ fun OrderItem(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(color = getBackgroundColor(totalItems + placeholderIndex))
-                            .padding(vertical = 30.dp, horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(vertical = 30.dp, horizontal = 20.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
                             text = "",
-                            modifier = Modifier
-                                .weight(2f)
-                                .fillMaxWidth(),
+                            modifier = Modifier.weight(2f),
                             textAlign = TextAlign.Start,
                         )
                         Text(
                             text = "",
-                            modifier = Modifier
-                                .weight(2f)
-                                .fillMaxWidth(),
+                            modifier = Modifier.weight(1f),
                             textAlign = TextAlign.Center,
+                        )
+                        Text(
+                            text = "",
+                            modifier = Modifier.weight(1f),
+                            textAlign = TextAlign.End,
                         )
                     }
                 }
             }
         }
+    }
+
+    if (showFulfillers) {
+        AlertDialog(
+            onDismissRequest = { showFulfillers = false },
+            confirmButton = {},
+            title = { Text(text = "Supplier/s", fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily) },
+            text = {
+                LazyColumn {
+                    itemsIndexed(order.fulfilledBy) { _, fulfiller ->
+                        Text(text = fulfiller, fontFamily = mintsansFontFamily)
+                    }
+                }
+            }
+        )
     }
 }
 
