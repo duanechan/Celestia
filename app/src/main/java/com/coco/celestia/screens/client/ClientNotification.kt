@@ -64,6 +64,8 @@ fun NotificationItem(notification: Notification) {
         "rejected" -> ContactText
         "pending" -> LightOrange
         "preparing" -> CDarkOrange
+        "partially fulfilled" -> ContactText
+        "harvesting meat" -> Cocoa
         "delivering" -> TrackOrder
         "completed" -> GDivider
         "incomplete" -> BAButton
