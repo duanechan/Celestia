@@ -3,8 +3,10 @@ package com.coco.celestia.screens.farmer.details
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -311,11 +313,11 @@ fun OrderDetailsCard(
 }
 
 @Composable
-fun DisplayOrderDetail (
+fun DisplayOrderDetail(
     label: String,
     value: String
 ) {
-    Row (
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
@@ -377,7 +379,9 @@ fun OrderStatusUpdates(orderData: OrderData) {
         contentAlignment = Alignment.TopStart
     ) {
         Column(
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier
+                .padding(8.dp)
+                .verticalScroll(rememberScrollState())
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -550,7 +554,9 @@ fun OrderStatusUpdates(orderData: OrderData) {
                     Image(
                         painter = painterResource(id = R.drawable.completed),
                         contentDescription = "Completed",
-                        modifier = Modifier.size(30.dp).padding(start = 3.dp),
+                        modifier = Modifier
+                            .size(30.dp)
+                            .padding(start = 3.dp),
                         colorFilter = ColorFilter.tint(OliveGreen)
                     )
                     Spacer(modifier = Modifier.width(20.dp))

@@ -10,10 +10,13 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -24,6 +27,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,12 +39,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -49,9 +53,7 @@ import com.coco.celestia.components.dialogs.PendingOrderDialog
 import com.coco.celestia.components.dialogs.UpdateOrderStatusDialog
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.ui.theme.Brown1
-import com.coco.celestia.ui.theme.Cinnabar
 import com.coco.celestia.ui.theme.Green
-import com.coco.celestia.ui.theme.JadeGreen
 import com.coco.celestia.ui.theme.SageGreen
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.model.FullFilledBy
@@ -59,7 +61,7 @@ import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.ui.theme.*
 
 @Composable
-fun PendingStatusDialog (
+fun PendingStatusDialog(
     orderData: OrderData,
     orderViewModel: OrderViewModel,
     navController: NavController
@@ -69,63 +71,93 @@ fun PendingStatusDialog (
     var showFulfillmentDialog by remember { mutableStateOf(false) }
     var action by remember { mutableStateOf("") }
 
-    Row(
+    Column(
         modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.Gray)
-            .padding(15.dp)
-            .semantics { testTag = "android:id/PendingOrderActions" },
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.Bottom
     ) {
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            IconButton(
-                onClick = {
-                    action = "Reject"
-                    showFulfillmentDialog = true
-                },
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(50.dp))
-                    .background(Cinnabar)
-                    .semantics { testTag = "android:id/RejectButton" }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Clear,
-                    contentDescription = "Reject",
-                    tint = Cocoa,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-            Text(text = "Reject", modifier = Modifier.padding(top = 16.dp), color = Cocoa)
-        }
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            IconButton(
-                onClick = {
-                    action = "Accept"
-                    showFulfillmentDialog = true
-                },
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(50.dp))
-                    .background(JadeGreen)
-                    .semantics { testTag = "android:id/AcceptButton" }
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = "Check",
-                    tint = Cocoa,
-                    modifier = Modifier.fillMaxSize()
+        Spacer(modifier = Modifier.height(16.dp))
 
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    color = Sand,
+                    shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
                 )
+                .padding(vertical = 60.dp)
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Would you like to fulfill this order?",
+                    fontSize = 20.sp,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Cocoa,
+                    modifier = Modifier.padding(bottom = 50.dp),
+                    textAlign = TextAlign.Center
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 15.dp)
+                        .semantics { testTag = "android:id/PendingOrderActions" },
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        IconButton(
+                            onClick = {
+                                action = "Reject"
+                                showFulfillmentDialog = true
+                            },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(50.dp))
+                                .background(Copper)
+                                .semantics { testTag = "android:id/RejectButton" }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Clear,
+                                contentDescription = "Reject",
+                                tint = Cocoa,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        Text(text = "Reject", modifier = Modifier.padding(top = 8.dp), color = Cocoa)
+                    }
+                    Column(
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        IconButton(
+                            onClick = {
+                                action = "Accept"
+                                showFulfillmentDialog = true
+                            },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(50.dp))
+                                .background(SageGreen)
+                                .semantics { testTag = "android:id/AcceptButton" }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Check",
+                                tint = Cocoa,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                        Text(text = "Accept", modifier = Modifier.padding(top = 8.dp), color = Cocoa)
+                    }
+                }
+                Spacer(modifier = Modifier.height(200.dp))
             }
-            Text(text = "Accept", modifier = Modifier.padding(top = 16.dp), color = Cocoa)
         }
     }
 
@@ -136,7 +168,7 @@ fun PendingStatusDialog (
             onDismiss = { showDialog = false },
             onAccept = {
                 showFulfillmentDialog = true
-                onUpdateOrder = (Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
+                onUpdateOrder = Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis())
                 showDialog = false
             }
         )
