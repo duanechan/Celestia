@@ -122,7 +122,9 @@ class ProductViewModel : ViewModel() {
                         val meat = product.type.equals("Meat", ignoreCase = true) ||
                                 product.type.equals("CoopMeat", ignoreCase = true)
                         val coffeeOrMeat = product.type.equals("Coffee", ignoreCase = true) ||
-                                product.type.equals("Meat", ignoreCase = true)
+                                product.type.equals("Meat", ignoreCase = true) ||
+                                product.type.equals("CoopCoffee", ignoreCase = true) ||
+                                product.type.equals("CoopMeat", ignoreCase = true)
                         val vegetable = product.type.equals("Vegetable", ignoreCase = true)
                         val filtered = filterKeywords.any { keyword ->
                             ProductData::class.memberProperties.any { prop ->
