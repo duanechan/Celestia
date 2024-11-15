@@ -1,6 +1,5 @@
 package com.coco.celestia.screens.client
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -100,8 +99,9 @@ fun ClientOrder(
             var text by remember { mutableStateOf("") }
             var selectedStatus by remember { mutableStateOf("All") }
             var expanded by remember { mutableStateOf(false) }
-            val statuses = listOf("All", "Partially Fulfilled", "Pending", "Accepted", "Planting", "Harvesting",
-                "Harvesting Meat", "Delivering", "Completed", "Rejected", "Cancelled")
+            val statuses = listOf("All", "Pending","Accepted","Harvesting Meat", "Partially Fulfilled", "Rejected", "Delivering", "Completed", "Received")
+            //removed PREPARING,
+            //added harvesting meat and partially fulfilled
 
             Row(
                 modifier = Modifier
@@ -196,8 +196,6 @@ fun ClientOrder(
 
                 is OrderState.SUCCESS -> {
                     val filteredOrders = orderData.filter { order ->
-                        Log.d("orderStatus", order.status)
-                        Log.d("selectedStatus", selectedStatus)
                         (selectedStatus == "All" || order.status.equals(selectedStatus, ignoreCase = true)) &&
                                 (order.orderId.contains(text, ignoreCase = true) ||
                                         userData?.let { "${it.firstname} ${it.lastname}" }

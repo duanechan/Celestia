@@ -582,37 +582,37 @@ fun OrderCardDetails(
                 )
             }
         }
-
-        Box(
-            modifier = Modifier
-                .height(125.dp)
-                .width(135.dp)
-                .background(BAButton, shape = RoundedCornerShape(8.dp))
-                .padding(8.dp)
-                .clickable {
-                    navController.navigate("add_order/${order.orderData.type}")
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.buyagain),
-                    contentDescription = "Buy Again Icon",
-                    colorFilter = ColorFilter.tint(BABText),
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Buy Again",
-                    color = BABText,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    textAlign = TextAlign.Center
-                )
-            }
-        }
+//REMOVED BUY AGAIN
+//        Box(
+//            modifier = Modifier
+//                .height(125.dp)
+//                .width(135.dp)
+//                .background(BAButton, shape = RoundedCornerShape(8.dp))
+//                .padding(8.dp)
+//                .clickable {
+//                    navController.navigate("add_order/${order.orderData.type}")
+//                },
+//            contentAlignment = Alignment.Center
+//        ) {
+//            Column(
+//                horizontalAlignment = Alignment.CenterHorizontally,
+//                verticalArrangement = Arrangement.Center,
+//            ) {
+//                Image(
+//                    painter = painterResource(id = R.drawable.buyagain),
+//                    contentDescription = "Buy Again Icon",
+//                    colorFilter = ColorFilter.tint(BABText),
+//                    modifier = Modifier.size(24.dp)
+//                )
+//                Spacer(modifier = Modifier.height(6.dp))
+//                Text(
+//                    text = "Buy Again",
+//                    color = BABText,
+//                    fontSize = 14.sp,
+//                    fontWeight = FontWeight.Medium,
+//                    textAlign = TextAlign.Center
+//                )
+//            }
+//        }
     }
 }

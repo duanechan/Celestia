@@ -512,7 +512,7 @@ fun ManageOrderCards(
 
                                     Text(
                                         text = displayStatus.replace("_", " "),
-                                        fontSize = 22.sp,
+                                        fontSize = 18.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Cocoa,
                                         modifier = Modifier
@@ -575,6 +575,17 @@ fun RequestCards(
 ) {
     val clientName = order.client
     val orderId = order.orderId.substring(6, 10).uppercase()
+    val displayStatus = when (order.status) {
+        "PENDING" -> "PENDING"
+        "PARTIALLY_FULFILLED" -> "PARTIALLY FULFILLED"
+        else -> "Unknown"
+    }
+
+    val backgroundColor = when (order.status) {
+        "PENDING" -> Sand2
+        "PARTIALLY_FULFILLED" -> Tangerine
+        else -> Color.Gray
+    }
 
     Row(
         modifier = Modifier
@@ -584,7 +595,7 @@ fun RequestCards(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp)
+                .height(180.dp)
                 .semantics { testTag = "android:id/requestCard_${order.orderId}" },
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(
@@ -608,40 +619,70 @@ fun RequestCards(
                     modifier = Modifier
                         .padding(20.dp)
                         .fillMaxSize(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Order Info
                     Column(
-                        verticalArrangement = Arrangement.Center,
                         modifier = Modifier
-                            .fillMaxHeight()
-                            .semantics { testTag = "android:id/requestInfoColumn_${order.orderId}" }
+                            .weight(1f)
+                            .padding(end = 8.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.Start
                     ) {
-                        Text(
-                            text = "Order ID: $orderId",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Cocoa,
-                            modifier = Modifier.semantics { testTag = "android:id/requestOrderIdText_${order.orderId}" }
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Client Name: $clientName",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Normal,
-                            color = Cocoa,
-                            modifier = Modifier.semantics { testTag = "android:id/requestClientNameText_${order.orderId}" }
-                        )
+
+                        Box(
+                            modifier = Modifier
+                                .background(backgroundColor, shape = RoundedCornerShape(16.dp))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                .semantics { testTag = "android:id/requestStatusBox_${order.orderId}" }
+                        ) {
+                            Text(
+                                text = displayStatus,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Cocoa,
+                                modifier = Modifier
+                                    .semantics { testTag = "android:id/requestStatusText_${order.orderId}" }
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp, start = 10.dp)
+                                .semantics { testTag = "android:id/requestInfoColumn_${order.orderId}" },
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.Start
+                        ) {
+                            Text(
+                                text = "Order ID: $orderId",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Cocoa,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.semantics { testTag = "android:id/requestOrderIdText_${order.orderId}" }
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Client Name: $clientName",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = Cocoa,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.semantics { testTag = "android:id/requestClientNameText_${order.orderId}" }
+                            )
+                        }
                     }
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowRight,
                         contentDescription = "Arrow Forward",
-                        tint = Cocoa,
                         modifier = Modifier
                             .size(40.dp)
                             .padding(end = 8.dp)
-                            .align(Alignment.CenterVertically)
-                            .semantics { testTag = "android:id/requestNavigateIcon_${order.orderId}" }
+                            .align(Alignment.CenterVertically),
+                        tint = Cocoa
                     )
                 }
             }

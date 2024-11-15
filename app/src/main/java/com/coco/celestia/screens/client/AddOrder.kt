@@ -870,15 +870,15 @@ fun ConfirmOrderRequestPanel(
                         .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    TextButton(onClick = {
-                        isOrderSheetOpen = false
-                        navController.navigate(Screen.AddOrder.route)
-                    }) {
-                        Text(
-                            text = "Order Again",
-                            fontSize = 16.sp
-                        )
-                    }
+//                    TextButton(onClick = {
+//                        isOrderSheetOpen = false
+//                        navController.navigate(Screen.AddOrder.route)
+//                    }) {
+//                        Text(
+//                            text = "Order Again",
+//                            fontSize = 16.sp
+//                        )
+//                    }
                     TextButton(
                         onClick = {
                             navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId))
