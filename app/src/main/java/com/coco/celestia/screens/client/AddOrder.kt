@@ -560,8 +560,7 @@ fun AddOrderForm(
         orderData = ProductData(productName.toString(), quantity, productType.toString(), productPrice.toDouble()),
         client = "${userData?.firstname} ${userData?.lastname}",
         barangay = userData?.barangay.toString(),
-        street = userData?.streetNumber.toString(),
-        statusDetail = ""
+        street = userData?.streetNumber.toString()
     )
 
     Column(

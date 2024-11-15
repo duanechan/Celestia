@@ -25,10 +25,15 @@ data class OrderData(
     val barangay: String = "",
     val street: String = "",
     val rejectionReason: String? = null,
-    val fulfilledBy: List<String> = emptyList(),
-    val partialQuantity: Int? = null,
-    val statusDetail: String = "",
+    val fulfilledBy: List<FullFilledBy> = emptyList(),
+    val partialQuantity: Int = 0,
     val fulfilled: Int = 0
+)
+
+data class FullFilledBy (
+    val farmerName: String = "",
+    val quantityFulfilled: Int = 0,
+    val status: String = ""
 )
 
 data class ProductData(

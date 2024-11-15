@@ -2,13 +2,9 @@ package com.coco.celestia.screens.farmer.details
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -27,17 +23,20 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
+import com.coco.celestia.screens.farmer.dialogs.AcceptedStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.CompletedStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.DeliveringStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.FarmerFulfillDialog
+import com.coco.celestia.screens.farmer.dialogs.HarvestingStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.PendingStatusDialog
-import com.coco.celestia.screens.farmer.dialogs.PreparingStatusDialog
+import com.coco.celestia.screens.farmer.dialogs.PlantingStatusDialog
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.FullFilledBy
 import com.coco.celestia.viewmodel.model.ItemData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.auth.FirebaseAuth
@@ -77,6 +76,7 @@ fun FarmerOrderDetails(
     val orderData: OrderData? = remember(orderId, allOrders) {
         allOrders.find { it.orderId == orderId }
     }
+    val fulfilledByFarmer = orderData?.fulfilledBy?.find { it.farmerName == farmerName }
 
     when {
         orderState == OrderState.LOADING -> {
@@ -142,9 +142,6 @@ fun FarmerOrderDetails(
                         )
                     }
                     else -> {
-                        if (orderData.status == "PREPARING") {
-                            OrderStatusDropdown(orderData = orderData, orderViewModel = orderViewModel)
-                        }
                         OrderStatusUpdates(orderData = orderData)
                     }
                 }
@@ -174,120 +171,6 @@ fun FarmerOrderDetails(
 }
 
 @Composable
-fun OrderStatusDropdown(orderData: OrderData, orderViewModel: OrderViewModel) {
-    var expanded by remember { mutableStateOf(false) }
-    var selectedStatus by remember { mutableStateOf(orderData.statusDetail) }
-
-    val statusOptions = when (orderData.statusDetail) {
-        "PREPARING" -> listOf("PLANTING")
-        "PLANTING" -> listOf("HARVESTING")
-        "HARVESTING" -> listOf("READY_TO_DELIVER")
-        "READY_TO_DELIVER" -> emptyList()
-        else -> emptyList()
-    }
-
-    val statusColor = when (selectedStatus) {
-        "PREPARING" -> Brown1
-        "PLANTING" -> OliveGreen
-        "HARVESTING" -> Green
-        "READY_TO_DELIVER" -> SageGreen
-        else -> Color.Gray.copy(alpha = 0.3f)
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp)
-    ) {
-        Text(
-            text = "Order Tracking",
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp,
-            color = Cocoa
-        )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 15.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
-        ) {
-            Text(
-                text = "Status Detail: ",
-                fontSize = 18.sp,
-                color = Cocoa
-            )
-
-            Spacer(modifier = Modifier.width(5.dp))
-
-            Box {
-                Box(
-                    modifier = Modifier
-                        .background(
-                            color = if (statusOptions.isEmpty()) OliveGreen.copy(alpha = 0.3f) else statusColor,
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .clickable(enabled = statusOptions.isNotEmpty()) { expanded = true }
-                        .padding(horizontal = 8.dp, vertical = 5.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.width(IntrinsicSize.Max)
-                    ) {
-                        Text(
-                            text = selectedStatus,
-                            fontWeight = FontWeight.Bold,
-                            color = Cocoa,
-                            modifier = Modifier.padding(end = 4.dp)
-                        )
-                        if (statusOptions.isNotEmpty()) {
-                            Icon(
-                                imageVector = if (expanded)
-                                    Icons.Default.KeyboardArrowUp
-                                else
-                                    Icons.Default.KeyboardArrowDown,
-                                contentDescription = "Dropdown Arrow",
-                                tint = Cocoa
-                            )
-                        }
-                    }
-                }
-
-                if (statusOptions.isNotEmpty()) {
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier
-                            .width(150.dp)
-                            .background(Color.White)
-                            .align(Alignment.BottomStart)
-                    ) {
-                        statusOptions.forEach { status ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = status,
-                                        color = Cocoa,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                },
-                                onClick = {
-                                    selectedStatus = status
-                                    expanded = false
-                                    //orderViewModel.updateOrder(orderData.copy(status = status))
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 fun DisplayFarmerFulfillDialog(
     navController: NavController,
     onDismiss: () -> Unit,
@@ -298,7 +181,7 @@ fun DisplayFarmerFulfillDialog(
     items: List<ProductData>,
     farmerName: String
 ) {
-    if (orderData.fulfilledBy.contains(farmerName)) {
+    if (orderData.fulfilledBy.any { it.farmerName == farmerName }) {
         return
     }
 
@@ -315,9 +198,13 @@ fun DisplayFarmerFulfillDialog(
         orderData = orderData,
         remainingQuantity = validRemainingQuantity,
         onAccept = {
+            val fulFiller = FullFilledBy(
+                farmerName = farmerName,
+                quantityFulfilled = validRemainingQuantity
+            )
             val updatedOrder = orderData.copy(
                 status = "PREPARING",
-                fulfilledBy = orderData.fulfilledBy + farmerName,
+                fulfilledBy = orderData.fulfilledBy.plus(fulFiller),
                 partialQuantity = validRemainingQuantity
             )
             orderViewModel.updateOrder(updatedOrder)
@@ -337,7 +224,16 @@ fun OrderDetailsCard(
     orderData: OrderData,
     orderViewModel: OrderViewModel
 ) {
+    val uid = FirebaseAuth.getInstance().uid.toString()
     val product = orderData.orderData
+    var farmerName by remember { mutableStateOf("") }
+    val farmerItemViewModel: FarmerItemViewModel = viewModel()
+
+    LaunchedEffect(Unit) {
+        farmerName = farmerItemViewModel.fetchFarmerName(uid)
+    }
+
+    val fulfilledByFarmer = orderData.fulfilledBy.find { it.farmerName == farmerName }
 
     Card(
         modifier = Modifier
@@ -365,24 +261,90 @@ fun OrderDetailsCard(
                 DisplayOrderDetail("Client Name", orderData.client)
                 DisplayOrderDetail("Address", "${orderData.street}, ${orderData.barangay}")
 
-                when (orderData.status) {
-                    "PENDING" -> PendingStatusDialog(
+                if (orderData.status == "PENDING") {
+                    PendingStatusDialog(
                         orderData,
                         orderViewModel
                     )
-                    "PREPARING" -> {
-                        if (orderData.statusDetail == "READY_TO_DELIVER") {
-                            PreparingStatusDialog(
+                }
+
+                if (orderData.status == "PARTIALLY_FULFILLED") {
+                    if (fulfilledByFarmer != null) {
+                        when (fulfilledByFarmer.status) {
+                            "ACCEPTED" -> {
+                                AcceptedStatusDialog(
+                                    orderData,
+                                    orderViewModel,
+                                    "partial",
+                                    fulfilledByFarmer
+                                )
+                            }
+
+                            "PLANTING" -> {
+                                PlantingStatusDialog(
+                                    orderData,
+                                    orderViewModel,
+                                    "partial",
+                                    fulfilledByFarmer
+                                )
+                            }
+
+                            "HARVESTING" -> {
+                                HarvestingStatusDialog(
+                                    orderData,
+                                    orderViewModel,
+                                    "partial",
+                                    fulfilledByFarmer
+                                )
+                            }
+
+                            "DELIVERING" -> DeliveringStatusDialog(
                                 orderData,
-                                orderViewModel
+                                orderViewModel,
+                                "partial",
+                                fulfilledByFarmer
                             )
+
+                            "COMPLETED" -> CompletedStatusDialog()
                         }
                     }
-                    "DELIVERING" -> DeliveringStatusDialog(
-                        orderData,
-                        orderViewModel
-                    )
-                    "COMPLETED" -> CompletedStatusDialog()
+                } else {
+                    when (orderData.status) {
+                        "ACCEPTED" -> {
+                            AcceptedStatusDialog(
+                                orderData,
+                                orderViewModel,
+                                "full",
+                                fulfilledByFarmer
+                            )
+                        }
+
+                        "PLANTING" -> {
+                            PlantingStatusDialog(
+                                orderData,
+                                orderViewModel,
+                                "full",
+                                fulfilledByFarmer
+                            )
+                        }
+
+                        "HARVESTING" -> {
+                            HarvestingStatusDialog(
+                                orderData,
+                                orderViewModel,
+                                "full",
+                                fulfilledByFarmer
+                            )
+                        }
+
+                        "DELIVERING" -> DeliveringStatusDialog(
+                            orderData,
+                            orderViewModel,
+                            "full",
+                            fulfilledByFarmer
+                        )
+                        "COMPLETED" -> CompletedStatusDialog()
+                    }
                 }
             }
         }
@@ -430,7 +392,25 @@ fun DisplayOrderDetail (
 @Composable
 fun OrderStatusUpdates(orderData: OrderData) {
     val client = orderData.client
-    val displayStatus = if (orderData.status == "RECEIVED") "COMPLETED" else orderData.status
+    var farmerName by remember { mutableStateOf("") }
+    var quantity by remember { mutableStateOf("") }
+    val farmerItemViewModel: FarmerItemViewModel = viewModel()
+    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+
+    LaunchedEffect(Unit) {
+        farmerName = farmerItemViewModel.fetchFarmerName(uid)
+    }
+
+    var displayStatus by remember { mutableStateOf("") }
+    val fulfilledByFarmer = orderData.fulfilledBy.find { it.farmerName == farmerName }
+
+    if (orderData.status == "PARTIALLY_FULFILLED") {
+        if (fulfilledByFarmer != null) {
+            displayStatus = fulfilledByFarmer.status
+        }
+    } else {
+        displayStatus = if (orderData.status == "RECEIVED") "COMPLETED" else orderData.status
+    }
 
     Box(
         modifier = Modifier
@@ -453,21 +433,79 @@ fun OrderStatusUpdates(orderData: OrderData) {
                 Spacer(modifier = Modifier.width(10.dp))
 
                 Spacer(modifier = Modifier.height(50.dp))
-
+                val fulfilledByFarmer = orderData.fulfilledBy.find { it.farmerName == farmerName }
+                if (fulfilledByFarmer != null) {
+                    quantity = fulfilledByFarmer.quantityFulfilled.toString()
+                }
                 Text(
-                    text = when {
-                        orderData.fulfilledBy.isEmpty() -> "No farmers are preparing the order"
-                        orderData.fulfilledBy.size == 1 -> "${orderData.fulfilledBy.first()} is preparing the order"
-                        orderData.fulfilledBy.size == 2 -> "${orderData.fulfilledBy.joinToString(" and ")} are preparing the order"
-                        else -> {
-                            val lastFarmer = orderData.fulfilledBy.last()
-                            val otherFarmers = orderData.fulfilledBy.dropLast(1).joinToString(", ")
-                            "$otherFarmers and $lastFarmer are preparing the order"
-                        }
-                    },
+                    text = "Accepted order of ${quantity}kg of ${orderData.orderData.name}",
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
+            }
+
+            if (displayStatus in listOf("PLANTING", "HARVESTING", "DELIVERING", "COMPLETED")) {
+                Row(
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Spacer(modifier = Modifier.width(18.dp))
+                    Divider(
+                        color = GoldenYellow,
+                        modifier = Modifier
+                            .width(2.dp)
+                            .height(30.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.planting),
+                        contentDescription = "Planting",
+                        modifier = Modifier.size(40.dp),
+                        colorFilter = ColorFilter.tint(Cocoa)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Crop is currently being grown.",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
+
+            if (displayStatus in listOf("HARVESTING", "DELIVERING", "COMPLETED")) {
+                Row(
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Spacer(modifier = Modifier.width(18.dp))
+                    Divider(
+                        color = GoldenYellow,
+                        modifier = Modifier
+                            .width(2.dp)
+                            .height(30.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.harvest),
+                        contentDescription = "Harvesting",
+                        modifier = Modifier.size(40.dp),
+                        colorFilter = ColorFilter.tint(Cocoa)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Harvesting of the Crop is underway.",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
             }
 
             if (displayStatus in listOf("DELIVERING", "COMPLETED")) {

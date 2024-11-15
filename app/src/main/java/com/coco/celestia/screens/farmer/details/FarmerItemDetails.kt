@@ -624,7 +624,9 @@ fun OrderTable(
     tableHeight: Dp = 450.dp,
     farmerName: String
 ) {
-    val filteredOrders = orders.filter { farmerName in it.fulfilledBy }
+    val filteredOrders = orders.filter { order ->
+        order.fulfilledBy.any { it.farmerName == farmerName }
+    }
 
     Column(
         modifier = Modifier

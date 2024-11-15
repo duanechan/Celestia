@@ -422,7 +422,7 @@ fun OrderStatusSection(
             val filteredOrders = orderData.filter { order ->
                 order.status !in listOf("PENDING", "REJECTED", "COMPLETED", "CANCELLED") &&
                         order.orderId.contains(searchQuery, ignoreCase = true)
-                order.fulfilledBy.contains(farmerName)
+                order.fulfilledBy.any { it.farmerName == farmerName }
             }.take(2)
 
             if (filteredOrders.isEmpty()) {
@@ -445,6 +445,7 @@ fun OrderStatusSection(
                             ManageOrderCards(
                                 navController = navController,
                                 order = order,
+                                farmerName = farmerName,
                                 cardHeight = 100.dp,
                                 showStatus = false
                             )

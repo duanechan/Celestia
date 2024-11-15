@@ -73,6 +73,7 @@ import com.coco.celestia.util.orderStatusConfig
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
+import com.coco.celestia.viewmodel.model.FullFilledBy
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.viewmodel.model.UserData
@@ -676,7 +677,15 @@ fun PendingOrderActions(
             onDismiss = { showDialog = false },
             onAccept = {
                 if (action == "Accept") {
-                    orderViewModel.updateOrder(order.copy(status = "PREPARING", fulfilledBy = order.fulfilledBy.plus(fulfiller)))
+                    val farmer = FullFilledBy(
+                        farmerName = fulfiller
+                    )
+                    orderViewModel.updateOrder(
+                        order.copy(
+                            status = "PREPARING",
+                            fulfilledBy = order.fulfilledBy.plus(farmer)
+                        )
+                    )
                 } else {
                     orderViewModel.updateOrder(order.copy(status = "REJECTED"))
                 }

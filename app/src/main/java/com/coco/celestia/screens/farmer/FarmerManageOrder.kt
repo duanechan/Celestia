@@ -275,7 +275,7 @@ fun FarmerManageOrder(
                                 selectedStatus == "Incomplete" -> order.status == "INCOMPLETE"
                                 else -> order.status.equals(selectedStatus, ignoreCase = true)
                             }
-                            val isFulfilledByFarmer = order.fulfilledBy.any { it.startsWith(farmerName)}
+                            val isFulfilledByFarmer = order.fulfilledBy.any { it.farmerName == farmerName}
                             matchesSearchQuery && matchesStatus &&
                                     (order.status == "INCOMPLETE" || isFulfilledByFarmer || selectedStatus == "Rejected" || selectedStatus == "Cancelled")
                         }
@@ -303,7 +303,7 @@ fun FarmerManageOrder(
                                             modifier = Modifier.fillMaxWidth(),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            ManageOrderCards(navController, order)
+                                            ManageOrderCards(navController, order, farmerName)
                                         }
                                     }
                                 }
@@ -385,16 +385,26 @@ fun FarmerManageRequest(
 fun ManageOrderCards(
     navController: NavController,
     order: OrderData,
+    farmerName: String,
     cardHeight: Dp = 150.dp,
     showStatus: Boolean = true
 ) {
     val clientName = order.client
     val orderId = order.orderId.substring(6, 10).uppercase()
-    val displayStatus = if (order.status == "RECEIVED") "COMPLETED" else order.status
+    var displayStatus by remember { mutableStateOf("") }
+    val fulfilledByFarmer = order.fulfilledBy.find { it.farmerName == farmerName }
+
+    if (order.status == "PARTIALLY_FULFILLED") {
+        if (fulfilledByFarmer != null) {
+            displayStatus = fulfilledByFarmer.status
+        }
+    } else {
+        displayStatus = if (order.status == "RECEIVED") "COMPLETED" else order.status
+    }
 
     val backgroundColor = when (displayStatus) {
-        "PREPARING" -> Brown1
-        "INCOMPLETE" -> Tangerine
+        "ACCEPTED" -> Brown1
+        "PLANTING" -> Tangerine
         "REJECTED" -> Copper.copy(alpha = 0.4f)
         "DELIVERING" -> Green
         "COMPLETED" -> SageGreen.copy(alpha = 0.7f)
@@ -403,8 +413,9 @@ fun ManageOrderCards(
     }
 
     val iconPainter: Painter? = when (displayStatus) {
-        "PREPARING" -> painterResource(id = R.drawable.preparing)
-        "INCOMPLETE" -> painterResource(id = R.drawable.incomplete)
+        "ACCEPTED" -> painterResource(id = R.drawable.preparing)
+        "PLANTING" -> painterResource(id = R.drawable.plant_hand)
+        "HARVESTING" -> painterResource(id = R.drawable.harvest_basket)
         "DELIVERING" -> painterResource(id = R.drawable.deliveryicon)
         "CANCELLED" -> painterResource(id = R.drawable.cancelled)
         else -> null

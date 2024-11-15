@@ -591,7 +591,7 @@ fun ContentItem(
         .filter {
             it.status != "PENDING" && it.status != "CANCELLED" &&
                     if (userRole == "Farmer") {
-                        it.fulfilledBy.contains(farmerName)
+                        it.fulfilledBy.any { fullFilled -> fullFilled.farmerName == farmerName }
                     } else {
                         true
                     }

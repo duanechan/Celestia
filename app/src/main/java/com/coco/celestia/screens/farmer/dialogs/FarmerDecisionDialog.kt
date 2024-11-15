@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.model.FullFilledBy
 import com.coco.celestia.viewmodel.model.OrderData
 import com.google.firebase.auth.FirebaseAuth
 
@@ -39,7 +40,7 @@ fun FarmerDecisionDialog(
     var showFulfillmentDialog by remember { mutableStateOf(false) }
     var isPartialFulfillment by remember { mutableStateOf<Boolean?>(null) }
     var partialQuantity by remember { mutableStateOf("0") }
-    val maxPartial = (orderData.orderData.quantity - orderData.fulfilled) * 0.8f
+    val maxPartial = (orderData.orderData.quantity - orderData.partialQuantity) * 0.8f
 
     val rejectionReasons = listOf("Not in season", "Too Far", "Not Available")
 
@@ -291,18 +292,26 @@ fun FarmerDecisionDialog(
                             if (isPartialFulfillment == true) {
                                 val partialToInt = partialQuantity.toIntOrNull() ?: 0
                                 val fulfilled = orderData.fulfilled + partialToInt
+                                val fulFiller = FullFilledBy (
+                                    farmerName = farmerName,
+                                    quantityFulfilled = partialToInt,
+                                    status = "ACCEPTED"
+                                )
                                 val updatedOrder = orderData.copy(
-                                    status = "PREPARING",
-                                    fulfilledBy = orderData.fulfilledBy + "${farmerName}_$partialToInt",
-                                    fulfilled = fulfilled
+                                    status = "PARTIALLY_FULFILLED",
+                                    fulfilledBy = orderData.fulfilledBy.plus(fulFiller),
+                                    partialQuantity = fulfilled
                                 )
                                 orderViewModel.updateOrder(updatedOrder)
                             } else {
-                                val unfulfilled = orderData.orderData.quantity - orderData.fulfilled
+                                val fulFiller = FullFilledBy (
+                                    farmerName = farmerName,
+                                    quantityFulfilled = orderData.orderData.quantity
+                                )
                                 val updatedOrder = orderData.copy(
-                                    status = "PREPARING",
-                                    fulfilledBy = orderData.fulfilledBy + "${farmerName}_$unfulfilled",
-                                    fulfilled = 0
+                                    status = "ACCEPTED",
+                                    fulfilledBy = orderData.fulfilledBy.plus(fulFiller),
+                                    partialQuantity = 0
                                 )
                                 orderViewModel.updateOrder(updatedOrder)
                             }

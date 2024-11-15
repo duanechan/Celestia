@@ -53,6 +53,7 @@ import com.coco.celestia.ui.theme.Green
 import com.coco.celestia.ui.theme.JadeGreen
 import com.coco.celestia.ui.theme.SageGreen
 import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.model.FullFilledBy
 import com.coco.celestia.viewmodel.model.OrderData
 
 @Composable
@@ -206,9 +207,229 @@ fun PreparingStatusDialog(
 }
 
 @Composable
+fun AcceptedStatusDialog(
+    orderData: OrderData,
+    orderViewModel: OrderViewModel,
+    status: String,
+    fulfilledByFarmer: FullFilledBy?
+) {
+    var onUpdateOrder by remember { mutableStateOf(Triple(ToastStatus.INFO, "", 0L)) }
+    var showDialog by remember { mutableStateOf(false) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Brown1)
+            .padding(8.dp)
+            .semantics { testTag = "android:id/PreparingOrderActions" },
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Plant Order Request?",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            modifier = Modifier
+                .padding(8.dp, 0.dp)
+                .semantics { testTag = "android:id/ShipOrderText" }
+        )
+        IconButton(
+            onClick = { showDialog = true },
+            modifier = Modifier
+                .size(50.dp)
+                .clip(RoundedCornerShape(50.dp))
+                .background(DeliveringStatus)
+                .semantics { testTag = "android:id/ShipOrderButton" }
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.planting),
+                contentDescription = "Plant",
+                tint = Color.White,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp)
+            )
+        }
+    }
+
+    if (showDialog) {
+        UpdateOrderStatusDialog(
+            status = "PLANTING",
+            onDismiss = { showDialog = false },
+            onAccept = {
+                if (status == "partial") {
+                    val updatedFulfilledBy = orderData.fulfilledBy.map { fulFiller ->
+                        if (fulFiller.farmerName == (fulfilledByFarmer?.farmerName ?: "")) {
+                            fulFiller.copy(status = "PLANTING")
+                        } else {
+                            fulFiller
+                        }
+                    }
+                    orderViewModel.updateOrder(orderData.copy(fulfilledBy = updatedFulfilledBy))
+                    onUpdateOrder = (Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
+                    showDialog = false
+                } else {
+                    orderViewModel.updateOrder(orderData.copy(status = "PLANTING"))
+                    onUpdateOrder = (Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
+                    showDialog = false
+                }
+
+            }
+        )
+    }
+}
+
+@Composable
+fun PlantingStatusDialog(
+    orderData: OrderData,
+    orderViewModel: OrderViewModel,
+    status: String,
+    fulfilledByFarmer: FullFilledBy?
+) {
+    var onUpdateOrder by remember { mutableStateOf(Triple(ToastStatus.INFO, "", 0L)) }
+    var showDialog by remember { mutableStateOf(false) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Brown1)
+            .padding(8.dp)
+            .semantics { testTag = "android:id/PreparingOrderActions" },
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Harvest Grown Crops?",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            modifier = Modifier
+                .padding(8.dp, 0.dp)
+                .semantics { testTag = "android:id/ShipOrderText" }
+        )
+        IconButton(
+            onClick = { showDialog = true },
+            modifier = Modifier
+                .size(50.dp)
+                .clip(RoundedCornerShape(50.dp))
+                .background(DeliveringStatus)
+                .semantics { testTag = "android:id/ShipOrderButton" }
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.harvest),
+                contentDescription = "Harvest",
+                tint = Color.White,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp)
+            )
+        }
+    }
+
+    if (showDialog) {
+        UpdateOrderStatusDialog(
+            status = "HARVESTING",
+            onDismiss = { showDialog = false },
+            onAccept = {
+                if (status == "partial") {
+                    val updatedFulfilledBy = orderData.fulfilledBy.map { fulFiller ->
+                        if (fulFiller.farmerName == (fulfilledByFarmer?.farmerName ?: "")) {
+                            fulFiller.copy(status = "HARVESTING")
+                        } else {
+                            fulFiller
+                        }
+                    }
+                    orderViewModel.updateOrder(orderData.copy(fulfilledBy = updatedFulfilledBy))
+                    onUpdateOrder = (Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
+                    showDialog = false
+                } else {
+                    orderViewModel.updateOrder(orderData.copy(status = "HARVESTING"))
+                    onUpdateOrder = (Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
+                    showDialog = false
+                }
+
+            }
+        )
+    }
+}
+
+@Composable
+fun HarvestingStatusDialog(
+    orderData: OrderData,
+    orderViewModel: OrderViewModel,
+    status: String,
+    fulfilledByFarmer: FullFilledBy?
+) {
+    var onUpdateOrder by remember { mutableStateOf(Triple(ToastStatus.INFO, "", 0L)) }
+    var showDialog by remember { mutableStateOf(false) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Brown1)
+            .padding(8.dp)
+            .semantics { testTag = "android:id/PreparingOrderActions" },
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Ship harvested order?",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            modifier = Modifier
+                .padding(8.dp, 0.dp)
+                .semantics { testTag = "android:id/ShipOrderText" }
+        )
+        IconButton(
+            onClick = { showDialog = true },
+            modifier = Modifier
+                .size(50.dp)
+                .clip(RoundedCornerShape(50.dp))
+                .background(DeliveringStatus)
+                .semantics { testTag = "android:id/ShipOrderButton" }
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.deliveryicon),
+                contentDescription = "Delivery",
+                tint = Color.White,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp)
+            )
+        }
+    }
+
+    if (showDialog) {
+        UpdateOrderStatusDialog(
+            status = "DELIVERING",
+            onDismiss = { showDialog = false },
+            onAccept = {
+                if (status == "partial") {
+                    val updatedFulfilledBy = orderData.fulfilledBy.map { fulFiller ->
+                        if (fulFiller.farmerName == (fulfilledByFarmer?.farmerName ?: "")) {
+                            fulFiller.copy(status = "DELIVERING")
+                        } else {
+                            fulFiller
+                        }
+                    }
+                    orderViewModel.updateOrder(orderData.copy(fulfilledBy = updatedFulfilledBy))
+                    onUpdateOrder = (Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
+                    showDialog = false
+                } else {
+                    orderViewModel.updateOrder(orderData.copy(status = "DELIVERING"))
+                    onUpdateOrder = (Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
+                    showDialog = false
+                }
+            }
+        )
+    }
+}
+
+@Composable
 fun DeliveringStatusDialog (
     orderData: OrderData,
-    orderViewModel: OrderViewModel
+    orderViewModel: OrderViewModel,
+    status: String,
+    fulfilledByFarmer: FullFilledBy?
 ) {
     var onUpdateOrder by remember { mutableStateOf(Triple(ToastStatus.INFO, "", 0L)) }
     var showDialog by remember { mutableStateOf(false) }
@@ -286,9 +507,28 @@ fun DeliveringStatusDialog (
             status = "COMPLETED",
             onDismiss = { showDialog = false },
             onAccept = {
-                orderViewModel.updateOrder(orderData.copy(status = "COMPLETED"))
-                onUpdateOrder = (Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
-                showDialog = false
+                if (status == "partial") {
+                    val updatedFulfilledBy = orderData.fulfilledBy.map { fulFiller ->
+                        if (fulFiller.farmerName == (fulfilledByFarmer?.farmerName ?: "")) {
+                            fulFiller.copy(status = "COMPLETED")
+                        } else {
+                            fulFiller
+                        }
+                    }
+                    orderViewModel.updateOrder(orderData.copy(fulfilledBy = updatedFulfilledBy))
+
+                    val allFulFilled = updatedFulfilledBy.all { it.status == "COMPLETED" }
+                    if (allFulFilled) {
+                        orderViewModel.updateOrder(orderData.copy(status = "COMPLETED"))
+                    }
+
+                    onUpdateOrder = (Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
+                    showDialog = false
+                } else {
+                    orderViewModel.updateOrder(orderData.copy(status = "COMPLETED"))
+                    onUpdateOrder = (Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
+                    showDialog = false
+                }
             }
         )
     }
