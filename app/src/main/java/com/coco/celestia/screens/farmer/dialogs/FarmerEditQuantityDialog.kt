@@ -1,26 +1,48 @@
+@file:OptIn(ExperimentalCoilApi::class)
+
 package com.coco.celestia.screens.farmer.dialogs
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.core.content.ContextCompat
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
+import com.coco.celestia.R
+import com.coco.celestia.components.toast.ToastStatus
+import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.*
 
 @Composable
@@ -35,6 +57,52 @@ fun EditQuantityDialog(
     var priceToEdit by remember { mutableStateOf(currentPrice.toString()) }
     var quantityError by remember { mutableStateOf(false) }
     var priceError by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    var productImage by remember { mutableStateOf<Uri?>(null) }
+    var updatedProductImage by remember { mutableStateOf<Uri?>(null) }
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
+        updatedProductImage = it
+    }
+    var toastEvent by remember { mutableStateOf(Triple(ToastStatus.INFO, "", 0L)) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                galleryLauncher.launch("image/*")
+            } else {
+                toastEvent = Triple(
+                    ToastStatus.WARNING,
+                    "Grant app access to add product image.",
+                    System.currentTimeMillis()
+                )
+            }
+        }
+    )
+
+    fun openGallery () {
+        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+
+        when (ContextCompat.checkSelfPermission(context, permission)) {
+            PackageManager.PERMISSION_GRANTED -> {
+                galleryLauncher.launch("image/*")
+            }
+
+            else -> {
+                permissionLauncher.launch(permission)
+            }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        ImageService.fetchProductImage(productName) {
+            productImage = it
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -44,6 +112,15 @@ fun EditQuantityDialog(
                 val newPrice = priceToEdit.toDoubleOrNull()
 
                 if (newQuantity != null && newQuantity >= 0 && newPrice != null && newPrice >= 0) {
+                    updatedProductImage?.let {
+                        ImageService.uploadProductPicture(productName, it) { status ->
+                            if (status) {
+                                Log.d("ProfileScreen", "Product image uploaded successfully!")
+                            } else {
+                                Log.d("ProfileScreen", "Product image upload failed!")
+                            }
+                        }
+                    }
                     onConfirm(newQuantity, newPrice)
                     onDismiss()
                 } else {
@@ -64,11 +141,48 @@ fun EditQuantityDialog(
                     modifier = Modifier.semantics { testTag = "android:id/editQuantityDismissButtonText" })
             }
         },
-        title = { Text(text = "Edit Details for $productName", color = Cocoa, fontWeight = FontWeight.Bold,
-            modifier = Modifier.semantics { testTag = "android:id/editQuantityTitle" }
-        ) },
+        title = {
+            Text(
+                text = "Edit Details for $productName", color = Cocoa, fontWeight = FontWeight.Bold,
+                modifier = Modifier.semantics { testTag = "android:id/editQuantityTitle" }
+            )
+        },
         text = {
-            Column(modifier = Modifier.semantics { testTag = "android:id/editQuantityContent" }) {
+            Column(
+                modifier = Modifier.semantics { testTag = "android:id/editQuantityContent" }
+            ) {
+                Box (
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(bottom = 12.dp)
+                ) {
+                    Image(
+                        painter = rememberImagePainter(
+                            data = updatedProductImage ?: productImage ?: R.drawable.product_icon,
+                        ),
+                        contentDescription = "Product Image",
+                        modifier = Modifier
+                            .size(150.dp)
+                            .align(Alignment.Center)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    FloatingActionButton(
+                        onClick = { openGallery() },
+                        shape = CircleShape,
+                        modifier = Modifier
+                            .size(35.dp)
+                            .align(Alignment.BottomEnd),
+                        contentColor = Color.White.copy(0.5f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Change Image",
+                            tint = DarkBlue
+                        )
+                    }
+                }
+
                 Text("Enter new quantity:", color = Cocoa, fontWeight = FontWeight.Bold,
                     modifier = Modifier.semantics { testTag = "android:id/editQuantityLabel" })
                 Spacer(modifier = Modifier.height(10.dp))

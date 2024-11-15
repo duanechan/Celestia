@@ -1,5 +1,15 @@
+@file:OptIn(ExperimentalCoilApi::class)
+
 package com.coco.celestia.screens.farmer.dialogs
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -8,13 +18,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.TextField
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
@@ -22,6 +36,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.ContextCompat
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
+import com.coco.celestia.R
+import com.coco.celestia.components.toast.ToastStatus
+import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -43,6 +63,46 @@ fun FarmerAddProductDialog(
     var seasonEndError by remember { mutableStateOf(false) }
     var isSeasonStartDropdownExpanded by remember { mutableStateOf(false) }
     var isSeasonEndDropdownExpanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val productImage by remember { mutableStateOf<Uri?>(null) }
+    var updatedProductImage by remember { mutableStateOf<Uri?>(null) }
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
+        updatedProductImage = it
+    }
+    var toastEvent by remember { mutableStateOf(Triple(ToastStatus.INFO, "", 0L)) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                galleryLauncher.launch("image/*")
+            } else {
+                toastEvent = Triple(
+                    ToastStatus.WARNING,
+                    "Grant app access to add product image.",
+                    System.currentTimeMillis()
+                )
+            }
+        }
+    )
+
+    fun openGallery () {
+        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+
+        when (ContextCompat.checkSelfPermission(context, permission)) {
+            PackageManager.PERMISSION_GRANTED -> {
+                galleryLauncher.launch("image/*")
+            }
+
+            else -> {
+                permissionLauncher.launch(permission)
+            }
+        }
+    }
 
     val months = listOf(
         "January", "February", "March", "April", "May", "June",
@@ -62,12 +122,20 @@ fun FarmerAddProductDialog(
                     seasonEndError = seasonEnd.isBlank()
 
                     if (!nameError && !quantityError && !seasonStartError && !seasonEndError) {
-                        println("Farmer's Name: $farmerName")
-                        println("Product Added on: $currentDate")
+                        updatedProductImage?.let {
+                            ImageService.uploadProductPicture(name, it) { status ->
+                                if (status) {
+                                    Log.d("ProfileScreen", "Product image uploaded successfully!")
+                                } else {
+                                    Log.d("ProfileScreen", "Product image upload failed!")
+                                }
+                            }
+                        }
                         onConfirm(name, quantityInt!!, seasonStart, seasonEnd)
                         onDismiss()
                     }
                 },
+                enabled = name.isNotEmpty() && quantity.isNotEmpty() && seasonStart.isNotEmpty() && seasonEnd.isNotEmpty(),
                 colors = ButtonDefaults.buttonColors(containerColor = OliveGreen),
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier
@@ -105,6 +173,38 @@ fun FarmerAddProductDialog(
                     .background(Sand2)
                     .padding(16.dp)
             ) {
+                Box (
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(bottom = 12.dp)
+                ) {
+                    Image(
+                        painter = rememberImagePainter(
+                            data = updatedProductImage ?: productImage ?: R.drawable.product_icon,
+                        ),
+                        contentDescription = "Product Image",
+                        modifier = Modifier
+                            .size(150.dp)
+                            .align(Alignment.Center)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    FloatingActionButton(
+                        onClick = { openGallery() },
+                        shape = CircleShape,
+                        modifier = Modifier
+                            .size(35.dp)
+                            .align(Alignment.BottomEnd),
+                        contentColor = Color.White.copy(0.5f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Change Image",
+                            tint = DarkBlue
+                        )
+                    }
+                }
+
                 // Product Name
                 Text(text = "Enter Product Name", color = Cocoa, fontWeight = FontWeight.Bold)
                 TextField(
