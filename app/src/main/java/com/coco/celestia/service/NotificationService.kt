@@ -93,15 +93,27 @@ object NotificationService {
                     }) " + when (item.status) {
                         "REJECTED" -> "has been rejected (Reason: ${item.rejectionReason})"
                         "PENDING" -> "is pending. Please wait for further updates."
-                        "PARTIALLY FULFILLED" -> "is partially fulfilled. Please wait for further updates."
-                        "HARVESTING MEAT" -> "is harvesting meat. Please wait for further updates."
-                        "PREPARING" -> "is being prepared."
+                        "PARTIALLY_FULFILLED" -> "is partially fulfilled. "
+                        "HARVESTING_MEAT" -> "is getting harvested. Please wait for further updates."
+                        "PLANTING" -> "is being planting. Please wait for further updates."
+                        "HARVESTING" -> "is getting harvested. Please wait for further updates."
+                        "ACCEPTED" -> "has been accepted by a farmer."
                         "DELIVERING" -> "is being delivered."
                         "COMPLETED"-> "has been completed. Thank you for ordering!"
                         "RECEIVED" -> "You have received your order. Thank you for ordering!"
-                        "INCOMPLETE" -> "has been partially fulfilled."
                         "CANCELLED" -> "has been cancelled."
                         else -> "UNKNOWN STATUS"
+                    } + when {
+                        item.fulfilledBy.any{ it.status == "PLANTING"} -> {
+                            "Planting the crop ordered. Please wait for further updates."
+                        }
+                        item.fulfilledBy.any{ it.status == "HARVESTING"} -> {
+                            "Harvesting the crop. Please wait for further updates."
+                        }
+                        item.fulfilledBy.any{ it.status == "HARVESTING_MEAT"} -> {
+                            "Harvesting meat. Please wait for further updates."
+                        }
+                        else -> ""
                     },
                     status = item.status
                 )
