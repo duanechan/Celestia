@@ -93,6 +93,8 @@ object NotificationService {
                     }) " + when (item.status) {
                         "REJECTED" -> "has been rejected (Reason: ${item.rejectionReason})"
                         "PENDING" -> "is pending. Please wait for further updates."
+                        "PARTIALLY FULFILLED" -> "is partially fulfilled. Please wait for further updates."
+                        "HARVESTING MEAT" -> "is harvesting meat. Please wait for further updates."
                         "PREPARING" -> "is being prepared."
                         "DELIVERING" -> "is being delivered."
                         "COMPLETED"-> "has been completed. Thank you for ordering!"
