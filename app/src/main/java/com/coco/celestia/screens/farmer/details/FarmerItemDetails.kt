@@ -1,6 +1,5 @@
 package com.coco.celestia.screens.farmer.details
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -34,18 +33,13 @@ import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.text.font.FontWeight.Companion.Medium
-import com.coco.celestia.R
 import com.coco.celestia.screens.farmer.dialogs.EditQuantityDialog
-import com.coco.celestia.screens.farmer.dialogs.FarmerPlanHarvestDialog
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FarmerItemViewModel
-import com.coco.celestia.viewmodel.model.CustomDurationUnit
 import com.coco.celestia.viewmodel.model.ItemData
 import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDate
@@ -69,9 +63,6 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
     var showEditDialog by remember { mutableStateOf(false) }
     var productQuantity by remember { mutableIntStateOf(0) }
     var productPricePerKg by remember { mutableDoubleStateOf(0.0) }
-    var isLowStock by remember { mutableStateOf(false) }
-    var dynamicLowStockThreshold by remember { mutableIntStateOf(0) }
-    var isInSeason by remember { mutableStateOf(false) }
     var farmerName by remember { mutableStateOf("") }
     val currentDateTime = LocalDateTime.now()
     val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
@@ -99,17 +90,6 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
         val availableItem = itemData.find { it.name.equals(productName, ignoreCase = true) }
         productQuantity = availableItem?.quantity ?: 0
         productPricePerKg = availableItem?.priceKg ?: 0.0
-
-        val (threshold, lowStock) = calculateStockThreshold(productQuantity)
-        dynamicLowStockThreshold = threshold
-        isLowStock = lowStock
-
-        isInSeason = availableItem?.let { item ->
-            val currentMonth = currentDateTime.monthValue.toString().padStart(2, '0')
-            val startSeasonMonth = item.startSeason.padStart(2, '0')
-            val endSeasonMonth = item.endSeason.padStart(2, '0')
-            isProductInSeason(currentMonth, startSeasonMonth, endSeasonMonth)
-        } ?: false
     }
 
     Box(
@@ -147,12 +127,10 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                             itemData = selectedItemAsItemData,
                             productQuantity = productQuantity,
                             productPricePerKg = productPricePerKg,
-                            isLowStock = isLowStock,
                             onEditClick = { showEditDialog = true },
                             uid = uid,
                             farmerItemViewModel = farmerItemViewModel,
                             farmerName = farmerName,
-                            isInSeason = isInSeason,
                             productDateAdded = productDateAdded
                         )
 
@@ -282,8 +260,6 @@ fun ProductDetailsCard(
     itemData: ItemData,
     productQuantity: Int,
     productPricePerKg: Double,
-    isLowStock: Boolean,
-    isInSeason: Boolean,
     onEditClick: () -> Unit,
     farmerItemViewModel: FarmerItemViewModel,
     uid: String,
@@ -291,20 +267,6 @@ fun ProductDetailsCard(
     modifier: Modifier = Modifier,
     productDateAdded: String
 ) {
-    var showHarvestDialog by remember { mutableStateOf(false) }
-    val firstProduct = itemData.items.firstOrNull()
-    val estimatedHarvestTime = firstProduct?.let { product ->
-        if (product.plantingDate.isNotEmpty() && product.duration > 0) {
-            computeEstimatedHarvestTime(
-                plantingDate = product.plantingDate,
-                duration = product.duration,
-                durationUnit = product.durationUnit
-            )
-        } else {
-            "N/A"
-        }
-    } ?: "N/A"
-
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -330,26 +292,11 @@ fun ProductDetailsCard(
                     itemData = itemData,
                     productQuantity = productQuantity,
                     productPricePerKg = productPricePerKg,
-                    estimatedHarvestTime = estimatedHarvestTime,
-                    isLowStock = isLowStock,
-                    isInSeason = isInSeason,
-                    onHarvestClick = { showHarvestDialog = true },
-                    onEditClick = onEditClick,
-                    productDateAdded = productDateAdded
+                    productDateAdded = productDateAdded,
+                    onEditClick = onEditClick
                 )
             }
         }
-    }
-
-    if (showHarvestDialog) {
-        FarmerPlanHarvestDialog(
-            farmerName = farmerName,
-            onDismiss = { showHarvestDialog = false },
-            onConfirm = { plantingDate, duration, quantity ->
-                farmerItemViewModel.setPlantingInfo(uid, itemData.name, plantingDate, duration, quantity)
-                showHarvestDialog = false
-            }
-        )
     }
 }
 
@@ -358,11 +305,7 @@ private fun ProductDetailsContent(
     itemData: ItemData,
     productQuantity: Int,
     productPricePerKg: Double,
-    estimatedHarvestTime: String,
     productDateAdded: String,
-    isLowStock: Boolean,
-    isInSeason: Boolean,
-    onHarvestClick: () -> Unit,
     onEditClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -374,7 +317,7 @@ private fun ProductDetailsContent(
         // Product Name
         Text(
             text = itemData.name,
-            fontSize = 60.sp,
+            fontSize = 40.sp,
             fontWeight = Bold,
             textAlign = TextAlign.Center,
             color = Cocoa,
@@ -383,7 +326,7 @@ private fun ProductDetailsContent(
                 .semantics { testTag = "android:id/productNameText" }
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -457,77 +400,41 @@ private fun ProductDetailsContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(15.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+            // Product Added Date
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp)
+                    .background(Sand2, RoundedCornerShape(8.dp))
+                    .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                    .padding(vertical = 8.dp)
             ) {
-                // Estimated Harvest Time
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 4.dp)
-                        .background(Sand2, RoundedCornerShape(8.dp))
-                        .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-                        .padding(vertical = 8.dp)
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "Estimated Harvest Time",
-                            fontSize = 14.sp,
-                            fontWeight = Medium,
-                            color = Cocoa,
-                            modifier = Modifier.semantics { testTag = "android:id/harvestTimeTitleText" }
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = estimatedHarvestTime,
-                            fontSize = 16.sp,
-                            fontWeight = Bold,
-                            color = Cocoa,
-                            modifier = Modifier.semantics { testTag = "android:id/harvestTimeValueText" }
-                        )
-                    }
-                }
-
-                // Product Added
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 4.dp)
-                        .background(Sand2, RoundedCornerShape(8.dp))
-                        .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-                        .padding(vertical = 8.dp)
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "Date Added",
-                            fontSize = 14.sp,
-                            fontWeight = Medium,
-                            color = Cocoa,
-                            modifier = Modifier.semantics { testTag = "android:id/productAddedTitleText" }
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = productDateAdded,
-                            fontSize = 16.sp,
-                            fontWeight = Bold,
-                            color = Cocoa,
-                            modifier = Modifier.semantics { testTag = "android:id/productAddedValueText" }
-                        )
-                    }
+                    Text(
+                        text = "Date Added",
+                        fontSize = 14.sp,
+                        fontWeight = Medium,
+                        color = Cocoa,
+                        modifier = Modifier.semantics { testTag = "android:id/productAddedTitleText" }
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = productDateAdded,
+                        fontSize = 16.sp,
+                        fontWeight = Bold,
+                        color = Cocoa,
+                        modifier = Modifier.semantics { testTag = "android:id/productAddedValueText" }
+                    )
                 }
             }
         }
 
-        // Status and Actions
+        // Actions
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -535,71 +442,12 @@ private fun ProductDetailsContent(
         ) {
             Row(
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
+                    .align(Alignment.BottomEnd)
                     .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    if (isLowStock || isInSeason) {
-                        IconButton(
-                            onClick = onHarvestClick,
-                            modifier = Modifier
-                                .size(35.dp)
-                                .semantics { testTag = "android:id/statusIconButton" }
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.plant),
-                                contentDescription = "Status Indicator",
-                                modifier = Modifier.size(30.dp),
-                                colorFilter = ColorFilter.tint(Cocoa)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        if (isLowStock && isInSeason) {
-                            Column(
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.Start
-                            ) {
-                                Text(
-                                    text = "In Season",
-                                    fontSize = 14.sp,
-                                    fontWeight = Bold,
-                                    color = GreenBeans
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Low Stock",
-                                    fontSize = 14.sp,
-                                    fontWeight = Bold,
-                                    color = Cinnabar
-                                )
-                            }
-                        } else {
-                            if (isLowStock) {
-                                Text(
-                                    text = "Low Stock",
-                                    fontSize = 14.sp,
-                                    fontWeight = Bold,
-                                    color = Cinnabar
-                                )
-                            }
-                            if (isInSeason) {
-                                Text(
-                                    text = "In Season",
-                                    fontSize = 14.sp,
-                                    fontWeight = Bold,
-                                    color = GreenBeans
-                                )
-                            }
-                        }
-                    }
-                }
-
+                // Edit Button
                 IconButton(
                     onClick = onEditClick,
                     modifier = Modifier
@@ -668,7 +516,7 @@ fun OrderTable(
                 fontFamily = mintsansFontFamily,
                 textAlign = TextAlign.Center,
                 fontSize = 16.sp,
-                color = Cocoa
+            color = Cocoa
             )
         }
 
@@ -789,38 +637,3 @@ fun OrderTable(
     }
 }
 
-fun computeEstimatedHarvestTime(plantingDate: String, duration: Int, durationUnit: CustomDurationUnit): String {
-    val dateFormat = DateTimeFormatter.ofPattern("MM/dd/yyyy")
-    val plantingLocalDate = LocalDate.parse(plantingDate, dateFormat)
-
-    val harvestDate = when (durationUnit) {
-        CustomDurationUnit.DAYS -> plantingLocalDate.plusDays(duration.toLong())
-        CustomDurationUnit.WEEKS -> plantingLocalDate.plusWeeks(duration.toLong())
-        CustomDurationUnit.MONTHS -> plantingLocalDate.plusMonths(duration.toLong())
-    }
-    return harvestDate.format(dateFormat)
-}
-
-fun calculateStockThreshold(
-    productQuantity: Int
-): Pair<Int, Boolean> {
-    val (baseThreshold, percentage) = when {
-        productQuantity > 500 -> 50 to 0.1
-        productQuantity > 200 -> 40 to 0.2
-        else -> 30 to 0.3
-    }
-
-    val percentageBasedThreshold = (productQuantity * percentage).toInt()
-    val dynamicLowStockThreshold = maxOf(baseThreshold, percentageBasedThreshold)
-    val isLowStock = productQuantity <= dynamicLowStockThreshold
-
-    return dynamicLowStockThreshold to isLowStock
-}
-
-fun isProductInSeason(currentMonth: String, startMonth: String, endMonth: String): Boolean {
-    return if (startMonth <= endMonth) {
-        currentMonth in startMonth..endMonth
-    } else {
-        currentMonth in startMonth.."12" || currentMonth in "01"..endMonth
-    }
-}

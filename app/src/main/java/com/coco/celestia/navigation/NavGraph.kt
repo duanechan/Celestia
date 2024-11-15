@@ -419,8 +419,7 @@ fun NavGraph(
             onNavigate("Inventory")
             FarmerProductTypeInventory(
                 product = product,
-                navController = navController,
-                currentMonth = currentMonth
+                navController = navController
             )
         }
         composable(
