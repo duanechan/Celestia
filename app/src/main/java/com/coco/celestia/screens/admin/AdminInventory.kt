@@ -88,7 +88,9 @@ fun AdminInventory(
         Column(
             modifier = Modifier
                 .background(BlueGradientBrush)
-                .verticalScroll(rememberScrollState())
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             TopBarInventory(
                 onTabSelected = {
@@ -275,7 +277,7 @@ fun AdminItemCard(
         modifier = modifier
             .fillMaxWidth()
             .height(if (identifier == "monthly") 220.dp else 180.dp)
-            .padding(16.dp)
+            .padding(12.dp)
             .semantics { testTag = "android:id/AdminItemCard_${productName}_${identifier}" },
         colors = CardDefaults.cardColors(
             containerColor = Color.White

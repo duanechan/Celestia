@@ -104,7 +104,7 @@ fun AdminUserManagement(
                     leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon", tint = DarkBlue) },
                     modifier = Modifier
                         .width(screenWidth * 0.75f)
-                        .offset(y = (-20).dp)
+                        .offset(y = (-12).dp)
                         .semantics { testTag = "android:id/searchBar" }
                 ) {}
 

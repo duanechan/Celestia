@@ -169,7 +169,7 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                         Icon(
                             painter = painterResource(id = R.drawable.filter),
                             contentDescription = "Filter",
-                            tint = DarkBlue
+                            tint = Color.White
                         )
                     }
 
