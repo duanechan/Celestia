@@ -425,15 +425,15 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel, role: String) {
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
 
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(products, orders) {
         when (role) {
             "CoopMeat" -> {
-                orderViewModel.fetchAllOrders("Meat", "Coop")
-                productViewModel.fetchProductByType("Meat")
+                orderViewModel.fetchAllOrders("", role)
+                productViewModel.fetchProducts("", role)
             }
             "CoopCoffee" -> {
-                orderViewModel.fetchAllOrders("Coffee", "Coop")
-                productViewModel.fetchProductByType("Coffee")
+                orderViewModel.fetchAllOrders("", role)
+                productViewModel.fetchProducts("", role)
             }
         }
     }
@@ -446,7 +446,7 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel, role: String) {
 
     // Filter data based on the role
     val filteredProducts = products.filter { product ->
-        (role == "CoopMeat" && product.type == "Meat") || (role == "CoopCoffee" && product.type == "Coffee")
+        (role == "CoopMeat" && product.type == "CoopMeat") || (role == "CoopCoffee" && product.type == "CoopCoffee")
     }
 
     val joinedData = filteredProducts.map { product ->
