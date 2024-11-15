@@ -50,13 +50,13 @@ import com.coco.celestia.components.dialogs.UpdateOrderStatusDialog
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.ui.theme.Brown1
 import com.coco.celestia.ui.theme.Cinnabar
-import com.coco.celestia.ui.theme.DeliveringStatus
 import com.coco.celestia.ui.theme.Green
 import com.coco.celestia.ui.theme.JadeGreen
 import com.coco.celestia.ui.theme.SageGreen
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.model.FullFilledBy
 import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.ui.theme.*
 
 @Composable
 fun PendingStatusDialog (
@@ -96,11 +96,11 @@ fun PendingStatusDialog (
                 Icon(
                     imageVector = Icons.Default.Clear,
                     contentDescription = "Reject",
-                    tint = Color.White,
+                    tint = Cocoa,
                     modifier = Modifier.fillMaxSize()
                 )
             }
-            Text(text = "Reject", modifier = Modifier.padding(top = 16.dp), color = Color.White)
+            Text(text = "Reject", modifier = Modifier.padding(top = 16.dp), color = Cocoa)
         }
         Column(
             verticalArrangement = Arrangement.Center,
@@ -120,12 +120,12 @@ fun PendingStatusDialog (
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = "Check",
-                    tint = Color.White,
+                    tint = Cocoa,
                     modifier = Modifier.fillMaxSize()
 
                 )
             }
-            Text(text = "Accept", modifier = Modifier.padding(top = 16.dp), color = Color.White)
+            Text(text = "Accept", modifier = Modifier.padding(top = 16.dp), color = Cocoa)
         }
     }
 
@@ -199,7 +199,7 @@ fun AcceptedStatusDialog(
             text = text,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White,
+            color = Cocoa,
             modifier = Modifier
                 .padding(8.dp, 0.dp)
                 .semantics { testTag = "android:id/ShipOrderText" }
@@ -209,13 +209,13 @@ fun AcceptedStatusDialog(
             modifier = Modifier
                 .size(50.dp)
                 .clip(RoundedCornerShape(50.dp))
-                .background(DeliveringStatus)
+                .background(Blue)
                 .semantics { testTag = "android:id/ShipOrderButton" }
         ) {
             Icon(
                 painter = iconPainter!!,
                 contentDescription = "Plant",
-                tint = Color.White,
+                tint = Cocoa,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(8.dp)
@@ -271,7 +271,7 @@ fun PlantingStatusDialog(
             text = "Harvest Grown Crops?",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White,
+            color = Cocoa,
             modifier = Modifier
                 .padding(8.dp, 0.dp)
                 .semantics { testTag = "android:id/ShipOrderText" }
@@ -281,13 +281,13 @@ fun PlantingStatusDialog(
             modifier = Modifier
                 .size(50.dp)
                 .clip(RoundedCornerShape(50.dp))
-                .background(DeliveringStatus)
+                .background(Blue)
                 .semantics { testTag = "android:id/ShipOrderButton" }
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.harvest),
                 contentDescription = "Harvest",
-                tint = Color.White,
+                tint = Cocoa,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(8.dp)
@@ -344,7 +344,7 @@ fun HarvestingStatusDialog(
             text = "Ship harvested order?",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White,
+            color = Cocoa,
             modifier = Modifier
                 .padding(8.dp, 0.dp)
                 .semantics { testTag = "android:id/ShipOrderText" }
@@ -354,13 +354,13 @@ fun HarvestingStatusDialog(
             modifier = Modifier
                 .size(50.dp)
                 .clip(RoundedCornerShape(50.dp))
-                .background(DeliveringStatus)
+                .background(Blue)
                 .semantics { testTag = "android:id/ShipOrderButton" }
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.deliveryicon),
                 contentDescription = "Delivery",
-                tint = Color.White,
+                tint = Cocoa,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(8.dp)
@@ -416,7 +416,7 @@ fun HarvestingMeatStatusDialog(
             text = "Ship Harvested Order?",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White,
+            color = Cocoa,
             modifier = Modifier
                 .padding(8.dp, 0.dp)
                 .semantics { testTag = "android:id/ShipOrderText" }
@@ -426,13 +426,13 @@ fun HarvestingMeatStatusDialog(
             modifier = Modifier
                 .size(50.dp)
                 .clip(RoundedCornerShape(50.dp))
-                .background(DeliveringStatus)
+                .background(Blue)
                 .semantics { testTag = "android:id/ShipOrderButton" }
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.deliveryicon),
                 contentDescription = "Deliver",
-                tint = Color.White,
+                tint = Cocoa,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(8.dp)
@@ -515,7 +515,7 @@ fun DeliveringStatusDialog (
                 text = "Order is being delivered.",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = Cocoa,
                 modifier = Modifier
                     .padding(start = 8.dp)
                     .semantics { testTag = "android:id/OrderDeliveryText" }
@@ -523,7 +523,7 @@ fun DeliveringStatusDialog (
             Icon(
                 imageVector = Icons.Default.MoreVert,
                 contentDescription = "Deliver",
-                tint = Color.White,
+                tint = Cocoa,
                 modifier = Modifier
                     .size(50.dp)
                     .rotate(90f)
@@ -534,7 +534,7 @@ fun DeliveringStatusDialog (
             Icon(
                 painter = painterResource(id = R.drawable.deliveryicon),
                 contentDescription = "Deliver",
-                tint = Color.White,
+                tint = Cocoa,
                 modifier = Modifier
                     .size(50.dp)
                     .padding(8.dp)
@@ -590,13 +590,13 @@ fun CompletedStatusDialog (
             text = "Order successfully delivered.",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White,
+            color = Cocoa,
             modifier = Modifier.padding(8.dp, 0.dp)
         )
         Icon(
             imageVector = Icons.Default.Check,
             contentDescription = "Deliver",
-            tint = Color.White,
+            tint = Cocoa,
             modifier = Modifier
                 .size(50.dp)
                 .padding(8.dp)

@@ -337,8 +337,7 @@ fun DisplayOrderDetail (
         Text(
             text = value,
             fontSize = 20.sp,
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
+            color = Cocoa,
             modifier = Modifier
                 .weight(1f)
                 .semantics { testTag = "android:id/deliveryAddressText" },

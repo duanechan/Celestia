@@ -416,7 +416,7 @@ fun ManageOrderCards(
 
     val iconPainter: Painter? = when (displayStatus) {
         "ACCEPTED" -> painterResource(id = R.drawable.preparing)
-        "PLANTING" -> painterResource(id = R.drawable.plant_hand)
+        "PLANTING" -> painterResource(id = R.drawable.plant)
         "HARVESTING" -> painterResource(id = R.drawable.harvest_basket)
         "DELIVERING" -> painterResource(id = R.drawable.deliveryicon)
         "CANCELLED" -> painterResource(id = R.drawable.cancelled)
