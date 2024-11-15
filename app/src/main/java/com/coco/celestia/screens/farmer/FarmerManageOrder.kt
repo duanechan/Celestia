@@ -411,13 +411,14 @@ fun ManageOrderCards(
     }
 
     val backgroundColor = when (displayStatus) {
-        "ACCEPTED" -> Brown1
+        "ACCEPTED" -> SageGreen
         "PLANTING" -> Tangerine
         "REJECTED" -> Copper.copy(alpha = 0.4f)
         "DELIVERING" -> Green
         "COMPLETED" -> SageGreen.copy(alpha = 0.7f)
         "CANCELLED" -> Copper3
-        "HARVESTING_MEAT" -> Color.Cyan.copy(alpha = 0.2f)
+        "HARVESTING" -> Brown1
+        "HARVESTING_MEAT" -> Brown1
         else -> Color.Gray
     }
 
