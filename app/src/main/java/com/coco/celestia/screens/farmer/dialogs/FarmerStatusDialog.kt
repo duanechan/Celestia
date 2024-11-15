@@ -25,6 +25,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -111,23 +113,28 @@ fun PendingStatusDialog(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        IconButton(
-                            onClick = {
-                                action = "Reject"
-                                showFulfillmentDialog = true
-                            },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(50.dp))
-                                .background(Copper)
-                                .semantics { testTag = "android:id/RejectButton" }
+                        Card(
+                            elevation = CardDefaults.cardElevation(4.dp),
+                            shape = RoundedCornerShape(50.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Clear,
-                                contentDescription = "Reject",
-                                tint = Cocoa,
-                                modifier = Modifier.fillMaxSize()
-                            )
+                            IconButton(
+                                onClick = {
+                                    action = "Reject"
+                                    showFulfillmentDialog = true
+                                },
+                                modifier = Modifier
+                                    .size(50.dp)
+                                    .clip(RoundedCornerShape(50.dp))
+                                    .background(Copper)
+                                    .semantics { testTag = "android:id/RejectButton" }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Clear,
+                                    contentDescription = "Reject",
+                                    tint = Cocoa,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
                         }
                         Text(text = "Reject", modifier = Modifier.padding(top = 8.dp), color = Cocoa)
                     }
@@ -135,23 +142,28 @@ fun PendingStatusDialog(
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        IconButton(
-                            onClick = {
-                                action = "Accept"
-                                showFulfillmentDialog = true
-                            },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(50.dp))
-                                .background(SageGreen)
-                                .semantics { testTag = "android:id/AcceptButton" }
+                        Card(
+                            elevation = CardDefaults.cardElevation(4.dp),
+                            shape = RoundedCornerShape(50.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Check",
-                                tint = Cocoa,
-                                modifier = Modifier.fillMaxSize()
-                            )
+                            IconButton(
+                                onClick = {
+                                    action = "Accept"
+                                    showFulfillmentDialog = true
+                                },
+                                modifier = Modifier
+                                    .size(50.dp)
+                                    .clip(RoundedCornerShape(50.dp))
+                                    .background(SageGreen)
+                                    .semantics { testTag = "android:id/AcceptButton" }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = "Check",
+                                    tint = Cocoa,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
                         }
                         Text(text = "Accept", modifier = Modifier.padding(top = 8.dp), color = Cocoa)
                     }
@@ -217,7 +229,6 @@ fun AcceptedStatusDialog(
         else -> null
     }
 
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -236,22 +247,27 @@ fun AcceptedStatusDialog(
                 .padding(8.dp, 0.dp)
                 .semantics { testTag = "android:id/ShipOrderText" }
         )
-        IconButton(
-            onClick = { showDialog = true },
-            modifier = Modifier
-                .size(50.dp)
-                .clip(RoundedCornerShape(50.dp))
-                .background(Blue)
-                .semantics { testTag = "android:id/ShipOrderButton" }
+        Card(
+            elevation = CardDefaults.cardElevation(8.dp),
+            shape = RoundedCornerShape(50.dp)
         ) {
-            Icon(
-                painter = iconPainter!!,
-                contentDescription = "Plant",
-                tint = Cocoa,
+            IconButton(
+                onClick = { showDialog = true },
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(8.dp)
-            )
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(50.dp))
+                    .background(Sand2)
+                    .semantics { testTag = "android:id/ShipOrderButton" }
+            ) {
+                Icon(
+                    painter = iconPainter!!,
+                    contentDescription = "Plant",
+                    tint = Cocoa,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(8.dp)
+                )
+            }
         }
     }
 
@@ -308,22 +324,27 @@ fun PlantingStatusDialog(
                 .padding(8.dp, 0.dp)
                 .semantics { testTag = "android:id/ShipOrderText" }
         )
-        IconButton(
-            onClick = { showDialog = true },
-            modifier = Modifier
-                .size(50.dp)
-                .clip(RoundedCornerShape(50.dp))
-                .background(Blue)
-                .semantics { testTag = "android:id/ShipOrderButton" }
+        Card(
+            elevation = CardDefaults.cardElevation(8.dp),
+            shape = RoundedCornerShape(50.dp)
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.harvest),
-                contentDescription = "Harvest",
-                tint = Cocoa,
+            IconButton(
+                onClick = { showDialog = true },
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(8.dp)
-            )
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(50.dp))
+                    .background(Sand2)
+                    .semantics { testTag = "android:id/ShipOrderButton" }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.harvest),
+                    contentDescription = "Harvest",
+                    tint = Cocoa,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(8.dp)
+                )
+            }
         }
     }
 
@@ -348,7 +369,6 @@ fun PlantingStatusDialog(
                     onUpdateOrder = (Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
                     showDialog = false
                 }
-
             }
         )
     }
@@ -381,22 +401,27 @@ fun HarvestingStatusDialog(
                 .padding(8.dp, 0.dp)
                 .semantics { testTag = "android:id/ShipOrderText" }
         )
-        IconButton(
-            onClick = { showDialog = true },
-            modifier = Modifier
-                .size(50.dp)
-                .clip(RoundedCornerShape(50.dp))
-                .background(Blue)
-                .semantics { testTag = "android:id/ShipOrderButton" }
+        Card(
+            elevation = CardDefaults.cardElevation(8.dp),
+            shape = RoundedCornerShape(50.dp)
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.deliveryicon),
-                contentDescription = "Delivery",
-                tint = Cocoa,
+            IconButton(
+                onClick = { showDialog = true },
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(8.dp)
-            )
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(50.dp))
+                    .background(Sand2)
+                    .semantics { testTag = "android:id/ShipOrderButton" }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.deliveryicon),
+                    contentDescription = "Delivery",
+                    tint = Cocoa,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(8.dp)
+                )
+            }
         }
     }
 
@@ -453,22 +478,27 @@ fun HarvestingMeatStatusDialog(
                 .padding(8.dp, 0.dp)
                 .semantics { testTag = "android:id/ShipOrderText" }
         )
-        IconButton(
-            onClick = { showDialog = true },
-            modifier = Modifier
-                .size(50.dp)
-                .clip(RoundedCornerShape(50.dp))
-                .background(Blue)
-                .semantics { testTag = "android:id/ShipOrderButton" }
+        Card(
+            elevation = CardDefaults.cardElevation(8.dp),
+            shape = RoundedCornerShape(50.dp)
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.deliveryicon),
-                contentDescription = "Deliver",
-                tint = Cocoa,
+            IconButton(
+                onClick = { showDialog = true },
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(8.dp)
-            )
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(50.dp))
+                    .background(Sand2)
+                    .semantics { testTag = "android:id/ShipOrderButton" }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.deliveryicon),
+                    contentDescription = "Deliver",
+                    tint = Cocoa,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(8.dp)
+                )
+            }
         }
     }
 

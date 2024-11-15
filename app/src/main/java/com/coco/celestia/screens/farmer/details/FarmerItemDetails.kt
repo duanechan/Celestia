@@ -328,16 +328,47 @@ private fun ProductDetailsContent(
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        // Product Added Date
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp)
+                .background(Sand2, RoundedCornerShape(8.dp))
+                .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                .padding(vertical = 8.dp)
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Date Added",
+                    fontSize = 14.sp,
+                    fontWeight = Medium,
+                    color = Cocoa,
+                    modifier = Modifier.semantics { testTag = "android:id/productAddedTitleText" }
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = productDateAdded,
+                    fontSize = 16.sp,
+                    fontWeight = Bold,
+                    color = Cocoa,
+                    modifier = Modifier.semantics { testTag = "android:id/productAddedValueText" }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Quantity and Price Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Quantity Box
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -397,39 +428,6 @@ private fun ProductDetailsContent(
                             modifier = Modifier.semantics { testTag = "android:id/priceValueText" }
                         )
                     }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Product Added Date
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp)
-                    .background(Sand2, RoundedCornerShape(8.dp))
-                    .border(1.dp, Cocoa.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-                    .padding(vertical = 8.dp)
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Date Added",
-                        fontSize = 14.sp,
-                        fontWeight = Medium,
-                        color = Cocoa,
-                        modifier = Modifier.semantics { testTag = "android:id/productAddedTitleText" }
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = productDateAdded,
-                        fontSize = 16.sp,
-                        fontWeight = Bold,
-                        color = Cocoa,
-                        modifier = Modifier.semantics { testTag = "android:id/productAddedValueText" }
-                    )
                 }
             }
         }

@@ -1,5 +1,6 @@
 package com.coco.celestia.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -87,15 +88,22 @@ fun Calendar(
         orderViewModel.fetchAllOrders("", userRole)
         productViewModel.fetchProducts("", userRole)
 
-        if (itemData.isNotEmpty() && orderData.isNotEmpty() && productData.isNotEmpty()) {
+        if (itemData.isNotEmpty() || orderData.isNotEmpty() && productData.isNotEmpty()) {
             orderData.forEach { order ->
                 val orderedProduct = order.orderData.name
-                val productPrice = if (userRole == "Farmer") {
-                    itemData.find { item -> item.name == orderedProduct }?.priceKg
-                } else {
-                    productData.find { product -> product.name == orderedProduct }?.priceKg
+                val productPrice = when (userRole) {
+                    "Farmer" -> {
+                        val price = itemData.find { item -> item.name == orderedProduct }?.priceKg
+                        price ?: 0.0
+                    }
+                    "CoopMeat", "CoopCoffee" -> {
+                        val price = productData.find { product -> product.name == orderedProduct }?.priceKg
+                        price ?: 0.0
+                    }
+                    else -> order.orderData.priceKg
                 }
-                priceMap[order.orderData.name] = productPrice ?: 0.0
+
+                priceMap[order.orderData.name] = productPrice
             }
         }
 

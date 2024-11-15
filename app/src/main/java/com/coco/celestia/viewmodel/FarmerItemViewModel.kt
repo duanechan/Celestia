@@ -1,5 +1,6 @@
 package com.coco.celestia.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -47,25 +48,21 @@ class FarmerItemViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 _itemState.value = ItemState.LOADING
-
-                val farmerName = fetchFarmerName(uid)
-                println("Fetching items for farmer: $farmerName")
-
-                val itemsSnapshot = database.child(uid).child("items").get().await()
-                if (itemsSnapshot.exists()) {
-                    val list = mutableListOf<ProductData>()
-                    for (item in itemsSnapshot.children) {
-                        val itemData = item.getValue(ProductData::class.java)
-                        if (itemData != null) {
-                            list.add(itemData)
+                database.child(uid).child("items").addValueEventListener(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val items = snapshot.children.mapNotNull { itemSnapshot ->
+                            itemSnapshot.getValue(ProductData::class.java)
                         }
+                        Log.d("Items", items.toString())
+                        _itemData.value = items
+                        _itemState.value = if (items.isEmpty()) ItemState.EMPTY else ItemState.SUCCESS
                     }
-                    _itemData.value = list
-                    _itemState.value = ItemState.SUCCESS
-                } else {
-                    _itemData.value = emptyList()
-                    _itemState.value = ItemState.EMPTY
-                }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        _itemState.value = ItemState.ERROR(error.message)
+                    }
+
+                })
             } catch (e: Exception) {
                 _itemState.value = ItemState.ERROR(e.message.toString())
             }

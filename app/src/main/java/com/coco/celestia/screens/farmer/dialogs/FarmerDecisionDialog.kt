@@ -1,6 +1,5 @@
 package com.coco.celestia.screens.farmer.dialogs
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -359,7 +358,9 @@ fun FarmerDecisionDialog(
                         fontSize = 16.sp
                     )
                 }
-            }
+            },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = Sand2
         )
     }
 }
