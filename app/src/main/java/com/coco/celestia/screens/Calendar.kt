@@ -92,14 +92,9 @@ fun Calendar(
             orderData.forEach { order ->
                 val orderedProduct = order.orderData.name
                 val productPrice = when (userRole) {
-                    "Farmer" -> {
-                        val price = itemData.find { item -> item.name == orderedProduct }?.priceKg
-                        price ?: 0.0
-                    }
-                    "CoopMeat", "CoopCoffee" -> {
-                        val price = productData.find { product -> product.name == orderedProduct }?.priceKg
-                        price ?: 0.0
-                    }
+                    "Farmer" -> itemData.find { item -> item.name == orderedProduct }?.priceKg ?:
+                        productData.find { product -> product.name == orderedProduct }?.priceKg ?: order.orderData.priceKg
+                    "CoopMeat", "CoopCoffee" -> productData.find { product -> product.name == orderedProduct }?.priceKg ?: 0.0
                     else -> order.orderData.priceKg
                 }
 
@@ -364,7 +359,9 @@ fun OrderItem(
                 color = textColor,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Start,
-                modifier = Modifier.weight(1f).offset(15.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .offset(15.dp)
             )
             Text(
                 text = "${order.orderData.quantity}",
@@ -372,7 +369,9 @@ fun OrderItem(
                 color = textColor,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f).offset((-8).dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .offset((-8).dp)
             )
             Text(
                 text = "₱${price * order.orderData.quantity}",
@@ -380,7 +379,9 @@ fun OrderItem(
                 color = textColor,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Start,
-                modifier = Modifier.weight(1f).offset(10.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .offset(10.dp)
             )
             IconButton(
                 onClick = { showFulfillers = true },
@@ -438,7 +439,7 @@ fun OrderItem(
                     if (order.fulfilledBy.isNotEmpty()) {
                         itemsIndexed(order.fulfilledBy) { _, fulfiller ->
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = "• $fulfiller", fontFamily = mintsansFontFamily)
+                                Text(text = "• ${fulfiller.farmerName}", fontFamily = mintsansFontFamily)
                             }
                         }
                     } else {
