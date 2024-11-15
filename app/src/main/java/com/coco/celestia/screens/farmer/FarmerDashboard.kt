@@ -511,14 +511,6 @@ fun StockLevelBarGraph(items: List<ProductData>) {
                                     )
                             )
 
-                            val plantingWidth = (item.plantingQuantity.toFloat() / maxQuantity.toFloat() * 200).dp
-                            Box(
-                                modifier = Modifier
-                                    .width(plantingWidth)
-                                    .height(40.dp)
-                                    .background(OliveGreen.copy(alpha = 0.4f))
-                            )
-
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
@@ -541,12 +533,6 @@ fun StockLevelBarGraph(items: List<ProductData>) {
                                 text = "${item.quantity}",
                                 fontSize = 14.sp,
                                 color = if (item.name == "Placeholder") Color.Gray else Sand,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = " + ${item.plantingQuantity} Kg",
-                                fontSize = 14.sp,
-                                color = OliveGreen,
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
