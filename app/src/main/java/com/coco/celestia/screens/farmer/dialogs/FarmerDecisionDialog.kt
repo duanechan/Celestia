@@ -19,6 +19,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.model.FullFilledBy
@@ -30,6 +32,7 @@ fun FarmerDecisionDialog(
     decisionType: String,
     orderData: OrderData,
     orderViewModel: OrderViewModel,
+    navController: NavController,
     onDismiss: () -> Unit,
     farmerItemViewModel: FarmerItemViewModel = viewModel()
 ) {
@@ -118,7 +121,6 @@ fun FarmerDecisionDialog(
             onDismissRequest = { showFulfillmentDialog = false },
             text = {
                 Column {
-                    Log.d("decision", decisionType)
                     if (decisionType == "Reject") {
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
@@ -330,6 +332,7 @@ fun FarmerDecisionDialog(
                                 }
                             }
                             showFulfillmentDialog = false
+                            navController.navigate(Screen.FarmerManageOrder.route)
                         }
                     },
                     shape = RoundedCornerShape(8.dp),

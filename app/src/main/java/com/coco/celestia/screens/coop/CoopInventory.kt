@@ -128,7 +128,7 @@ fun ProductTypeInventory(type: String?, userRole: String) {
     }
 
     LaunchedEffect(Unit) {
-        productViewModel.fetchProductByType(type.toString())
+        productViewModel.fetchProducts("", userRole)
         orderViewModel.fetchAllOrders(
             "",
             userRole

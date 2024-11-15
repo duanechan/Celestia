@@ -55,6 +55,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -164,10 +165,10 @@ fun OrderRequest(
             }
             Button(
                 onClick = {
-                    keywords = if (keywords == "PREPARING") {
+                    keywords = if (keywords == "ACCEPTED") {
                         ""
                     } else {
-                        "PREPARING"
+                        "ACCEPTED"
                     }
                 },
                 modifier = Modifier
@@ -179,7 +180,45 @@ fun OrderRequest(
                     contentColor = Color.White
                 )
             ) {
-                Text("Preparing", fontFamily = mintsansFontFamily, fontWeight = FontWeight.Bold)
+                Text("Accepted", fontFamily = mintsansFontFamily, fontWeight = FontWeight.Bold)
+            }
+
+            Button(
+                onClick = {
+                    keywords = if (keywords == "PROCESSING_COFFEE") {
+                        ""
+                    } else {
+                        "PROCESSING_COFFEE"
+                    }
+                },
+                modifier = Modifier
+                    .height(40.dp)
+                    .semantics { testTag = "android:id/CompletedButton" },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = CompletedStatus,
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Processing Coffee", fontFamily = mintsansFontFamily, fontWeight = FontWeight.Bold)
+            }
+
+            Button(
+                onClick = {
+                    keywords = if (keywords == "PROCESSING_MEAT") {
+                        ""
+                    } else {
+                        "PROCESSING_MEAT"
+                    }
+                },
+                modifier = Modifier
+                    .height(40.dp)
+                    .semantics { testTag = "android:id/CompletedButton" },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = CompletedStatus,
+                    contentColor = Color.White
+                )
+            ) {
+                Text("Processing Meat", fontFamily = mintsansFontFamily, fontWeight = FontWeight.Bold)
             }
             Button(
                 onClick = {
@@ -383,11 +422,25 @@ fun OrderItem(
                             orderViewModel = orderViewModel,
                             onUpdateOrder = { onUpdateOrder(it) }
                         )
-                        "PREPARING" -> PreparingOrderActions(
+                        "ACCEPTED" -> AcceptedOrderActions (
+                            order = order,
+                            orderViewModel = orderViewModel,
+                            type = order.orderData.type,
+                            onUpdateOrder = { onUpdateOrder(it) }
+                        )
+
+                        "PROCESSING_COFFEE" -> ProcessingMeatAndCoffeeOrderActions (
                             order = order,
                             orderViewModel = orderViewModel,
                             onUpdateOrder = { onUpdateOrder(it) }
                         )
+
+                        "PROCESSING_MEAT" -> ProcessingMeatAndCoffeeOrderActions (
+                            order = order,
+                            orderViewModel = orderViewModel,
+                            onUpdateOrder = { onUpdateOrder(it) }
+                        )
+
                         "DELIVERING" -> DeliveringOrderActions(
                             order = order,
                             orderViewModel = orderViewModel,
@@ -432,7 +485,84 @@ fun CompletedOrderActions() {
 }
 
 @Composable
-fun PreparingOrderActions(
+fun AcceptedOrderActions(
+    order: OrderData,
+    orderViewModel: OrderViewModel,
+    type: String,
+    onUpdateOrder: (Triple<ToastStatus, String, Long>) -> Unit
+) {
+    var statusDialog by remember { mutableStateOf(false) }
+
+    val text = when (type) {
+        "CoopCoffee" -> "Process Coffee?"
+        "CoopMeat" -> "Process Meat?"
+        else -> ""
+    }
+
+    val setStatus = when (type) {
+        "CoopCoffee" -> "PROCESSING_COFFEE"
+        "CoopMeat" -> "PROCESSING_MEAT"
+        else -> ""
+    }
+
+    val iconPainter: Painter? = when (type) {
+        "CoopCoffee" -> painterResource(id = R.drawable.coffeeicon)
+        "CoopMeat" -> painterResource(id = R.drawable.meaticon)
+        else -> null
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(PreparingStatus)
+            .padding(8.dp)
+            .semantics { testTag = "android:id/PreparingOrderActions" },
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = text,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            modifier = Modifier
+                .padding(8.dp, 0.dp)
+                .semantics { testTag = "android:id/ShipOrderText" }
+        )
+        IconButton(
+            onClick = { statusDialog = true },
+            modifier = Modifier
+                .size(50.dp)
+                .clip(RoundedCornerShape(50.dp))
+                .background(DeliveringStatus)
+                .semantics { testTag = "android:id/ShipOrderButton" }
+        ) {
+            Icon(
+                painter = iconPainter!!,
+                contentDescription = "Deliver",
+                tint = Color.White,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp)
+            )
+        }
+    }
+
+    if (statusDialog) {
+        UpdateOrderStatusDialog(
+            status = setStatus,
+            onDismiss = { statusDialog = false },
+            onAccept = {
+                orderViewModel.updateOrder(order.copy(status = setStatus))
+                onUpdateOrder(Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
+                statusDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun ProcessingMeatAndCoffeeOrderActions(
     order: OrderData,
     orderViewModel: OrderViewModel,
     onUpdateOrder: (Triple<ToastStatus, String, Long>) -> Unit
@@ -449,7 +579,7 @@ fun PreparingOrderActions(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Ship this order?",
+            text = "Ship harvested order?",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
@@ -682,7 +812,7 @@ fun PendingOrderActions(
                     )
                     orderViewModel.updateOrder(
                         order.copy(
-                            status = "PREPARING",
+                            status = "ACCEPTED",
                             fulfilledBy = order.fulfilledBy.plus(farmer)
                         )
                     )

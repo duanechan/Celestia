@@ -140,7 +140,8 @@ fun OrderDetails(
         item {
             PendingStatusDialog(
                 orderData = orderData,
-                orderViewModel = orderViewModel
+                orderViewModel = orderViewModel,
+                navController = navController
             )
         }
     }

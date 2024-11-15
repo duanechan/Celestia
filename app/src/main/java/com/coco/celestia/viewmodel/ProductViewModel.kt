@@ -117,8 +117,10 @@ class ProductViewModel : ViewModel() {
                     val products = snapshot.children.mapNotNull {
                         it.getValue(ProductData::class.java)
                     }.filter { product ->
-                        val coffee = product.type.equals("Coffee", ignoreCase = true)
-                        val meat = product.type.equals("Meat", ignoreCase = true)
+                        val coffee = product.type.equals("Coffee", ignoreCase = true) ||
+                                product.type.equals("CoopCoffee", ignoreCase = true)
+                        val meat = product.type.equals("Meat", ignoreCase = true) ||
+                                product.type.equals("CoopMeat", ignoreCase = true)
                         val coffeeOrMeat = product.type.equals("Coffee", ignoreCase = true) ||
                                 product.type.equals("Meat", ignoreCase = true)
                         val vegetable = product.type.equals("Vegetable", ignoreCase = true)

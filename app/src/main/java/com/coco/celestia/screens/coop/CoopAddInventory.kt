@@ -79,12 +79,6 @@ fun AddProductForm(
             .semantics { testTag = "android:id/AddProductFormColumn" },
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-//        Text(
-//            text = "Add Product",
-//            fontWeight = FontWeight.Bold,
-//            fontSize = 22.sp,
-//            modifier = Modifier.align(Alignment.CenterHorizontally)
-//        )
         // From
         OutlinedTextField(
             value = from,

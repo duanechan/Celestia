@@ -26,7 +26,6 @@ import com.coco.celestia.R
 import com.coco.celestia.screens.farmer.dialogs.AcceptedStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.CompletedStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.DeliveringStatusDialog
-import com.coco.celestia.screens.farmer.dialogs.FarmerFulfillDialog
 import com.coco.celestia.screens.farmer.dialogs.HarvestingMeatStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.HarvestingStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.PendingStatusDialog
@@ -37,9 +36,6 @@ import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.UserViewModel
-import com.coco.celestia.viewmodel.model.FullFilledBy
-import com.coco.celestia.viewmodel.model.ItemData
-import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -77,7 +73,6 @@ fun FarmerOrderDetails(
     val orderData: OrderData? = remember(orderId, allOrders) {
         allOrders.find { it.orderId == orderId }
     }
-    val fulfilledByFarmer = orderData?.fulfilledBy?.find { it.farmerName == farmerName }
 
     when {
         orderState == OrderState.LOADING -> {
@@ -114,7 +109,7 @@ fun FarmerOrderDetails(
                     .background(color = BgColor)
                     .semantics { testTag = "android:id/orderDetailsScreen" }
             ) {
-                OrderDetailsCard(orderData = orderData, orderViewModel = orderViewModel)
+                OrderDetailsCard(orderData = orderData, orderViewModel = orderViewModel, navController = navController)
                 Spacer(modifier = Modifier.height(20.dp))
 
                 when (orderData.status) {
@@ -149,81 +144,13 @@ fun FarmerOrderDetails(
             }
         }
     }
-
-    if (showFulfillDialog && orderData != null) {
-        val farmerItems = farmerItemViewModel.itemData.observeAsState().value ?: emptyList()
-        val farmerInventory = ItemData(
-            name = orderData.orderData.name,
-            farmerName = farmerName,
-            items = farmerItems.toMutableList()
-        )
-
-        DisplayFarmerFulfillDialog(
-            navController = navController,
-            onDismiss = { showFulfillDialog = false },
-            farmerItemViewModel = farmerItemViewModel,
-            orderViewModel = orderViewModel,
-            orderData = orderData,
-            itemData = farmerInventory,
-            items = farmerItems,
-            farmerName = farmerName
-        )
-    }
-}
-
-@Composable
-fun DisplayFarmerFulfillDialog(
-    navController: NavController,
-    onDismiss: () -> Unit,
-    farmerItemViewModel: FarmerItemViewModel,
-    orderViewModel: OrderViewModel,
-    orderData: OrderData,
-    itemData: ItemData,
-    items: List<ProductData>,
-    farmerName: String
-) {
-    if (orderData.fulfilledBy.any { it.farmerName == farmerName }) {
-        return
-    }
-
-    val remainingQuantity = orderData.partialQuantity?.let {
-        orderData.orderData.quantity - it
-    } ?: orderData.orderData.quantity
-
-    val validRemainingQuantity = maxOf(remainingQuantity, 0)
-
-    FarmerFulfillDialog(
-        navController = navController,
-        farmerName = farmerName,
-        itemData = items,
-        orderData = orderData,
-        remainingQuantity = validRemainingQuantity,
-        onAccept = {
-            val fulFiller = FullFilledBy(
-                farmerName = farmerName,
-                quantityFulfilled = validRemainingQuantity
-            )
-            val updatedOrder = orderData.copy(
-                status = "PREPARING",
-                fulfilledBy = orderData.fulfilledBy.plus(fulFiller),
-                partialQuantity = validRemainingQuantity
-            )
-            orderViewModel.updateOrder(updatedOrder)
-            farmerItemViewModel.reduceItemQuantity(itemData, validRemainingQuantity)
-
-            onDismiss()
-        },
-        onReject = {
-            onDismiss()
-        },
-        onDismiss = onDismiss
-    )
 }
 
 @Composable
 fun OrderDetailsCard(
     orderData: OrderData,
-    orderViewModel: OrderViewModel
+    orderViewModel: OrderViewModel,
+    navController: NavController
 ) {
     val uid = FirebaseAuth.getInstance().uid.toString()
     val product = orderData.orderData
@@ -265,7 +192,8 @@ fun OrderDetailsCard(
                 if (orderData.status == "PENDING") {
                     PendingStatusDialog(
                         orderData,
-                        orderViewModel
+                        orderViewModel,
+                        navController
                     )
                 }
 

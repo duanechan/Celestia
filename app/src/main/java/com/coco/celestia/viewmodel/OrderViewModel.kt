@@ -178,11 +178,13 @@ class OrderViewModel : ViewModel() {
                         userSnapshot.children.mapNotNull { orderSnapshot ->
                             orderSnapshot.getValue(OrderData::class.java)
                         }.filter { order ->
-                            val isCoffee = order.orderData.type.equals("Coffee", ignoreCase = true)
-                            val isMeat = order.orderData.type.equals("Meat", ignoreCase = true)
-                            val isCoffeeOrMeat = order.orderData.type.equals("Coffee", ignoreCase = true) ||
-                                    order.orderData.type.equals("Meat", ignoreCase = true)
-                            val isVegetable = order.orderData.type.equals("Vegetable", ignoreCase = true)
+                            val isCoffee = order.orderData.type.equals("CoopCoffee", ignoreCase = true)
+                            val isMeat = order.orderData.type.equals("CoopMeat", ignoreCase = true)
+                            val isCoffeeOrMeat = order.orderData.type.equals("CoopCoffee", ignoreCase = true) ||
+                                    order.orderData.type.equals("CoopMeat", ignoreCase = true)
+                            val isVegetable = order.orderData.type.equals("Vegetable", ignoreCase = true) ||
+                                    order.orderData.type.equals("Meat", ignoreCase = true) ||
+                                    order.orderData.type.equals("Coffee", ignoreCase = true)
                             val matchesFilter = filterKeywords.any { keyword ->
                                 order::class.memberProperties.any { property ->
                                     val value = property.getter.call(order)?.toString() ?: ""
@@ -194,7 +196,7 @@ class OrderViewModel : ViewModel() {
                                 "Coop", "Admin" -> isCoffeeOrMeat && matchesFilter
                                 "CoopCoffee" -> isCoffee && matchesFilter && removeCancelReject
                                 "CoopMeat" -> isMeat && matchesFilter && removeCancelReject
-                                "Farmer" -> matchesFilter
+                                "Farmer" -> isVegetable && matchesFilter
                                 "Client" -> matchesFilter
                                 // "Client" -> order.status.equals("completed", ignoreCase = true) && matchesFilter
                                 else -> false

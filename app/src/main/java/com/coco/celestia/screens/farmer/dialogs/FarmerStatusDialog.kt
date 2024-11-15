@@ -43,6 +43,7 @@ import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.components.dialogs.PendingOrderDialog
 import com.coco.celestia.components.dialogs.UpdateOrderStatusDialog
@@ -60,7 +61,8 @@ import com.coco.celestia.viewmodel.model.OrderData
 @Composable
 fun PendingStatusDialog (
     orderData: OrderData,
-    orderViewModel: OrderViewModel
+    orderViewModel: OrderViewModel,
+    navController: NavController
 ) {
     var onUpdateOrder by remember { mutableStateOf(Triple(ToastStatus.INFO, "", 0L)) }
     var showDialog by remember { mutableStateOf(false) }
@@ -145,64 +147,8 @@ fun PendingStatusDialog (
             decisionType = action,
             orderData = orderData,
             orderViewModel = orderViewModel,
+            navController = navController,
             onDismiss = { showFulfillmentDialog = false }
-        )
-    }
-}
-
-@Composable
-fun PreparingStatusDialog(
-    orderData: OrderData,
-    orderViewModel: OrderViewModel
-) {
-    var onUpdateOrder by remember { mutableStateOf(Triple(ToastStatus.INFO, "", 0L)) }
-    var showDialog by remember { mutableStateOf(false) }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Brown1)
-            .padding(8.dp)
-            .semantics { testTag = "android:id/PreparingOrderActions" },
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Ship this order?",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier
-                .padding(8.dp, 0.dp)
-                .semantics { testTag = "android:id/ShipOrderText" }
-        )
-        IconButton(
-            onClick = { showDialog = true },
-            modifier = Modifier
-                .size(50.dp)
-                .clip(RoundedCornerShape(50.dp))
-                .background(DeliveringStatus)
-                .semantics { testTag = "android:id/ShipOrderButton" }
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.deliveryicon),
-                contentDescription = "Deliver",
-                tint = Color.White,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(8.dp)
-            )
-        }
-    }
-
-    if (showDialog) {
-        UpdateOrderStatusDialog(
-            status = "DELIVERING",
-            onDismiss = { showDialog = false },
-            onAccept = {
-                orderViewModel.updateOrder(orderData.copy(status = "DELIVERING"))
-                onUpdateOrder = (Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
-                showDialog = false
-            }
         )
     }
 }
@@ -219,18 +165,21 @@ fun AcceptedStatusDialog(
     var showDialog by remember { mutableStateOf(false) }
 
     val text = when (type) {
+        "Coffee" -> "Plant Order Request?"
         "Vegetable" -> "Plant Order Request?"
         "Meat" -> "Give the animal a peaceful end"
         else -> ""
     }
 
     val setStatus = when (type) {
+        "Coffee" -> "PLANTING"
         "Vegetable" -> "PLANTING"
         "Meat" -> "HARVESTING_MEAT"
         else -> ""
     }
 
     val iconPainter: Painter? = when (type) {
+        "Coffee" -> painterResource(id = R.drawable.coffeeicon)
         "Vegetable" -> painterResource(id = R.drawable.planting)
         "Meat" -> painterResource(id = R.drawable.meaticon)
         else -> null
