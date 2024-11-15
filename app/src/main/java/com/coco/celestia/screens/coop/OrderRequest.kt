@@ -77,8 +77,6 @@ import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.FullFilledBy
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.TransactionData
-import com.coco.celestia.viewmodel.model.UserData
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -195,7 +193,7 @@ fun OrderRequest(
                     .height(40.dp)
                     .semantics { testTag = "android:id/CompletedButton" },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = CompletedStatus,
+                    containerColor = ProcessingCoffee,
                     contentColor = Color.White
                 )
             ) {
@@ -214,7 +212,7 @@ fun OrderRequest(
                     .height(40.dp)
                     .semantics { testTag = "android:id/CompletedButton" },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = CompletedStatus,
+                    containerColor = ProcessingMeat,
                     contentColor = Color.White
                 )
             ) {
@@ -506,8 +504,8 @@ fun AcceptedOrderActions(
     }
 
     val iconPainter: Painter? = when (type) {
-        "CoopCoffee" -> painterResource(id = R.drawable.coffeeicon)
-        "CoopMeat" -> painterResource(id = R.drawable.meaticon)
+        "CoopCoffee" -> painterResource(id = R.drawable.coffee_plant)
+        "CoopMeat" -> painterResource(id = R.drawable.cow_animal)
         else -> null
     }
 
@@ -569,17 +567,23 @@ fun ProcessingMeatAndCoffeeOrderActions(
 ) {
     var statusDialog by remember { mutableStateOf(false) }
 
+    val textColor = when (order.orderData.type) {
+        "CoopCoffee" -> ProcessingCoffee
+        "CoopMeat" -> ProcessingMeat
+        else -> Color.Transparent
+    }
+
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .background(PreparingStatus)
+            .background(textColor)
             .padding(8.dp)
             .semantics { testTag = "android:id/PreparingOrderActions" },
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Ship harvested order?",
+            text = "Ship processed product?",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
