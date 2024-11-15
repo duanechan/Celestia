@@ -28,6 +28,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -185,7 +186,8 @@ fun FarmerAddProductDialog(
                         contentDescription = "Product Image",
                         modifier = Modifier
                             .size(150.dp)
-                            .align(Alignment.Center)
+                            .align(Alignment.Center),
+                        colorFilter = ColorFilter.tint(Cocoa)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
