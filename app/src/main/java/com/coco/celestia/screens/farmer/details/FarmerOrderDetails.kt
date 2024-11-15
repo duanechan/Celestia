@@ -305,7 +305,12 @@ fun OrderDetailsCard(
                                 fulfilledByFarmer
                             )
 
-                            "COMPLETED" -> CompletedStatusDialog()
+                            "COMPLETED" -> CompletedStatusDialog(
+                                orderData,
+                                orderViewModel,
+                                "partial",
+                                fulfilledByFarmer
+                            )
                         }
                     }
                 } else {
@@ -343,7 +348,12 @@ fun OrderDetailsCard(
                             "full",
                             fulfilledByFarmer
                         )
-                        "COMPLETED" -> CompletedStatusDialog()
+                        "COMPLETED" -> CompletedStatusDialog(
+                            orderData,
+                            orderViewModel,
+                            "full",
+                            fulfilledByFarmer
+                        )
                     }
                 }
             }

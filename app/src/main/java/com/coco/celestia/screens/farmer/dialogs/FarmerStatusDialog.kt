@@ -516,12 +516,6 @@ fun DeliveringStatusDialog (
                         }
                     }
                     orderViewModel.updateOrder(orderData.copy(fulfilledBy = updatedFulfilledBy))
-
-                    val allFulFilled = updatedFulfilledBy.all { it.status == "COMPLETED" }
-                    if (allFulFilled) {
-                        orderViewModel.updateOrder(orderData.copy(status = "COMPLETED"))
-                    }
-
                     onUpdateOrder = (Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
                     showDialog = false
                 } else {
@@ -535,7 +529,12 @@ fun DeliveringStatusDialog (
 }
 
 @Composable
-fun CompletedStatusDialog () {
+fun CompletedStatusDialog (
+    orderData: OrderData,
+    orderViewModel: OrderViewModel,
+    status: String,
+    fulfilledByFarmer: FullFilledBy?
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -560,5 +559,18 @@ fun CompletedStatusDialog () {
                 .size(50.dp)
                 .padding(8.dp)
         )
+    }
+    if (status == "partial") {
+        val updatedFulfilledBy = orderData.fulfilledBy.map { fulFiller ->
+            if (fulFiller.farmerName == (fulfilledByFarmer?.farmerName ?: "")) {
+                fulFiller.copy(status = "COMPLETED")
+            } else {
+                fulFiller
+            }
+        }
+        val allFulFilled = updatedFulfilledBy.all { it.status == "COMPLETED" }
+        if (allFulFilled) {
+            orderViewModel.updateOrder(orderData.copy(status = "COMPLETED"))
+        }
     }
 }

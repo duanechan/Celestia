@@ -236,6 +236,7 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
     val clientName = "${user.firstname} ${user.lastname}"
     val orderId = order.orderId.substring(6, 10).uppercase()
     val orderStatus = order.status
+    val formattedStatus = orderStatus.replace("_", " ")
 
     Row(
         modifier = Modifier
@@ -291,7 +292,7 @@ fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController:
                             horizontalAlignment = Alignment.Start
                         ) {
                             Text(
-                                text = orderStatus,
+                                text = formattedStatus,
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = CLGText,

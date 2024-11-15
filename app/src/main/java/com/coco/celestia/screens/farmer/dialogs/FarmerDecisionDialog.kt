@@ -306,12 +306,12 @@ fun FarmerDecisionDialog(
                             } else {
                                 val fulFiller = FullFilledBy (
                                     farmerName = farmerName,
-                                    quantityFulfilled = orderData.orderData.quantity
+                                    quantityFulfilled = orderData.orderData.quantity - orderData.partialQuantity
                                 )
                                 val updatedOrder = orderData.copy(
                                     status = "ACCEPTED",
                                     fulfilledBy = orderData.fulfilledBy.plus(fulFiller),
-                                    partialQuantity = 0
+                                    partialQuantity = orderData.orderData.quantity
                                 )
                                 orderViewModel.updateOrder(updatedOrder)
                             }

@@ -48,6 +48,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -180,8 +181,9 @@ fun ClientOrderDetails(
 
                                         Spacer(modifier = Modifier.height(6.dp))
 
+                                        val formattedStatus = orderData.status.replace("_", " ")
                                         Text(
-                                            text = orderData.status,
+                                            text = formattedStatus,
                                             fontSize = 25.sp,
                                             color = White,
                                             fontWeight = FontWeight.Bold
@@ -217,6 +219,122 @@ fun ClientOrderDetails(
                                 )
                                 OrderDetailsColumn("Target Date", orderData.targetDate)
 
+                                Divider(
+                                    modifier = Modifier
+                                        .padding(top = 15.dp, bottom = 5.dp),
+                                    thickness = 3.dp,
+                                    color = Color.Black.copy(alpha = 0.6f)
+                                )
+
+                                Text(
+                                    "Fulfilled By",
+                                    fontSize = 16.sp,
+                                    color = Color.Black.copy(alpha = 0.5f),
+                                    modifier = Modifier
+                                        .padding(top = 10.dp, bottom = 6.dp)
+                                )
+                                Row (
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 5.dp)
+                                ){
+                                    Text(
+                                        "Name",
+                                        fontSize = 16.sp,
+                                        color = Color.Black.copy(alpha = 0.5f),
+                                        modifier = Modifier
+                                            .padding(end = 5.dp)
+                                            .weight(1.2f)
+                                    )
+                                    Text(
+                                        "Quantity",
+                                        fontSize = 16.sp,
+                                        color = Color.Black.copy(alpha = 0.5f),
+                                        modifier = Modifier
+                                            .padding(start = 10.dp)
+                                            .weight(1f)
+                                    )
+                                    Text(
+                                        "Status",
+                                        fontSize = 16.sp,
+                                        color = Color.Black.copy(alpha = 0.5f),
+                                        modifier = Modifier
+                                            .padding(start = 6.dp)
+                                            .weight(1.2f)
+                                    )
+                                }
+
+                                if (orderData.status == "PARTIALLY_FULFILLED") {
+                                    orderData.fulfilledBy.forEach { fulFillData ->
+                                        Row {
+                                            Text(
+                                                fulFillData.farmerName,
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier
+                                                    .weight(1.2f),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                fulFillData.quantityFulfilled.toString(),
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier
+                                                    .padding(horizontal = 10.dp)
+                                                    .weight(1f),
+                                                textAlign = TextAlign.Center,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                fulFillData.status,
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier
+                                                    .padding(start = 6.dp)
+                                                    .weight(1.2f),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    orderData.fulfilledBy.forEach { fulFillData ->
+                                        Row {
+                                            Text(
+                                                fulFillData.farmerName,
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier
+                                                    .weight(1.2f),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                fulFillData.quantityFulfilled.toString(),
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier
+                                                    .padding(horizontal = 10.dp)
+                                                    .weight(1f),
+                                                textAlign = TextAlign.Center,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                            Text(
+                                                orderData.status,
+                                                fontSize = 18.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier
+                                                    .padding(start = 6.dp)
+                                                    .weight(1.2f),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+                                }
                                 Divider(
                                     modifier = Modifier
                                         .padding(top = 15.dp, bottom = 5.dp),

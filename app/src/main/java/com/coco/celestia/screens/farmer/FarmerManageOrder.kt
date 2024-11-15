@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.farmer
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -277,7 +278,7 @@ fun FarmerManageOrder(
                             }
                             val isFulfilledByFarmer = order.fulfilledBy.any { it.farmerName == farmerName}
                             matchesSearchQuery && matchesStatus &&
-                                    (order.status == "INCOMPLETE" || isFulfilledByFarmer || selectedStatus == "Rejected" || selectedStatus == "Cancelled")
+                                    (isFulfilledByFarmer || selectedStatus == "Rejected" || selectedStatus == "Cancelled")
                         }
 
                         if (filteredOrders.isEmpty()) {
@@ -352,13 +353,14 @@ fun FarmerManageRequest(
             is OrderState.SUCCESS -> {
                 val filteredOrders = orderData
                     .filter { order ->
-                        order.status.equals("PENDING", ignoreCase = true)
+                        order.status.equals("PENDING", ignoreCase = true) ||
+                                (order.orderData.quantity - order.partialQuantity != 0)
                     }
                     .filter { order ->
                         order.orderId.contains(searchQuery, ignoreCase = true) &&
                                 (selectedCategory.isEmpty() || order.orderData.name.equals(selectedCategory, ignoreCase = true))
                     }
-
+                Log.d("orders", filteredOrders.toString())
                 if (filteredOrders.isEmpty()) {
                     Text("No pending orders available.")
                 } else {
