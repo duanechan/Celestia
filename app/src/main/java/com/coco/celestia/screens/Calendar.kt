@@ -104,7 +104,7 @@ fun Calendar(
                 val orderedProduct = order.orderData.name
                 val productPrice = productData
                     .find { product -> product.name == orderedProduct }?.priceKg
-                priceMap[order.orderData.name] = productPrice!!
+                priceMap[order.orderData.name] = productPrice ?: 0.0
             }
         }
         if (uid.isNotEmpty()) {

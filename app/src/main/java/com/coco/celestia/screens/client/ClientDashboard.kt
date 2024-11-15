@@ -314,7 +314,8 @@ fun CategoryBox(
             .fillMaxWidth()
             .padding(8.dp)
             .clickable {
-                navController.navigate("add_order/$productName")
+                Log.d("Product Route", productName)
+                navController.navigate(Screen.AddOrder.route)
             }
             .semantics { testTag = "android:id/CategoryBox_$productName" }
     ) {
@@ -407,7 +408,7 @@ fun ProductTypeCard(
             .width(120.dp)
             .height(100.dp)
             .clickable {
-                navController.navigate("add_order/${product.type}")
+                navController.navigate(Screen.AddOrder.route)
             },
         elevation = CardDefaults.cardElevation(4.dp),
     ) {
@@ -454,7 +455,8 @@ fun OrderHistory(
     navController: NavController
 ) {
     val receivedOrders = orderData.filter { order ->
-        order.status.trim().equals("Received", ignoreCase = true)
+        order.status.trim().equals("Received", ignoreCase = true) ||
+        order.status.trim().equals("Completed", ignoreCase = true)
     }
 
     Column(
@@ -558,7 +560,7 @@ fun OrderCardDetails(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = orderStatus,
+                        text = "RECEIVED",
                         fontSize = 17.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = CLGText,
