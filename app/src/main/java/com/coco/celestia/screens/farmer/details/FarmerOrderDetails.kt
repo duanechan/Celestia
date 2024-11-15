@@ -406,99 +406,101 @@ fun OrderStatusUpdates(orderData: OrderData) {
                 )
             }
 
-            if (displayStatus in listOf("PLANTING", "HARVESTING", "DELIVERING", "COMPLETED")) {
-                Row(
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Spacer(modifier = Modifier.width(18.dp))
-                    Divider(
-                        color = GoldenYellow,
-                        modifier = Modifier
-                            .width(2.dp)
-                            .height(30.dp)
-                    )
+            if (orderData.orderData.type == "Meat") {
+                if (displayStatus in listOf("HARVESTING_MEAT", "DELIVERING", "COMPLETED")) {
+                    Row(
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Spacer(modifier = Modifier.width(18.dp))
+                        Divider(
+                            color = GoldenYellow,
+                            modifier = Modifier
+                                .width(2.dp)
+                                .height(30.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.cow_animal),
+                            contentDescription = "Harvesting Meat",
+                            modifier = Modifier.size(40.dp),
+                            colorFilter = ColorFilter.tint(Cocoa)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Harvesting the animal.",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    }
+                }
+            } else {
+                if (displayStatus in listOf("PLANTING", "HARVESTING", "DELIVERING", "COMPLETED")) {
+                    Row(
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Spacer(modifier = Modifier.width(18.dp))
+                        Divider(
+                            color = GoldenYellow,
+                            modifier = Modifier
+                                .width(2.dp)
+                                .height(30.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.planting),
+                            contentDescription = "Planting",
+                            modifier = Modifier.size(40.dp),
+                            colorFilter = ColorFilter.tint(Cocoa)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Crop is currently being grown.",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.planting),
-                        contentDescription = "Planting",
-                        modifier = Modifier.size(40.dp),
-                        colorFilter = ColorFilter.tint(Cocoa)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "Crop is currently being grown.",
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
-                }
-            }
+                if (displayStatus in listOf("HARVESTING", "DELIVERING", "COMPLETED")) {
+                    Row(
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Spacer(modifier = Modifier.width(18.dp))
+                        Divider(
+                            color = GoldenYellow,
+                            modifier = Modifier
+                                .width(2.dp)
+                                .height(30.dp)
+                        )
+                    }
 
-            if (displayStatus in listOf("HARVESTING", "DELIVERING", "COMPLETED")) {
-                Row(
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Spacer(modifier = Modifier.width(18.dp))
-                    Divider(
-                        color = GoldenYellow,
-                        modifier = Modifier
-                            .width(2.dp)
-                            .height(30.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.harvest),
-                        contentDescription = "Harvesting",
-                        modifier = Modifier.size(40.dp),
-                        colorFilter = ColorFilter.tint(Cocoa)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "Harvesting of the Crop is underway.",
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
-                }
-            }
-
-            if (displayStatus in listOf("HARVESTING_MEAT", "DELIVERING", "COMPLETED")) {
-                Row(
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Spacer(modifier = Modifier.width(18.dp))
-                    Divider(
-                        color = GoldenYellow,
-                        modifier = Modifier
-                            .width(2.dp)
-                            .height(30.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.cow_animal),
-                        contentDescription = "Harvesting Meat",
-                        modifier = Modifier.size(40.dp),
-                        colorFilter = ColorFilter.tint(Cocoa)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "Harvesting the animal.",
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.harvest),
+                            contentDescription = "Harvesting",
+                            modifier = Modifier.size(40.dp),
+                            colorFilter = ColorFilter.tint(Cocoa)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Harvesting of the Crop is underway.",
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    }
                 }
             }
 
