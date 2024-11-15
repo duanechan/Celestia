@@ -35,8 +35,15 @@ fun ProductListDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = "All Products", color = Cocoa, textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Bold, modifier = Modifier.fillMaxWidth()) },
+        title = {
+            Text(
+                text = "All Products",
+                color = Cocoa,
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
         text = {
             Box(modifier = Modifier.height(300.dp)) {
                 LazyColumn(
@@ -82,14 +89,6 @@ fun ProductListDialog(
                                             )
                                     )
 
-                                    val plantingWidth = (item.plantingQuantity.toFloat() / 3000.toFloat() * 200).dp
-                                    Box(
-                                        modifier = Modifier
-                                            .width(plantingWidth)
-                                            .height(40.dp)
-                                            .background(OliveGreen.copy(alpha = 0.4f))
-                                    )
-
                                     Box(
                                         modifier = Modifier
                                             .weight(1f)
@@ -112,12 +111,6 @@ fun ProductListDialog(
                                         text = "${item.quantity}",
                                         fontSize = 14.sp,
                                         color = if (item.name.isEmpty()) Color.Gray else Sand,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    Text(
-                                        text = " + ${item.plantingQuantity} Kg",
-                                        fontSize = 14.sp,
-                                        color = OliveGreen,
                                         fontWeight = FontWeight.SemiBold
                                     )
                                 }
