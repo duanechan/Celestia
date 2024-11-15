@@ -477,7 +477,7 @@ fun <T> ProductCard(
         ) {
             Image(
                 painter = rememberImagePainter(data = productImage ?: R.drawable.product_image),
-                contentScale = ContentScale.Fit,
+                contentScale = ContentScale.Crop,
                 contentDescription = "Product Image",
                 modifier = Modifier.size(100.dp)
             )
@@ -870,15 +870,6 @@ fun ConfirmOrderRequestPanel(
                         .padding(horizontal = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-//                    TextButton(onClick = {
-//                        isOrderSheetOpen = false
-//                        navController.navigate(Screen.AddOrder.route)
-//                    }) {
-//                        Text(
-//                            text = "Order Again",
-//                            fontSize = 16.sp
-//                        )
-//                    }
                     TextButton(
                         onClick = {
                             navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId))
