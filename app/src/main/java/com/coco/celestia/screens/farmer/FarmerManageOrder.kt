@@ -181,7 +181,7 @@ fun FarmerManageOrder(
 
                     ) {
                         if (isOrderStatusView) {
-                            listOf("All", "Preparing", "Incomplete", "Delivering", "Completed", "Rejected", "Cancelled").forEach { status ->
+                            listOf("All", "Accepted", "Planting", "Harvesting", "Delivering", "Completed", "Rejected", "Cancelled").forEach { status ->
                                 DropdownMenuItem(
                                     text = { Text(status, color = Cocoa) },
                                     onClick = {
@@ -268,19 +268,24 @@ fun FarmerManageOrder(
                     is OrderState.SUCCESS -> {
                         val filteredOrders = orderData.filter { order ->
                             val matchesSearchQuery = order.orderId.contains(searchQuery, ignoreCase = true)
-                            val matchesStatus = when {
-                                selectedStatus == "All" -> true
-                                selectedStatus == "Completed" -> order.status == "COMPLETED" || order.status == "RECEIVED"
-                                selectedStatus == "Rejected" -> order.status == "REJECTED"
-                                selectedStatus == "Cancelled" -> order.status == "CANCELLED"
-                                selectedStatus == "Incomplete" -> order.status == "INCOMPLETE"
+                            val matchesStatus = when (selectedStatus){
+                                "All" -> true
+                                "Completed" -> order.status == "COMPLETED" || order.status == "RECEIVED"
+                                "Rejected" -> order.status == "REJECTED"
+                                "Cancelled" -> order.status == "CANCELLED"
+                                "Accepted" -> order.status == "ACCEPTED"
+                                "Planting" -> order.status == "PLANTING"
+                                "Harvesting" -> order.status == "HARVESTING"
+                                "Delivering" -> order.status == "DELIVERING"
                                 else -> order.status.equals(selectedStatus, ignoreCase = true)
                             }
                             val isFulfilledByFarmer = order.fulfilledBy.any { it.farmerName == farmerName}
                             matchesSearchQuery && matchesStatus &&
-                                    (isFulfilledByFarmer || selectedStatus == "Rejected" || selectedStatus == "Cancelled")
+                                    (isFulfilledByFarmer || order.status in listOf("REJECTED", "CANCELLED"))
                         }
-
+                        filteredOrders.forEach { order ->
+                            Log.d("filter", order.status)
+                        }
                         if (filteredOrders.isEmpty()) {
                             Box(
                                 modifier = Modifier
@@ -354,7 +359,8 @@ fun FarmerManageRequest(
                 val filteredOrders = orderData
                     .filter { order ->
                         order.status.equals("PENDING", ignoreCase = true) ||
-                                (order.orderData.quantity - order.partialQuantity != 0)
+                                (order.status == "PARTIALLY_FULFILLED" &&
+                                        order.orderData.quantity - order.partialQuantity != 0)
                     }
                     .filter { order ->
                         order.orderId.contains(searchQuery, ignoreCase = true) &&
@@ -411,6 +417,7 @@ fun ManageOrderCards(
         "DELIVERING" -> Green
         "COMPLETED" -> SageGreen.copy(alpha = 0.7f)
         "CANCELLED" -> Copper3
+        "HARVESTING_MEAT" -> Color.Cyan.copy(alpha = 0.2f)
         else -> Color.Gray
     }
 
@@ -418,6 +425,7 @@ fun ManageOrderCards(
         "ACCEPTED" -> painterResource(id = R.drawable.preparing)
         "PLANTING" -> painterResource(id = R.drawable.plant)
         "HARVESTING" -> painterResource(id = R.drawable.harvest_basket)
+        "HARVESTING_MEAT" -> painterResource(id = R.drawable.cow_animal)
         "DELIVERING" -> painterResource(id = R.drawable.deliveryicon)
         "CANCELLED" -> painterResource(id = R.drawable.cancelled)
         else -> null
@@ -503,7 +511,7 @@ fun ManageOrderCards(
                                     Spacer(modifier = Modifier.width(6.dp))
 
                                     Text(
-                                        text = displayStatus,
+                                        text = displayStatus.replace("_", " "),
                                         fontSize = 22.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Cocoa,

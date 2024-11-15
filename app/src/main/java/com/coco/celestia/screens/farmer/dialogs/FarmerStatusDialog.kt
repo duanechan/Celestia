@@ -211,9 +211,9 @@ fun AcceptedStatusDialog(
     }
 
     val iconPainter: Painter? = when (type) {
-        "Coffee" -> painterResource(id = R.drawable.coffeeicon)
+        "Coffee" -> painterResource(id = R.drawable.coffee_plant)
         "Vegetable" -> painterResource(id = R.drawable.planting)
-        "Meat" -> painterResource(id = R.drawable.meaticon)
+        "Meat" -> painterResource(id = R.drawable.harvest_meat)
         else -> null
     }
 
