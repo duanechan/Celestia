@@ -493,18 +493,12 @@ fun PrivacyPolicy() {
                 Text(text = "Contact Us", fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily)
                 Text(
                     text = "If you have questions about this Privacy Policy or your personal" +
-                            " data, please reach out to us using the information below:\n" +
-                            "\n",
+                            " data, please reach out to us using the information below:\n",
                     textAlign = TextAlign.Justify, fontFamily = mintsansFontFamily
                 )
                 Row {
                     Text(
-                        text = "Cooperative’s Email:\n[e.g: support@coopconnects.com]\n", fontFamily = mintsansFontFamily
-                    )
-                }
-                Row {
-                    Text(
-                        text = "Cooperative’s Phone:\n[Insert Phone Number]\n", fontFamily = mintsansFontFamily
+                        text = "Cooperative’s Phone:\n0917 138 7592\n", fontFamily = mintsansFontFamily
                     )
                 }
                 Row {
