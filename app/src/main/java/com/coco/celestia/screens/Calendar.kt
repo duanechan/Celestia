@@ -47,16 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.coco.celestia.ui.theme.BgColor
-import com.coco.celestia.ui.theme.Cocoa
-import com.coco.celestia.ui.theme.CompletedStatus
-import com.coco.celestia.ui.theme.DeliveringStatus
-import com.coco.celestia.ui.theme.DuskyBlue
-import com.coco.celestia.ui.theme.GoldenYellow
-import com.coco.celestia.ui.theme.PendingStatus
-import com.coco.celestia.ui.theme.Sand
-import com.coco.celestia.ui.theme.Sand2
-import com.coco.celestia.ui.theme.mintsansFontFamily
+import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.DateUtil
 import com.coco.celestia.util.getDisplayName
 import com.coco.celestia.viewmodel.CalendarViewModel
@@ -88,25 +79,26 @@ fun Calendar(
     val inputFormat = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
     val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     val farmerItemViewModel: FarmerItemViewModel = viewModel()
+    val itemData by farmerItemViewModel.itemData.observeAsState(emptyList())
     var farmerName by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        orderViewModel.fetchAllOrders(
-            "",
-            userRole
-        )
-        productViewModel.fetchProducts(
-            "",
-            userRole
-        )
-        if (orderData.isNotEmpty() && productData.isNotEmpty()) {
+        farmerItemViewModel.getItems(uid)
+        orderViewModel.fetchAllOrders("", userRole)
+        productViewModel.fetchProducts("", userRole)
+
+        if (itemData.isNotEmpty() && orderData.isNotEmpty() && productData.isNotEmpty()) {
             orderData.forEach { order ->
                 val orderedProduct = order.orderData.name
-                val productPrice = productData
-                    .find { product -> product.name == orderedProduct }?.priceKg
+                val productPrice = if (userRole == "Farmer") {
+                    itemData.find { item -> item.name == orderedProduct }?.priceKg
+                } else {
+                    productData.find { product -> product.name == orderedProduct }?.priceKg
+                }
                 priceMap[order.orderData.name] = productPrice ?: 0.0
             }
         }
+
         if (uid.isNotEmpty()) {
             farmerName = farmerItemViewModel.fetchFarmerName(uid)
         }
@@ -220,7 +212,7 @@ fun Calendar(
                     }
                     if (sameDate.isNotEmpty()) {
                         itemsIndexed(sameDate) { index, order ->
-                            val orderPrice = priceMap[order.orderData.name]!!
+                            val orderPrice = priceMap[order.orderData.name] ?: 0.0
                             OrderItem(
                                 order = order,
                                 price = orderPrice,

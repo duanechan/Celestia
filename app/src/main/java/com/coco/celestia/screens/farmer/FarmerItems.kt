@@ -22,15 +22,11 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
-import com.coco.celestia.R
 import com.coco.celestia.components.toast.Toast
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.components.toast.toastDelay
-import com.coco.celestia.screens.farmer.details.calculateStockThreshold
-import com.coco.celestia.screens.farmer.details.isProductInSeason
 import com.coco.celestia.screens.farmer.dialogs.FarmerAddProductDialog
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.screens.`object`.Screen
@@ -133,8 +129,6 @@ fun FarmerItems(navController: NavController) {
 
 @Composable
 fun FarmerItems(items: List<ProductData>, navController: NavController) {
-    val currentMonth = java.time.LocalDate.now().monthValue.toString()
-
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier.fillMaxSize()
@@ -157,8 +151,7 @@ fun FarmerItems(items: List<ProductData>, navController: NavController) {
                 FarmerProductTypeInventory(
                     product = product,
                     navController = navController,
-                    isFirst = (index == 0),
-                    currentMonth = currentMonth
+                    isFirst = (index == 0)
                 )
             }
         }
@@ -237,14 +230,8 @@ fun LoadingFarmerProducts() {
 fun FarmerProductTypeInventory(
     product: ProductData,
     navController: NavController,
-    isFirst: Boolean = false,
-    currentMonth: String // Add currentMonth parameter
+    isFirst: Boolean = false
 ) {
-    val (_, isLowStock) = calculateStockThreshold(product.quantity)
-
-    // Determine if the product is in season
-    val isInSeason = isProductInSeason(currentMonth, product.startSeason, product.endSeason)
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -287,28 +274,6 @@ fun FarmerProductTypeInventory(
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.semantics { testTag = "android:id/productName_${product.name}" }
                         )
-
-                        // Display plant icon if in season
-                        if (isInSeason) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Icon(
-                                painter = painterResource(id = R.drawable.plant), // Assuming you have a plant icon
-                                contentDescription = "In Season",
-                                modifier = Modifier.size(20.dp),
-                                tint = GreenBeans
-                            )
-                        }
-
-                        // Low stock warning
-                        if (isLowStock) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Icon(
-                                imageVector = Icons.Default.Warning,
-                                contentDescription = "Low Stock Warning",
-                                tint = Cinnabar,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
                     }
                     Spacer(modifier = Modifier.height(5.dp))
                     Text(
