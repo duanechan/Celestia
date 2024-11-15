@@ -417,6 +417,7 @@ fun ManageOrderCards(
         "DELIVERING" -> Green
         "COMPLETED" -> SageGreen.copy(alpha = 0.7f)
         "CANCELLED" -> Copper3
+        "HARVESTING_MEAT" -> Color.Cyan.copy(alpha = 0.2f)
         else -> Color.Gray
     }
 
@@ -424,6 +425,7 @@ fun ManageOrderCards(
         "ACCEPTED" -> painterResource(id = R.drawable.preparing)
         "PLANTING" -> painterResource(id = R.drawable.plant)
         "HARVESTING" -> painterResource(id = R.drawable.harvest_basket)
+        "HARVESTING_MEAT" -> painterResource(id = R.drawable.cow_animal)
         "DELIVERING" -> painterResource(id = R.drawable.deliveryicon)
         "CANCELLED" -> painterResource(id = R.drawable.cancelled)
         else -> null
@@ -509,7 +511,7 @@ fun ManageOrderCards(
                                     Spacer(modifier = Modifier.width(6.dp))
 
                                     Text(
-                                        text = displayStatus,
+                                        text = displayStatus.replace("_", " "),
                                         fontSize = 22.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Cocoa,

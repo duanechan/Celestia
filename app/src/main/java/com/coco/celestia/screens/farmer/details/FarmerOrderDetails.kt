@@ -488,7 +488,7 @@ fun OrderStatusUpdates(orderData: OrderData) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.meaticon),
+                        painter = painterResource(id = R.drawable.cow_animal),
                         contentDescription = "Harvesting Meat",
                         modifier = Modifier.size(40.dp),
                         colorFilter = ColorFilter.tint(Cocoa)
