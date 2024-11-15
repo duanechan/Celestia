@@ -27,6 +27,7 @@ import com.coco.celestia.screens.farmer.dialogs.AcceptedStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.CompletedStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.DeliveringStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.FarmerFulfillDialog
+import com.coco.celestia.screens.farmer.dialogs.HarvestingMeatStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.HarvestingStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.PendingStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.PlantingStatusDialog
@@ -276,6 +277,7 @@ fun OrderDetailsCard(
                                     orderData,
                                     orderViewModel,
                                     "partial",
+                                    orderData.orderData.type,
                                     fulfilledByFarmer
                                 )
                             }
@@ -291,6 +293,15 @@ fun OrderDetailsCard(
 
                             "HARVESTING" -> {
                                 HarvestingStatusDialog(
+                                    orderData,
+                                    orderViewModel,
+                                    "partial",
+                                    fulfilledByFarmer
+                                )
+                            }
+
+                            "HARVESTING_MEAT" -> {
+                                HarvestingMeatStatusDialog(
                                     orderData,
                                     orderViewModel,
                                     "partial",
@@ -320,6 +331,7 @@ fun OrderDetailsCard(
                                 orderData,
                                 orderViewModel,
                                 "full",
+                                orderData.orderData.type,
                                 fulfilledByFarmer
                             )
                         }
@@ -335,6 +347,15 @@ fun OrderDetailsCard(
 
                         "HARVESTING" -> {
                             HarvestingStatusDialog(
+                                orderData,
+                                orderViewModel,
+                                "full",
+                                fulfilledByFarmer
+                            )
+                        }
+
+                        "HARVESTING_MEAT" -> {
+                            HarvestingMeatStatusDialog(
                                 orderData,
                                 orderViewModel,
                                 "full",
@@ -512,6 +533,38 @@ fun OrderStatusUpdates(orderData: OrderData) {
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = "Harvesting of the Crop is underway.",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
+            }
+
+            if (displayStatus in listOf("HARVESTING_MEAT", "DELIVERING", "COMPLETED")) {
+                Row(
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Spacer(modifier = Modifier.width(18.dp))
+                    Divider(
+                        color = GoldenYellow,
+                        modifier = Modifier
+                            .width(2.dp)
+                            .height(30.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.meaticon),
+                        contentDescription = "Harvesting Meat",
+                        modifier = Modifier.size(40.dp),
+                        colorFilter = ColorFilter.tint(Cocoa)
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "Harvesting the animal.",
                         fontSize = 12.sp,
                         color = Color.Gray
                     )

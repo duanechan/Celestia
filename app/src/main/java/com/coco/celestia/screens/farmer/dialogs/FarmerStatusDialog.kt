@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -211,10 +212,31 @@ fun AcceptedStatusDialog(
     orderData: OrderData,
     orderViewModel: OrderViewModel,
     status: String,
+    type: String,
     fulfilledByFarmer: FullFilledBy?
 ) {
     var onUpdateOrder by remember { mutableStateOf(Triple(ToastStatus.INFO, "", 0L)) }
     var showDialog by remember { mutableStateOf(false) }
+
+    val text = when (type) {
+        "Vegetable" -> "Plant Order Request?"
+        "Meat" -> "Give the animal a peaceful end"
+        else -> ""
+    }
+
+    val setStatus = when (type) {
+        "Vegetable" -> "PLANTING"
+        "Meat" -> "HARVESTING_MEAT"
+        else -> ""
+    }
+
+    val iconPainter: Painter? = when (type) {
+        "Vegetable" -> painterResource(id = R.drawable.planting)
+        "Meat" -> painterResource(id = R.drawable.meaticon)
+        else -> null
+    }
+
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -225,7 +247,7 @@ fun AcceptedStatusDialog(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Plant Order Request?",
+            text = text,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White,
@@ -242,7 +264,7 @@ fun AcceptedStatusDialog(
                 .semantics { testTag = "android:id/ShipOrderButton" }
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.planting),
+                painter = iconPainter!!,
                 contentDescription = "Plant",
                 tint = Color.White,
                 modifier = Modifier
@@ -254,13 +276,13 @@ fun AcceptedStatusDialog(
 
     if (showDialog) {
         UpdateOrderStatusDialog(
-            status = "PLANTING",
+            status = setStatus,
             onDismiss = { showDialog = false },
             onAccept = {
                 if (status == "partial") {
                     val updatedFulfilledBy = orderData.fulfilledBy.map { fulFiller ->
                         if (fulFiller.farmerName == (fulfilledByFarmer?.farmerName ?: "")) {
-                            fulFiller.copy(status = "PLANTING")
+                            fulFiller.copy(status = setStatus)
                         } else {
                             fulFiller
                         }
@@ -269,11 +291,10 @@ fun AcceptedStatusDialog(
                     onUpdateOrder = (Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
                     showDialog = false
                 } else {
-                    orderViewModel.updateOrder(orderData.copy(status = "PLANTING"))
+                    orderViewModel.updateOrder(orderData.copy(status = setStatus))
                     onUpdateOrder = (Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
                     showDialog = false
                 }
-
             }
         )
     }
@@ -390,6 +411,78 @@ fun HarvestingStatusDialog(
             Icon(
                 painter = painterResource(id = R.drawable.deliveryicon),
                 contentDescription = "Delivery",
+                tint = Color.White,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp)
+            )
+        }
+    }
+
+    if (showDialog) {
+        UpdateOrderStatusDialog(
+            status = "DELIVERING",
+            onDismiss = { showDialog = false },
+            onAccept = {
+                if (status == "partial") {
+                    val updatedFulfilledBy = orderData.fulfilledBy.map { fulFiller ->
+                        if (fulFiller.farmerName == (fulfilledByFarmer?.farmerName ?: "")) {
+                            fulFiller.copy(status = "DELIVERING")
+                        } else {
+                            fulFiller
+                        }
+                    }
+                    orderViewModel.updateOrder(orderData.copy(fulfilledBy = updatedFulfilledBy))
+                    onUpdateOrder = (Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
+                    showDialog = false
+                } else {
+                    orderViewModel.updateOrder(orderData.copy(status = "DELIVERING"))
+                    onUpdateOrder = (Triple(ToastStatus.SUCCESSFUL, "Order updated successfully!", System.currentTimeMillis()))
+                    showDialog = false
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun HarvestingMeatStatusDialog(
+    orderData: OrderData,
+    orderViewModel: OrderViewModel,
+    status: String,
+    fulfilledByFarmer: FullFilledBy?
+) {
+    var onUpdateOrder by remember { mutableStateOf(Triple(ToastStatus.INFO, "", 0L)) }
+    var showDialog by remember { mutableStateOf(false) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Brown1)
+            .padding(8.dp)
+            .semantics { testTag = "android:id/PreparingOrderActions" },
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Ship Harvested Order?",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            modifier = Modifier
+                .padding(8.dp, 0.dp)
+                .semantics { testTag = "android:id/ShipOrderText" }
+        )
+        IconButton(
+            onClick = { showDialog = true },
+            modifier = Modifier
+                .size(50.dp)
+                .clip(RoundedCornerShape(50.dp))
+                .background(DeliveringStatus)
+                .semantics { testTag = "android:id/ShipOrderButton" }
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.deliveryicon),
+                contentDescription = "Deliver",
                 tint = Color.White,
                 modifier = Modifier
                     .fillMaxSize()

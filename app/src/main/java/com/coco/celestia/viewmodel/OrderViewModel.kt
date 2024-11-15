@@ -194,7 +194,7 @@ class OrderViewModel : ViewModel() {
                                 "Coop", "Admin" -> isCoffeeOrMeat && matchesFilter
                                 "CoopCoffee" -> isCoffee && matchesFilter && removeCancelReject
                                 "CoopMeat" -> isMeat && matchesFilter && removeCancelReject
-                                "Farmer" -> isVegetable && matchesFilter
+                                "Farmer" -> matchesFilter
                                 "Client" -> matchesFilter
                                 // "Client" -> order.status.equals("completed", ignoreCase = true) && matchesFilter
                                 else -> false

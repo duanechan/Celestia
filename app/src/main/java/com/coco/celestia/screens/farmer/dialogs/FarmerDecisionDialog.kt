@@ -304,16 +304,30 @@ fun FarmerDecisionDialog(
                                 )
                                 orderViewModel.updateOrder(updatedOrder)
                             } else {
-                                val fulFiller = FullFilledBy (
-                                    farmerName = farmerName,
-                                    quantityFulfilled = orderData.orderData.quantity - orderData.partialQuantity
-                                )
-                                val updatedOrder = orderData.copy(
-                                    status = "ACCEPTED",
-                                    fulfilledBy = orderData.fulfilledBy.plus(fulFiller),
-                                    partialQuantity = orderData.orderData.quantity
-                                )
-                                orderViewModel.updateOrder(updatedOrder)
+                                if (orderData.status == "PARTIALLY_FULFILLED") {
+                                    val fulFiller = FullFilledBy (
+                                        farmerName = farmerName,
+                                        quantityFulfilled = orderData.orderData.quantity - orderData.partialQuantity,
+                                        status = "ACCEPTED"
+                                    )
+                                    val updatedOrder = orderData.copy(
+                                        fulfilledBy = orderData.fulfilledBy.plus(fulFiller),
+                                        partialQuantity = orderData.orderData.quantity
+                                    )
+                                    orderViewModel.updateOrder(updatedOrder)
+
+                                } else {
+                                    val fulFiller = FullFilledBy (
+                                        farmerName = farmerName,
+                                        quantityFulfilled = orderData.orderData.quantity - orderData.partialQuantity
+                                    )
+                                    val updatedOrder = orderData.copy(
+                                        status = "ACCEPTED",
+                                        fulfilledBy = orderData.fulfilledBy.plus(fulFiller),
+                                        partialQuantity = orderData.orderData.quantity
+                                    )
+                                    orderViewModel.updateOrder(updatedOrder)
+                                }
                             }
                             showFulfillmentDialog = false
                         }
