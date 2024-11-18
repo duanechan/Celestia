@@ -189,6 +189,7 @@ class FarmerItemViewModel : ViewModel() {
             }
         }
     }
+
     fun reduceItemQuantity(item: String, quantityDeducted: Int) {
         viewModelScope.launch {
             try {
@@ -216,6 +217,32 @@ class FarmerItemViewModel : ViewModel() {
             }
         }
     }
+
+    fun deleteItem(productName: String) {
+        viewModelScope.launch {
+            try {
+                _itemState.value = ItemState.LOADING
+                val uid = FirebaseAuth.getInstance().uid.toString()
+                database.child(uid).child("items").child(productName.lowercase()).addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        if (snapshot.exists()) {
+                            snapshot.ref.removeValue()
+                                .addOnSuccessListener { _itemState.value = ItemState.SUCCESS }
+                                .addOnFailureListener { _itemState.value = ItemState.ERROR("Failed to delete item") }
+                        } else {
+                            _itemState.value = ItemState.ERROR("Item doesn't exist")
+                        }
+                    }
+                    override fun onCancelled(error: DatabaseError) {
+                        _itemState.value = ItemState.ERROR(error.message)
+                    }
+                })
+            } catch (e: Exception) {
+                _itemState.value = ItemState.ERROR(e.message.toString())
+            }
+        }
+    }
+
     fun setPlantingInfo(uid: String, productName: String, plantingDate: String, duration: Int, quantity: Int) {
         viewModelScope.launch {
             try {

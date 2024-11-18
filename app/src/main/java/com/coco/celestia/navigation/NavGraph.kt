@@ -176,7 +176,7 @@ fun NavGraph(
             )
         }
         composable(route = Screen.FarmerItems.route) {
-            onNavigate("Vegetables")
+            onNavigate("Products")
             FarmerItems(navController = navController)
         }
         composable(route = Screen.FarmerTransactions.route) {
@@ -430,7 +430,8 @@ fun NavGraph(
             onNavigate("Products")
             FarmerItemDetails(
                 navController = navController,
-                productName = productNameDetail ?: ""
+                productName = productNameDetail ?: "",
+                onToastEvent = { onEvent(it) }
             )
         }
         composable(

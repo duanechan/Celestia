@@ -107,43 +107,53 @@ fun EditQuantityDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = {
-                val newQuantity = quantityToEdit.toIntOrNull()
-                val newPrice = priceToEdit.toDoubleOrNull()
+            TextButton(
+                onClick = {
+                    val newQuantity = quantityToEdit.toIntOrNull()
+                    val newPrice = priceToEdit.toDoubleOrNull()
 
-                if (newQuantity != null && newQuantity >= 0 && newPrice != null && newPrice >= 0) {
-                    updatedProductImage?.let {
-                        ImageService.uploadProductPicture(productName, it) { status ->
-                            if (status) {
-                                Log.d("ProfileScreen", "Product image uploaded successfully!")
-                            } else {
-                                Log.d("ProfileScreen", "Product image upload failed!")
+                    if (newQuantity != null && newQuantity >= 0 && newPrice != null && newPrice >= 0) {
+                        updatedProductImage?.let {
+                            ImageService.uploadProductPicture(productName, it) { status ->
+                                if (status) {
+                                    Log.d("ProfileScreen", "Product image uploaded successfully!")
+                                } else {
+                                    Log.d("ProfileScreen", "Product image upload failed!")
+                                }
                             }
                         }
+                        onConfirm(newQuantity, newPrice)
+                        onDismiss()
+                    } else {
+                        quantityError = newQuantity == null || newQuantity < 0
+                        priceError = newPrice == null || newPrice < 0
                     }
-                    onConfirm(newQuantity, newPrice)
-                    onDismiss()
-                } else {
-                    quantityError = newQuantity == null || newQuantity < 0
-                    priceError = newPrice == null || newPrice < 0
-                }
-            },
+                },
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = OliveGreen),
-                modifier = Modifier.semantics { testTag = "android:id/editQuantityConfirmButton" }) {
-                Text("Confirm", color = Apricot,
-                    modifier = Modifier.semantics { testTag = "android:id/editQuantityConfirmButtonText" })
+                modifier = Modifier.semantics { testTag = "android:id/editQuantityConfirmButton" }
+            ) {
+                Text(
+                    text = "Confirm",
+                    color = Apricot,
+                    modifier = Modifier.semantics { testTag = "android:id/editQuantityConfirmButtonText" }
+                )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = Cocoa,
-                    modifier = Modifier.semantics { testTag = "android:id/editQuantityDismissButtonText" })
+                Text(
+                    text = "Cancel",
+                    color = Cocoa,
+                    modifier = Modifier.semantics { testTag = "android:id/editQuantityDismissButtonText" }
+                )
             }
         },
         title = {
             Text(
-                text = "Edit Details for $productName", color = Cocoa, fontWeight = FontWeight.Bold,
+                text = "Edit Details for $productName",
+                color = Cocoa,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier.semantics { testTag = "android:id/editQuantityTitle" }
             )
         },

@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -37,6 +38,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.text.font.FontWeight.Companion.Medium
+import com.coco.celestia.components.toast.ToastStatus
+import com.coco.celestia.screens.farmer.dialogs.DeleteItemDialog
 import com.coco.celestia.screens.farmer.dialogs.EditQuantityDialog
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FarmerItemViewModel
@@ -50,7 +53,11 @@ import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.TransactionData
 
 @Composable
-fun FarmerItemDetails(navController: NavController, productName: String) {
+fun FarmerItemDetails(
+    navController: NavController,
+    productName: String,
+    onToastEvent: (Triple<ToastStatus, String, Long>) -> Unit
+) {
     val uid = FirebaseAuth.getInstance().uid.toString()
     val farmerProductViewModel: ProductViewModel = viewModel()
     val farmerItemViewModel: FarmerItemViewModel = viewModel()
@@ -61,6 +68,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
     val allOrders by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     var showEditDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     var productQuantity by remember { mutableIntStateOf(0) }
     var productPricePerKg by remember { mutableDoubleStateOf(0.0) }
     var farmerName by remember { mutableStateOf("") }
@@ -128,6 +136,7 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                             productQuantity = productQuantity,
                             productPricePerKg = productPricePerKg,
                             onEditClick = { showEditDialog = true },
+                            onDeleteClick = { showDeleteDialog = true },
                             uid = uid,
                             farmerItemViewModel = farmerItemViewModel,
                             farmerName = farmerName,
@@ -249,7 +258,30 @@ fun FarmerItemDetails(navController: NavController, productName: String) {
                         description = "$productName price updated to ₱$newPrice."
                     )
                 )
+                onToastEvent(Triple(ToastStatus.SUCCESSFUL, "$productName updated!", System.currentTimeMillis()))
                 showEditDialog = false
+            }
+        )
+    }
+
+    if (showDeleteDialog) {
+        DeleteItemDialog(
+            productName = productName,
+            onDismiss = { showDeleteDialog = false },
+            onConfirm = {
+                farmerItemViewModel.deleteItem(productName)
+                transactionViewModel.recordTransaction(
+                    uid = uid,
+                    transaction = TransactionData(
+                        transactionId = "Transaction-${UUID.randomUUID()}",
+                        type = "ItemDeleted",
+                        date = formattedDateTime,
+                        description = "$farmerName removed $productName from their inventory."
+                    )
+                )
+                navController.navigateUp()
+                onToastEvent(Triple(ToastStatus.SUCCESSFUL, "$productName deleted!", System.currentTimeMillis()))
+                showDeleteDialog = false
             }
         )
     }
@@ -261,6 +293,7 @@ fun ProductDetailsCard(
     productQuantity: Int,
     productPricePerKg: Double,
     onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     farmerItemViewModel: FarmerItemViewModel,
     uid: String,
     farmerName: String,
@@ -293,7 +326,8 @@ fun ProductDetailsCard(
                     productQuantity = productQuantity,
                     productPricePerKg = productPricePerKg,
                     productDateAdded = productDateAdded,
-                    onEditClick = onEditClick
+                    onEditClick = onEditClick,
+                    onDeleteClick = onDeleteClick
                 )
             }
         }
@@ -307,6 +341,7 @@ private fun ProductDetailsContent(
     productPricePerKg: Double,
     productDateAdded: String,
     onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -445,6 +480,19 @@ private fun ProductDetailsContent(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Delete Button
+                IconButton(
+                    onClick = onDeleteClick,
+                    modifier = Modifier
+                        .size(35.dp)
+                        .semantics { testTag = "android:id/deleteItemButton" }
+                ) {
+                    Icon(
+                        Icons.Filled.Delete,
+                        contentDescription = "Delete Item",
+                        tint = Cocoa
+                    )
+                }
                 // Edit Button
                 IconButton(
                     onClick = onEditClick,
