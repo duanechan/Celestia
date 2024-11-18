@@ -61,7 +61,6 @@ fun ClientContact(contactViewModel: ContactViewModel) {
         modifier = Modifier
             .fillMaxSize()
             .background(ClientBG)
-//            .padding(top = 75.dp)
             .verticalScroll(rememberScrollState())
             .semantics { testTag = "android:id/ClientContactScreen" }
     ) {

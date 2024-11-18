@@ -501,19 +501,4 @@ fun NavGraph(
             )
         }
     }
-
-//    NavHost(navController, startDestination = "client_dashboard") {
-//        composable("client_dashboard") {
-//            ClientDashboard(
-//                navController = navController,
-//                userViewModel = userViewModel,
-//                productViewModel = productViewModel,
-//                orderViewModel = orderViewModel,
-//                transactionViewModel = transactionViewModel
-//            )
-//        }
-//        composable("notifications_screen") {
-//            ClientNotification(notifications = notifications, navController = navController)
-//        }
-//    }
 }

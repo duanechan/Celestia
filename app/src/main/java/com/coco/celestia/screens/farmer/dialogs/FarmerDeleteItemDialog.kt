@@ -28,6 +28,7 @@ import com.coco.celestia.ui.theme.Apricot
 import com.coco.celestia.ui.theme.Cinnabar
 import com.coco.celestia.ui.theme.Cocoa
 import com.coco.celestia.ui.theme.OliveGreen
+import com.coco.celestia.ui.theme.Sand2
 
 @Composable
 fun DeleteItemDialog(
@@ -86,6 +87,7 @@ fun DeleteItemDialog(
                     text = "Cancel",
                     modifier = Modifier.semantics { testTag = "android:id/editQuantityDismissButtonText" })
             }
-        }
+        },
+        containerColor = Sand2
     )
 }

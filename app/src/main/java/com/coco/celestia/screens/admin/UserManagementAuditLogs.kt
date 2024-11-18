@@ -92,7 +92,7 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
     )
 
     LaunchedEffect(transactionData) {
-        transactionViewModel.fetchAllTransactions() // Put filter keyword here if search functionality exists
+        transactionViewModel.fetchAllTransactions()
 
         val filterTransaction = mutableMapOf<String, List<TransactionData>>()
         val filterOrderDataTran = mutableMapOf<UserData, List<TransactionData>>()
@@ -186,12 +186,12 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                                     text = {
                                         Text(
                                             text = status,
-                                            color = if (selectedStatus == status) Color.White else DarkBlue // Change text color
+                                            color = if (selectedStatus == status) Color.White else DarkBlue
                                         )
                                     },
                                     modifier = Modifier
                                         .background(
-                                            color = if (selectedStatus == status) DarkBlue else Color.Transparent // Change background color
+                                            color = if (selectedStatus == status) DarkBlue else Color.Transparent
                                         ),
                                     onClick = {
                                         selectedStatus = status

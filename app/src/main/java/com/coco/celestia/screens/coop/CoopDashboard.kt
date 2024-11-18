@@ -392,7 +392,7 @@ fun OrderStatusDonutChart(orderViewModel: OrderViewModel) {
                 .align(Alignment.CenterVertically)
         ) {
             statusData.forEach { (percentage, color, label) ->
-                if (percentage > 0) { // Only show legend for non-zero proportions
+                if (percentage > 0) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(vertical = 4.dp)
@@ -443,8 +443,6 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel, role: String) {
     }.sortedBy { it }
     val dateFormatter = SimpleDateFormat("MM/dd/yyyy", Locale.US)
     val formattedLastSevenDays = lastSevenDays.map { dateFormatter.format(it) }
-
-    // Filter data based on the role
     val filteredProducts = products.filter { product ->
         (role == "CoopMeat" && product.type == "CoopMeat") || (role == "CoopCoffee" && product.type == "CoopCoffee")
     }
@@ -527,7 +525,7 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel, role: String) {
                                 textColor = Color(0xFF6F4E37).toArgb()
                                 setDrawGridLines(true)
                                 gridColor = Color.LightGray.toArgb()
-                                axisMinimum = 0f  // Ensures no negative values are displayed
+                                axisMinimum = 0f
                             }
 
                             legend.apply {
@@ -587,7 +585,7 @@ fun ProductStockTrendsChart(productViewModel: ProductViewModel, role: String) {
 
 @Composable
 fun StockLevelsBarGraph(productViewModel: ProductViewModel, role: String) {
-    val products by productViewModel.productData.observeAsState(emptyList())  // List of products
+    val products by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
 
     LaunchedEffect(Unit) {
@@ -675,7 +673,7 @@ fun StockLevelsBarGraph(productViewModel: ProductViewModel, role: String) {
                                     textColor = Color(0xFF6F4E37).toArgb()
                                     setDrawGridLines(true)
                                     gridColor = Color.LightGray.toArgb()
-                                    axisMinimum = 0f  // Ensures no negative values are displayed
+                                    axisMinimum = 0f
                                 }
 
                                 xAxis.apply {
@@ -691,10 +689,9 @@ fun StockLevelsBarGraph(productViewModel: ProductViewModel, role: String) {
                             }
                         },
                         update = { barChart ->
-                            // Extract stock or quantity from product data based on JSON structure
                             val entries = products.mapIndexed { index, product ->
-                                val stockQuantity = product.quantity  // Ensure quantity is not null
-                                BarEntry(index.toFloat(), stockQuantity.toFloat().coerceAtLeast(0f)) // Ensure no negative values
+                                val stockQuantity = product.quantity
+                                BarEntry(index.toFloat(), stockQuantity.toFloat().coerceAtLeast(0f))
                             }
 
                             val colors = products.map { product ->
@@ -724,7 +721,7 @@ fun StockLevelsBarGraph(productViewModel: ProductViewModel, role: String) {
                             barChart.apply {
                                 data = barData
                                 xAxis.valueFormatter = IndexAxisValueFormatter(products.map { it.name }.toTypedArray())
-                                animateY(1000)  // Animation for Y-axis
+                                animateY(1000)
                                 invalidate()
                             }
                         }

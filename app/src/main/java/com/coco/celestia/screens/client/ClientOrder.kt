@@ -92,7 +92,7 @@ fun ClientOrder(
             modifier = Modifier
                 .fillMaxHeight()
                 .verticalScroll(rememberScrollState())
-                .semantics { testTag = "android:id/ClientOrderColumn" } // Test tag for the main column
+                .semantics { testTag = "android:id/ClientOrderColumn" }
         ) {
             Spacer(modifier = Modifier.height(10.dp))
 

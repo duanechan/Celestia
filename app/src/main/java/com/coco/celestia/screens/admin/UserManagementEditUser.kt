@@ -49,7 +49,6 @@ fun EditUser(
     var expanded by remember { mutableStateOf(false) }
     val content = LocalContext.current
 
-    // Map roles to more user-friendly names
     if (updatedRole == "CoopCoffee") {
         updatedRole = "Coffee"
     } else if (updatedRole == "CoopMeat") {
@@ -62,7 +61,7 @@ fun EditUser(
             Text(
                 text = "Enter your input",
                 modifier = Modifier.semantics { testTag = "android:id/EditUserDialogTitle" }
-            ) // Added test tag
+            )
         },
         text = {
             Column(
@@ -169,7 +168,7 @@ fun EditUser(
                         }
 
                     }
-                    onDismiss() // Close the dialog
+                    onDismiss()
                 },
                 modifier = Modifier.semantics { testTag = "android:id/EditUserConfirmButton" }
             ) {

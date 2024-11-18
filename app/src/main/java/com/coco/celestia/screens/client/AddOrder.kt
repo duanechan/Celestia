@@ -132,7 +132,6 @@ fun AddOrderPanel(
     val types = listOf("All", "Coffee", "Meat", "Vegetable")
 
     LaunchedEffect(Unit) {
-//        userViewModel.fetchUser(uid)
         orderViewModel.fetchMostOrderedItems()
         productViewModel.fetchProducts(
             filter = "",

@@ -69,7 +69,6 @@ fun AdminUserManagement(
     val usersData by userViewModel.usersData.observeAsState(emptyList())
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
 
-    // Filter users by role and search text
     val filteredUsers = usersData.filter {
         (it.role == "CoopCoffee" || it.role == "CoopMeat") &&
                 ("${it.firstname} ${it.lastname}".contains(text, ignoreCase = true))

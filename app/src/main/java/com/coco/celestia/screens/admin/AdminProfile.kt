@@ -32,7 +32,6 @@ fun AdminProfile(userViewModel: UserViewModel, navController: NavController) {
     var logoutDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    // Handle back press to show the exit dialog or navigate to login
     BackHandler {
         exitDialog = true
     }

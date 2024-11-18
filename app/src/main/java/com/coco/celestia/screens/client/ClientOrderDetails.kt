@@ -2,22 +2,18 @@ package com.coco.celestia.screens.client
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -40,7 +36,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.res.painterResource
@@ -55,8 +50,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.ui.theme.CDText
-import com.coco.celestia.ui.theme.ClientBG
 import com.coco.celestia.ui.theme.Copper
 import com.coco.celestia.ui.theme.GDivider
 import com.coco.celestia.ui.theme.GreenBeans
@@ -139,14 +132,12 @@ fun ClientOrderDetails(
                         modifier = Modifier
                             .fillMaxWidth()
                             .semantics { testTag = "android:id/OrderDetailsCard" },
-//                        shape = RoundedCornerShape(20.dp),
                         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
                     ) {
                         // Upper Part
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-//                                .clip(RoundedCornerShape(5.dp))
                                 .background(LightOrange),
                             contentAlignment = Alignment.TopStart,
                         ) {

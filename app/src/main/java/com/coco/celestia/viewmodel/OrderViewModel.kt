@@ -12,7 +12,6 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import kotlin.reflect.full.memberProperties
 
 sealed class OrderState {
@@ -38,49 +37,7 @@ class OrderViewModel : ViewModel() {
     val orderData: LiveData<List<OrderData>> = _orderData
     val mostOrderedData: LiveData<List<MostOrdered>> = _mostOrderedData
     val orderState: LiveData<OrderState> = _orderState
-    val mostOrderedState: LiveData<MostOrderedState> = _mostOrderedState
-    /**
-     * Fetches order data from the database based on the provided order ID.
-     *
-     * This function fetches order data from the database based on the provided order ID.
-     *
-     * @param targetId The ID of the order to be fetched.
-     * @throws DatabaseError If there is an error fetching the order.
-     */
-    fun fetchOrder(targetId: String) {
-        viewModelScope.launch {
-            _orderState.value = OrderState.LOADING
-            try {
-                val snapshot = database.get().await()
-                if (snapshot.exists()) {
-                    for(user in snapshot.children) {
-                        var found = false
-                        val orders = user.children
-                        for(order in orders) {
-                            val orderInfo = order.getValue(OrderData::class.java)
-                            val orderId = order.child("orderId").getValue(String::class.java)
-                            if(orderId == targetId) {
-                                val orderData = mutableListOf<OrderData>()
-                                orderData.add(orderInfo!!)
-                                _orderData.value = orderData
-                                _orderState.value = OrderState.SUCCESS
-                                found = true
-                                break
-                            }
-                        }
-                        if(found) {
-                            break
-                        }
-                    }
-                } else {
-                    _orderData.value = emptyList()
-                    _orderState.value = OrderState.EMPTY
-                }
-            } catch(e: Exception) {
-                _orderState.value = OrderState.ERROR(e.message ?: "Unknown error")
-            }
-        }
-    }
+
     /**
      * Fetches orders from the database based on the provided UID.
      *
@@ -240,28 +197,6 @@ class OrderViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Takes an order to fulfill.
-     *
-     * This function allows coop users to take on an order to fulfill.
-     *
-     * @param uid The UID of the user taking on the order.
-     * @param order The order data to be taken on.
-     * @throws Exception If there is an error taking on the order.
-     */
-    fun takeOnOrder(uid: String, role: String, order: OrderData) {
-        viewModelScope.launch {
-            _orderState.value = OrderState.LOADING
-            val query = database.child(role.lowercase()).child(uid).child("preparing").push()
-            query.setValue(order.copy(status = "PREPARING"))
-                .addOnCompleteListener {
-                    _orderState.value = OrderState.SUCCESS
-                }
-                .addOnFailureListener {
-                    _orderState.value = OrderState.ERROR(it.message ?: "Unknown error")
-                }
-        }
-    }
     /**
      * Updates an order in the database based on the order ID.
      *

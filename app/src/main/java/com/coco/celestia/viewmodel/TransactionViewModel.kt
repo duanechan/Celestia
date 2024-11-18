@@ -112,31 +112,4 @@ class TransactionViewModel : ViewModel() {
             })
         }
     }
-
-    fun listenForStatusUpdates(uid: String) {
-        database.child(uid).addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val newNotifications = mutableListOf<String>()
-                snapshot.children.forEach { transactionSnapshot ->
-                    val transaction = transactionSnapshot.getValue(TransactionData::class.java)
-                    transaction?.let {
-                        val message = when (it.status) {
-                            "Pending" -> "Your order for ${it.productName} is pending."
-                            "Preparing" -> "Your order for ${it.productName} is being prepared in the warehouse."
-                            "Rejected" -> "Your order for ${it.productName} has been rejected."
-                            "Delivering" -> "Your order for ${it.productName} is on the way."
-                            "Completed" -> "Your order for ${it.productName} has been completed and received."
-                            else -> null
-                        }
-                        message?.let { newNotifications.add(it) }
-                    }
-                }
-                _notifications.value = newNotifications
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                _transactionState.value = TransactionState.ERROR(error.message)
-            }
-        })
-    }
 }

@@ -243,34 +243,6 @@ class FarmerItemViewModel : ViewModel() {
         }
     }
 
-    fun setPlantingInfo(uid: String, productName: String, plantingDate: String, duration: Int, quantity: Int) {
-        viewModelScope.launch {
-            try {
-                _itemState.value = ItemState.LOADING
-
-                val productRef = database.child(uid).child("items").child(productName.lowercase())
-                val snapshot = productRef.get().await()
-
-                if (snapshot.exists()) {
-                    productRef.child("plantingDate").setValue(plantingDate).await()
-                    productRef.child("duration").setValue(duration).await()
-                    productRef.child("plantingQuantity").setValue(quantity).await()
-
-                    _itemData.value = _itemData.value?.map {
-                        if (it.name.equals(productName, ignoreCase = true)) {
-                            it.copy(plantingDate = plantingDate, duration = duration, plantingQuantity = quantity)
-                        } else it
-                    }
-
-                    _itemState.value = ItemState.SUCCESS
-                } else {
-                    _itemState.value = ItemState.ERROR("Product not found.")
-                }
-            } catch (e: Exception) {
-                _itemState.value = ItemState.ERROR(e.message.toString())
-            }
-        }
-    }
     fun getFarmersWithProduct(productName: String) {
         viewModelScope.launch {
             try {
