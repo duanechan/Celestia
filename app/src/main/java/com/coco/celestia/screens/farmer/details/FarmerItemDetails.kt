@@ -151,32 +151,13 @@ fun FarmerItemDetails(
                                         .semantics { testTag = "android:id/orderLoadingIndicator" }
                                 )
                             }
-                            OrderState.EMPTY -> {
-                                Text(
-                                    text = "No orders available for this product.",
-                                    fontSize = 16.sp,
-                                    color = Cocoa.copy(alpha = 0.8f),
-                                    modifier = Modifier
-                                        .align(Alignment.CenterHorizontally)
-                                        .padding(16.dp)
-                                        .semantics { testTag = "android:id/noOrdersText" }
-                                )
-                            }
                             OrderState.SUCCESS -> {
                                 val filteredOrders = allOrders.filter {
                                     it.orderData.name.equals(productName, ignoreCase = true)
                                 }
 
                                 if (filteredOrders.isEmpty()) {
-                                    Text(
-                                        text = "No orders available for this product.",
-                                        fontSize = 16.sp,
-                                        color = Cocoa.copy(alpha = 0.8f),
-                                        modifier = Modifier
-                                            .align(Alignment.CenterHorizontally)
-                                            .padding(16.dp)
-                                            .semantics { testTag = "noOrdersForProductText" }
-                                    )
+                                    OrderTable(orders = emptyList(), farmerName = farmerName)
                                 } else {
                                     OrderTable(orders = filteredOrders, farmerName = farmerName)
                                 }
@@ -192,6 +173,7 @@ fun FarmerItemDetails(
                                         .semantics { testTag = "android:id/orderErrorText" }
                                 )
                             }
+                            OrderState.EMPTY -> { }
                         }
                     }
                 } else {
@@ -579,7 +561,7 @@ fun OrderTable(
                 .height(tableHeight)
                 .verticalScroll(rememberScrollState())
                 .semantics { testTag = "android:id/orderList" }
-                .background(SoftOrange)  // Added background here
+                .background(SoftOrange)
         ) {
             if (filteredOrders.isNotEmpty()) {
                 Column(

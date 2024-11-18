@@ -212,12 +212,12 @@ fun FarmerAddProductDialog(
                 TextField(
                     value = name,
                     onValueChange = {
-                        if (it.length <= 200) {  // Limit to 200 characters
+                        if (it.length <= 200) {
                             name = it
                             nameError = false
                         }
                     },
-                    placeholder = { Text("Enter vegetable name", color = Cocoa.copy(alpha = 0.7f)) },
+                    placeholder = { Text("Enter product name", color = Cocoa.copy(alpha = 0.7f)) },
                     isError = nameError,
                     modifier = Modifier
                         .fillMaxWidth()
