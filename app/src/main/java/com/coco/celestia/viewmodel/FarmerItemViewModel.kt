@@ -189,46 +189,27 @@ class FarmerItemViewModel : ViewModel() {
             }
         }
     }
-    fun reduceItemQuantity(item: ItemData, partialQuantity: Int? = null) {
+    fun reduceItemQuantity(item: String, quantityDeducted: Int) {
         viewModelScope.launch {
             try {
                 _itemState.value = ItemState.LOADING
-
-                var itemFound = false
                 val uid = FirebaseAuth.getInstance().uid.toString()
-                val snapshot = database.child(uid).child("items").get().await()
-                val orderedQuantity = item.items.firstOrNull()?.quantity ?: 0
-                val reductionAmount = partialQuantity ?: orderedQuantity
+                val query = database.child(uid).child("items").child(item.lowercase()).child("quantity")
 
-                for (itemNode in snapshot.children) {
-                    val name = itemNode.child("name").getValue(String::class.java)
-
-                    if (name?.equals(item.name, ignoreCase = true) == true) {
-                        val currentQuantity = itemNode.child("quantity").getValue(Int::class.java) ?: 0
-
-                        val newQuantity = (currentQuantity - reductionAmount).coerceAtLeast(0)
-                        itemNode.child("quantity").ref.setValue(newQuantity).await()
-
-                        val updatedItem = itemNode.getValue(ProductData::class.java)?.copy(quantity = newQuantity)
-                        updatedItem?.let {
-                            _itemData.value = _itemData.value?.map { existingItem ->
-                                if (existingItem.name.equals(item.name, ignoreCase = true)) updatedItem else existingItem
-                            }?.toList()
-                        }
-
-                        itemFound = true
-                        if (partialQuantity != null) break
+                query.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val oldQuantity = snapshot.getValue(Int::class.java) ?: 0
+                        snapshot.ref.setValue(oldQuantity - quantityDeducted)
+                            .addOnSuccessListener { _itemState.value = ItemState.SUCCESS }
+                            .addOnFailureListener { _itemState.value = ItemState.ERROR("Failed to update inventory") }
                     }
-                }
 
-                if (!itemFound) {
-                    val availableItems = snapshot.children.mapNotNull {
-                        it.child("name").getValue(String::class.java)
-                    }.joinToString(", ")
-                    _itemState.value = ItemState.ERROR("Product ${item.name} not found in inventory")
-                } else {
-                    getItems(uid)
-                }
+                    override fun onCancelled(error: DatabaseError) {
+                        _itemState.value = ItemState.ERROR(error.message ?: "Failed to update inventory")
+                    }
+
+                })
+
 
             } catch (e: Exception) {
                 _itemState.value = ItemState.ERROR(e.message ?: "Failed to update inventory")

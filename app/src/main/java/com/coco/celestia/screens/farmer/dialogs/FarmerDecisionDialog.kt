@@ -304,6 +304,7 @@ fun FarmerDecisionDialog(
                                     partialQuantity = fulfilled
                                 )
                                 orderViewModel.updateOrder(updatedOrder)
+                                farmerItemViewModel.reduceItemQuantity(updatedOrder.orderData.name, partialToInt)
                             } else {
                                 if (orderData.status == "PARTIALLY_FULFILLED") {
                                     val fulFiller = FullFilledBy (
@@ -316,7 +317,10 @@ fun FarmerDecisionDialog(
                                         partialQuantity = orderData.orderData.quantity
                                     )
                                     orderViewModel.updateOrder(updatedOrder)
-
+                                    farmerItemViewModel.reduceItemQuantity(
+                                        updatedOrder.orderData.name,
+                                        updatedOrder.orderData.quantity - updatedOrder.fulfilled
+                                    )
                                 } else {
                                     val fulFiller = FullFilledBy (
                                         farmerName = farmerName,
@@ -328,6 +332,7 @@ fun FarmerDecisionDialog(
                                         partialQuantity = orderData.orderData.quantity
                                     )
                                     orderViewModel.updateOrder(updatedOrder)
+                                    farmerItemViewModel.reduceItemQuantity(updatedOrder.orderData.name, updatedOrder.orderData.quantity)
                                 }
                             }
                             showFulfillmentDialog = false
