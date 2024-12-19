@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalCoilApi::class)
 
-package com.coco.celestia.screens.admin
+package com.coco.celestia.screens.coop
 
 import android.Manifest
 import android.content.pm.PackageManager

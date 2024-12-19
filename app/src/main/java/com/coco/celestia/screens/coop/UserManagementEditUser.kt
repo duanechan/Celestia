@@ -1,4 +1,4 @@
-package com.coco.celestia.screens.admin
+package com.coco.celestia.screens.coop
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
@@ -27,7 +27,6 @@ import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
-import com.sun.mail.imap.protocol.UID
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID

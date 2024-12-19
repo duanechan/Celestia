@@ -1,4 +1,4 @@
-package com.coco.celestia.screens.admin
+package com.coco.celestia.screens.coop
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +25,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
@@ -36,7 +35,6 @@ import androidx.compose.ui.semantics.testTag
 import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.util.isValidEmail
 import com.coco.celestia.util.sendEmail
 import com.coco.celestia.viewmodel.TransactionViewModel

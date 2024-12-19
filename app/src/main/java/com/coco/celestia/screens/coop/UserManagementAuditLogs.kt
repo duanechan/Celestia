@@ -1,4 +1,4 @@
-package com.coco.celestia.screens.admin
+package com.coco.celestia.screens.coop
 
 import android.Manifest
 import android.os.Build
