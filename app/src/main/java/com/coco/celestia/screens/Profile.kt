@@ -89,6 +89,8 @@ import com.coco.celestia.ui.theme.DOrangeCircle
 import com.coco.celestia.ui.theme.DuskyBlue
 import com.coco.celestia.ui.theme.FarmerGradientBrush
 import com.coco.celestia.ui.theme.GrayGradientBrush
+import com.coco.celestia.ui.theme.Green1
+import com.coco.celestia.ui.theme.Green4
 import com.coco.celestia.ui.theme.LightBlue
 import com.coco.celestia.ui.theme.LightBlueGreen
 import com.coco.celestia.ui.theme.OrangeGradientBrush
@@ -280,57 +282,21 @@ fun ProfileScreen(
         )
     }
 
-    fun getGradientBrushForRole(role: String): Brush {
-        return when (role) {
-            "Admin" -> BlueGradientBrush
-            "Client" -> OrangeGradientBrush
-            "Farmer" -> FarmerGradientBrush
-            "Coop", "CoopCoffee", "CoopMeat" -> BGGradientBrush
-            else -> GrayGradientBrush
-        }
-    }
-
     fun getFirstColorForRole(role: String): Color {
-        return when (role) {
-            "Admin" -> Color(0xFF40458d)
-            "Client" -> Color(0xFFe79857)
-            "Farmer" -> Color(0xFFE6B962)
-            "Coop", "CoopCoffee", "CoopMeat" -> Color(0xFF16909B)
-            else -> Color(0x80FFFFFF)
-        }
+        return Green4
     }
 
     fun saveInfoColor(role: String): Color {
-        return when (role) {
-            "Admin" -> Color(0xFF5362bd)
-            "Client" -> Color(0xFFe3a383)
-            "Farmer" -> Color(0xFFE6B962)
-            "Coop", "CoopCoffee", "CoopMeat" -> Color(0xFF47DEB1)
-            else -> Color(0x80FFFFFF)
-        }
+        return Green4
     }
 
     fun getIconColorForRole(role: String): Color {
-        return when (role) {
-            "Admin" -> DuskyBlue
-            "Client" -> DOrangeCircle
-            "Farmer" -> Cocoa
-            "Coop", "CoopCoffee", "CoopMeat" -> PreparingStatus
-            else -> Color(0x80FFFFFF)
-        }
+        return Green4
     }
 
     fun getProfileColorForRole(role: String): Color {
-        return when (role) {
-            "Admin" -> PaleBlue
-            "Client" -> CProfile
-            "Farmer" -> Apricot
-            "Coop", "CoopCoffee", "CoopMeat" -> LightBlueGreen
-            else -> Color(0x80FFFFFF)
-        }
+        return Green4
     }
-
-    val gradientBrush = getGradientBrushForRole(role)
 
     Box(
         modifier = Modifier
@@ -345,8 +311,7 @@ fun ProfileScreen(
                     .fillMaxWidth()
                     .height(250.dp)
                     .background(
-                        brush = gradientBrush,
-                        shape = RoundedCornerShape(bottomEnd = 16.dp, bottomStart = 16.dp)
+                        Green4
                     ),
                 contentAlignment = Alignment.Center
             ) {
@@ -387,14 +352,14 @@ fun ProfileScreen(
                         fontWeight = FontWeight.Bold,
                         fontSize = 28.sp,
                         fontFamily = mintsansFontFamily,
-                        color = Color.White
+                        color = Green1
                     )
                     Text(
                         text = role,
                         fontWeight = FontWeight.Normal,
                         fontSize = 18.sp,
                         fontFamily = mintsansFontFamily,
-                        color = Color.White
+                        color = Green1
                     )
                 }
             }
@@ -511,7 +476,7 @@ fun ProfileScreen(
                             .align(Alignment.End),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = saveInfoColor(role = role),
-                            contentColor = Color.White
+                            contentColor = Green1
                         )
                     ) {
                         Text("Change Password")
@@ -671,7 +636,7 @@ fun ProfileScreen(
                     onClick = { logoutDialog = true },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = getFirstColorForRole(role),
-                        contentColor = Color.White
+                        contentColor = Green1
                     ),
                     modifier = Modifier
                         .weight(1f)

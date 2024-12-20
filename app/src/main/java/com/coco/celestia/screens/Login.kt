@@ -97,7 +97,7 @@ fun LoginScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = BgColor)
+            .background(color = White2)
             .padding(horizontal = 16.dp)
             .semantics { testTag = "android:id/loginScreen" },
         verticalArrangement = Arrangement.Center,
@@ -109,24 +109,24 @@ fun LoginScreen(
             modifier = Modifier.size(195.dp)
         )
 
-        Text(text = "CoCo", fontSize = 54.sp, fontWeight = FontWeight.Bold, color = BrownCoffee2)
-        Text(text = "Coop Connects", fontSize = 15.sp, color = BrownCoffee2)
+        Text(text = "CoCo", fontSize = 54.sp, fontWeight = FontWeight.Bold, color = Green1)
+        Text(text = "Coop Connects", fontSize = 15.sp, color = Green1)
 
         Spacer(modifier = Modifier.height(35.dp))
 
         OutlinedTextField(
             value = email,
             onValueChange = { if (it.length <= 25) email = it },
-            label = { Text(text = "Email", color = BrownCoffee2) },
+            label = { Text(text = "Email", color = Green1) },
             singleLine = true,
             maxLines = 1,
             shape = RoundedCornerShape(16.dp),
-            textStyle = TextStyle(color = BrownCoffee2),
+            textStyle = TextStyle(color = Green1),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
-                focusedBorderColor = BrownCoffee2,
-                unfocusedBorderColor = BrownCoffee2
+                focusedBorderColor = Green1,
+                unfocusedBorderColor = Green1
             ),
             modifier = Modifier.semantics { testTag = "android:id/emailField" }
         )
@@ -136,18 +136,18 @@ fun LoginScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { if (it.length <= 16) password = it },
-            label = { Text(text = "Password", color = BrownCoffee2) },
+            label = { Text(text = "Password", color = Green1) },
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             singleLine = true,
             maxLines = 1,
             shape = RoundedCornerShape(16.dp),
-            textStyle = TextStyle(color = BrownCoffee2),
+            textStyle = TextStyle(color = Green1),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
-                focusedBorderColor = BrownCoffee2,
-                unfocusedBorderColor = BrownCoffee2
+                focusedBorderColor = Green1,
+                unfocusedBorderColor = Green1
             ),
             modifier = Modifier.semantics { testTag = "android:id/passwordField" }
         )
@@ -167,7 +167,7 @@ fun LoginScreen(
                     onLoginEvent(Triple(ToastStatus.FAILED, e.message ?: "An unknown error has occurred.", System.currentTimeMillis()))
                 }
             },
-            colors = ButtonDefaults.buttonColors(BrownCoffee),
+            colors = ButtonDefaults.buttonColors(Green1),
             modifier = Modifier
                 .width(285.dp)
                 .height(50.dp)
@@ -179,7 +179,7 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = "Forgot Password?",
-            color = BrownCoffee2,
+            color = Green1,
             fontSize = 13.sp,
             modifier = Modifier.clickable {
                 mainNavController.navigate(Screen.ForgotPassword.route)
@@ -190,7 +190,7 @@ fun LoginScreen(
         Text(
             text = "Don't have an account? Register Now!",
             fontSize = 13.sp,
-            color = BrownCoffee2,
+            color = Green1,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clickable {
                 mainNavController.navigate(Screen.Register.route)

@@ -23,6 +23,14 @@ val BrownCoffee2 = Color(0xFF633E06)
 //Profile Palette
 val GrayTextField = Color(0XFFdcdcdc)
 
+//Main Color Palette - New
+val Green1 = Color(0XFF253528)
+val Green2 = Color(0XFF49654E)
+val Green3 = Color(0xFF8BA889)
+val Green4 = Color(0XFFC0CFB2)
+val White1 = Color(0XFFE4E6D9)
+val White2 = Color(0XFFECEDE8)
+
 //Client Palette
 val LightOrange = Color(0xFFe79857) //top bar
 val ClientBG = Color (0xFFECDFCC)  //client bg

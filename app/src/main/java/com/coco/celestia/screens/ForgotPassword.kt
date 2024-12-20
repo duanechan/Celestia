@@ -46,7 +46,7 @@ fun ForgotPasswordScreen(
     Column (
         modifier = Modifier
             .fillMaxSize()
-            .background(color = BgColor)
+            .background(color = White2)
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -54,15 +54,15 @@ fun ForgotPasswordScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { if (it.length <= 25) email = it },
-            label = { Text(text = "Email", color = BrownCoffee2) },
+            label = { Text(text = "Email", color = Green1) },
             singleLine = true,
             maxLines = 1,
             shape = RoundedCornerShape(16.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = Color.White,
                 unfocusedContainerColor = Color.White,
-                focusedBorderColor = BrownCoffee2,
-                unfocusedBorderColor = BrownCoffee2
+                focusedBorderColor = Green1,
+                unfocusedBorderColor = Green1
             ),
         )
 
@@ -76,7 +76,7 @@ fun ForgotPasswordScreen(
                     userViewModel.sendPasswordResetEmail(email)
                 }
             },
-            colors = ButtonDefaults.buttonColors(BrownCoffee),
+            colors = ButtonDefaults.buttonColors(Green1),
             modifier = Modifier
                 .width(285.dp)
                 .height(50.dp)

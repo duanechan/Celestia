@@ -25,12 +25,12 @@ import com.coco.celestia.screens.Profile
 import com.coco.celestia.screens.RegisterScreen
 import com.coco.celestia.screens.SplashScreen
 import com.coco.celestia.screens.coop.AddUserForm
-import com.coco.celestia.screens.admin.AdminAddProduct
-import com.coco.celestia.screens.admin.AdminDashboard
+//import com.coco.celestia.screens.admin.AdminAddProduct
+//import com.coco.celestia.screens.admin.AdminDashboard
 import com.coco.celestia.screens.coop.AdminInventory
 import com.coco.celestia.screens.coop.AdminUserManagement
 import com.coco.celestia.screens.coop.CheckAddUser
-import com.coco.celestia.screens.admin.ConfirmAddProduct
+//import com.coco.celestia.screens.admin.ConfirmAddProduct
 import com.coco.celestia.screens.coop.UserManagementAuditLogs
 import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientDashboard
@@ -219,16 +219,16 @@ fun NavGraph(
                 userViewModel.fetchUser(uid)
             }
             val userData by userViewModel.userData.observeAsState()
-            if (userData == null) {
-                LoadingIndicator()
-            } else {
-                AdminDashboard(
-                    userData = userData,
-                    productViewModel = productViewModel,
-                    orderViewModel = orderViewModel,
-                    navController = navController
-                )
-            }
+//            if (userData == null) {
+//                LoadingIndicator()
+//            } else {
+//                AdminDashboard(
+//                    userData = userData,
+//                    productViewModel = productViewModel,
+//                    orderViewModel = orderViewModel,
+//                    navController = navController
+//                )
+//            }
         }
 
         composable(route = Screen.AdminInventory.route) {
@@ -288,42 +288,42 @@ fun NavGraph(
                 onRegisterEvent = { onEvent(it) }
             )
         }
-        composable(route = Screen.AdminAddProduct.route) {
-            onNavigate("Add Product")
-            LaunchedEffect(Unit) {
-                productViewModel.updateProductName("")
-                productType = ""
-                productPrice = ""
-            }
-
-            AdminAddProduct(
-                productPrice = productPrice,
-                productName = productName,
-                onUpdatedProductImage = { updatedProductImage = it },
-                onProductNameChanged = { productViewModel.updateProductName(it) },
-                onTypeSelected = { productType = it },
-                onPriceChanged = { productPrice = it },
-                onToastEvent = { onEvent(it) }
-            )
-        }
-        composable(route = Screen.AdminConfirmAddProduct.route) {
-            onNavigate("Add Product")
-            if (productName.isNotEmpty() && productType.isNotEmpty() && productPrice.isNotEmpty()) {
-                ConfirmAddProduct(
-                    navController = navController,
-                    productViewModel = productViewModel,
-                    transactionViewModel = transactionViewModel,
-                    productName = productName,
-                    productType = productType,
-                    productPrice = productPrice,
-                    updatedProductImage = updatedProductImage,
-                    onToastEvent = { onEvent(it) }
-                )
-            } else {
-                onEvent(Triple(ToastStatus.WARNING, "All Fields must be filled", System.currentTimeMillis()))
-                navController.navigate(Screen.AdminAddProduct.route)
-            }
-        }
+//        composable(route = Screen.AdminAddProduct.route) {
+//            onNavigate("Add Product")
+//            LaunchedEffect(Unit) {
+//                productViewModel.updateProductName("")
+//                productType = ""
+//                productPrice = ""
+//            }
+//
+//            AdminAddProduct(
+//                productPrice = productPrice,
+//                productName = productName,
+//                onUpdatedProductImage = { updatedProductImage = it },
+//                onProductNameChanged = { productViewModel.updateProductName(it) },
+//                onTypeSelected = { productType = it },
+//                onPriceChanged = { productPrice = it },
+//                onToastEvent = { onEvent(it) }
+//            )
+//        }
+//        composable(route = Screen.AdminConfirmAddProduct.route) {
+//            onNavigate("Add Product")
+//            if (productName.isNotEmpty() && productType.isNotEmpty() && productPrice.isNotEmpty()) {
+//                ConfirmAddProduct(
+//                    navController = navController,
+//                    productViewModel = productViewModel,
+//                    transactionViewModel = transactionViewModel,
+//                    productName = productName,
+//                    productType = productType,
+//                    productPrice = productPrice,
+//                    updatedProductImage = updatedProductImage,
+//                    onToastEvent = { onEvent(it) }
+//                )
+//            } else {
+//                onEvent(Triple(ToastStatus.WARNING, "All Fields must be filled", System.currentTimeMillis()))
+//                navController.navigate(Screen.AdminAddProduct.route)
+//            }
+//        }
         composable(route = Screen.Coop.route) {
             onNavigate("Dashboard")
             CoopDashboard(
