@@ -16,7 +16,7 @@ val Pink40 = Color(0xFF7D5260)
 val Orange = Color(0xFFE86A33)
 val LightGreen = Color(0xFF41644A)
 val DarkGreen = Color(0xFF263A29)
-val BgColor = Color(0xFFF2E3DB)
+val BgColor = Color(0xFFECEDE8) //new bg color
 val Gray = Color(0xFF3E3E3E)
 val BrownCoffee2 = Color(0xFF633E06)
 
@@ -57,12 +57,12 @@ val MustardYellow = Color(0xFFff9900)
 val RoyalBlue = Color(0xFF4169e1)
 
 //Farmer Palette
-val LightApricot = Color(0xFFFFE7BF)
+val LightApricot = Color(0xFFE4E6D9) //
 val PaleGold = Color(0xFFFFC978)
 val SageGreen = Color(0xFFcece93)
 val Sand = Color(0xFFD1A664)
 val Copper = Color(0xFFC27B57)
-val Cocoa = Color(0xFF88563d)
+val Cocoa = Color(0xFF263A29) //
 val SoftOrange = Color(0xFFFFCE86)
 val GoldenYellow = Color(0xFFE6B979)
 val Yellow4 = Color(0xFFE6B962)
