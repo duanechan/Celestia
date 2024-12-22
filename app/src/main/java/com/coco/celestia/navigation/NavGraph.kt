@@ -21,6 +21,7 @@ import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.Calendar
 import com.coco.celestia.screens.ForgotPasswordScreen
 import com.coco.celestia.screens.LoginScreen
+import com.coco.celestia.screens.Notifications
 import com.coco.celestia.screens.Profile
 import com.coco.celestia.screens.RegisterScreen
 import com.coco.celestia.screens.SplashScreen
@@ -130,6 +131,12 @@ fun NavGraph(
                 productViewModel = productViewModel
             )
         }
+        composable(route = Screen.Notifications.route) {
+            onNavigate("Notifications")
+            Notifications(
+                role = userRole
+            )
+        }
         composable(route = Screen.Farmer.route) {
             onNavigate("Dashboard")
 
@@ -189,7 +196,7 @@ fun NavGraph(
         }
 
         composable(route = Screen.Client.route) {
-            onNavigate("Dashboard")
+            onNavigate("Home")
             ClientDashboard(
                 navController = navController,
                 userViewModel = userViewModel,

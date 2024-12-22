@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -291,88 +292,6 @@ fun TopBar(
     }
 }
 
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun GradientTopBar(title: String, navController: NavController) {
-//    val navBackStackEntry by navController.currentBackStackEntryAsState()
-//    val currentDestination = navBackStackEntry?.destination?.route
-//    val noBackButtonRoutes = listOf("farmer_dashboard", "farmer_manage_order", "farmer_items", "profile", "farmer_add_product")
-//
-//    Box(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .background(
-//                Brush.verticalGradient(
-//                    colors = listOf(Sand, Yellow4)
-//                )
-//            )
-//    ) {
-//        TopAppBar(
-//            title = {
-//                Box(
-//                    modifier = Modifier
-//                        .fillMaxSize(),
-//                    contentAlignment = Alignment.Center
-//                ) {
-//                    Text(
-//                        text = title,
-//                        fontWeight = FontWeight.Bold,
-//                        color = contentsColor,
-//                    )
-//                }
-//            },
-//            navigationIcon = {
-//                if (currentDestination !in noBackButtonRoutes) {
-//                    IconButton(
-//                        onClick = {
-//                            navController.popBackStack()
-//                        }
-//                    ) {
-//                        Icon(
-//                            imageVector = Icons.Default.KeyboardArrowLeft,
-//                            contentDescription = "Back button",
-//                            tint = contentsColor
-//                        )
-//                    }
-//                } else {
-//                    Box(modifier = Modifier.width(48.dp))
-//                }
-//            },
-//            actions = {
-//                if (currentDestination == "farmer_dashboard" || currentDestination == "farmer_items" || currentDestination == "farmer_manage_order") {
-//                    Icon(
-//                        imageVector = Icons.Default.DateRange,
-//                        tint = contentsColor,
-//                        contentDescription = "Calendar Icon",
-//                        modifier = Modifier
-//                            .padding(10.dp)
-//                            .size(30.dp)
-//                            .clickable {
-//                                navController.navigate(Screen.Calendar.route)
-//                            }
-//                    )
-//                }
-//                else{
-//                    Icon(
-//                        imageVector = Icons.Default.DateRange,
-//                        tint = Color.Transparent,
-//                        contentDescription = "Calendar Icon",
-//                        modifier = Modifier
-//                            .padding(10.dp)
-//                            .size(30.dp)
-//                    )
-//                }
-//            },
-//            colors = TopAppBarDefaults.topAppBarColors(
-//                containerColor = Color.Transparent,
-//                titleContentColor = Green1,
-//                navigationIconContentColor = Green1
-//            ),
-//            modifier = Modifier.fillMaxWidth()
-//        )
-//    }
-//}
-
 @Composable
 fun NavDrawerBottomBar(
     role: String,
@@ -388,11 +307,12 @@ fun NavDrawerBottomBar(
             containerColor = navColor,
             contentColor = contentsColor
         ) {
+            // Home
             NavigationBarItem(
                 icon = {
                     Icon(
                         imageVector = Icons.Default.Home,
-                        contentDescription = "Dashboard",
+                        contentDescription = "Home",
                         tint = when {
                             role == "Client" -> contentsColor
                             role == "Farmer" && currentDestination == routes.dashboard -> contentsColor
@@ -403,7 +323,7 @@ fun NavDrawerBottomBar(
                 },
                 label = {
                     Text(
-                        "Dashboard",
+                        "Home",
                         color = when {
                             role == "Client" -> contentsColor
                             role == "Farmer" && currentDestination == routes.dashboard -> contentsColor
@@ -443,7 +363,7 @@ fun NavDrawerBottomBar(
                     },
                     label = {
                         Text(
-                            "Orders",
+                            if (role == "Client") "Track Orders" else "Orders",
                             color = when {
                                 role == "Client" -> contentsColor
                                 role == "Farmer" && currentDestination == routes.orders -> contentsColor
@@ -486,7 +406,7 @@ fun NavDrawerBottomBar(
                     },
                     label = {
                         Text(
-                            "Items",
+                            if (role == "CoopCoffee" || role == "CoopMeat") "Inventory" else "Items",
                             color = contentsColor,
                             fontFamily = mintsansFontFamily
                         )
@@ -538,14 +458,14 @@ fun NavDrawerBottomBar(
                 )
             }
 
-            // Contact section for Client - ig to remove
-            if (role == "Client") {
+            // Notification
+            if (role == "Client" || role == "Farmer") {
                 NavigationBarItem(
-                    icon = { Icon(imageVector = Icons.Default.Call, contentDescription = "Contact", tint = contentsColor) },
-                    label = { Text("Contact", color = contentsColor, fontFamily = mintsansFontFamily) },
-                    selected = currentDestination == Screen.ClientContact.route,
+                    icon = { Icon(imageVector = Icons.Default.Notifications, contentDescription = "Notification", tint = contentsColor) },
+                    label = { Text("Notification", color = contentsColor, fontFamily = mintsansFontFamily) },
+                    selected = currentDestination == Screen.Notifications.route,
                     onClick = {
-                        navController.navigate(Screen.ClientContact.route) {
+                        navController.navigate(Screen.Notifications.route) {
                             popUpTo(navController.graph.startDestinationId)
                         }
                     },
@@ -553,7 +473,7 @@ fun NavDrawerBottomBar(
                         selectedIconColor = contentsColor,
                         indicatorColor = DOrangeCircle
                     ),
-                    modifier = Modifier.semantics { testTag = "android:id/contactPage" }
+                    modifier = Modifier.semantics { testTag = "android:id/notificationsPage" }
                 )
             }
 
@@ -588,16 +508,3 @@ fun NavDrawerBottomBar(
         }
     }
 }
-
-//fun bottomColorConfig(role: String): Pair<Color, Color> {
-//    return when (role) {
-//        "Admin" -> Pair(Green1, DarkBlue)
-//        "Client" -> Pair(LightOrange, Green1)
-//        "Coop" -> Pair(Green1, contentsColor)
-//        "CoopCoffee" -> Pair(Green1, contentsColor)
-//        "CoopMeat" -> Pair(Green1, contentsColor)
-//        "Farmer" -> Pair(Yellow4, contentsColor)
-//        else -> Pair(Green1, Color.Black) // Default
-//    }
-//}
-
