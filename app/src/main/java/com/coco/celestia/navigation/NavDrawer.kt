@@ -395,7 +395,7 @@ fun NavDrawerBottomBar(
             }
 
             // Items section
-            if (role == "Admin" || role == "Coop" || role == "CoopCoffee" || role == "CoopMeat" || role == "Farmer") {
+            if (role == "Admin" || role == "Coop" || role == "CoopCoffee" || role == "CoopMeat") {
                 NavigationBarItem(
                     icon = {
                         Icon(

@@ -167,7 +167,7 @@ fun FarmerDashboard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "In Season Products",
+                                text = "Order Progress Overview",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Cocoa
@@ -199,7 +199,7 @@ fun FarmerDashboard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Product Stock Levels",
+                                text = "Quotation Review",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Cocoa
@@ -231,7 +231,7 @@ fun FarmerDashboard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Order Listings",
+                                text = "Pending Order Requests",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Cocoa
