@@ -1,4 +1,4 @@
-package com.coco.celestia.screens.coop
+package com.coco.celestia.screens.coop.admin
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

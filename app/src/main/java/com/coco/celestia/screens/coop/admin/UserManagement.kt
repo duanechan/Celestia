@@ -1,4 +1,4 @@
-package com.coco.celestia.screens.coop
+package com.coco.celestia.screens.coop.admin
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -81,13 +81,13 @@ fun AdminUserManagement(
         Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .background(BlueGradientBrush)
+                .background(Green4)
                 .verticalScroll(rememberScrollState())
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(BlueGradientBrush)
+                    .background(Green4)
                     .padding(5.dp, 0.dp, 0.dp, 0.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
@@ -97,8 +97,8 @@ fun AdminUserManagement(
                     onSearch = { query -> text = query },
                     active = false,
                     onActiveChange = {},
-                    placeholder = { Text(text = "Search name...", color = DarkBlue) },
-                    leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon", tint = DarkBlue) },
+                    placeholder = { Text(text = "Search name...", color = Green1) },
+                    leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = "Search Icon", tint = Green1) },
                     modifier = Modifier
                         .width(screenWidth * 0.75f)
                         .offset(y = (-12).dp)
@@ -179,7 +179,7 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                         .semantics { testTag = "android:id/userTableHeaderName" },
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Start,
-                    color = DarkBlue
+                    color = Green1
                 )
                 Text(
                     text = "ROLE",
@@ -190,7 +190,7 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                         .semantics { testTag = "android:id/userTableHeaderRole" },
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Start,
-                    color = DarkBlue
+                    color = Green1
                 )
                 Text(
                     text = "EDIT",
@@ -200,7 +200,7 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                         .semantics { testTag = "android:id/userTableHeaderEdit" },
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
-                    color = DarkBlue
+                    color = Green1
                 )
             }
         }
@@ -221,7 +221,7 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                             .fillMaxWidth()
                             .semantics { testTag = "android:id/userName_$index" },
                         textAlign = TextAlign.Start,
-                        color = DarkBlue
+                        color = Green1
                     )
                     role = if (user.role == "CoopCoffee") {
                         "Coffee"
@@ -236,7 +236,7 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                             .fillMaxWidth()
                             .semantics { testTag = "android:id/userRole_$index" },
                         textAlign = TextAlign.Start,
-                        color = DarkBlue
+                        color = Green1
                     )
                     IconButton(
                         onClick = {
@@ -249,7 +249,7 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "Edit User",
-                            tint = DarkBlue,
+                            tint = Green1,
                             modifier = Modifier.semantics { testTag = "android:id/editIcon_$index" }
                         )
                     }

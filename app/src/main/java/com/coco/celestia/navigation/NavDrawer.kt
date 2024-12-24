@@ -5,28 +5,22 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
@@ -35,13 +29,14 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
@@ -57,6 +52,7 @@ import com.coco.celestia.screens.client.ClientHelpOverlay
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.routeHandler
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +64,10 @@ fun NavDrawerTopBar(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination?.route
     val isHelpOverlayVisible = remember { mutableStateOf(false) }
+    val expandedMenu = remember { mutableStateOf(false) }
+
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
     when (role) {
         "Client" -> {
@@ -140,38 +140,33 @@ fun NavDrawerTopBar(
             ClientHelpOverlay(isVisible = isHelpOverlayVisible)
         }
         "Admin" -> {
-            TopBar(
-                title = title,
-                navController = navController,
-                containerColor = Green4,
-                currentDestination = currentDestination
+            TopAppBar(
+                title = {
+                    Text(
+                        text = title,
+                        color = Green1,
+                        fontWeight = FontWeight.Bold,
+                    )
+                },
+                navigationIcon = {
+                    IconButton(
+                        onClick = { scope.launch { drawerState.open() } }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "Menu Button",
+                            tint = Green1
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Green4,
+                    titleContentColor = Green1,
+                    navigationIconContentColor = Green1
+                )
             )
         }
-        "Farmer" -> {
-            TopBar(
-                title = title,
-                navController = navController,
-                containerColor = Green4,
-                currentDestination = currentDestination
-            )
-        }
-        "Coop" -> {
-            TopBar(
-                title = title,
-                navController = navController,
-                containerColor = Green4,
-                currentDestination = currentDestination
-            )
-        }
-        "CoopCoffee" -> {
-            TopBar(
-                title = title,
-                navController = navController,
-                containerColor = Green4,
-                currentDestination = currentDestination
-            )
-        }
-        "CoopMeat" -> {
+        else -> {
             TopBar(
                 title = title,
                 navController = navController,
@@ -181,7 +176,6 @@ fun NavDrawerTopBar(
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -347,7 +341,7 @@ fun NavDrawerBottomBar(
             )
 
             // Orders section
-            if (role == "Coop" || role == "CoopCoffee" || role == "CoopMeat" || role == "Client" || role == "Farmer") {
+            if (role == "Coop" || role == "CoopCoffee" || role == "CoopMeat" || role == "Client" || role == "Farmer" || role == "Admin") {
                 NavigationBarItem(
                     icon = {
                         Icon(
@@ -357,6 +351,7 @@ fun NavDrawerBottomBar(
                                 role == "Client" -> contentsColor
                                 role == "Farmer" && currentDestination == routes.orders -> contentsColor
                                 role == "CoopCoffee" && currentDestination == routes.orders -> contentsColor
+                                role == "Admin" && currentDestination == routes.orders -> contentsColor
                                 else -> contentsColor
                             }
                         )
@@ -367,21 +362,30 @@ fun NavDrawerBottomBar(
                             color = when {
                                 role == "Client" -> contentsColor
                                 role == "Farmer" && currentDestination == routes.orders -> contentsColor
-                                role == "CoopCoffee" && currentDestination == routes.orders-> contentsColor
+                                role == "CoopCoffee" && currentDestination == routes.orders -> contentsColor
+                                role == "Admin" && currentDestination == routes.orders -> contentsColor
                                 else -> contentsColor
                             },
                             fontFamily = mintsansFontFamily
                         )
                     },
-                    selected = currentDestination == routes.orders || currentDestination == Screen.ClientOrderDetails.route,
+                    selected = currentDestination == routes.orders || currentDestination == Screen.CoopOrder.route,
                     onClick = {
-                        if (role == "Farmer") {
-                            navController.navigate(Screen.FarmerManageOrder.route) {
-                                popUpTo(navController.graph.startDestinationId)
+                        when (role) {
+                            "Farmer" -> {
+                                navController.navigate(Screen.FarmerManageOrder.route) {
+                                    popUpTo(navController.graph.startDestinationId)
+                                }
                             }
-                        } else {
-                            navController.navigate(routes.orders) {
-                                popUpTo(navController.graph.startDestinationId)
+                            "Admin" -> {
+                                navController.navigate(Screen.AdminOrders.route) { // Navigate to AdminOrders screen
+                                    popUpTo(navController.graph.startDestinationId)
+                                }
+                            }
+                            else -> {
+                                navController.navigate(routes.orders) {
+                                    popUpTo(navController.graph.startDestinationId)
+                                }
                             }
                         }
                     },

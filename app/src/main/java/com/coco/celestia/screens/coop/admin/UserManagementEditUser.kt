@@ -1,4 +1,4 @@
-package com.coco.celestia.screens.coop
+package com.coco.celestia.screens.coop.admin
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column

@@ -25,24 +25,25 @@ import com.coco.celestia.screens.Notifications
 import com.coco.celestia.screens.Profile
 import com.coco.celestia.screens.RegisterScreen
 import com.coco.celestia.screens.SplashScreen
-import com.coco.celestia.screens.coop.AddUserForm
+import com.coco.celestia.screens.coop.admin.AddUserForm
 //import com.coco.celestia.screens.admin.AdminAddProduct
 //import com.coco.celestia.screens.admin.AdminDashboard
-import com.coco.celestia.screens.coop.AdminInventory
-import com.coco.celestia.screens.coop.AdminUserManagement
-import com.coco.celestia.screens.coop.CheckAddUser
+import com.coco.celestia.screens.coop.admin.AdminInventory
+import com.coco.celestia.screens.coop.admin.AdminUserManagement
+import com.coco.celestia.screens.coop.admin.CheckAddUser
 //import com.coco.celestia.screens.admin.ConfirmAddProduct
-import com.coco.celestia.screens.coop.UserManagementAuditLogs
+import com.coco.celestia.screens.coop.admin.UserManagementAuditLogs
 import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientDashboard
 import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.client.ClientOrderDetails
-import com.coco.celestia.screens.coop.AddProductForm
-import com.coco.celestia.screens.coop.CoopAddInventory
-import com.coco.celestia.screens.coop.CoopDashboard
-import com.coco.celestia.screens.coop.CoopInventory
-import com.coco.celestia.screens.coop.OrderRequest
-import com.coco.celestia.screens.coop.ProductTypeInventory
+import com.coco.celestia.screens.coop.admin.AdminOrders
+import com.coco.celestia.screens.coop.facility.AddProductForm
+import com.coco.celestia.screens.coop.facility.CoopAddInventory
+import com.coco.celestia.screens.coop.facility.CoopDashboard
+import com.coco.celestia.screens.coop.facility.CoopInventory
+import com.coco.celestia.screens.coop.facility.OrderRequest
+import com.coco.celestia.screens.coop.facility.ProductTypeInventory
 import com.coco.celestia.screens.farmer.FarmerDashboard
 import com.coco.celestia.screens.farmer.FarmerItems
 import com.coco.celestia.screens.farmer.FarmerManageOrder
@@ -293,6 +294,15 @@ fun NavGraph(
                 lastname = lastname,
                 role = role,
                 onRegisterEvent = { onEvent(it) }
+            )
+        }
+        composable(route = Screen.AdminOrders.route) {
+            onNavigate("Orders")
+            AdminOrders(
+                userRole = userRole,
+                orderViewModel = orderViewModel,
+                transactionViewModel = transactionViewModel,
+                onUpdateOrder = { onEvent(it) }
             )
         }
 //        composable(route = Screen.AdminAddProduct.route) {

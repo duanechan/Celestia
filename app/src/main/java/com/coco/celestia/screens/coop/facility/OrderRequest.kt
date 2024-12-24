@@ -1,4 +1,4 @@
-package com.coco.celestia.screens.coop
+package com.coco.celestia.screens.coop.facility
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize

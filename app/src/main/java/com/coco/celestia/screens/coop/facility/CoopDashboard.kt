@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalCoilApi::class)
 
-package com.coco.celestia.screens.coop
+package com.coco.celestia.screens.coop.facility
 
 import android.annotation.SuppressLint
 import android.icu.text.SimpleDateFormat

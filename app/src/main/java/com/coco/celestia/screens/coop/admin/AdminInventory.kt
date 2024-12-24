@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalCoilApi::class, ExperimentalMaterial3Api::class)
 
-package com.coco.celestia.screens.coop
+package com.coco.celestia.screens.coop.admin
 
 import android.net.Uri
 import androidx.compose.foundation.Canvas

@@ -27,6 +27,7 @@ sealed class Screen(val route: String) {
     data object AdminAddUserManagementDB: Screen( route = "admin_add_user_management_db")
     data object AdminUserManagementAuditLogs: Screen(route = "admin_add_user_management_logs")
     data object AdminAddProduct: Screen( route = "admin_add_product")
+    data object AdminOrders: Screen( route = "admin_orders")
     data object AdminConfirmAddProduct: Screen( route = "admin_confirm_add_product")
     data object AdminProfile: Screen( route = "admin_profile")
     //coop
