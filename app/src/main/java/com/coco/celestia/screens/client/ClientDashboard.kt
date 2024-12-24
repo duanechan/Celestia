@@ -504,7 +504,7 @@ fun OrderHistory(
             is OrderState.SUCCESS -> {
                 if (receivedOrders.isNotEmpty()) {
                     Column {
-                        receivedOrders.take(3).forEach { order ->  // Limit to 3 cards
+                        receivedOrders.take(3).forEach { order ->
                             OrderCardDetails(
                                 order = order,
                                 user = userData,

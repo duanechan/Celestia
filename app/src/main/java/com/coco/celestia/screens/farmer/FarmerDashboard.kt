@@ -4,11 +4,14 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -175,9 +178,10 @@ fun FarmerDashboard(
                             TextButton(
                                 onClick = { showInSeasonDialog = true },
                                 modifier = Modifier.padding(start = 8.dp)
-                            ) {
-                                Text("See All", color = Cocoa, fontWeight = FontWeight.Bold)
-                            }
+                            ){}
+//                            {
+//                                Text("See All", color = Cocoa, fontWeight = FontWeight.Bold)
+//                            }
                         }
 
                         InSeasonProducts(products = inSeasonProducts)
@@ -285,94 +289,40 @@ fun FarmerDashboard(
 fun InSeasonProducts(products: List<ProductData>) {
     val currentMonth = LocalDate.now().month
 
-    val inSeasonProducts = products.filter { product ->
-        val sanitizedStartSeason = product.startSeason.trim().uppercase(Locale.ROOT)
-        val sanitizedEndSeason = product.endSeason.trim().uppercase(Locale.ROOT)
-
-        val startMonth = try {
-            Month.valueOf(sanitizedStartSeason)
-        } catch (e: IllegalArgumentException) { return@filter false }
-
-        val endMonth = try {
-            Month.valueOf(sanitizedEndSeason)
-        } catch (e: IllegalArgumentException) { return@filter false }
-
-        when {
-            startMonth.value <= endMonth.value -> {
-                currentMonth.value in startMonth.value..endMonth.value
-            }
-            else -> {
-                currentMonth.value >= startMonth.value || currentMonth.value <= endMonth.value
-            }
-        }
-    }
+    val statusCounts = mapOf(
+        "In Progress" to 5,
+        "Pending" to 3,
+        "Accepted" to 7,
+        "Rejected" to 2
+    )
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 10.dp, top = 10.dp, end = 5.dp),
+            .padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
             horizontalArrangement = Arrangement.SpaceEvenly,
             modifier = Modifier.fillMaxWidth()
         ) {
-            if (inSeasonProducts.isNotEmpty()) {
-                inSeasonProducts.take(3).forEach { product ->
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(5.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .background(color = SoftOrange, shape = CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.plant),
-                                contentDescription = "Plant Image",
-                                modifier = Modifier.size(50.dp),
-                                colorFilter = ColorFilter.tint(OliveGreen)
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = product.name,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Cocoa
-                        )
-                    }
-                }
-            } else {
-                repeat(3) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(5.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .background(color = PaleGold, shape = CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.plant),
-                                contentDescription = "Crop",
-                                modifier = Modifier.size(50.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "No Product",
-                            fontSize = 9.sp,
-                            color = Color.DarkGray
-                        )
-                    }
+            statusCounts.forEach { (status, count) ->
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = count.toString(),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+                    Text(
+                        text = status,
+                        fontSize = 10.sp,
+                        color = Color.Gray
+                    )
                 }
             }
         }
+        Spacer(modifier = Modifier.height(20.dp))
 
         Text(
             text = currentMonth.name,
@@ -459,9 +409,7 @@ fun OrderStatusSection(
 
 @Composable
 fun StockLevelBarGraph(items: List<ProductData>) {
-    val topItems = items.sortedByDescending { it.quantity }.take(3)
-    val maxQuantity = 3000
-    val itemsToDisplay = topItems + List(3 - topItems.size) { ProductData(name = "Placeholder", quantity = 0) }
+    val inNeedOfReviewCount = items.count { it.quantity < 500 }
 
     Column(
         modifier = Modifier
@@ -469,76 +417,24 @@ fun StockLevelBarGraph(items: List<ProductData>) {
             .padding(10.dp),
         horizontalAlignment = Alignment.Start
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-        ) {
-            itemsToDisplay.forEach { item ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                ) {
-                    Text(
-                        text = if (item.name == "Placeholder") "No Product" else item.name.replaceFirstChar { it.uppercase() },
-                        fontSize = 14.sp,
-                        color = if (item.name == "Placeholder") Color.Gray else Cocoa,
-                        modifier = Modifier.padding(bottom = 2.dp)
-                    )
-
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            var animationPlayed by remember { mutableStateOf(false) }
-                            val animatedWidth by animateDpAsState(
-                                targetValue = if (animationPlayed) (item.quantity.toFloat() / maxQuantity.toFloat() * 200).dp else 0.dp,
-                                animationSpec = tween(durationMillis = 1000)
-                            )
-
-                            LaunchedEffect(Unit) {
-                                animationPlayed = true
-                            }
-
-                            Box(
-                                modifier = Modifier
-                                    .width(if (item.name == "Placeholder") 0.dp else animatedWidth)
-                                    .height(40.dp)
-                                    .background(
-                                        if (item.name == "Placeholder") Color.LightGray else SoftOrange,
-                                        shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp)
-                                    )
-                            )
-
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(40.dp)
-                                    .background(
-                                        Color.Gray.copy(alpha = 0.2f),
-                                        shape = RoundedCornerShape(topEnd = 10.dp, bottomEnd = 10.dp)
-                                    )
-                            )
-                        }
-
-                        Row(
-                            modifier = Modifier
-                                .align(Alignment.CenterEnd)
-                                .padding(end = 8.dp),
-                            horizontalArrangement = Arrangement.End,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "${item.quantity}",
-                                fontSize = 14.sp,
-                                color = if (item.name == "Placeholder") Color.Gray else Sand,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
+                .padding(horizontal = 16.dp)
+                .background(
+                    color = Color(0xFFC0CFB2),
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .clickable {
+                    // Action for button click
                 }
-            }
+                .padding(vertical = 12.dp, horizontal = 16.dp)
+        ) {
+            Text(
+                text = "$inNeedOfReviewCount items in need of review",
+                fontSize = 14.sp,
+                color = Color.DarkGray
+            )
         }
     }
 }
