@@ -32,9 +32,14 @@ import com.coco.celestia.components.toast.toastDelay
 import com.coco.celestia.navigation.NavDrawerBottomBar
 import com.coco.celestia.navigation.NavDrawerTopBar
 import com.coco.celestia.navigation.NavGraph
+import com.coco.celestia.navigation.TopBar
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.CelestiaTheme
+import com.coco.celestia.ui.theme.Green4
 import com.coco.celestia.util.checkNetworkConnection
+import com.coco.celestia.viewmodel.LocationViewModel
+import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.firebase.auth.FirebaseAuth
@@ -156,17 +161,40 @@ fun App() {
 
     Scaffold(
         topBar = {
-            if (shouldShowNavigation) {
-                NavDrawerTopBar(
-                    navController = navController,
-                    title = topBarTitle,
-                    role = userData?.role.toString()
-                )
+            if (userData != null && shouldShowNavigation) {
+                if (userData!!.role == "Admin") {
+                    NavDrawerTopBar(
+                        navController = navController,
+                        title = topBarTitle,
+                        role = userData!!.role,
+                        orderViewModel = OrderViewModel(),
+                        transactionViewModel = TransactionViewModel(),
+                        onUpdateOrder = {},
+                        userViewModel = userViewModel,
+                        locationViewModel = LocationViewModel(),
+                        onLogoutEvent = {
+                            val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+                            if (uid.isNotEmpty()) {
+                                userViewModel.logout(uid = uid)
+                            }
+                            navController.navigate(Screen.Login.route) {
+                                popUpTo(Screen.Login.route) { inclusive = true }
+                            }
+                        },
+                        onProfileUpdateEvent = {}
+                    )
+                } else {
+                    TopBar(
+                        title = topBarTitle,
+                        navController = navController,
+                        containerColor = Green4,
+                        currentDestination = navController.currentBackStackEntry?.destination?.route
+                    )
+                }
             }
-            Toast(message = toastMessage, status = toastStatus, visibility = showToast)
         },
         bottomBar = {
-            if (shouldShowNavigation) {
+            if (shouldShowNavigation && userData?.role !in listOf("Admin")) {
                 NavDrawerBottomBar(
                     role = userData?.role.toString(),
                     navController = navController

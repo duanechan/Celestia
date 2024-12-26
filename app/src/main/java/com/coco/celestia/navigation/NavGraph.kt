@@ -26,12 +26,8 @@ import com.coco.celestia.screens.Profile
 import com.coco.celestia.screens.RegisterScreen
 import com.coco.celestia.screens.SplashScreen
 import com.coco.celestia.screens.coop.admin.AddUserForm
-//import com.coco.celestia.screens.admin.AdminAddProduct
-//import com.coco.celestia.screens.admin.AdminDashboard
-import com.coco.celestia.screens.coop.admin.AdminInventory
 import com.coco.celestia.screens.coop.admin.AdminUserManagement
 import com.coco.celestia.screens.coop.admin.CheckAddUser
-//import com.coco.celestia.screens.admin.ConfirmAddProduct
 import com.coco.celestia.screens.coop.admin.UserManagementAuditLogs
 import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientDashboard
@@ -239,14 +235,14 @@ fun NavGraph(
 //            }
         }
 
-        composable(route = Screen.AdminInventory.route) {
-            onNavigate("Inventory")
-            AdminInventory(
-                orderViewModel = orderViewModel,
-                productViewModel = productViewModel,
-                transactionViewModel = transactionViewModel
-            )
-        }
+//        composable(route = Screen.AdminInventory.route) {
+//            onNavigate("Inventory")
+//            AdminInventory(
+//                orderViewModel = orderViewModel,
+//                productViewModel = productViewModel,
+//                transactionViewModel = transactionViewModel
+//            )
+//        }
         composable(route = Screen.AdminUserManagement.route) {
             onNavigate("User Management")
             AdminUserManagement(
