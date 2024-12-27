@@ -217,7 +217,6 @@ fun App() {
             currentDestination != Screen.Splash.route &&
             currentDestination != Screen.ForgotPassword.route
 
-    println("User Role: ${userData.role}")
     ModalNavigationDrawer(
         drawerContent = {
             ModalDrawerSheet(

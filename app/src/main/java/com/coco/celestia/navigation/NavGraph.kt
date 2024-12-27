@@ -57,6 +57,7 @@ import com.coco.celestia.screens.farmer.details.FarmerRequestDetails
 import com.coco.celestia.screens.farmer.details.LoadingIndicator
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.ContactViewModel
+import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.OrderState
@@ -72,6 +73,7 @@ fun NavGraph(
     navController: NavHostController,
     userRole: String,
     contactViewModel: ContactViewModel = viewModel(),
+    facilityViewModel: FacilityViewModel = viewModel(),
     itemViewModel: FarmerItemViewModel = viewModel(),
     locationViewModel: LocationViewModel = viewModel(),
     orderViewModel: OrderViewModel = viewModel(),
@@ -223,7 +225,10 @@ fun NavGraph(
 
         composable(route = Screen.Admin.route) {
             onNavigate("Home")
-            AdminHome(navController)
+            AdminHome(
+                navController = navController,
+                facilityViewModel = facilityViewModel,
+                onEvent = { onEvent(it) })
         }
 
         composable(route = Screen.AdminSettings.route) {

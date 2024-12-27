@@ -15,6 +15,11 @@ data class UserData(
     var isChecked: Boolean = false
 )
 
+data class FacilityData(
+    val name: String = "",
+    val emails: String = "" // TODO: Change emails to type List<String> or MutableList<String>.
+)
+
 data class OrderData(
     val orderId: String = "",
     val orderDate: String = "",

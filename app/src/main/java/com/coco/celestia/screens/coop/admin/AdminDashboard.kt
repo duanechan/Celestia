@@ -4,11 +4,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,13 +23,21 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
+import com.coco.celestia.components.toast.ToastStatus
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.viewmodel.FacilityState
+import com.coco.celestia.viewmodel.FacilityViewModel
+import com.coco.celestia.viewmodel.model.FacilityData
 
 @Composable
 fun AdminHome(
-    navController: NavController
+    navController: NavController,
+    facilityViewModel: FacilityViewModel,
+    onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     var currentView by remember { mutableStateOf("Dashboard") }
 
@@ -72,20 +83,7 @@ fun AdminHome(
 
         when (currentView) {
             "Dashboard" -> {
-                Text(
-                    text = "My Facilities",
-                    color = Green1,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp)
-                        .padding(vertical = 8.dp)
-                )
-                Text(
-                    text = "No facilities yet.",
-                    color = Color.Gray,
-                    fontStyle = FontStyle.Italic,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
+                Facilities(facilityViewModel)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -109,8 +107,85 @@ fun AdminHome(
                 }
             }
             "Add Facility" -> {
-                AddFacilityForm()
+                AddFacilityForm(
+                    navController = navController,
+                    facilityViewModel = facilityViewModel,
+                    onEvent = { onEvent(it) })
             }
+        }
+    }
+}
+
+@Composable
+fun Facilities(facilityViewModel: FacilityViewModel) {
+    val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
+    val facilityState by facilityViewModel.facilityState.observeAsState(FacilityState.LOADING)
+
+    LaunchedEffect(Unit) {
+        facilityViewModel.fetchFacilities()
+    }
+
+    Text(
+        text = "My Facilities",
+        color = Green1,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .padding(vertical = 8.dp)
+    )
+    when (facilityState) {
+        FacilityState.LOADING -> {
+            Text(
+                text = "Loading...",
+                color = Color.Gray,
+                fontStyle = FontStyle.Italic,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+        FacilityState.EMPTY -> {
+            Text(
+                text = "No facilities yet.",
+                color = Color.Gray,
+                fontStyle = FontStyle.Italic,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+        is FacilityState.ERROR -> {
+            Text(
+                text = "Error occurred: ${(facilityState as FacilityState.ERROR).message}",
+                color = Color.Gray,
+                fontStyle = FontStyle.Italic,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+        }
+        FacilityState.SUCCESS -> {
+            // TODO: WIP for now. Ginawa ko munang LazyRow para lang ma display.
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                itemsIndexed(facilitiesData) { _, facility ->
+                    FacilityCard(facility)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FacilityCard(facility: FacilityData) {
+    Card(
+        modifier = Modifier
+            .padding(4.dp)
+            .size(100.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = facility.name, color = Green1)
         }
     }
 }
@@ -150,7 +225,15 @@ fun NavigationTab(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddFacilityForm() {
+fun AddFacilityForm(
+    navController: NavController,
+    facilityViewModel: FacilityViewModel,
+    onEvent: (Triple<ToastStatus, String, Long>) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var emails = remember { mutableListOf<String>() }
+    var email by remember { mutableStateOf("") }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -189,8 +272,8 @@ fun AddFacilityForm() {
 
                 var facilityFocused by remember { mutableStateOf(false) }
                 TextField(
-                    value = "",
-                    onValueChange = {},
+                    value = name,
+                    onValueChange = { name = it },
                     placeholder = {
                         Text(
                             text = "Enter name of Facility",
@@ -226,8 +309,8 @@ fun AddFacilityForm() {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     TextField(
-                        value = "",
-                        onValueChange = {},
+                        value = email,
+                        onValueChange = { email = it },
                         placeholder = {
                             Text(
                                 text = "Enter email address",
@@ -262,7 +345,21 @@ fun AddFacilityForm() {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = { /* Add Action */ },
+            onClick = {
+                if (name.isNotEmpty() && email.isNotEmpty()) {
+                    facilityViewModel.createFacility(
+                        name = name,
+                        emails = email,
+                        onComplete = {
+                            onEvent(Triple(ToastStatus.SUCCESSFUL, "$name facility added.", System.currentTimeMillis()))
+                            navController.navigate(Screen.Admin.route)
+                        },
+                        onError = { onEvent(Triple(ToastStatus.FAILED, it, System.currentTimeMillis())) }
+                    )
+                } else {
+                    onEvent(Triple(ToastStatus.FAILED, "Please fill in the missing fields.", System.currentTimeMillis()))
+                }
+            },
             colors = ButtonDefaults.buttonColors(containerColor = Green1),
             modifier = Modifier.align(Alignment.End)
         ) {
