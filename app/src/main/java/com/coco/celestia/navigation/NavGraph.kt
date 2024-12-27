@@ -298,8 +298,12 @@ fun NavGraph(
                 onRegisterEvent = { onEvent(it) }
             )
         }
-        composable(route = Screen.AdminOrders.route) {
-            onNavigate("Orders")
+        composable(
+            route = Screen.AdminOrders.route,
+            arguments = listOf(navArgument("status") { type = NavType.StringType })
+        ) {
+            val status = it.arguments?.getString("status") ?: ""
+            onNavigate("Special Requests")
             AdminOrders(
                 userRole = userRole,
                 orderViewModel = orderViewModel,

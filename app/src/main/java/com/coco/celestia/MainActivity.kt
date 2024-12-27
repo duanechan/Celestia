@@ -294,8 +294,7 @@ fun App() {
                                                     isDropdownExpanded = false
                                                     scope.launch {
                                                         drawerState.close()
-                                                        // Change navigation : Add status in route
-                                                        navController.navigate(Screen.AdminOrders.route)
+                                                        navController.navigate(Screen.AdminOrders.createRoute(status))
                                                     }
                                                 }
                                         ) {
