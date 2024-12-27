@@ -49,10 +49,12 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -62,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.coco.celestia.R
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.PrivacyPolicy
 import com.coco.celestia.screens.Profile
@@ -102,7 +105,7 @@ fun NavDrawerTopBar(
     val isHelpOverlayVisible = remember { mutableStateOf(false) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-
+    var isDropdownExpanded by remember { mutableStateOf(false) }
     val userData by userViewModel.userData.observeAsState(initial = UserData())
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
 
@@ -121,6 +124,8 @@ fun NavDrawerTopBar(
             "Settings" to Screen.Profile.route
         )
     }
+
+    val statuses = listOf("To Review", "In Progress", "Completed", "Cancelled", "Turned Down")
 
     ModalNavigationDrawer(
         drawerContent = {
@@ -161,36 +166,96 @@ fun NavDrawerTopBar(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     menuItems.forEach { (label, route) ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                                .clickable {
-                                    scope.launch {
-                                        drawerState.close()
-                                        navController.navigate(route) {
-                                            popUpTo(navController.graph.startDestinationId) {
-                                                inclusive = true
+                        if (label == "Special Requests") {
+                            Column {
+                                Row (
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                        .clickable { isDropdownExpanded = !isDropdownExpanded }
+                                ) {
+                                    Icon(Icons.Default.Info, contentDescription = null, tint = Green1)
+                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Text(
+                                        text = label,
+                                        color = if (currentDestination == route) Green1 else Color.Gray,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Icon(
+                                        painter = painterResource(id = if (isDropdownExpanded) R.drawable.expand_less else R.drawable.expand_more),
+                                        contentDescription = null,
+                                        tint = Green1,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                }
+
+                                if (isDropdownExpanded) {
+                                    statuses.forEach { status ->
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(8.dp)
+                                                .padding(start = 48.dp)
+                                                .clickable {
+                                                    isDropdownExpanded = false
+                                                    scope.launch {
+                                                        drawerState.close()
+                                                        // Change navigation : Add status in route
+                                                        navController.navigate(Screen.AdminOrders.route)
+                                                    }
+                                                }
+                                        ) {
+                                            when (status) {
+                                                "To Review" -> Icon(painterResource(R.drawable.review), null, tint = Green1, modifier = Modifier.size(24.dp))
+                                                "In Progress" -> Icon(painterResource(R.drawable.progress), null, tint = Green1, modifier = Modifier.size(24.dp))
+                                                "Completed" -> Icon(painterResource(R.drawable.completed), null, tint = Green1, modifier = Modifier.size(24.dp))
+                                                "Cancelled" -> Icon(painterResource(R.drawable.cancelled), null, tint = Green1, modifier = Modifier.size(24.dp))
+                                                "Turned Down" -> Icon(painterResource(R.drawable.turned_down), null, tint = Green1, modifier = Modifier.size(24.dp))
                                             }
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = status,
+                                                color = Color.Gray,
+                                                fontWeight = FontWeight.Bold
+                                            )
                                         }
                                     }
                                 }
-                        ) {
-                            when (label) {
-                                "Home" -> Icon(Icons.Default.Home, contentDescription = null, tint = Green1)
-                                "Special Requests" -> Icon(Icons.Default.Info, contentDescription = null, tint = Green1)
-                                "Members" -> Icon(Icons.Default.Face, contentDescription = null, tint = Green1)
-                                "Clients & Customers" -> Icon(Icons.Default.Person, contentDescription = null, tint = Green1)
-                                "Settings" -> Icon(Icons.Default.Settings, contentDescription = null, tint = Green1)
-                                "Profile" -> Icon(Icons.Default.Person, contentDescription = null, tint = Green1)
                             }
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Text(
-                                text = label,
-                                color = if (currentDestination == route) Green1 else Color.Gray,
-                                fontWeight = FontWeight.Bold
-                            )
+                        } else {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                                    .clickable {
+                                        scope.launch {
+                                            drawerState.close()
+                                            navController.navigate(route) {
+                                                popUpTo(navController.graph.startDestinationId) {
+                                                    inclusive = true
+                                                }
+                                            }
+                                        }
+                                    }
+                            ) {
+                                when (label) {
+                                    "Home" -> Icon(Icons.Default.Home, contentDescription = null, tint = Green1)
+                                    "Members" -> Icon(Icons.Default.Face, contentDescription = null, tint = Green1)
+                                    "Clients & Customers" -> Icon(Icons.Default.Person, contentDescription = null, tint = Green1)
+                                    "Settings" -> Icon(Icons.Default.Settings, contentDescription = null, tint = Green1)
+                                    "Profile" -> Icon(Icons.Default.Person, contentDescription = null, tint = Green1)
+                                }
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Text(
+                                    text = label,
+                                    color = if (currentDestination == route) Green1 else Color.Gray,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }
