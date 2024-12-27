@@ -1,6 +1,5 @@
 package com.coco.celestia.screens
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,7 +24,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -63,7 +61,6 @@ import com.coco.celestia.util.isValidPassword
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(
     navController: NavController,
@@ -330,18 +327,19 @@ fun RegisterScreen(
 
 @Composable
 fun PrivacyPolicy() {
-    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+    LazyColumn(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)) {
         item {
             Text(
                 text = "Welcome to CoCo: CoopConnects. We are committed to protecting your personal data. " +
                         "This Privacy Policy explains how we collect, use, share, and protect the information " +
                         "you provide in compliance with the Data Privacy Act of 2012 in the Philippines.",
-                textAlign = TextAlign.Justify, fontFamily = mintsansFontFamily
+                textAlign = TextAlign.Justify, fontFamily = mintsansFontFamily,
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
         }
         item { Divider(modifier = Modifier.padding(vertical = 8.dp)) }
         item {
-            Column {
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Text(text = "Information We Collect", fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily)
                 Text(
                     text =  "When you use CoCo: CoopConnects, we may collect the following types of personal data:\n" +
@@ -353,7 +351,7 @@ fun PrivacyPolicy() {
         }
         item { Divider(modifier = Modifier.padding(vertical = 8.dp)) }
         item {
-            Column {
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Text(text = "How We Use Your Information", fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily)
                 Text(
                     text = "We use your data to:\n" +
@@ -366,7 +364,7 @@ fun PrivacyPolicy() {
         }
         item { Divider(modifier = Modifier.padding(vertical = 8.dp)) }
         item {
-            Column {
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Text(text = "Data Sharing and Disclosure", fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily)
                 Text(
                     text = "Your data will not be shared with third parties, except in the following situations:\n" +
@@ -381,7 +379,7 @@ fun PrivacyPolicy() {
         }
         item { Divider(modifier = Modifier.padding(vertical = 8.dp)) }
         item {
-            Column {
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Text(text = "Data Storage, Retention, and Security", fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily)
                 Text(
                     text = "We store your data securely with Firebase, a trusted, industry-standard" +
@@ -395,7 +393,7 @@ fun PrivacyPolicy() {
         }
         item { Divider(modifier = Modifier.padding(vertical = 8.dp)) }
         item {
-            Column {
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Text(text = "Your Rights", fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily)
                 Text(
                     text = "Under the Data Privacy Act, you have the right to:\n" +
@@ -411,7 +409,7 @@ fun PrivacyPolicy() {
         }
         item { Divider(modifier = Modifier.padding(vertical = 8.dp)) }
         item {
-            Column {
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Text(text = "Changes to This Privacy Policy", fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily)
                 Text(
                     text = "We may update this policy as necessary. We will notify you of " +
@@ -422,7 +420,7 @@ fun PrivacyPolicy() {
         }
         item { Divider(modifier = Modifier.padding(vertical = 8.dp)) }
         item {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                 Text(text = "Contact Us", fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily)
                 Text(
                     text = "If you have questions about this Privacy Policy or your personal" +
@@ -441,6 +439,5 @@ fun PrivacyPolicy() {
                 }
             }
         }
-
     }
 }

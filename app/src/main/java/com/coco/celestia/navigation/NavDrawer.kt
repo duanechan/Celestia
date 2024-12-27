@@ -63,10 +63,15 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.coco.celestia.components.toast.ToastStatus
+import com.coco.celestia.screens.PrivacyPolicy
 import com.coco.celestia.screens.Profile
+import com.coco.celestia.screens.coop.admin.AccessControlScreen
+import com.coco.celestia.screens.coop.admin.AdminClients
 import com.coco.celestia.screens.coop.admin.AdminHome
 import com.coco.celestia.screens.coop.admin.AdminOrders
+import com.coco.celestia.screens.coop.admin.AdminSettings
 import com.coco.celestia.screens.coop.admin.AdminUserManagement
+import com.coco.celestia.screens.coop.admin.OrganizationProfileScreen
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.routeHandler
@@ -106,8 +111,8 @@ fun NavDrawerTopBar(
             "Home" to Screen.Admin.route,
             "Special Requests" to Screen.AdminOrders.route,
             "Members" to Screen.AdminUserManagement.route,
-            "Clients & Customers" to Screen.AdminInventory.route,
-            "Settings" to Screen.Profile.route
+            "Clients & Customers" to Screen.AdminClients.route,
+            "Settings" to Screen.AdminSettings.route
         )
     } else {
         listOf(
@@ -255,6 +260,11 @@ fun NavDrawerTopBar(
                         onLogoutEvent = onLogoutEvent,
                         onProfileUpdateEvent = onProfileUpdateEvent
                     )
+                    Screen.AdminClients.route -> AdminClients(navController = navController, userViewModel = userViewModel)
+                    Screen.AdminSettings.route -> AdminSettings(navController = navController)
+                    Screen.OrganizationProfile.route -> OrganizationProfileScreen()
+                    Screen.AccessControl.route -> AccessControlScreen()
+                    Screen.PrivacyPolicy.route -> PrivacyPolicy()
                     else -> {
                         AdminHome(navController)
                     }

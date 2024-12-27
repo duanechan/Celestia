@@ -22,6 +22,7 @@ import com.coco.celestia.screens.Calendar
 import com.coco.celestia.screens.ForgotPasswordScreen
 import com.coco.celestia.screens.LoginScreen
 import com.coco.celestia.screens.Notifications
+import com.coco.celestia.screens.PrivacyPolicy
 import com.coco.celestia.screens.Profile
 import com.coco.celestia.screens.RegisterScreen
 import com.coco.celestia.screens.SplashScreen
@@ -33,7 +34,11 @@ import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientDashboard
 import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.client.ClientOrderDetails
+import com.coco.celestia.screens.coop.admin.AccessControlScreen
+import com.coco.celestia.screens.coop.admin.AdminClients
 import com.coco.celestia.screens.coop.admin.AdminOrders
+import com.coco.celestia.screens.coop.admin.AdminSettings
+import com.coco.celestia.screens.coop.admin.OrganizationProfileScreen
 import com.coco.celestia.screens.coop.facility.AddProductForm
 import com.coco.celestia.screens.coop.facility.CoopAddInventory
 import com.coco.celestia.screens.coop.facility.CoopDashboard
@@ -243,6 +248,29 @@ fun NavGraph(
 //                transactionViewModel = transactionViewModel
 //            )
 //        }
+        composable(route = Screen.AdminSettings.route) {
+            onNavigate("Settings")
+            AdminSettings(navController = navController)
+        }
+        composable(route = Screen.OrganizationProfile.route) {
+            onNavigate("Organizational Profile")
+            OrganizationProfileScreen()
+        }
+        composable(route = Screen.AccessControl.route) {
+            onNavigate("Access Control")
+            AccessControlScreen()
+        }
+        composable(route = Screen.PrivacyPolicy.route) {
+            onNavigate("Privacy Policy")
+            PrivacyPolicy()
+        }
+        composable(route = Screen.AdminClients.route) {
+            onNavigate("Clients & Customers")
+            AdminClients(
+                navController = navController,
+                userViewModel = userViewModel
+            )
+        }
         composable(route = Screen.AdminUserManagement.route) {
             onNavigate("User Management")
             AdminUserManagement(
