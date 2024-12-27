@@ -36,6 +36,7 @@ import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.client.ClientOrderDetails
 import com.coco.celestia.screens.coop.admin.AccessControlScreen
 import com.coco.celestia.screens.coop.admin.AdminClients
+import com.coco.celestia.screens.coop.admin.AdminHome
 import com.coco.celestia.screens.coop.admin.AdminOrders
 import com.coco.celestia.screens.coop.admin.AdminSettings
 import com.coco.celestia.screens.coop.admin.OrganizationProfileScreen
@@ -221,33 +222,10 @@ fun NavGraph(
         }
 
         composable(route = Screen.Admin.route) {
-            onNavigate("Dashboard")
-            // Fetch user data when the composable is first launched
-            LaunchedEffect(Unit) {
-                val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-                userViewModel.fetchUser(uid)
-            }
-            val userData by userViewModel.userData.observeAsState()
-//            if (userData == null) {
-//                LoadingIndicator()
-//            } else {
-//                AdminDashboard(
-//                    userData = userData,
-//                    productViewModel = productViewModel,
-//                    orderViewModel = orderViewModel,
-//                    navController = navController
-//                )
-//            }
+            onNavigate("Home")
+            AdminHome(navController)
         }
 
-//        composable(route = Screen.AdminInventory.route) {
-//            onNavigate("Inventory")
-//            AdminInventory(
-//                orderViewModel = orderViewModel,
-//                productViewModel = productViewModel,
-//                transactionViewModel = transactionViewModel
-//            )
-//        }
         composable(route = Screen.AdminSettings.route) {
             onNavigate("Settings")
             AdminSettings(navController = navController)

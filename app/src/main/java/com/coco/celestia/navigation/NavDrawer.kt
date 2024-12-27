@@ -63,7 +63,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.R
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.PrivacyPolicy
@@ -98,245 +101,108 @@ fun NavDrawerTopBar(
     userViewModel: UserViewModel,
     locationViewModel: LocationViewModel,
     onLogoutEvent: (Triple<ToastStatus, String, Long>) -> Unit,
-    onProfileUpdateEvent: (Triple<ToastStatus, String, Long>) -> Unit
+    onProfileUpdateEvent: (Triple<ToastStatus, String, Long>) -> Unit,
+    onSidebarToggle: () -> Unit
 ) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination?.route
-    val isHelpOverlayVisible = remember { mutableStateOf(false) }
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-    var isDropdownExpanded by remember { mutableStateOf(false) }
-    val userData by userViewModel.userData.observeAsState(initial = UserData())
-    val userState by userViewModel.userState.observeAsState(UserState.LOADING)
 
-    val menuItems = if (role == "Admin") {
-        listOf(
-            "Home" to Screen.Admin.route,
-            "Special Requests" to Screen.AdminOrders.route,
-            "Members" to Screen.AdminUserManagement.route,
-            "Clients & Customers" to Screen.AdminClients.route,
-            "Settings" to Screen.AdminSettings.route
-        )
-    } else {
-        listOf(
-            "Home" to Screen.Admin.route,
-            "Profile" to Screen.Profile.route,
-            "Settings" to Screen.Profile.route
-        )
-    }
-
-    val statuses = listOf("To Review", "In Progress", "Completed", "Cancelled", "Turned Down")
-
-    ModalNavigationDrawer(
-        drawerContent = {
-            ModalDrawerSheet(
-                modifier = Modifier
-                    .width(300.dp)
-                    .fillMaxHeight()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .background(Color(0xFFE0E0E0))
-                        .padding(16.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .padding(bottom = 16.dp)
-                            .clickable {
-                                scope.launch {
-                                    drawerState.close()
-                                    navController.navigate(Screen.Profile.route)
-                                }
-                            }
-                    ) {
-                        CircleAvatar(
-                            text = userData.firstname.take(1),
-                            backgroundColor = Green4,
-                            textColor = Green1
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(userData.firstname + " " + userData.lastname, fontWeight = FontWeight.Bold)
-                            Text(userData.email, fontSize = 12.sp, color = Color.Gray)
-                        }
-                    }
-                    Divider(color = Color.Gray, thickness = 1.dp)
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    menuItems.forEach { (label, route) ->
-                        if (label == "Special Requests") {
-                            Column {
-                                Row (
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp)
-                                        .clickable { isDropdownExpanded = !isDropdownExpanded }
-                                ) {
-                                    Icon(Icons.Default.Info, contentDescription = null, tint = Green1)
-                                    Spacer(modifier = Modifier.width(16.dp))
-                                    Text(
-                                        text = label,
-                                        color = if (currentDestination == route) Green1 else Color.Gray,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Icon(
-                                        painter = painterResource(id = if (isDropdownExpanded) R.drawable.expand_less else R.drawable.expand_more),
-                                        contentDescription = null,
-                                        tint = Green1,
-                                        modifier = Modifier.size(12.dp)
-                                    )
-                                }
-
-                                if (isDropdownExpanded) {
-                                    statuses.forEach { status ->
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(8.dp)
-                                                .padding(start = 48.dp)
-                                                .clickable {
-                                                    isDropdownExpanded = false
-                                                    scope.launch {
-                                                        drawerState.close()
-                                                        // Change navigation : Add status in route
-                                                        navController.navigate(Screen.AdminOrders.route)
-                                                    }
-                                                }
-                                        ) {
-                                            when (status) {
-                                                "To Review" -> Icon(painterResource(R.drawable.review), null, tint = Green1, modifier = Modifier.size(24.dp))
-                                                "In Progress" -> Icon(painterResource(R.drawable.progress), null, tint = Green1, modifier = Modifier.size(24.dp))
-                                                "Completed" -> Icon(painterResource(R.drawable.completed), null, tint = Green1, modifier = Modifier.size(24.dp))
-                                                "Cancelled" -> Icon(painterResource(R.drawable.cancelled), null, tint = Green1, modifier = Modifier.size(24.dp))
-                                                "Turned Down" -> Icon(painterResource(R.drawable.turned_down), null, tint = Green1, modifier = Modifier.size(24.dp))
-                                            }
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text(
-                                                text = status,
-                                                color = Color.Gray,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp)
-                                    .clickable {
-                                        scope.launch {
-                                            drawerState.close()
-                                            navController.navigate(route) {
-                                                popUpTo(navController.graph.startDestinationId) {
-                                                    inclusive = true
-                                                }
-                                            }
-                                        }
-                                    }
-                            ) {
-                                when (label) {
-                                    "Home" -> Icon(Icons.Default.Home, contentDescription = null, tint = Green1)
-                                    "Members" -> Icon(Icons.Default.Face, contentDescription = null, tint = Green1)
-                                    "Clients & Customers" -> Icon(Icons.Default.Person, contentDescription = null, tint = Green1)
-                                    "Settings" -> Icon(Icons.Default.Settings, contentDescription = null, tint = Green1)
-                                    "Profile" -> Icon(Icons.Default.Person, contentDescription = null, tint = Green1)
-                                }
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Text(
-                                    text = label,
-                                    color = if (currentDestination == route) Green1 else Color.Gray,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+    TopAppBar(
+        title = {
+            Text(
+                text = title,
+                color = Green1,
+                fontWeight = FontWeight.Bold,
+            )
         },
-        drawerState = drawerState
-    ) {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Text(
-                            text = title,
-                            color = Green1,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(
-                            onClick = {
-                                scope.launch {
-                                    if (drawerState.isClosed) {
-                                        drawerState.open()
-                                    } else {
-                                        drawerState.close()
-                                    }
-                                }
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Menu,
-                                contentDescription = "Menu Button",
-                                tint = Green1
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Green4,
-                        titleContentColor = Green1,
-                        navigationIconContentColor = Green1
-                    )
+        navigationIcon = {
+            IconButton(onClick = { onSidebarToggle() }) {
+                Icon(
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = "Menu Button",
+                    tint = Green1
                 )
             }
-        ) { paddingValues ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                when (currentDestination) {
-                    Screen.AdminOrders.route -> AdminOrders(
-                        userRole = role,
-                        orderViewModel = orderViewModel,
-                        transactionViewModel = transactionViewModel,
-                        onUpdateOrder = onUpdateOrder
-                    )
-                    Screen.AdminUserManagement.route -> AdminUserManagement(
-                        navController = navController,
-                        userViewModel = userViewModel,
-                        transactionViewModel = transactionViewModel
-                    )
-                    Screen.Profile.route -> Profile(
-                        navController = navController,
-                        userViewModel = userViewModel,
-                        locationViewModel = locationViewModel,
-                        onLogoutEvent = onLogoutEvent,
-                        onProfileUpdateEvent = onProfileUpdateEvent
-                    )
-                    Screen.AdminClients.route -> AdminClients(navController = navController, userViewModel = userViewModel)
-                    Screen.AdminSettings.route -> AdminSettings(navController = navController)
-                    Screen.OrganizationProfile.route -> OrganizationProfileScreen()
-                    Screen.AccessControl.route -> AccessControlScreen()
-                    Screen.PrivacyPolicy.route -> PrivacyPolicy()
-                    else -> {
-                        AdminHome(navController)
-                    }
-                }
-            }
-        }
-    }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Green4,
+            titleContentColor = Green1,
+            navigationIconContentColor = Green1
+        )
+    )
+//     {
+//        Scaffold(
+//            modifier = Modifier.fillMaxSize(),
+//            topBar = {
+//                TopAppBar(
+//                    title = {
+//                        Text(
+//                            text = title,
+//                            color = Green1,
+//                            fontWeight = FontWeight.Bold,
+//                        )
+//                    },
+//                    navigationIcon = {
+//                        IconButton(
+//                            onClick = {
+//                                scope.launch {
+//                                    if (drawerState.isClosed) {
+//                                        drawerState.open()
+//                                    } else {
+//                                        drawerState.close()
+//                                    }
+//                                }
+//                            }
+//                        ) {
+//                            Icon(
+//                                imageVector = Icons.Default.Menu,
+//                                contentDescription = "Menu Button",
+//                                tint = Green1
+//                            )
+//                        }
+//                    },
+//                    colors = TopAppBarDefaults.topAppBarColors(
+//                        containerColor = Green4,
+//                        titleContentColor = Green1,
+//                        navigationIconContentColor = Green1
+//                    )
+//                )
+//            }
+//        ) { paddingValues ->
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .padding(paddingValues)
+//            ) {
+//                when (currentDestination) {
+//                    Screen.AdminOrders.route -> AdminOrders(
+//                        userRole = role,
+//                        orderViewModel = orderViewModel,
+//                        transactionViewModel = transactionViewModel,
+//                        onUpdateOrder = onUpdateOrder
+//                    )
+//                    Screen.AdminUserManagement.route -> AdminUserManagement(
+//                        navController = navController,
+//                        userViewModel = userViewModel,
+//                        transactionViewModel = transactionViewModel
+//                    )
+//                    Screen.Profile.route -> Profile(
+//                        navController = navController,
+//                        userViewModel = userViewModel,
+//                        locationViewModel = locationViewModel,
+//                        onLogoutEvent = onLogoutEvent,
+//                        onProfileUpdateEvent = onProfileUpdateEvent
+//                    )
+//                    Screen.AdminClients.route -> AdminClients(navController = navController, userViewModel = userViewModel)
+//                    Screen.AdminSettings.route -> AdminSettings(navController = navController)
+//                    Screen.OrganizationProfile.route -> OrganizationProfileScreen()
+//                    Screen.AccessControl.route -> AccessControlScreen()
+//                    Screen.PrivacyPolicy.route -> PrivacyPolicy()
+//                    else -> {
+//                        AdminHome(navController)
+//                    }
+//                }
+//            }
+//        }
+//    }
 }
 
 @Composable
