@@ -12,6 +12,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.MutableData
 import com.google.firebase.database.Transaction
+import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -23,7 +24,7 @@ sealed class FacilityState {
 }
 
 class FacilityViewModel: ViewModel() {
-    private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("facility")
+    private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("facilities")
     private val _facilityData = MutableLiveData<FacilityData>()
     private val _facilitiesData = MutableLiveData<List<FacilityData>>()
     private val _facilityState = MutableLiveData<FacilityState>()
@@ -33,27 +34,27 @@ class FacilityViewModel: ViewModel() {
 
     fun fetchFacilities() {
         _facilityState.value = FacilityState.LOADING
-        viewModelScope.launch {
-            try {
-                val snapshot = database.get().await()
+
+        database.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
-                    val facilities = snapshot.children.mapNotNull { facility ->
-                        facility.getValue(FacilityData::class.java)
-                    }
+                    val facilities = snapshot.children.mapNotNull { it.getValue(FacilityData::class.java) }
                     _facilitiesData.value = facilities
-                    _facilityState.value = FacilityState.SUCCESS
+                    _facilityState.value = if (facilities.isEmpty()) FacilityState.EMPTY else FacilityState.SUCCESS
                 } else {
                     _facilitiesData.value = emptyList()
                     _facilityState.value = FacilityState.EMPTY
                 }
-            } catch (e: Exception) {
-                _facilityState.value = FacilityState.ERROR(e.message.toString())
             }
-        }
+
+            override fun onCancelled(error: DatabaseError) {
+                _facilityState.value = FacilityState.ERROR(error.message)
+            }
+        })
     }
 
     // TODO: Change emails to type List<String> or MutableList<String>.
-    fun createFacility(name: String, emails: String, onComplete: () -> Unit, onError: (String) -> Unit) {
+    fun createFacility(name: String, emails: MutableList<String>, onComplete: () -> Unit, onError: (String) -> Unit) {
         _facilityState.value = FacilityState.LOADING
         viewModelScope.launch {
             try {

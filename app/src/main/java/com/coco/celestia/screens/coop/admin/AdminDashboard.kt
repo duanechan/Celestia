@@ -4,11 +4,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -231,8 +234,9 @@ fun AddFacilityForm(
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
-    var emails = remember { mutableListOf<String>() }
-    var email by remember { mutableStateOf("") }
+    var emails = remember { mutableStateListOf("") }
+    var facilityFocused by remember { mutableStateOf(false) }
+    var accessibleFocused by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -270,7 +274,6 @@ fun AddFacilityForm(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
 
-                var facilityFocused by remember { mutableStateOf(false) }
                 TextField(
                     value = name,
                     onValueChange = { name = it },
@@ -303,40 +306,41 @@ fun AddFacilityForm(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                var accessibleFocused by remember { mutableStateOf(false) }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    TextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        placeholder = {
-                            Text(
-                                text = "Enter email address",
-                                fontStyle = FontStyle.Italic,
-                                color = if (accessibleFocused) Color.Transparent else Color.Gray
+                LazyColumn {
+                    itemsIndexed(emails) { index, email ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                        ) {
+                            TextField(
+                                value = email,
+                                onValueChange = { newValue -> emails[index] = newValue },
+                                placeholder = { Text(text = "Enter email address", color = if (accessibleFocused) Color.Transparent else Color.Gray) },
+                                modifier = Modifier.weight(1f),
+                                colors = TextFieldDefaults.textFieldColors(
+                                    containerColor = White1,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent
+                                )
                             )
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(16.dp))
-                            .onFocusChanged { focusState ->
-                                accessibleFocused = focusState.isFocused
-                            },
-                        colors = TextFieldDefaults.textFieldColors(
-                            containerColor = White1,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        )
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    IconButton(onClick = { /* Add Action */ }) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = null,
-                            tint = Green1
-                        )
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            IconButton(
+                                onClick = {
+                                    if (index == emails.size - 1) {
+                                        emails.add("")
+                                    } else {
+                                        emails.removeAt(index)
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = if (index == emails.size - 1) Icons.Default.Add else Icons.Default.Clear,
+                                    contentDescription = null,
+                                    tint = Green1
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -346,10 +350,10 @@ fun AddFacilityForm(
 
         Button(
             onClick = {
-                if (name.isNotEmpty() && email.isNotEmpty()) {
+                if (name.isNotEmpty() && emails.all { it.isNotEmpty() }) {
                     facilityViewModel.createFacility(
                         name = name,
-                        emails = email,
+                        emails = emails,
                         onComplete = {
                             onEvent(Triple(ToastStatus.SUCCESSFUL, "$name facility added.", System.currentTimeMillis()))
                             navController.navigate(Screen.Admin.route)
@@ -357,7 +361,7 @@ fun AddFacilityForm(
                         onError = { onEvent(Triple(ToastStatus.FAILED, it, System.currentTimeMillis())) }
                     )
                 } else {
-                    onEvent(Triple(ToastStatus.FAILED, "Please fill in the missing fields.", System.currentTimeMillis()))
+                    onEvent(Triple(ToastStatus.FAILED, "Please fill in all fields.", System.currentTimeMillis()))
                 }
             },
             colors = ButtonDefaults.buttonColors(containerColor = Green1),

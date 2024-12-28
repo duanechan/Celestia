@@ -17,7 +17,7 @@ data class UserData(
 
 data class FacilityData(
     val name: String = "",
-    val emails: String = "" // TODO: Change emails to type List<String> or MutableList<String>.
+    val emails: MutableList<String> = mutableListOf()
 )
 
 data class OrderData(
