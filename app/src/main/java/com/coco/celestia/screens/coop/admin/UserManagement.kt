@@ -111,7 +111,7 @@ fun AdminUserManagement(
                     onClick = {
                         navController.navigate(Screen.AdminUserManagementAuditLogs.route)
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = LightBlue),
+                    colors = ButtonDefaults.buttonColors(containerColor = Green2),
                     modifier = Modifier
                         .padding(top = 25.dp)
                         .semantics { testTag = "android:id/auditLogsButton" }
@@ -209,7 +209,7 @@ fun UserTable(users: List<UserData?>, modifier: Modifier, onEditUserClick: (User
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(if (index % 2 == 0) PaleBlue else Color.White)
+                        .background(if (index % 2 == 0) White1 else Color.White)
                         .padding(10.dp)
                         .semantics { testTag = "android:id/userRow_$index" },
                     verticalAlignment = Alignment.CenterVertically

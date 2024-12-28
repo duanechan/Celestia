@@ -8,7 +8,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
@@ -27,12 +31,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.R
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
@@ -111,7 +117,7 @@ fun AdminClients(
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
                     items(clients) { client ->
-                        ClientItem(client)
+                        ClientItem(client, navController)
                         Spacer(modifier = Modifier.height(8.dp))
                     }
 
@@ -163,17 +169,16 @@ fun NavigationTabs(
 }
 
 @Composable
-fun ClientItem(client: UserData) {
+fun ClientItem(client: UserData, navController: NavController) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = White1
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
+            .padding(vertical = 4.dp)
+            .clickable {
+                navController.navigate(Screen.AdminClientDetails.createRoute(client.email))
+            },
+        colors = CardDefaults.cardColors(containerColor = White1),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -183,7 +188,7 @@ fun ClientItem(client: UserData) {
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.profile),
-                contentDescription = "Add Client",
+                contentDescription = "Client Profile",
                 modifier = Modifier.size(50.dp),
                 tint = Green1
             )
@@ -193,13 +198,99 @@ fun ClientItem(client: UserData) {
                     text = "${client.firstname} ${client.lastname}",
                     fontWeight = FontWeight.Bold
                 )
+                Text(
+                    text = client.email,
+                    color = Color.Gray,
+                    fontSize = 12.sp
+                )
             }
-            IconButton(onClick = { /* to add later */ }) {
+            IconButton(onClick = {
+                navController.navigate(Screen.AdminClientDetails.createRoute(client.email))
+            }) {
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowRight,
                     contentDescription = "Details"
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun ClientDetails(
+    email: String,
+    userViewModel: UserViewModel
+) {
+    val usersData by userViewModel.usersData.observeAsState(emptyList())
+    val client = usersData.find { it.email == email }
+
+    if (client != null) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            ClientInfoCard(label = "Name", value = "${client.firstname} ${client.lastname}", icon = Icons.Default.Person)
+            ClientInfoCard(label = "Email", value = client.email, icon = Icons.Default.Email)
+            ClientInfoCard(label = "Phone Number", value = client.phoneNumber, icon = Icons.Default.Phone)
+            ClientInfoCard(label = "Address", value = "${client.streetNumber}, ${client.barangay}", icon = Icons.Default.Home)
+        }
+    } else {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Client not found",
+                color = Color.Red,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
+}
+
+@Composable
+fun ClientInfoCard(label: String, value: String, icon: ImageVector) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .height(120.dp),
+        colors = CardDefaults.cardColors(containerColor = White1),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    modifier = Modifier.size(36.dp),
+                    tint = Green1
+                )
+                Text(
+                    text = label,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Green1
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = value,
+                fontSize = 18.sp,
+                color = Green1
+            )
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }

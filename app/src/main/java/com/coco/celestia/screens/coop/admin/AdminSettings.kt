@@ -4,6 +4,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.OutlinedTextField
@@ -11,7 +13,9 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -30,6 +34,8 @@ import com.coco.celestia.BuildConfig
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.viewmodel.UserState
+import com.coco.celestia.viewmodel.UserViewModel
 
 @Composable
 fun AdminSettings(navController: NavController) {
@@ -242,19 +248,72 @@ fun OrganizationProfileScreen() {
 }
 
 @Composable
-fun AccessControlScreen() {
+// TODO: CRUD (adding, updating, and deleting accounts)
+fun AccessControlScreen(userViewModel: UserViewModel) {
+    val usersData by userViewModel.usersData.observeAsState(emptyList())
+    val userState by userViewModel.userState.observeAsState(UserState.LOADING)
+    val adminUsers = usersData.filter { it.role.equals("Admin", ignoreCase = true) }
+
+    LaunchedEffect(userState) {
+        userViewModel.fetchUsers()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(White2)
+            .background(Color(0xFFF8F8F8))
             .padding(16.dp)
     ) {
         Text(
             text = "People Who can access Coop Admin",
             color = Color.Gray,
-            fontSize = 18.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
             style = TextStyle(fontFamily = mintsansFontFamily)
         )
+
+        if (adminUsers.isEmpty()) {
+            when (userState) {
+                UserState.LOADING -> {
+                    Text(text = "Loading admins...", color = Color.Gray)
+                }
+                UserState.SUCCESS -> {
+                    Text(text = "No admins found", color = Color.Gray)
+                }
+                else -> {
+                    Text(text = "Failed to load admins", color = Color.Red)
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.padding(top = 16.dp),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
+                items(adminUsers) { admin ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        colors = CardDefaults.cardColors(containerColor = White1),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = admin.email,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Green1
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+        }
     }
 }

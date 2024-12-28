@@ -118,7 +118,7 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
     Column(
         modifier = Modifier
             .fillMaxHeight()
-            .background(BlueGradientBrush)
+            .background(Green4)
             .semantics { testTag = "android:id/AuditLogsScreen" },
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -135,12 +135,12 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                 TextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search user...", color = DarkBlue) },
+                    placeholder = { Text("Search user...", color = Green1) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Search,
                             contentDescription = "Search Icon",
-                            tint = DarkBlue
+                            tint = Green1
                         )
                     },
                     modifier = Modifier
@@ -164,7 +164,7 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                     IconButton(
                         onClick = { filterActionExpanded = true },
                         modifier = Modifier
-                            .background(color = LightBlue, shape = RoundedCornerShape(16.dp))
+                            .background(color = Green2, shape = RoundedCornerShape(16.dp))
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.filter),
@@ -177,7 +177,7 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                         expanded = filterActionExpanded,
                         onDismissRequest = { filterActionExpanded = false },
                         modifier = Modifier
-                            .background(color = PaleBlue, shape = RoundedCornerShape(8.dp))
+                            .background(color = White1, shape = RoundedCornerShape(8.dp))
                             .heightIn(max = 250.dp)
                     ) {
                         if (actionStatusView) {
@@ -186,12 +186,12 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                                     text = {
                                         Text(
                                             text = status,
-                                            color = if (selectedStatus == status) Color.White else DarkBlue
+                                            color = if (selectedStatus == status) Color.White else Green1
                                         )
                                     },
                                     modifier = Modifier
                                         .background(
-                                            color = if (selectedStatus == status) DarkBlue else Color.Transparent
+                                            color = if (selectedStatus == status) Green1 else Color.Transparent
                                         ),
                                     onClick = {
                                         selectedStatus = status
@@ -204,12 +204,12 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                                 text = {
                                     Text(
                                         text = "All Actions",
-                                        color = if (selectedCategory.isEmpty()) Color.White else DarkBlue
+                                        color = if (selectedCategory.isEmpty()) Color.White else Green1
                                     )
                                 },
                                 modifier = Modifier
                                     .background(
-                                        color = if (selectedCategory.isEmpty()) DarkBlue else Color.Transparent
+                                        color = if (selectedCategory.isEmpty()) Green1 else Color.Transparent
                                     ),
                                 onClick = {
                                     selectedCategory = ""
@@ -230,7 +230,7 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                         }
                     },
                     modifier = Modifier
-                        .background(color = LightBlue , shape = RoundedCornerShape(16.dp))
+                        .background(color = Green2 , shape = RoundedCornerShape(16.dp))
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.download_icon),
@@ -331,7 +331,7 @@ fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(if (isEvenRow) PaleBlue else Color.White)
+            .background(if (isEvenRow) White1 else Color.White)
             .padding(10.dp)
             .semantics { testTag = "android:id/LogItem" }
     ) {
@@ -339,7 +339,7 @@ fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
             text = transaction.date,
             fontSize = 13.sp,
             fontFamily = mintsansFontFamily,
-            color = DarkBlue,
+            color = Green1,
             modifier = Modifier
                 .weight(1f)
                 .semantics { testTag = "android:id/transactionDate" }
@@ -355,21 +355,21 @@ fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
                 fontSize = 13.sp,
                 fontFamily = mintsansFontFamily,
                 fontWeight = FontWeight.Bold,
-                color = DarkBlue
+                color = Green1
             )
             // Role
             Text(
                 text = userData?.role ?: "",
                 fontSize = 13.sp,
                 fontFamily = mintsansFontFamily,
-                color = DarkBlue
+                color = Green1
             )
         }
         Text(
             text = formattedType,
             fontSize = 12.sp,
             fontFamily = mintsansFontFamily,
-            color = DarkBlue,
+            color = Green1,
             modifier = Modifier
                 .weight(1f)
                 .semantics { testTag = "android:id/transactionType" }
@@ -384,7 +384,7 @@ fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
             Icon(
                 painter = painterResource(R.drawable.viewmore),
                 contentDescription = "View Details",
-                tint = DarkBlue,
+                tint = Green1,
                 modifier = Modifier
                     .size(25.dp)
             )

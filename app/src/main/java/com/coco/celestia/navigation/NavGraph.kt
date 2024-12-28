@@ -39,6 +39,7 @@ import com.coco.celestia.screens.coop.admin.AdminClients
 import com.coco.celestia.screens.coop.admin.AdminHome
 import com.coco.celestia.screens.coop.admin.AdminOrders
 import com.coco.celestia.screens.coop.admin.AdminSettings
+import com.coco.celestia.screens.coop.admin.ClientDetails
 import com.coco.celestia.screens.coop.admin.OrganizationProfileScreen
 import com.coco.celestia.screens.coop.facility.AddProductForm
 import com.coco.celestia.screens.coop.facility.CoopAddInventory
@@ -241,7 +242,7 @@ fun NavGraph(
         }
         composable(route = Screen.AccessControl.route) {
             onNavigate("Access Control")
-            AccessControlScreen()
+            AccessControlScreen(userViewModel = userViewModel)
         }
         composable(route = Screen.PrivacyPolicy.route) {
             onNavigate("Privacy Policy")
@@ -254,8 +255,13 @@ fun NavGraph(
                 userViewModel = userViewModel
             )
         }
+        composable(route = Screen.AdminClientDetails.route) { backStackEntry ->
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            onNavigate("Client Details")
+            ClientDetails(email = email, userViewModel = userViewModel)
+        }
         composable(route = Screen.AdminUserManagement.route) {
-            onNavigate("User Management")
+            onNavigate("Members")
             AdminUserManagement(
                 userViewModel = userViewModel,
                 transactionViewModel = transactionViewModel,

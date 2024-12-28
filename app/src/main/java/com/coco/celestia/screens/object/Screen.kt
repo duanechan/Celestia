@@ -35,6 +35,9 @@ sealed class Screen(val route: String) {
     data object AdminClients: Screen( route = "admin_clients")
     data object OrganizationProfile: Screen(route = "organization_profile")
     data object AccessControl: Screen(route = "access_control")
+    data object AdminClientDetails : Screen(route = "client_details/{email}") {
+        fun createRoute(email: String) = "client_details/$email"
+    }
     //coop
     data object Coop: Screen( route = "coop_dashboard")
     data object CoopInventory: Screen( route = "coop_inventory")
