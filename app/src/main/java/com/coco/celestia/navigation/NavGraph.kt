@@ -45,6 +45,9 @@ import com.coco.celestia.screens.coop.facility.AddProductForm
 import com.coco.celestia.screens.coop.facility.CoopAddInventory
 import com.coco.celestia.screens.coop.facility.CoopDashboard
 import com.coco.celestia.screens.coop.facility.CoopInventory
+import com.coco.celestia.screens.coop.facility.CoopPurchases
+import com.coco.celestia.screens.coop.facility.CoopReports
+import com.coco.celestia.screens.coop.facility.CoopSales
 import com.coco.celestia.screens.coop.facility.OrderRequest
 import com.coco.celestia.screens.coop.facility.ProductTypeInventory
 import com.coco.celestia.screens.farmer.FarmerDashboard
@@ -437,6 +440,15 @@ fun NavGraph(
                 quantityAmount = 0
                 productType = ""
             }
+        }
+        composable(Screen.CoopReports.route) {
+            CoopReports(navController)
+        }
+        composable(Screen.CoopSales.route) {
+            CoopSales(navController)
+        }
+        composable(Screen.CoopPurchases.route) {
+            CoopPurchases(navController)
         }
         composable(
             route = Screen.FarmerProductInventory.route,

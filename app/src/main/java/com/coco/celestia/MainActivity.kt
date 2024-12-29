@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,8 +21,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
@@ -68,11 +71,13 @@ import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green4
 import com.coco.celestia.util.checkNetworkConnection
+import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.FacilityData
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.firebase.auth.FirebaseAuth
@@ -140,6 +145,8 @@ fun App() {
     val userViewModel: UserViewModel = viewModel()
     val userData by userViewModel.userData.observeAsState(UserData())
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
+    val facilityViewModel: FacilityViewModel = viewModel()
+    val facilityData by facilityViewModel.facilityData.observeAsState(FacilityData())
     var lastConnectionState = checkNetworkConnection(context)
     val currentDestination = navController.currentBackStackEntry?.destination?.route
     var topBarTitle by remember { mutableStateOf("") }
@@ -153,19 +160,28 @@ fun App() {
     val scope = rememberCoroutineScope()
     var isDropdownExpanded by remember { mutableStateOf(false) }
 
-    val menuItems = if (userData.role == "Admin") {
+    val commonCoopMenuItems = listOf(
+        "Home" to Screen.Coop.route,
+        "Inventory" to Screen.CoopInventory.route,
+        "Sales" to Screen.CoopSales.route,
+        "Purchases" to Screen.CoopPurchases.route,
+        "Reports" to Screen.CoopReports.route,
+        "Settings" to Screen.AdminSettings.route
+    )
+
+    val menuItems = if (userData.role.startsWith("Coop")) {
+        if (facilityData.name.isNotEmpty()) {
+            commonCoopMenuItems
+        } else {
+            listOf("NO FACILITY YET" to "") + commonCoopMenuItems
+        }
+    } else {
         listOf(
             "Home" to Screen.Admin.route,
             "Special Requests" to Screen.AdminOrders.route,
             "Members" to Screen.AdminUserManagement.route,
             "Clients & Customers" to Screen.AdminClients.route,
-            "Settings" to Screen.AdminSettings.route
-        )
-    } else {
-        listOf(
-            "Home" to Screen.Admin.route,
-            "Profile" to Screen.Profile.route,
-            "Settings" to Screen.Profile.route
+            "Settings" to Screen.AdminSettings.route // to add coop settings later
         )
     }
 
@@ -201,7 +217,7 @@ fun App() {
         if (toastEvent.second.isNotEmpty()) {
             toastStatus = toastEvent.first
             toastMessage = toastEvent.second
-            if(toastEvent.second == "Logging in...") {
+            if (toastEvent.second == "Logging in...") {
                 showToast = true
             } else {
                 showToast = true
@@ -256,9 +272,23 @@ fun App() {
                     Spacer(modifier = Modifier.height(8.dp))
 
                     menuItems.forEach { (label, route) ->
-                        if (label == "Special Requests") {
+                        if (label == "NO FACILITY YET") {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 16.dp)
+                            ) {
+                                Text(
+                                    text = label,
+                                    fontSize = 18.sp,
+                                    color = Color.Red,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
+                            }
+                        } else if (label == "Special Requests") {
                             Column {
-                                Row (
+                                Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -337,6 +367,10 @@ fun App() {
                                     "Clients & Customers" -> Icon(Icons.Default.Person, contentDescription = null, tint = Green1)
                                     "Settings" -> Icon(Icons.Default.Settings, contentDescription = null, tint = Green1)
                                     "Profile" -> Icon(Icons.Default.Person, contentDescription = null, tint = Green1)
+                                    "Inventory" -> Icon(Icons.Default.List, contentDescription = null, tint = Green1)
+                                    "Sales" -> Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Green1)
+                                    "Purchases" -> Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Green1)
+                                    "Reports" -> Icon(Icons.Default.Info, contentDescription = null, tint = Green1)
                                 }
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Text(
@@ -355,51 +389,85 @@ fun App() {
         Scaffold(
             topBar = {
                 if (userData != null && shouldShowNavigation) {
-                    if (userData!!.role == "Admin") {
-                        NavDrawerTopBar(
-                            navController = navController,
-                            title = topBarTitle,
-                            role = userData!!.role,
-                            orderViewModel = OrderViewModel(),
-                            transactionViewModel = TransactionViewModel(),
-                            onUpdateOrder = {},
-                            userViewModel = userViewModel,
-                            locationViewModel = LocationViewModel(),
-                            onLogoutEvent = {
-                                val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-                                if (uid.isNotEmpty()) {
-                                    userViewModel.logout(uid = uid)
-                                }
-                                navController.navigate(Screen.Login.route) {
-                                    popUpTo(Screen.Login.route) { inclusive = true }
-                                }
-                            },
-                            onProfileUpdateEvent = {},
-                            onSidebarToggle = {
-                                scope.launch {
-                                    if (drawerState.isClosed) {
-                                        drawerState.open()
-                                    } else {
-                                        drawerState.close()
+                    when {
+                        userData.role.startsWith("Coop") -> {
+                            NavDrawerTopBar(
+                                navController = navController,
+                                title = topBarTitle,
+                                role = userData!!.role,
+                                orderViewModel = OrderViewModel(),
+                                transactionViewModel = TransactionViewModel(),
+                                onUpdateOrder = {},
+                                userViewModel = userViewModel,
+                                locationViewModel = LocationViewModel(),
+                                onLogoutEvent = {
+                                    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+                                    if (uid.isNotEmpty()) {
+                                        userViewModel.logout(uid = uid)
+                                    }
+                                    navController.navigate(Screen.Login.route) {
+                                        popUpTo(Screen.Login.route) { inclusive = true }
+                                    }
+                                },
+                                onProfileUpdateEvent = {},
+                                onSidebarToggle = {
+                                    scope.launch {
+                                        if (drawerState.isClosed) {
+                                            drawerState.open()
+                                        } else {
+                                            drawerState.close()
+                                        }
                                     }
                                 }
-                            }
-                        )
-                    } else {
-                        TopBar(
-                            title = topBarTitle,
-                            navController = navController,
-                            containerColor = Green4,
-                            currentDestination = navController.currentBackStackEntry?.destination?.route
-                        )
+                            )
+                        }
+                        userData.role == "Admin" -> {
+                            NavDrawerTopBar(
+                                navController = navController,
+                                title = topBarTitle,
+                                role = userData!!.role,
+                                orderViewModel = OrderViewModel(),
+                                transactionViewModel = TransactionViewModel(),
+                                onUpdateOrder = {},
+                                userViewModel = userViewModel,
+                                locationViewModel = LocationViewModel(),
+                                onLogoutEvent = {
+                                    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+                                    if (uid.isNotEmpty()) {
+                                        userViewModel.logout(uid = uid)
+                                    }
+                                    navController.navigate(Screen.Login.route) {
+                                        popUpTo(Screen.Login.route) { inclusive = true }
+                                    }
+                                },
+                                onProfileUpdateEvent = {},
+                                onSidebarToggle = {
+                                    scope.launch {
+                                        if (drawerState.isClosed) {
+                                            drawerState.open()
+                                        } else {
+                                            drawerState.close()
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                        else -> {
+                            TopBar(
+                                title = topBarTitle,
+                                navController = navController,
+                                containerColor = Green4,
+                                currentDestination = navController.currentBackStackEntry?.destination?.route
+                            )
+                        }
                     }
                 }
                 Toast(message = toastMessage, status = toastStatus, visibility = showToast)
             },
             bottomBar = {
-                if (shouldShowNavigation && userData?.role !in listOf("Admin")) {
+                if (shouldShowNavigation && !(userData.role.startsWith("Coop") || userData.role == "Admin")) {
                     NavDrawerBottomBar(
-                        role = userData?.role.toString(),
+                        role = userData.role,
                         navController = navController
                     )
                 }
@@ -409,8 +477,9 @@ fun App() {
                 navController = navController,
                 userRole = userData?.role.toString(),
                 onNavigate = { topBarTitle = it },
-                onEvent = {  toastEvent = Triple(it.first, it.second, it.third)
-                          println(toastEvent)},
+                onEvent = {
+                    toastEvent = Triple(it.first, it.second, it.third)
+                },
                 modifier = if (shouldShowNavigation) {
                     Modifier.padding(paddingValues)
                 } else {
