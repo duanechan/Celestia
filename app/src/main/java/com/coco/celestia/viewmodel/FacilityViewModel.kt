@@ -53,7 +53,6 @@ class FacilityViewModel: ViewModel() {
         })
     }
 
-    // TODO: Change emails to type List<String> or MutableList<String>.
     fun createFacility(name: String, emails: MutableList<String>, onComplete: () -> Unit, onError: (String) -> Unit) {
         _facilityState.value = FacilityState.LOADING
         viewModelScope.launch {

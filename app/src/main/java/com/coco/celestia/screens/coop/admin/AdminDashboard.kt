@@ -6,7 +6,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -26,7 +25,6 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.components.toast.ToastStatus
@@ -34,12 +32,14 @@ import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
+import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.FacilityData
 
 @Composable
 fun AdminHome(
     navController: NavController,
     facilityViewModel: FacilityViewModel,
+    userViewModel: UserViewModel,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     var currentView by remember { mutableStateOf("Dashboard") }
@@ -113,6 +113,7 @@ fun AdminHome(
                 AddFacilityForm(
                     navController = navController,
                     facilityViewModel = facilityViewModel,
+                    userViewModel = userViewModel,
                     onEvent = { onEvent(it) })
             }
         }
@@ -230,6 +231,7 @@ fun NavigationTab(
 @Composable
 fun AddFacilityForm(
     navController: NavController,
+    userViewModel: UserViewModel,
     facilityViewModel: FacilityViewModel,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
@@ -356,6 +358,7 @@ fun AddFacilityForm(
                         emails = emails,
                         onComplete = {
                             onEvent(Triple(ToastStatus.SUCCESSFUL, "$name facility added.", System.currentTimeMillis()))
+                            userViewModel.assignFacility(emails, name)
                             navController.navigate(Screen.Admin.route)
                         },
                         onError = { onEvent(Triple(ToastStatus.FAILED, it, System.currentTimeMillis())) }

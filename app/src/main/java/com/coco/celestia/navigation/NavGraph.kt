@@ -246,6 +246,7 @@ fun NavGraph(
             AdminHome(
                 navController = navController,
                 facilityViewModel = facilityViewModel,
+                userViewModel = userViewModel,
                 onEvent = { onEvent(it) })
         }
 

@@ -1,6 +1,7 @@
 package com.coco.celestia.viewmodel
 
 import android.util.Log
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -17,6 +18,8 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.MutableData
+import com.google.firebase.database.Transaction
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -318,6 +321,41 @@ class UserViewModel : ViewModel() {
                 _userState.value = UserState.ERROR("Invalid email or password.")
             } catch (e: FirebaseNetworkException) {
                 _userState.value = UserState.ERROR("No internet connection.")
+            }
+        }
+    }
+
+    fun assignFacility(emails: List<String>, facility: String) {
+        viewModelScope.launch {
+            _userState.value = UserState.LOADING
+            try {
+                database.runTransaction(object : Transaction.Handler {
+                    override fun doTransaction(currentData: MutableData): Transaction.Result {
+                        currentData.children.forEach { child ->
+                            var user = child.getValue(UserData::class.java) ?: UserData()
+                            if (emails.contains(user.email) && !user.role.startsWith("Coop")) {
+                                user.role = "Coop${facility.replaceFirstChar { it.uppercase() }}"
+                                child.value = user
+                            }
+                        }
+                        return Transaction.success(currentData)
+                    }
+
+                    override fun onComplete(
+                        error: DatabaseError?,
+                        committed: Boolean,
+                        currentData: DataSnapshot?
+                    ) {
+                        if (error != null) {
+                            _userState.value = UserState.ERROR(error.message)
+                        } else if (committed) {
+                            _userState.value = UserState.SUCCESS
+                        }
+                    }
+
+                })
+            } catch (e: Exception) {
+                _userState.value = UserState.ERROR(e.message ?: "Unknown Error.")
             }
         }
     }

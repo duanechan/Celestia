@@ -387,29 +387,34 @@ fun App() {
         drawerState = drawerState
     ) {
         Scaffold(
-            topBar = {
+                topBar = {
                 if (userData != null && shouldShowNavigation) {
                     when {
                         userData.role.startsWith("Coop") -> {
                             NavDrawerTopBar(
                                 navController = navController,
                                 title = topBarTitle,
-                                role = userData!!.role,
-                                orderViewModel = OrderViewModel(),
-                                transactionViewModel = TransactionViewModel(),
-                                onUpdateOrder = {},
-                                userViewModel = userViewModel,
-                                locationViewModel = LocationViewModel(),
-                                onLogoutEvent = {
-                                    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-                                    if (uid.isNotEmpty()) {
-                                        userViewModel.logout(uid = uid)
-                                    }
-                                    navController.navigate(Screen.Login.route) {
-                                        popUpTo(Screen.Login.route) { inclusive = true }
-                                    }
-                                },
-                                onProfileUpdateEvent = {},
+//
+//
+//                                Idk ano ginagawa nito pero cinomment ko muna kasi di mastart yung app.
+//
+//
+//                                role = userData!!.role,
+//                                orderViewModel = OrderViewModel(),
+//                                transactionViewModel = TransactionViewModel(),
+//                                onUpdateOrder = {},
+//                                userViewModel = userViewModel,
+//                                locationViewModel = LocationViewModel(),
+//                                onLogoutEvent = {
+//                                    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+//                                    if (uid.isNotEmpty()) {
+//                                        userViewModel.logout(uid = uid)
+//                                    }
+//                                    navController.navigate(Screen.Login.route) {
+//                                        popUpTo(Screen.Login.route) { inclusive = true }
+//                                    }
+//                                },
+//                                onProfileUpdateEvent = {},
                                 onSidebarToggle = {
                                     scope.launch {
                                         if (drawerState.isClosed) {
@@ -425,22 +430,22 @@ fun App() {
                             NavDrawerTopBar(
                                 navController = navController,
                                 title = topBarTitle,
-                                role = userData!!.role,
-                                orderViewModel = OrderViewModel(),
-                                transactionViewModel = TransactionViewModel(),
-                                onUpdateOrder = {},
-                                userViewModel = userViewModel,
-                                locationViewModel = LocationViewModel(),
-                                onLogoutEvent = {
-                                    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-                                    if (uid.isNotEmpty()) {
-                                        userViewModel.logout(uid = uid)
-                                    }
-                                    navController.navigate(Screen.Login.route) {
-                                        popUpTo(Screen.Login.route) { inclusive = true }
-                                    }
-                                },
-                                onProfileUpdateEvent = {},
+//                                role = userData.role,
+//                                orderViewModel = OrderViewModel(),
+//                                transactionViewModel = TransactionViewModel(),
+//                                onUpdateOrder = {},
+//                                userViewModel = userViewModel,
+//                                locationViewModel = LocationViewModel(),
+//                                onLogoutEvent = {
+//                                    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+//                                    if (uid.isNotEmpty()) {
+//                                        userViewModel.logout(uid = uid)
+//                                    }
+//                                    navController.navigate(Screen.Login.route) {
+//                                        popUpTo(Screen.Login.route) { inclusive = true }
+//                                    }
+//                                },
+//                                onProfileUpdateEvent = {},
                                 onSidebarToggle = {
                                     scope.launch {
                                         if (drawerState.isClosed) {

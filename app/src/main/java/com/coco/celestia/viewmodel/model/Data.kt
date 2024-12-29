@@ -7,7 +7,7 @@ data class UserData(
     val email: String = "",
     val firstname: String = "",
     val lastname: String = "",
-    val role: String = "",
+    var role: String = "",
     val phoneNumber: String = "",
     val streetNumber: String = "",
     val barangay: String = "",
