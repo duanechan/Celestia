@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -35,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -44,31 +44,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.coco.celestia.components.toast.ToastStatus
+import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.DOrangeCircle
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green4
 import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.util.routeHandler
-import com.coco.celestia.viewmodel.LocationViewModel
-import com.coco.celestia.viewmodel.OrderViewModel
-import com.coco.celestia.viewmodel.TransactionViewModel
-import com.coco.celestia.viewmodel.UserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NavDrawerTopBar(
     navController: NavController,
     title: String,
-    role: String,
-    orderViewModel: OrderViewModel,
-    transactionViewModel: TransactionViewModel,
-    onUpdateOrder: (Triple<ToastStatus, String, Long>) -> Unit,
-    userViewModel: UserViewModel,
-    locationViewModel: LocationViewModel,
-    onLogoutEvent: (Triple<ToastStatus, String, Long>) -> Unit,
-    onProfileUpdateEvent: (Triple<ToastStatus, String, Long>) -> Unit,
     onSidebarToggle: () -> Unit
 ) {
 
@@ -154,8 +142,7 @@ fun TopBar(
                     Text(
                         text = title,
                         fontWeight = FontWeight.Bold,
-                        color = Green1,
-                        modifier = Modifier.weight(1f)
+                        color = Green1
                     )
                 }
             },
@@ -171,14 +158,15 @@ fun TopBar(
                         )
                     }
                 }
-                if (currentDestination == Screen.Calendar.route) {
+                if (currentDestination == Screen.ClientAddSpecialReq.route) {
                     IconButton(
                         onClick = { navController.popBackStack() },
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            painter = painterResource(R.drawable.back),
                             contentDescription = "Back Button",
-                            tint = Green1
+                            tint = Green1,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
@@ -415,8 +403,24 @@ fun NavDrawerBottomBar(
                 )
             }
 
+            if (role == "Client") {
+                NavigationBarItem(
+                    icon = { Icon(painterResource(R.drawable.special_request), contentDescription = "Special Request", tint = contentsColor, modifier = Modifier.size(24.dp)) },
+                    label = { Text("Request", color = contentsColor, fontFamily = mintsansFontFamily) },
+                    selected = currentDestination == Screen.ClientSpecialReq.route,
+                    onClick = {
+                        navController.navigate(Screen.ClientSpecialReq.route) {
+                            popUpTo(navController.graph.startDestinationId)
+                        }
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = contentsColor,
+                        indicatorColor = DOrangeCircle
+                    )
+                )
+            }
             // Notification
-            if (role == "Client" || role == "Farmer") {
+            if (role == "Farmer") {
                 NavigationBarItem(
                     icon = { Icon(imageVector = Icons.Default.Notifications, contentDescription = "Notification", tint = contentsColor) },
                     label = { Text("Notification", color = contentsColor, fontFamily = mintsansFontFamily) },

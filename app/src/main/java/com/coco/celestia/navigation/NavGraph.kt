@@ -1,6 +1,5 @@
 package com.coco.celestia.navigation
 
-import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -26,6 +25,7 @@ import com.coco.celestia.screens.PrivacyPolicy
 import com.coco.celestia.screens.Profile
 import com.coco.celestia.screens.RegisterScreen
 import com.coco.celestia.screens.SplashScreen
+import com.coco.celestia.screens.client.AddSpecialReq
 import com.coco.celestia.screens.coop.admin.AddUserForm
 import com.coco.celestia.screens.coop.admin.AdminUserManagement
 import com.coco.celestia.screens.coop.admin.CheckAddUser
@@ -34,6 +34,7 @@ import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientDashboard
 import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.client.ClientOrderDetails
+import com.coco.celestia.screens.client.DisplaySpecialReq
 import com.coco.celestia.screens.coop.admin.AccessControlScreen
 import com.coco.celestia.screens.coop.admin.AdminClients
 import com.coco.celestia.screens.coop.admin.AdminHome
@@ -67,6 +68,7 @@ import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.ProductData
@@ -84,6 +86,7 @@ fun NavGraph(
     productViewModel: ProductViewModel = viewModel(),
     transactionViewModel: TransactionViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
+    specialRequestViewModel: SpecialRequestViewModel = viewModel(),
     onNavigate: (String) -> Unit,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit,
     modifier: Modifier
@@ -93,12 +96,10 @@ fun NavGraph(
     var quantityAmount by remember { mutableIntStateOf(0) }
     var defectBeans by remember { mutableIntStateOf(0) }
     var productType by remember { mutableStateOf("") }
-    var productPrice by remember { mutableStateOf("") }
     var emailSend by remember { mutableStateOf("") }
     var firstname by remember { mutableStateOf("") }
     var lastname by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("") }
-    var updatedProductImage by remember { mutableStateOf<Uri?>(null) }
 
     NavHost(
         navController = navController,
@@ -225,6 +226,19 @@ fun NavGraph(
         composable(route = Screen.ClientContact.route) {
             onNavigate("Contacts")
             ClientContact(contactViewModel = contactViewModel)
+        }
+
+        composable(route = Screen.ClientSpecialReq.route) {
+            DisplaySpecialReq(
+                navController
+            )
+        }
+
+        composable(route = Screen.ClientAddSpecialReq.route) {
+            onNavigate("Request an Order")
+            AddSpecialReq(
+                specialRequestViewModel
+            )
         }
 
         composable(route = Screen.Admin.route) {

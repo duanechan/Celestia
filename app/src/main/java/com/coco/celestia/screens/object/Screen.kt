@@ -59,6 +59,8 @@ sealed class Screen(val route: String) {
     data object Client: Screen( route = "client_dashboard")
     data object ClientOrder: Screen( route = "client_order")
     data object ClientContact: Screen( route = "client_contact")
+    data object ClientSpecialReq: Screen( route = "client_special_req")
+    data object ClientAddSpecialReq: Screen( route = "client_add_special_req")
     data object Cart: Screen(route = "client/cart")
     data object CheckoutEvent: Screen(route = "client/cart/checkout")
     //farmer

@@ -35,6 +35,15 @@ data class OrderData(
     val fulfilled: Int = 0
 )
 
+data class SpecialRequest(
+    val subject: String = "",
+    val description: String = "",
+    val products: List<Pair<String, Int>> = emptyList(),
+    val targetDate: String = "",
+    val collectionMethod: String = "",
+    val additionalRequest: String = ""
+)
+
 data class FullFilledBy (
     val farmerName: String = "",
     val quantityFulfilled: Int = 0,
