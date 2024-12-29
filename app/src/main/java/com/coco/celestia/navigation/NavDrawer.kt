@@ -49,6 +49,7 @@ import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.DOrangeCircle
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green4
+import com.coco.celestia.ui.theme.White1
 import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.util.routeHandler
 
@@ -57,7 +58,7 @@ import com.coco.celestia.util.routeHandler
 fun NavDrawerTopBar(
     navController: NavController,
     title: String,
-    onSidebarToggle: () -> Unit
+    onSidebarToggle: () -> Unit,
 ) {
 
     TopAppBar(
@@ -239,7 +240,10 @@ fun NavDrawerBottomBar(
 
     Box(modifier = Modifier.fillMaxWidth()) {
         NavigationBar(
-            containerColor = navColor,
+            containerColor = when (role) {
+                "Client" -> Green1
+                else -> navColor
+            },
             contentColor = contentsColor
         ) {
             // Home
@@ -249,7 +253,7 @@ fun NavDrawerBottomBar(
                         imageVector = Icons.Default.Home,
                         contentDescription = "Home",
                         tint = when {
-                            role == "Client" -> contentsColor
+                            role == "Client" -> Color.White
                             role == "Farmer" && currentDestination == routes.dashboard -> contentsColor
                             role == "CoopCoffee" && currentDestination == routes.dashboard -> contentsColor
                             else -> contentsColor
@@ -260,7 +264,7 @@ fun NavDrawerBottomBar(
                     Text(
                         "Home",
                         color = when {
-                            role == "Client" -> contentsColor
+                            role == "Client" -> Color.White
                             role == "Farmer" && currentDestination == routes.dashboard -> contentsColor
                             role == "CoopCoffee" && currentDestination == routes.dashboard -> contentsColor
                             else -> contentsColor
@@ -289,7 +293,7 @@ fun NavDrawerBottomBar(
                             imageVector = Icons.Default.ShoppingCart,
                             contentDescription = "Orders",
                             tint = when {
-                                role == "Client" -> contentsColor
+                                role == "Client" -> Color.White
                                 role == "Farmer" && currentDestination == routes.orders -> contentsColor
                                 role == "CoopCoffee" && currentDestination == routes.orders -> contentsColor
                                 role == "Admin" && currentDestination == routes.orders -> contentsColor
@@ -301,7 +305,7 @@ fun NavDrawerBottomBar(
                         Text(
                             if (role == "Client") "Track Orders" else "Orders",
                             color = when {
-                                role == "Client" -> contentsColor
+                                role == "Client" -> Color.White
                                 role == "Farmer" && currentDestination == routes.orders -> contentsColor
                                 role == "CoopCoffee" && currentDestination == routes.orders -> contentsColor
                                 role == "Admin" && currentDestination == routes.orders -> contentsColor
@@ -405,8 +409,8 @@ fun NavDrawerBottomBar(
 
             if (role == "Client") {
                 NavigationBarItem(
-                    icon = { Icon(painterResource(R.drawable.special_request), contentDescription = "Special Request", tint = contentsColor, modifier = Modifier.size(24.dp)) },
-                    label = { Text("Request", color = contentsColor, fontFamily = mintsansFontFamily) },
+                    icon = { Icon(painterResource(R.drawable.special_request), contentDescription = "Special Request", tint = Color.White, modifier = Modifier.size(24.dp)) },
+                    label = { Text("Request", color = Color.White, fontFamily = mintsansFontFamily) },
                     selected = currentDestination == Screen.ClientSpecialReq.route,
                     onClick = {
                         navController.navigate(Screen.ClientSpecialReq.route) {
@@ -415,7 +419,7 @@ fun NavDrawerBottomBar(
                     },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = contentsColor,
-                        indicatorColor = DOrangeCircle
+                        indicatorColor = White1
                     )
                 )
             }
@@ -444,13 +448,13 @@ fun NavDrawerBottomBar(
                     Icon(
                         imageVector = Icons.Default.AccountCircle,
                         contentDescription = "Profile",
-                        tint = contentsColor
+                        tint = Color.White
                     )
                 },
                 label = {
                     Text(
                         "Profile",
-                        color = contentsColor,
+                        color = Color.White,
                         fontFamily = mintsansFontFamily
                     )
                 },
