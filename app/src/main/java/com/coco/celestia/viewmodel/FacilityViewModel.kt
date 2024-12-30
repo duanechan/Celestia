@@ -53,7 +53,13 @@ class FacilityViewModel: ViewModel() {
         })
     }
 
-    fun createFacility(name: String, emails: MutableList<String>, onComplete: () -> Unit, onError: (String) -> Unit) {
+    fun createFacility(
+        icon: Int,
+        name: String,
+        emails: MutableList<String>,
+        onComplete: () -> Unit,
+        onError: (String) -> Unit
+    ) {
         _facilityState.value = FacilityState.LOADING
         viewModelScope.launch {
             try {
@@ -66,6 +72,7 @@ class FacilityViewModel: ViewModel() {
                         }
 
                         val facility = mapOf(
+                            "icon" to icon,
                             "name" to name,
                             "emails" to emails
                         )

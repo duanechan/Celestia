@@ -6,6 +6,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,11 +24,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.components.toast.ToastStatus
@@ -189,7 +196,17 @@ fun FacilityCard(facility: FacilityData) {
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = facility.name, color = Green1)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = facility.icon),
+                    contentDescription = null,
+                    modifier = Modifier.size(25.dp)
+                )
+                Text(text = facility.name, color = Green1)
+            }
         }
     }
 }
@@ -239,6 +256,8 @@ fun AddFacilityForm(
     var emails = remember { mutableStateListOf("") }
     var facilityFocused by remember { mutableStateOf(false) }
     var accessibleFocused by remember { mutableStateOf(false) }
+    var iconPickerShown by remember { mutableStateOf(false) }
+    var selectedIcon by remember { mutableIntStateOf(R.drawable.facility) }
 
     Column(
         modifier = Modifier
@@ -263,10 +282,11 @@ fun AddFacilityForm(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.facility),
+                        painter = painterResource(id = selectedIcon),
                         contentDescription = "Facility Image",
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(40.dp).clickable { iconPickerShown = true }
                     )
+
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Facility Name",
@@ -312,7 +332,9 @@ fun AddFacilityForm(
                     itemsIndexed(emails) { index, email ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
                         ) {
                             TextField(
                                 value = email,
@@ -354,6 +376,7 @@ fun AddFacilityForm(
             onClick = {
                 if (name.isNotEmpty() && emails.all { it.isNotEmpty() }) {
                     facilityViewModel.createFacility(
+                        icon = selectedIcon,
                         name = name,
                         emails = emails,
                         onComplete = {
@@ -373,6 +396,82 @@ fun AddFacilityForm(
             Text(text = "ADD", color = Color.White)
         }
     }
+
+    if (iconPickerShown) {
+        IconPicker(
+            selected = selectedIcon,
+            onDismiss = { iconPickerShown = false },
+            onConfirm = {
+                selectedIcon = it
+                iconPickerShown = false
+            }
+        )
+    }
+}
+
+// Icon picker for facility creation
+@Composable
+fun IconPicker(
+    selected: Int,
+    onConfirm: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var selectedIcon by remember { mutableIntStateOf(selected) }
+    // If you wanna add icons to the icon picker, prefix the file with 'fac_icon_'.
+    var icons = R.drawable::class.java.fields
+        .filter { it.name.startsWith("fac_icon_") }
+        .map { it.getInt(null) }
+
+    AlertDialog(
+        onDismissRequest = { onDismiss() },
+        title = {
+            Text(
+                text = "Pick an icon for the facility:",
+                fontFamily = mintsansFontFamily,
+                fontSize = 16.sp,
+            )
+        },
+        text = {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(5),
+                modifier = Modifier
+                    .height(200.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                itemsIndexed(icons) { _, icon ->
+                    Row {
+                        IconButton(
+                            onClick = { selectedIcon = icon },
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = if (selectedIcon == icon) JadeGreen else Color.Transparent,
+                                contentColor = if (selectedIcon == icon) White1 else Color.DarkGray
+                            )
+                        ) {
+                            Icon(
+                                painter = painterResource(id = icon),
+                                contentDescription = null
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { onDismiss() }) {
+                Text(text = "Cancel", fontFamily = mintsansFontFamily)
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(selectedIcon) },
+                enabled = selectedIcon != selected
+            ) {
+                Text(text = "Confirm", fontFamily = mintsansFontFamily)
+            }
+        },
+    )
 }
 
 @Composable

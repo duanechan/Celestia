@@ -1,5 +1,6 @@
 package com.coco.celestia.viewmodel.model
 
+import com.coco.celestia.R
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -16,6 +17,7 @@ data class UserData(
 )
 
 data class FacilityData(
+    val icon: Int = R.drawable.facility,
     val name: String = "",
     val emails: MutableList<String> = mutableListOf()
 )
