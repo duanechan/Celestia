@@ -1,7 +1,9 @@
 package com.coco.celestia.screens.coop.facility
 
-import androidx.compose.foundation.Image
+import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,429 +14,370 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.LastBaseline
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
-import com.coco.celestia.util.calculateMonthlyInventory
-import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.FacilityState
+import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
-import com.coco.celestia.viewmodel.model.MonthlyInventory
 import com.coco.celestia.viewmodel.model.ProductData
 
 @Composable
-fun CoopInventory(navController: NavController, role: String) {
+fun CoopInventory(navController: NavController, role: String, userEmail: String) {
+    val facilityViewModel: FacilityViewModel = viewModel()
     val productViewModel: ProductViewModel = viewModel()
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
+    val productData by productViewModel.productData.observeAsState(emptyList())
+    val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
+    val facilityState by facilityViewModel.facilityState.observeAsState(FacilityState.LOADING)
 
     LaunchedEffect(Unit) {
-        productViewModel.fetchProducts(
-            filter = "",
-            role = role
-        )
+        facilityViewModel.fetchFacilities()
     }
 
-    Column(
+    Box(modifier = Modifier.fillMaxSize()) {
+        when (facilityState) {
+            is FacilityState.LOADING -> LoadingScreen("Loading facilities...")
+            is FacilityState.ERROR -> ErrorScreen((facilityState as FacilityState.ERROR).message)
+            else -> {
+                val userFacility = facilitiesData.find { it.emails.contains(userEmail) }
+
+                if (userFacility != null) {
+                    val facilityName = userFacility.name
+                    LaunchedEffect(facilityName) {
+                        productViewModel.fetchProductByType(facilityName)
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .height(860.dp)
+                            .background(CoopBackground)
+                            .verticalScroll(rememberScrollState())
+                            .semantics { testTag = "android:id/CoopInventoryColumn" }
+                    ) {
+                        when (productState) {
+                            is ProductState.LOADING -> LoadingScreen("Loading products...")
+                            is ProductState.ERROR -> ErrorScreen((productState as ProductState.ERROR).message)
+                            is ProductState.SUCCESS -> {
+                                if (productData.isNotEmpty() && role.contains("Coop", ignoreCase = true)) {
+                                    LaunchedEffect(Unit) {
+                                        Log.d("CoopInventory", "Facility name being passed: $facilityName")
+                                        navController.navigate(Screen.CoopInStoreProducts.createRoute(facilityName))
+                                    }
+                                }
+                            }
+                            is ProductState.EMPTY -> {
+                                LaunchedEffect(Unit) {
+                                    navController.navigate(Screen.AddProductInventory.route)
+                                }
+                            }
+                        }
+                    }
+
+                    FloatingActionButton(
+                        onClick = {
+                            navController.navigate(Screen.AddProductInventory.route) {
+                                popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(16.dp)
+                            .semantics { testTag = "android:id/AddProductFAB" }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "Add Product"
+                        )
+                    }
+                } else {
+                    NoFacilityScreen()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CoopProductInventory(
+    navController: NavController,
+    facilityName: String,
+    currentEmail: String,
+    isInStore: Boolean,
+    productViewModel: ProductViewModel = viewModel(),
+    facilityViewModel: FacilityViewModel = viewModel()
+) {
+    val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
+    val productData by productViewModel.productData.observeAsState(emptyList())
+    val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
+    val facilityState by facilityViewModel.facilityState.observeAsState(FacilityState.LOADING)
+
+    LaunchedEffect(Unit) {
+        facilityViewModel.fetchFacilities()
+    }
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .height(860.dp)
             .background(CoopBackground)
-            .verticalScroll(rememberScrollState())
-            .semantics { testTag = "android:id/CoopInventoryColumn" }
-    ){
-        when (productState) {
-            is ProductState.LOADING -> {
-                Text("Loading products...")
-                Modifier.semantics { testTag = "android:id/LoadingText" }
-            }
-            is ProductState.ERROR -> {
-                Text("Failed to load products: ${(productState as ProductState.ERROR).message}")
-                Modifier.semantics { testTag = "android:id/ErrorText" }
-            }
-            is ProductState.EMPTY -> {
-                Text("No products available.")
-                Modifier.semantics { testTag = "android:id/EmptyText" }
-            }
-            is ProductState.SUCCESS -> {
-                if (role == "CoopCoffee") {
-                    navController.navigate(Screen.CoopProductInventory.createRoute("Coffee"))
-                } else {
-                    navController.navigate(Screen.CoopProductInventory.createRoute("Meat"))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun ProductTypeInventory(type: String?, userRole: String) {
-    val productViewModel: ProductViewModel = viewModel()
-    val orderViewModel: OrderViewModel = viewModel()
-    val orderData by orderViewModel.orderData.observeAsState(emptyList())
-    val productData by productViewModel.productData.observeAsState(emptyList())
-    var monthlyInventory by remember { mutableStateOf<List<MonthlyInventory>>(emptyList()) }
-    var selectedTab by remember { mutableStateOf("Current Inventory") }
-
-    val orderedQuantityAmount = orderData.filter { order ->
-        order.status in listOf("PENDING", "PREPARING", "DELIVERING")
-    }.fold(0) { accumulator, order ->
-        accumulator + order.orderData.quantity
-    }
-
-    val deliveredQuantityAmount = orderData.filter { order ->
-        order.status == "COMPLETED"
-    }.fold(0) { accumulator, order ->
-        accumulator + order.orderData.quantity
-    }
-
-    val fontColor = when (type) {
-        "Coffee" -> Color(0xFFB06520)
-        else -> Color(0xFFE86A33)
-    }
-
-    val iconRes = when (type) {
-        "Coffee" -> R.drawable.coffeeicon
-        else -> R.drawable.meaticon
-    }
-
-    LaunchedEffect(Unit) {
-        productViewModel.fetchProducts("", userRole)
-        orderViewModel.fetchAllOrders(
-            "",
-            userRole
-        )
-    }
-    LaunchedEffect(orderData, productData) {
-        monthlyInventory = calculateMonthlyInventory(orderData, productData)
-    }
-
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .verticalScroll(rememberScrollState())
-        .semantics { testTag = "android:id/ProductTypeInventoryColumn" },
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TopBarCoopInventory(
-            onTabSelected = { selectedTab = it },
-//            Modifier.semantics { testTag = "android:id/TopBarCoopInventory" }
-        )
-
-        Row(modifier = Modifier.padding(top = 10.dp, bottom = 10.dp)) {
-            Text(
-                text = type.toString(),
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 10.dp, bottom = 10.dp),
-                color = fontColor
-            )
-
-            Image(
-                painter = painterResource(id = iconRes),
-                contentDescription = "$type icon",
-                modifier = Modifier
-                    .size(35.dp)
-                    .padding(top = 5.dp)
-                    .semantics { testTag = "android:id/${type}Icon" }
-            )
-        }
-
-        if (selectedTab == "Current Inventory") {
-            CoopItemList(productData)
-            Modifier.semantics { testTag = "android:id/CurrentInventory" }
-        } else {
-            CoopMonthlyItemList(monthlyInventory)
-        }
-
-        Card(
-            colors = CardDefaults.cardColors(
-                containerColor = Ordered
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-                .padding(8.dp)
-                .semantics { testTag = "android:id/OrderedCard" }
-        ) {
-            Row(
-                modifier = Modifier
-                    .padding(16.dp)
-            ) {
-                Text(text = "Ordered",
-                    fontSize = 25.sp,
-                    modifier = Modifier.padding(10.dp),
-                    color = Color.White,
-                    fontFamily = mintsansFontFamily,
-                    fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.weight(1f))
-                Text(text = "${orderedQuantityAmount}kg",
-                    fontSize = 35.sp,
-                    color = Color.White,
-                    fontFamily = mintsansFontFamily,
-                    fontWeight = FontWeight.Bold)
+        when (facilityState) {
+            is FacilityState.LOADING -> {
+                LoadingScreen("Loading facilities...")
             }
-        }
-        Card(
-            colors = CardDefaults.cardColors(
-                containerColor = DeliveredItem
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-                .padding(8.dp)
-                .semantics { testTag = "android:id/DeliveredCard" }
-        ) {
-            Row(
-                modifier = Modifier
-                    .padding(16.dp)
-            ) {
-                Text(text = "Delivered",
-                    fontSize = 25.sp,
-                    modifier = Modifier.padding(10.dp),
-                    color = Color.White,
-                    fontFamily = mintsansFontFamily,
-                    fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.weight(1f))
-                Text(text = "${deliveredQuantityAmount}kg",
-                    fontSize = 35.sp,
-                    color = Color.White,
-                    fontFamily = mintsansFontFamily,
-                    fontWeight = FontWeight.Bold)
+            is FacilityState.ERROR -> {
+                ErrorScreen((facilityState as FacilityState.ERROR).message)
             }
-        }
-    }
-}
+            else -> {
+                val userFacility = facilitiesData.find { facility ->
+                    facility.emails.contains(currentEmail)
+                }
 
-@Composable
-fun CoopItemList(itemList: List<ProductData>) {
-    if (itemList.isNotEmpty()) {
-        itemList.forEach { product ->
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = when (product.name) {
-                        "Green Beans" -> GreenBeans
-                        "Roasted Beans" -> RoastedBeans
-                        "Packaged Beans" -> Packed
-                        "Sorted Beans" -> Sorted
-                        "Kiniing" -> Kiniing
-                        "Raw Meat" -> RawMeat
-                        "Pork" -> Pork
-                        else -> Color.Gray
+                if (userFacility != null) {
+                    LaunchedEffect(userFacility.name) {
+                        productViewModel.fetchProductByType(userFacility.name)
                     }
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
-                    .padding(8.dp)
-                    .semantics { testTag = "android:id/ProductCard_${product.name}" }
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(20.dp)
-                ) {
-                    Text(
-                        text = product.name,
-                        fontSize = 25.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        modifier = Modifier
-                            .alignBy(LastBaseline)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        text = "₱ ${product.priceKg}",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        modifier = Modifier
-                            .alignBy(LastBaseline)
-                    )
-                }
 
-                Row (
-                    modifier = Modifier
-                        .padding(start = 20.dp, end = 20.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Inventory",
-                        fontSize = 20.sp,
-                        fontFamily = mintsansFontFamily,
-                        color = Color.White
-                    )
-                    Text(
-                        text = "${product.quantity}kg",
-                        fontSize = 20.sp,
-                        fontFamily = mintsansFontFamily,
-                        color = Color.White
-                    )
-                }
-            }
-        }
-    }
-}
+                    when (productState) {
+                        is ProductState.LOADING -> {
+                            LoadingScreen("Loading products...")
+                        }
+                        is ProductState.ERROR -> {
+                            ErrorScreen((productState as ProductState.ERROR).message)
+                        }
+                        is ProductState.SUCCESS -> {
+                            val filteredProducts = productData.filter { product ->
+                                product.isInStore == isInStore &&
+                                        product.type == userFacility.name
+                            }
 
-@Composable
-fun CoopMonthlyItemList(itemList: List<MonthlyInventory>) {
-    if (itemList.isNotEmpty()) {
-        itemList.forEach { product ->
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = when (product.productName) {
-                        "Green Beans" -> GreenBeans
-                        "Roasted Beans" -> RoastedBeans
-                        "Packaged Beans" -> Packed
-                        "Sorted Beans" -> Sorted
-                        "Kiniing" -> Kiniing
-                        "Raw Meat" -> RawMeat
-                        "Pork" -> Pork
-                        else -> Color.Gray
+                            if (filteredProducts.isEmpty()) {
+                                EmptyProductsScreen(isInStore, userFacility.name)
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(16.dp)
+                                ) {
+                                    itemsIndexed(filteredProducts) { index, product ->
+                                        ProductCard(
+                                            product = product,
+                                            onClick = {}
+                                        )
+                                        if (index < filteredProducts.lastIndex) {
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        is ProductState.EMPTY -> {
+                            EmptyProductsScreen(isInStore, userFacility.name)
+                        }
                     }
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(170.dp)
-                    .padding(8.dp)
-                    .semantics { testTag = "android:id/MonthlyInventoryCard_${product.productName}" }
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(20.dp)
-                ) {
-                    Text(
-                        text = product.productName,
-                        fontSize = 25.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
+
+                    FloatingActionButton(
+                        onClick = {
+                            navController.navigate(Screen.AddProductInventory.route)
+                        },
                         modifier = Modifier
-                            .alignBy(LastBaseline)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        text = "₱ ${product.priceKg}",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        modifier = Modifier
-                            .alignBy(LastBaseline)
-                    )
-                }
-
-                Row (
-                    modifier = Modifier
-                        .padding(start = 20.dp, end = 20.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Inventory",
-                        fontSize = 20.sp,
-                        fontFamily = mintsansFontFamily,
-                        color = Color.White
-                    )
-                    Text(
-                        text = "${product.remainingQuantity}kg",
-                        fontSize = 20.sp,
-                        fontFamily = mintsansFontFamily,
-                        color = Color.White
-                    )
-                }
-
-                Row (
-                    modifier = Modifier
-                        .padding(start = 20.dp, end = 20.dp, top = 15.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Ordered",
-                        fontSize = 20.sp,
-                        fontFamily = mintsansFontFamily,
-                        color = Color.White
-                    )
-                    Text(
-                        text = "-${product.totalOrderedThisMonth}kg",
-                        fontSize = 20.sp,
-                        fontFamily = mintsansFontFamily,
-                        color = Color.White
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun TopBarCoopInventory(onTabSelected: (String) -> Unit) {
-    var selectedOption by remember { mutableIntStateOf(0) }
-    Column(
-        modifier = Modifier
-            .wrapContentHeight()
-            .semantics { testTag = "android:id/TopBarCoopInventoryColumn" }
-    ) {
-        TabRow(
-            selectedTabIndex = selectedOption,
-            modifier = Modifier.wrapContentHeight(),
-            indicator = { tabPositions ->
-                Box(
-                    Modifier
-                        .tabIndicatorOffset(tabPositions[selectedOption])
-                        .height(4.dp)
-                        .background(DeliveringStatus)
-                )
-            }
-        ) {
-            val tabTitles = listOf("Current Inventory", "Inventory This Month")
-            tabTitles.forEachIndexed { index, title ->
-                Tab(
-                    text = {
-                        Text(
-                            text = title,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = mintsansFontFamily,
-                            fontSize = 15.sp,
-                            color = if (selectedOption == index) DeliveringStatus else PendingStatus // Change text color based on selection
+                            .align(Alignment.BottomEnd)
+                            .padding(16.dp)
+                            .semantics { testTag = "android:id/AddProductFAB" }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Product"
                         )
-                    },
-                    selected = selectedOption == index,
-                    onClick = {
-                        selectedOption = index
-                        onTabSelected(title)
-                    },
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .semantics { testTag = "android:id/Tab_${title.replace(" ", "")}" }
-                )
+                    }
+                } else {
+                    NoFacilityScreen()
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun LoadingScreen(message: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+    }
+}
+
+@Composable
+private fun ErrorScreen(message: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Error",
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(48.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Error: $message",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptyProductsScreen(isInStore: Boolean, facilityName: String) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = "No Products",
+                modifier = Modifier.size(48.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "No ${if (isInStore) "in-store" else "online"} products available at $facilityName",
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun NoFacilityScreen() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(CoopBackground),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "You are not assigned to any facility.",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+@Composable
+fun ProductCard(
+    product: ProductData,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .semantics { testTag = "android:id/ProductCard" },
+        colors = CardDefaults.cardColors(
+            containerColor = White1
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = product.name,
+                    color = Green1,
+                    modifier = Modifier.semantics { testTag = "android:id/ProductName" }
+                )
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = White1
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = Green2
+                    ),
+                    modifier = Modifier.semantics { testTag = "android:id/ProductLocation" }
+                ) {
+                    Text(
+                        text = if (product.isInStore) "In-Store" else "Online",
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        color = Green2
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Quantity: ${product.quantity} ${product.weightUnit.name.lowercase()}",
+                color = Green1,
+                modifier = Modifier.semantics { testTag = "android:id/ProductQuantity" }
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Price: ₱${product.price}",
+                color = Green1,
+                modifier = Modifier.semantics { testTag = "android:id/ProductPrice" }
+            )
         }
     }
 }

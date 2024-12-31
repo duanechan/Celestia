@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.viewmodel.model.ProductData
+import com.coco.celestia.viewmodel.model.WeightUnit
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.launch
@@ -82,12 +83,38 @@ class ProductViewModel : ViewModel() {
             _productState.value = ProductState.LOADING
             try {
                 val snapshot = database.orderByChild("type").equalTo(type).get().await()
+
                 if (snapshot.exists()) {
-                    val products =
-                        snapshot.children.mapNotNull { it.getValue(ProductData::class.java) }
+
+                    val products = snapshot.children.mapNotNull { child ->
+                        try {
+                            val name = child.child("name").getValue(String::class.java) ?: ""
+                            val quantity = child.child("quantity").getValue(Int::class.java) ?: 0
+                            val productType = child.child("type").getValue(String::class.java) ?: ""
+                            val price = child.child("price").getValue(Double::class.java) ?: 0.0
+                            val weightUnit = child.child("weightUnit").getValue(String::class.java)?.let {
+                                WeightUnit.valueOf(it)
+                            } ?: WeightUnit.GRAMS
+                            val isInStore = child.child("inStore").getValue(Boolean::class.java) ?: true
+                            val dateAdded = child.child("dateAdded").getValue(String::class.java) ?: ""
+
+                            ProductData(
+                                name = name,
+                                quantity = quantity,
+                                type = productType,
+                                price = price,
+                                weightUnit = weightUnit,
+                                isInStore = isInStore,
+                                dateAdded = dateAdded
+                            ).also {
+                            }
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+
                     _productData.value = products
-                    _productState.value =
-                        if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
+                    _productState.value = if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
                 } else {
                     _productData.value = emptyList()
                     _productState.value = ProductState.EMPTY
@@ -220,7 +247,7 @@ class ProductViewModel : ViewModel() {
         }
     }
 
-    fun updateFromProduct(productName: String, quantity: Int, defectBeans: Int) {
+    fun updateFromProduct(productName: String, quantity: Int) {
         viewModelScope.launch {
             try {
                 val snapshot = database.get().await()
@@ -231,11 +258,7 @@ class ProductViewModel : ViewModel() {
                     if (name == _from.value) {
                         val fromCurrentQuantity =
                             product.child("quantity").getValue(Int::class.java) ?: 0
-                        val fromNewQuantity = if (productName == "Sorted Beans") {
-                            fromCurrentQuantity - (quantity + defectBeans)
-                        } else {
-                            fromCurrentQuantity - quantity
-                        }
+                        val fromNewQuantity = fromCurrentQuantity - quantity
                         product.child("quantity").ref.setValue(fromNewQuantity).await()
                         productFound = true
                         break

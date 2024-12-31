@@ -53,7 +53,7 @@ fun ShowAvailableFarmers(
                     } else {
                         LazyColumn {
                             items(availableFarmers.filter { it.quantity > 0 }) { product ->
-                                val farmerNames = product.farmerNames
+//                                val farmerNames = product.farmerNames
 
                                 Card(
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -65,19 +65,19 @@ fun ShowAvailableFarmers(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Column(modifier = Modifier.weight(1f)) {
-                                            farmerNames.forEach { farmerName ->
-                                                Text(
-                                                    text = farmerName,
-                                                    style = MaterialTheme.typography.titleMedium,
-                                                    color = MaterialTheme.colorScheme.secondary
-                                                )
-                                            }
+//                                            farmerNames.forEach { farmerName ->
+//                                                Text(
+//                                                    text = farmerName,
+//                                                    style = MaterialTheme.typography.titleMedium,
+//                                                    color = MaterialTheme.colorScheme.secondary
+//                                                )
+//                                            }
                                             Spacer(modifier = Modifier.height(4.dp))
-                                            Text(
-                                                text = "₱${product.priceKg}/kg",
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.secondary
-                                            )
+//                                            Text(
+//                                                text = "₱${product.priceKg}/kg",
+//                                                style = MaterialTheme.typography.bodyMedium,
+//                                                color = MaterialTheme.colorScheme.secondary
+//                                            )
                                         }
                                         Text(
                                             text = "${product.quantity} kg",

@@ -395,8 +395,8 @@ fun App() {
                                         if (expandedMenus.contains(label)) {
                                             val subItems = when (label) {
                                                 "Products" -> listOf(
-                                                    "In-Store Products" to Screen.CoopInventory.route,
-                                                    "Online Products" to Screen.CoopInventory.route
+                                                    "In-Store Products" to Screen.CoopInStoreProducts.route,
+                                                    "Online Products" to Screen.CoopOnlineProducts.route
                                                 )
                                                 "Sales" -> listOf(
                                                     "In-Store Sales" to Screen.CoopSales.route,

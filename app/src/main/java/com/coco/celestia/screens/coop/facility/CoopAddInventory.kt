@@ -2,17 +2,21 @@ package com.coco.celestia.screens.coop.facility
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,7 +25,9 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.input.KeyboardType
@@ -29,33 +35,47 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.ui.theme.Green1
+import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.TransactionData
+import com.coco.celestia.viewmodel.model.WeightUnit
 import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+
+// TODO: Add checks for every field
+// TODO: To add other fields later on
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddProductForm(
     userViewModel: UserViewModel,
     productViewModel: ProductViewModel,
+    facilityViewModel: FacilityViewModel,
     quantity: Int,
-    defectBeans: Int,
+    price: Double,
+    isInStore: Boolean,
+    weightUnit: WeightUnit,
     onProductNameChange: (String) -> Unit,
     onQuantityChange: (String) -> Unit,
-    onDefectBeansChange: (String) -> Unit,
+    onPriceChange: (String) -> Unit,
+    onIsInStoreChange: (Boolean) -> Unit,
+    onWeightUnitChange: (WeightUnit) -> Unit,
+    onAddClick: () -> Unit,
+    onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-    var expanded by remember { mutableStateOf(false) }
+    val email = FirebaseAuth.getInstance().currentUser?.email.orEmpty()
+    var weightUnitExpanded by remember { mutableStateOf(false) }
     val userData by userViewModel.userData.observeAsState()
-    val productData by productViewModel.productData.observeAsState()
     val productName by productViewModel.productName.observeAsState("")
-    val from by productViewModel.from.observeAsState("")
+    val facilityData by facilityViewModel.facilitiesData.observeAsState(emptyList())
+    var facilityName by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("") }
 
     LaunchedEffect(uid) {
@@ -69,6 +89,16 @@ fun AddProductForm(
         }
     }
 
+    LaunchedEffect(email, facilityData) {
+        if (email.isNotEmpty() && facilityData.isNotEmpty()) {
+            facilityName = facilityData.find { it.emails.contains(email) }?.name.orEmpty()
+        }
+    }
+
+    LaunchedEffect(facilityViewModel.facilitiesData) {
+        facilityViewModel.fetchFacilities()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -76,76 +106,142 @@ fun AddProductForm(
             .semantics { testTag = "android:id/AddProductFormColumn" },
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // From
         OutlinedTextField(
-            value = from,
-            onValueChange = {},
-            label = { Text("From") },
+            value = productName,
+            onValueChange = onProductNameChange,
+            label = { Text("Product Name") },
             modifier = Modifier
                 .fillMaxWidth()
-                .semantics { testTag = "android:id/FromField" },
-            enabled = false
+                .semantics { testTag = "android:id/ProductNameField" }
         )
 
-        // Product Name
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded },
-            modifier = Modifier.semantics { testTag = "android:id/ProductDropdown" }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedTextField(
-                readOnly = true,
-                value = productName,
-                onValueChange = {},
-                placeholder = { Text("Select Product") },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded)
-                },
+                value = if (quantity == 0) "" else quantity.toString(),
+                onValueChange = onQuantityChange,
+                label = { Text("Quantity") },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor()
+                    .width(235.dp)
+                    .semantics { testTag = "android:id/QuantityField" },
+                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
+                singleLine = true
             )
 
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
+            ExposedDropdownMenuBox(
+                expanded = weightUnitExpanded,
+                onExpandedChange = { weightUnitExpanded = !weightUnitExpanded },
+                modifier = Modifier
+                    .width(150.dp)
+                    .semantics { testTag = "android:id/WeightUnitDropdown" }
             ) {
-                productData?.forEach { productItem ->
-                    DropdownMenuItem(
-                        text = { Text(productItem.name) },
-                        onClick = {
-                            onProductNameChange(productItem.name)
-                            expanded = false
-                        },
-                        modifier = Modifier.semantics { testTag = "android:id/DropdownItem_${productItem.name}" }
-                    )
+                OutlinedTextField(
+                    readOnly = true,
+                    value = weightUnit.name.lowercase(),
+                    onValueChange = {},
+                    label = { Text("Unit") },
+                    singleLine = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(weightUnitExpanded)
+                    },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
+                )
+
+                ExposedDropdownMenu(
+                    expanded = weightUnitExpanded,
+                    onDismissRequest = { weightUnitExpanded = false }
+                ) {
+                    WeightUnit.values().forEach { unit ->
+                        DropdownMenuItem(
+                            text = { Text(unit.name.lowercase()) },
+                            onClick = {
+                                onWeightUnitChange(unit)
+                                weightUnitExpanded = false
+                            },
+                            modifier = Modifier.semantics { testTag = "android:id/WeightUnit_${unit.name}" }
+                        )
+                    }
                 }
             }
         }
 
-        // Quantity
         OutlinedTextField(
-            value = if (quantity == 0) "" else quantity.toString(),
-            onValueChange = onQuantityChange,
-            label = { Text("Quantity (kg)") },
+            value = if (price == 0.0) "" else price.toString(),
+            onValueChange = onPriceChange,
+            label = { Text("Price per ${weightUnit.name.lowercase()}") },
             modifier = Modifier
                 .fillMaxWidth()
-                .semantics { testTag = "android:id/QuantityField" },
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+                .semantics { testTag = "android:id/PriceField" },
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal)
         )
 
-        // Defect Beans
-        if (productName == "Sorted Beans") {
-            OutlinedTextField(
-                value = if (defectBeans == 0) "" else defectBeans.toString(),
-                onValueChange = onDefectBeansChange,
-                label = { Text("Defect Beans (kg)") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { testTag = "DefectBeansField" },
-                keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Available In Store")
+            Switch(
+                checked = isInStore,
+                onCheckedChange = onIsInStoreChange,
+                modifier = Modifier.semantics { testTag = "android:id/StoreLocationSwitch" }
             )
-            Spacer(modifier = Modifier.width(12.dp))
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = {
+                if (productName.isNotEmpty() && quantity > 0 && price > 0.0) {
+                    val currentDateTime = LocalDateTime.now()
+                    val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+                    val formattedDateTime = currentDateTime.format(formatter)
+
+                    val product = ProductData(
+                        name = productName,
+                        quantity = quantity,
+                        type = facilityName,
+                        price = price,
+                        weightUnit = weightUnit,
+                        isInStore = isInStore,
+                        dateAdded = formattedDateTime
+                    )
+                    productViewModel.addProduct(product)
+
+                    onEvent(
+                        Triple(
+                            ToastStatus.SUCCESSFUL,
+                            "Product added successfully",
+                            System.currentTimeMillis()
+                        )
+                    )
+                    onAddClick()
+                } else {
+                    onEvent(
+                        Triple(
+                            ToastStatus.WARNING,
+                            "Please fill in all required fields",
+                            System.currentTimeMillis()
+                        )
+                    )
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Green1)
+        ) {
+            Text(
+                text = "Add Product",
+                modifier = Modifier.padding(vertical = 4.dp),
+                color = Color.White
+            )
         }
     }
 }
@@ -158,7 +254,9 @@ fun CoopAddInventory(
     productName: String,
     quantityAmount: Int,
     productType: String,
-    defectBeans: Int,
+    price: Double,
+    isInStore: Boolean,
+    weightUnit: WeightUnit,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().uid.toString()
@@ -169,34 +267,41 @@ fun CoopAddInventory(
     val from by productViewModel.from.observeAsState("")
 
     LaunchedEffect(Unit) {
-        if (productName.isNotEmpty() &&
-            quantityAmount > 0
-        ) {
+        if (productName.isNotEmpty() && quantityAmount > 0) {
             productViewModel.fetchProduct(from)
             val product = ProductData(
                 name = productName,
                 quantity = quantityAmount,
-                type = productType
+                type = productType,
+                price = price,
+                weightUnit = weightUnit,
+                isInStore = isInStore,
+                dateAdded = formattedDateTime
             )
 
-            if (((productData?.get(0)?.quantity ?: 0) - (product.quantity + defectBeans)) >= 0 ||
-                productName == "Green Beans") {
+            if ((productData?.get(0)?.quantity ?: 0) - product.quantity >= 0 ||
+                productName == "Green Beans"
+            ) {
                 transactionViewModel.recordTransaction(
                     uid = uid,
                     transaction = TransactionData(
                         transactionId = "Transaction-${UUID.randomUUID()}",
                         type = "Product_Added",
                         date = formattedDateTime,
-                        description = "Added ${product.quantity}kg of ${product.name}."
+                        description = "Added ${product.quantity}${weightUnit.name.lowercase()} of ${product.name}."
                     )
                 )
                 productViewModel.updateProductQuantity(product.name, product.quantity)
-                productViewModel.updateFromProduct(product.name, product.quantity, defectBeans)
-                navController.navigate(Screen.CoopInventory.route)
+                productViewModel.updateFromProduct(product.name, product.quantity)
+                if (isInStore) {
+                    navController.navigate(Screen.CoopInStoreProducts.route)
+                } else {
+                    navController.navigate(Screen.CoopOnlineProducts.route)
+                }
                 onEvent(
                     Triple(
                         ToastStatus.SUCCESSFUL,
-                        "${quantityAmount}kg of $productName added to $productType inventory.",
+                        "${quantityAmount}${weightUnit.name.lowercase()} of $productName added to $productType inventory.",
                         System.currentTimeMillis()
                     )
                 )

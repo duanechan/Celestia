@@ -94,8 +94,8 @@ fun FarmerItems(navController: NavController) {
                             name = name,
                             quantity = quantity,
                             type = "Vegetable",
-                            startSeason = seasonStart,
-                            endSeason = seasonEnd
+//                            startSeason = seasonStart,
+//                            endSeason = seasonEnd
                         )
                         transactionViewModel.recordTransaction(
                             uid = uid,
@@ -106,7 +106,7 @@ fun FarmerItems(navController: NavController) {
                                 description = "${product.quantity}kg of ${product.name} added."
                             )
                         )
-                        itemViewModel.addItem(uid, product)
+//                        itemViewModel.addItem(uid, product)
                         productViewModel.addProduct(product)
                         toastMessage = "$quantity kg of $name added successfully."
                         showToast = true
@@ -284,7 +284,7 @@ fun FarmerProductTypeInventory(
                     )
                     Spacer(modifier = Modifier.height(5.dp))
                     Text(
-                        text = "₱ ${product.priceKg}",
+                        text = "₱ ${product.price}",
                         fontSize = 25.sp,
                         color = Cocoa,
                     )

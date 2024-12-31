@@ -139,27 +139,27 @@ fun AddOrderPanel(
         )
     }
 
-    val inSeasonProducts = products.filter { product ->
-        val sanitizedStartSeason = product.startSeason.trim().uppercase(Locale.ROOT)
-        val sanitizedEndSeason = product.endSeason.trim().uppercase(Locale.ROOT)
-
-        val startMonth = try {
-            Month.valueOf(sanitizedStartSeason)
-        } catch (e: IllegalArgumentException) { return@filter false }
-
-        val endMonth = try {
-            Month.valueOf(sanitizedEndSeason)
-        } catch (e: IllegalArgumentException) { return@filter false }
-
-        when {
-            startMonth.value <= endMonth.value -> {
-                currentMonth.value in startMonth.value..endMonth.value
-            }
-            else -> {
-                currentMonth.value >= startMonth.value || currentMonth.value <= endMonth.value
-            }
-        }
-    }
+//    val inSeasonProducts = products.filter { product ->
+//        val sanitizedStartSeason = product.startSeason.trim().uppercase(Locale.ROOT)
+//        val sanitizedEndSeason = product.endSeason.trim().uppercase(Locale.ROOT)
+//
+//        val startMonth = try {
+//            Month.valueOf(sanitizedStartSeason)
+//        } catch (e: IllegalArgumentException) { return@filter false }
+//
+//        val endMonth = try {
+//            Month.valueOf(sanitizedEndSeason)
+//        } catch (e: IllegalArgumentException) { return@filter false }
+//
+//        when {
+//            startMonth.value <= endMonth.value -> {
+//                currentMonth.value in startMonth.value..endMonth.value
+//            }
+//            else -> {
+//                currentMonth.value >= startMonth.value || currentMonth.value <= endMonth.value
+//            }
+//        }
+//    }
 
     BackHandler {
         navController.navigateUp()
@@ -255,11 +255,11 @@ fun AddOrderPanel(
                 navController,
                 userViewModel
             )
-            DisplayInSeason(
-                inSeasonProducts,
-                navController,
-                userViewModel
-            )
+//            DisplayInSeason(
+//                inSeasonProducts,
+//                navController,
+//                userViewModel
+//            )
             DisplayProducts(
                 productViewModel,
                 navController,
@@ -440,7 +440,7 @@ fun <T> ProductCard(
 
     val productPrice = when (product) {
         is MostOrdered -> product.priceKg
-        is ProductData -> product.priceKg
+//        is ProductData -> product.priceKg
         else -> 0.0
     }
 
@@ -576,7 +576,7 @@ fun AddOrderForm(
         SummaryDetails("Address", "${order.barangay}, ${order.street}")
         SummaryDetails("Date Ordered", order.orderDate)
         SummaryDetails("Product", productName.toString())
-        SummaryDetails("Price", "₱${order.orderData.priceKg}")
+//        SummaryDetails("Price", "₱${order.orderData.priceKg}")
 
         Spacer(modifier = Modifier.height(25.dp))
 

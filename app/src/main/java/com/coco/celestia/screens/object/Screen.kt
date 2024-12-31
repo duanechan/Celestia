@@ -41,16 +41,24 @@ sealed class Screen(val route: String) {
     //coop
     data object Coop: Screen( route = "coop_dashboard")
     data object CoopInventory: Screen( route = "coop_inventory")
+    data object CoopInStoreProducts : Screen("coop_instore_products/{facilityName}") {
+        fun createRoute(facilityName: String) = "coop_instore_products/$facilityName"
+    }
+
+    data object CoopOnlineProducts : Screen("coop_online_products/{facilityName}") {
+        fun createRoute(facilityName: String) = "coop_online_products/$facilityName"
+    }
     data object CoopOrder: Screen( route = "coop_order")
     data object CoopSales: Screen( route = "coop_sales")
     data object CoopReports: Screen( route = "coop_reports")
     data object CoopPurchases: Screen( route = "coop_purchases")
-    data object CoopProductInventory: Screen("coop_inventory/{type}") {
-        fun createRoute(type: String) = "coop_inventory/$type"
+    data object CoopProductInventory : Screen("coop_product_inventory/{type}") {
+        fun createRoute(type: String) = "coop_product_inventory/$type"
     }
-    data object AddProductInventory: Screen("coop_add_product_inventory/{type}") {
-        fun createRoute(type: String) = "coop_add_product_inventory/$type"
-    }
+    data object AddProductInventory : Screen("add_product_inventory")
+//    data object AddProductInventory: Screen("coop_add_product_inventory/{type}") {
+//        fun createRoute(type: String) = "coop_add_product_inventory/$type"
+//    }
     data object CoopAddProductInventoryDB: Screen("coop_add_product_inventory_db")
     data object CoopProcessOrder: Screen("coop_order/process/{orderId}") {
         fun createRoute(orderId: String) = "coop_order/process/${orderId}"

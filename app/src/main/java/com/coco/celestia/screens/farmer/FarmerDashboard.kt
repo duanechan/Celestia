@@ -87,28 +87,28 @@ fun FarmerDashboard(
         }
     }
 
-    val inSeasonProducts = products.filter { product ->
-        val currentMonth = LocalDate.now().month
-        val sanitizedStartSeason = product.startSeason.trim().uppercase(Locale.getDefault())
-        val sanitizedEndSeason = product.endSeason.trim().uppercase(Locale.getDefault())
-
-        val startMonth = try {
-            Month.valueOf(sanitizedStartSeason)
-        } catch (e: IllegalArgumentException) { return@filter false }
-
-        val endMonth = try {
-            Month.valueOf(sanitizedEndSeason)
-        } catch (e: IllegalArgumentException) { return@filter false }
-
-        when {
-            startMonth.value <= endMonth.value -> {
-                currentMonth.value in startMonth.value..endMonth.value
-            }
-            else -> {
-                currentMonth.value >= startMonth.value || currentMonth.value <= endMonth.value
-            }
-        }
-    }
+//    val inSeasonProducts = products.filter { product ->
+//        val currentMonth = LocalDate.now().month
+//        val sanitizedStartSeason = product.startSeason.trim().uppercase(Locale.getDefault())
+//        val sanitizedEndSeason = product.endSeason.trim().uppercase(Locale.getDefault())
+//
+//        val startMonth = try {
+//            Month.valueOf(sanitizedStartSeason)
+//        } catch (e: IllegalArgumentException) { return@filter false }
+//
+//        val endMonth = try {
+//            Month.valueOf(sanitizedEndSeason)
+//        } catch (e: IllegalArgumentException) { return@filter false }
+//
+//        when {
+//            startMonth.value <= endMonth.value -> {
+//                currentMonth.value in startMonth.value..endMonth.value
+//            }
+//            else -> {
+//                currentMonth.value >= startMonth.value || currentMonth.value <= endMonth.value
+//            }
+//        }
+//    }
 
     when (itemState) {
         is ItemState.LOADING -> {
@@ -184,7 +184,7 @@ fun FarmerDashboard(
 //                            }
                         }
 
-                        InSeasonProducts(products = inSeasonProducts)
+//                        InSeasonProducts(products = inSeasonProducts)
                     }
                 }
 
@@ -270,12 +270,12 @@ fun FarmerDashboard(
         }
     }
 
-    if (showInSeasonDialog) {
-        InSeasonProductListDialog(
-            products = inSeasonProducts,
-            onDismiss = { showInSeasonDialog = false }
-        )
-    }
+//    if (showInSeasonDialog) {
+//        InSeasonProductListDialog(
+//            products = inSeasonProducts,
+//            onDismiss = { showInSeasonDialog = false }
+//        )
+//    }
 
     if (showAllDialog) {
         ProductListDialog(

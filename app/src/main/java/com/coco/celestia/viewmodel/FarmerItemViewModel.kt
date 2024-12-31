@@ -69,56 +69,56 @@ class FarmerItemViewModel : ViewModel() {
         }
     }
 
-    fun addItem(uid: String, product: ProductData) {
-        viewModelScope.launch {
-            try {
-                _itemState.value = ItemState.LOADING
-
-                val farmerName = fetchFarmerName(uid)
-                val currentDateAdded = LocalDate.now().format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
-                val updatedProduct = product.copy(dateAdded = currentDateAdded)
-
-                val productRef = database.child(uid).child("items").child(updatedProduct.name.lowercase())
-
-                productRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-                        val existingItem = snapshot.getValue(ProductData::class.java)
-
-                        if (existingItem == null) {
-                            val itemData = hashMapOf(
-                                "farmerNames" to listOf(farmerName),
-                                "endSeason" to updatedProduct.endSeason,
-                                "dateAdded" to updatedProduct.dateAdded,
-                                "name" to updatedProduct.name,
-                                "priceKg" to updatedProduct.priceKg,
-                                "quantity" to updatedProduct.quantity,
-                                "startSeason" to updatedProduct.startSeason,
-                                "type" to updatedProduct.type
-                            )
-                            productRef.setValue(itemData)
-                        } else {
-                            val updatedFarmerNames = existingItem.farmerNames.toMutableList().apply {
-                                if (!contains(farmerName)) {
-                                    add(farmerName)
-                                }
-                            }
-
-                            val newQuantity = existingItem.quantity + updatedProduct.quantity
-                            productRef.child("quantity").setValue(newQuantity)
-                            productRef.child("farmerNames").setValue(updatedFarmerNames)
-                        }
-                        _itemState.value = ItemState.SUCCESS
-                    }
-
-                    override fun onCancelled(error: DatabaseError) {
-                        _itemState.value = ItemState.ERROR(error.message)
-                    }
-                })
-            } catch (e: Exception) {
-                _itemState.value = ItemState.ERROR(e.message.toString())
-            }
-        }
-    }
+//    fun addItem(uid: String, product: ProductData) {
+//        viewModelScope.launch {
+//            try {
+//                _itemState.value = ItemState.LOADING
+//
+//                val farmerName = fetchFarmerName(uid)
+//                val currentDateAdded = LocalDate.now().format(DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+//                val updatedProduct = product.copy(dateAdded = currentDateAdded)
+//
+//                val productRef = database.child(uid).child("items").child(updatedProduct.name.lowercase())
+//
+//                productRef.addListenerForSingleValueEvent(object : ValueEventListener {
+//                    override fun onDataChange(snapshot: DataSnapshot) {
+//                        val existingItem = snapshot.getValue(ProductData::class.java)
+//
+//                        if (existingItem == null) {
+//                            val itemData = hashMapOf(
+//                                "farmerNames" to listOf(farmerName),
+//                                "endSeason" to updatedProduct.endSeason,
+//                                "dateAdded" to updatedProduct.dateAdded,
+//                                "name" to updatedProduct.name,
+//                                "priceKg" to updatedProduct.priceKg,
+//                                "quantity" to updatedProduct.quantity,
+//                                "startSeason" to updatedProduct.startSeason,
+//                                "type" to updatedProduct.type
+//                            )
+//                            productRef.setValue(itemData)
+//                        } else {
+//                            val updatedFarmerNames = existingItem.farmerNames.toMutableList().apply {
+//                                if (!contains(farmerName)) {
+//                                    add(farmerName)
+//                                }
+//                            }
+//
+//                            val newQuantity = existingItem.quantity + updatedProduct.quantity
+//                            productRef.child("quantity").setValue(newQuantity)
+//                            productRef.child("farmerNames").setValue(updatedFarmerNames)
+//                        }
+//                        _itemState.value = ItemState.SUCCESS
+//                    }
+//
+//                    override fun onCancelled(error: DatabaseError) {
+//                        _itemState.value = ItemState.ERROR(error.message)
+//                    }
+//                })
+//            } catch (e: Exception) {
+//                _itemState.value = ItemState.ERROR(e.message.toString())
+//            }
+//        }
+//    }
 
     fun updateItemQuantity(itemName: String, quantity: Int) {
         viewModelScope.launch {
@@ -169,7 +169,7 @@ class FarmerItemViewModel : ViewModel() {
                     if (name.equals(itemName, ignoreCase = true)) {
                         item.child("priceKg").ref.setValue(newPrice).await()
 
-                        val updatedItem = item.getValue(ProductData::class.java)?.copy(priceKg = newPrice)
+                        val updatedItem = item.getValue(ProductData::class.java)?.copy(price = newPrice)
                         updatedItem?.let {
                             _itemData.value = _itemData.value?.map { existingItem ->
                                 if (existingItem.name.equals(itemName, ignoreCase = true)) updatedItem else existingItem

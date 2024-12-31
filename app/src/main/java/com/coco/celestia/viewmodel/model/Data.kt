@@ -1,5 +1,6 @@
 package com.coco.celestia.viewmodel.model
 
+import androidx.annotation.Keep
 import com.coco.celestia.R
 import java.time.LocalDate
 import java.time.YearMonth
@@ -56,21 +57,17 @@ data class ProductData(
     val name: String = "",
     val quantity: Int = 0,
     val type: String = "",
-    val priceKg: Double = 0.0,
-    val startSeason: String = "",
-    val endSeason: String = "",
-    var plantingDate: String = "",
-    var duration: Int = 0,
-    var durationUnit: CustomDurationUnit = CustomDurationUnit.DAYS,
-    var plantingQuantity: Int = 0,
-    val farmerNames: List<String> = emptyList(),
+    val price: Double = 0.0,
+    val weightUnit: WeightUnit = WeightUnit.GRAMS,
+    val isInStore: Boolean = true,
     val dateAdded: String = ""
-)
+) {
+    constructor() : this("", 0, "", 0.0, WeightUnit.GRAMS, true, "")
+}
 
-enum class CustomDurationUnit {
-    DAYS,
-    WEEKS,
-    MONTHS
+@Keep
+enum class WeightUnit {
+    GRAMS, KILOGRAMS, POUNDS
 }
 
 data class TransactionData(

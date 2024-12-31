@@ -83,29 +83,29 @@ fun Calendar(
     val itemData by farmerItemViewModel.itemData.observeAsState(emptyList())
     var farmerName by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
-        farmerItemViewModel.getItems(uid)
-        orderViewModel.fetchAllOrders("", userRole)
-        productViewModel.fetchProducts("", userRole)
-
-        if (itemData.isNotEmpty() || orderData.isNotEmpty() && productData.isNotEmpty()) {
-            orderData.forEach { order ->
-                val orderedProduct = order.orderData.name
-                val productPrice = when (userRole) {
-                    "Farmer" -> itemData.find { item -> item.name == orderedProduct }?.priceKg ?:
-                        productData.find { product -> product.name == orderedProduct }?.priceKg ?: order.orderData.priceKg
-                    "CoopMeat", "CoopCoffee" -> productData.find { product -> product.name == orderedProduct }?.priceKg ?: 0.0
-                    else -> order.orderData.priceKg
-                }
-
-                priceMap[order.orderData.name] = productPrice
-            }
-        }
-
-        if (uid.isNotEmpty()) {
-            farmerName = farmerItemViewModel.fetchFarmerName(uid)
-        }
-    }
+//    LaunchedEffect(Unit) {
+//        farmerItemViewModel.getItems(uid)
+//        orderViewModel.fetchAllOrders("", userRole)
+//        productViewModel.fetchProducts("", userRole)
+//
+//        if (itemData.isNotEmpty() || orderData.isNotEmpty() && productData.isNotEmpty()) {
+//            orderData.forEach { order ->
+//                val orderedProduct = order.orderData.name
+//                val productPrice = when (userRole) {
+//                    "Farmer" -> itemData.find { item -> item.name == orderedProduct }?.priceKg ?:
+//                        productData.find { product -> product.name == orderedProduct }?.priceKg ?: order.orderData.priceKg
+//                    "CoopMeat", "CoopCoffee" -> productData.find { product -> product.name == orderedProduct }?.priceKg ?: 0.0
+//                    else -> order.orderData.priceKg
+//                }
+//
+//                priceMap[order.orderData.name] = productPrice
+//            }
+//        }
+//
+//        if (uid.isNotEmpty()) {
+//            farmerName = farmerItemViewModel.fetchFarmerName(uid)
+//        }
+//    }
 
     val calendarBackgroundColor = when (userRole) {
         "Admin" -> Color.White

@@ -97,7 +97,7 @@ fun FarmerItemDetails(
     LaunchedEffect(itemData) {
         val availableItem = itemData.find { it.name.equals(productName, ignoreCase = true) }
         productQuantity = availableItem?.quantity ?: 0
-        productPricePerKg = availableItem?.priceKg ?: 0.0
+        productPricePerKg = availableItem?.price ?: 0.0
     }
 
     Box(

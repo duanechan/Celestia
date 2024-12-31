@@ -46,11 +46,11 @@ import com.coco.celestia.screens.coop.facility.AddProductForm
 import com.coco.celestia.screens.coop.facility.CoopAddInventory
 import com.coco.celestia.screens.coop.facility.CoopDashboard
 import com.coco.celestia.screens.coop.facility.CoopInventory
+import com.coco.celestia.screens.coop.facility.CoopProductInventory
 import com.coco.celestia.screens.coop.facility.CoopPurchases
 import com.coco.celestia.screens.coop.facility.CoopReports
 import com.coco.celestia.screens.coop.facility.CoopSales
 import com.coco.celestia.screens.coop.facility.OrderRequest
-import com.coco.celestia.screens.coop.facility.ProductTypeInventory
 import com.coco.celestia.screens.farmer.FarmerDashboard
 import com.coco.celestia.screens.farmer.FarmerItems
 import com.coco.celestia.screens.farmer.FarmerManageOrder
@@ -72,6 +72,7 @@ import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.ProductData
+import com.coco.celestia.viewmodel.model.WeightUnit
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -92,6 +93,7 @@ fun NavGraph(
     modifier: Modifier
 ) {
     val uid = FirebaseAuth.getInstance().uid.toString()
+    val userEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
     val productName by productViewModel.productName.observeAsState("")
     var quantityAmount by remember { mutableIntStateOf(0) }
     var defectBeans by remember { mutableIntStateOf(0) }
@@ -100,6 +102,9 @@ fun NavGraph(
     var firstname by remember { mutableStateOf("") }
     var lastname by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("") }
+    var price by remember { mutableStateOf(0.0) }
+    var isInStore by remember { mutableStateOf(true) }
+    var weightUnit by remember { mutableStateOf(WeightUnit.KILOGRAMS) }
 
     NavHost(
         navController = navController,
@@ -395,7 +400,11 @@ fun NavGraph(
         }
         composable(route = Screen.CoopInventory.route) {
             onNavigate("Inventory")
-            CoopInventory(navController = navController, role = userRole)
+            CoopInventory(
+                navController = navController,
+                role = userRole,
+                userEmail = userEmail
+            )
         }
         composable(route = Screen.AddOrder.route) {
             onNavigate("Add Order")
@@ -408,36 +417,99 @@ fun NavGraph(
             )
         }
         composable(
-            route = Screen.CoopProductInventory.route,
-            arguments = listOf(
-                navArgument("type") { type = NavType.StringType })
-        ) { backStack ->
-            val type = backStack.arguments?.getString("type")
+            route = Screen.CoopInStoreProducts.route,
+            arguments = listOf(navArgument("facilityName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val facilityName = backStackEntry.arguments?.getString("facilityName") ?: ""
 
-            productType = type ?: ""
-            onNavigate("Inventory")
-            ProductTypeInventory(
-                type = productType,
-                userRole = userRole
+            val currentEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
+
+            onNavigate("In-Store Products")
+            CoopProductInventory(
+                navController = navController,
+                facilityName = facilityName,
+                currentEmail = currentEmail,
+                isInStore = true
             )
         }
+
+        composable(
+            route = Screen.CoopOnlineProducts.route,
+            arguments = listOf(navArgument("facilityName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val facilityName = backStackEntry.arguments?.getString("facilityName") ?: ""
+
+            val currentEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
+
+            onNavigate("Online Products")
+            CoopProductInventory(
+                navController = navController,
+                facilityName = facilityName,
+                currentEmail = currentEmail,
+                isInStore = false
+            )
+        }
+//        composable(
+//            route = Screen.CoopProductInventory.route,
+//            arguments = listOf(
+//                navArgument("type") { type = NavType.StringType })
+//        ) { backStack ->
+//            val type = backStack.arguments?.getString("type")
+//
+//            productType = type ?: ""
+//            onNavigate("Inventory")
+//            ProductTypeInventory(
+//                type = productType,
+//                userRole = userRole
+//            )
+//        }
         composable(route = Screen.AddProductInventory.route) {
-            LaunchedEffect(Unit) {
+            var price by remember { mutableStateOf(0.0) }
+            var isInStore by remember { mutableStateOf(true) }
+            var weightUnit by remember { mutableStateOf(WeightUnit.KILOGRAMS) }
+            var facilityName by remember { mutableStateOf("") }
+            var quantity by remember { mutableStateOf(0) }
+
+            val email = FirebaseAuth.getInstance().currentUser?.email.orEmpty()
+
+            LaunchedEffect(email) {
                 productViewModel.updateProductName("")
-                quantityAmount = 0
-                defectBeans = 0
+                price = 0.0
+                isInStore = true
+                weightUnit = WeightUnit.KILOGRAMS
+                facilityViewModel.fetchFacilities()
+
+                // Derive the facility name based on the email
+                facilityName = facilityViewModel.facilitiesData.value
+                    ?.find { it.emails.contains(email) }
+                    ?.name
+                    .orEmpty()
             }
+
             onNavigate("Add Product")
+
             AddProductForm(
                 userViewModel = userViewModel,
                 productViewModel = productViewModel,
-                quantity = quantityAmount,
-                defectBeans = defectBeans,
+                facilityViewModel = facilityViewModel,
+                quantity = quantity,
+                price = price,
+                isInStore = isInStore,
+                weightUnit = weightUnit,
                 onProductNameChange = { productViewModel.onProductNameChange(it) },
-                onQuantityChange = { newValue -> quantityAmount = newValue.toIntOrNull() ?: 0 },
-                onDefectBeansChange = { newValue -> defectBeans = newValue.toIntOrNull() ?: 0}
+                onQuantityChange = { newValue -> quantity = newValue.toIntOrNull() ?: 0 },
+                onPriceChange = { newValue -> price = newValue.toDoubleOrNull() ?: 0.0 },
+                onIsInStoreChange = { isInStore = it },
+                onWeightUnitChange = { weightUnit = it },
+                onAddClick = {
+                    navController.navigate(Screen.CoopInventory.route) {
+                        popUpTo(Screen.CoopInventory.route) { inclusive = true }
+                    }
+                },
+                onEvent = { onEvent(it) }
             )
         }
+
         composable(route = Screen.CoopAddProductInventoryDB.route) {
             onNavigate("Add Product")
             CoopAddInventory(
@@ -447,7 +519,9 @@ fun NavGraph(
                 productName = productName,
                 quantityAmount = quantityAmount,
                 productType = productType,
-                defectBeans = defectBeans,
+                price = price,
+                isInStore = isInStore,
+                weightUnit = weightUnit,
                 onEvent = { onEvent(it) }
             )
 
@@ -455,6 +529,9 @@ fun NavGraph(
                 productViewModel.updateProductName("")
                 quantityAmount = 0
                 productType = ""
+                price = 0.0
+                isInStore = true
+                weightUnit = WeightUnit.KILOGRAMS
             }
         }
         composable(Screen.CoopReports.route) {
