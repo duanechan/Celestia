@@ -18,14 +18,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalDrawerSheet
@@ -56,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.coco.celestia.components.toast.Toast
@@ -72,9 +72,6 @@ import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green4
 import com.coco.celestia.util.checkNetworkConnection
 import com.coco.celestia.viewmodel.FacilityViewModel
-import com.coco.celestia.viewmodel.LocationViewModel
-import com.coco.celestia.viewmodel.OrderViewModel
-import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.FacilityData
@@ -82,6 +79,7 @@ import com.coco.celestia.viewmodel.model.UserData
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -137,9 +135,28 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun App() {
+fun AppStateAndContent(
+    content: @Composable (
+        navController: NavHostController,
+        userData: UserData,
+        facilityData: FacilityData,
+        topBarTitle: String,
+        toastStatus: ToastStatus,
+        showToast: Boolean,
+        toastMessage: String,
+        drawerState: DrawerState,
+        scope: CoroutineScope,
+        expandedMenus: Set<String>,
+        menuItems: List<Pair<String, String>>,
+        statuses: List<String>,
+        shouldShowNavigation: Boolean,
+        currentDestination: String?,
+        onTopBarTitleChange: (String) -> Unit,
+        onToastEvent: (Triple<ToastStatus, String, Long>) -> Unit,
+        onExpandMenu: (String) -> Unit
+    ) -> Unit
+) {
     val navController = rememberNavController()
     val context = LocalContext.current
     val userViewModel: UserViewModel = viewModel()
@@ -147,6 +164,7 @@ fun App() {
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
     val facilityViewModel: FacilityViewModel = viewModel()
     val facilityData by facilityViewModel.facilityData.observeAsState(FacilityData())
+    val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
     var lastConnectionState = checkNetworkConnection(context)
     val currentDestination = navController.currentBackStackEntry?.destination?.route
     var topBarTitle by remember { mutableStateOf("") }
@@ -158,11 +176,17 @@ fun App() {
     val isHelpOverlayVisible = remember { mutableStateOf(false) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    var isDropdownExpanded by remember { mutableStateOf(false) }
+    var expandedMenus by remember { mutableStateOf(setOf<String>()) }
+
+    LaunchedEffect(userData.email) {
+        if (userData.email.isNotEmpty()) {
+            facilityViewModel.fetchFacilities()
+        }
+    }
 
     val commonCoopMenuItems = listOf(
         "Home" to Screen.Coop.route,
-        "Inventory" to Screen.CoopInventory.route,
+        "Products" to Screen.CoopInventory.route,
         "Sales" to Screen.CoopSales.route,
         "Purchases" to Screen.CoopPurchases.route,
         "Reports" to Screen.CoopReports.route,
@@ -170,8 +194,12 @@ fun App() {
     )
 
     val menuItems = if (userData.role.startsWith("Coop")) {
-        if (facilityData.name.isNotEmpty()) {
-            commonCoopMenuItems
+        val userFacility = facilitiesData.find { facility ->
+            facility.emails.contains(userData.email)
+        }
+
+        if (userFacility != null) {
+            listOf("${userFacility.name.uppercase()} FACILITY" to "") + commonCoopMenuItems
         } else {
             listOf("NO FACILITY YET" to "") + commonCoopMenuItems
         }
@@ -181,7 +209,7 @@ fun App() {
             "Special Requests" to Screen.AdminOrders.route,
             "Members" to Screen.AdminUserManagement.route,
             "Clients & Customers" to Screen.AdminClients.route,
-            "Settings" to Screen.AdminSettings.route // to add coop settings later
+            "Settings" to Screen.AdminSettings.route
         )
     }
 
@@ -233,264 +261,272 @@ fun App() {
             currentDestination != Screen.Splash.route &&
             currentDestination != Screen.ForgotPassword.route
 
-    ModalNavigationDrawer(
-        drawerContent = {
-            ModalDrawerSheet(
-                modifier = Modifier
-                    .width(300.dp)
-                    .fillMaxHeight()
-            ) {
-                Column(
+    content(
+        navController,
+        userData,
+        facilityData,
+        topBarTitle,
+        toastStatus,
+        showToast,
+        toastMessage,
+        drawerState,
+        scope,
+        expandedMenus,
+        menuItems,
+        statuses,
+        shouldShowNavigation,
+        currentDestination,
+        { topBarTitle = it },
+        { toastEvent = it },
+        { menu ->
+            expandedMenus = if (expandedMenus.contains(menu)) {
+                expandedMenus - menu
+            } else {
+                expandedMenus + menu
+            }
+        }
+    )
+}
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@Composable
+fun App() {
+    AppStateAndContent { navController, userData, facilityData, topBarTitle, toastStatus, showToast,
+                         toastMessage, drawerState, scope, expandedMenus, menuItems, statuses,
+                         shouldShowNavigation, currentDestination, onTopBarTitleChange, onToastEvent,
+                         onExpandMenu ->
+        ModalNavigationDrawer(
+            drawerContent = {
+                ModalDrawerSheet(
                     modifier = Modifier
+                        .width(300.dp)
                         .fillMaxHeight()
-                        .background(Color(0xFFE0E0E0))
-                        .padding(16.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
+                    Column(
                         modifier = Modifier
-                            .padding(bottom = 16.dp)
-                            .clickable {
-                                scope.launch {
-                                    drawerState.close()
-                                    navController.navigate(Screen.Profile.route)
-                                }
-                            }
+                            .fillMaxHeight()
+                            .background(Color(0xFFF5F5F5))
+                            .padding(16.dp)
                     ) {
-                        CircleAvatar(
-                            text = userData.firstname.take(1),
-                            backgroundColor = Green4,
-                            textColor = Green1
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(userData.firstname + " " + userData.lastname, fontWeight = FontWeight.Bold)
-                            Text(userData.email, fontSize = 12.sp, color = Color.Gray)
-                        }
-                    }
-                    Divider(color = Color.Gray, thickness = 1.dp)
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    menuItems.forEach { (label, route) ->
-                        if (label == "NO FACILITY YET") {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 16.dp)
-                            ) {
-                                Text(
-                                    text = label,
-                                    fontSize = 18.sp,
-                                    color = Color.Red,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.align(Alignment.Center)
-                                )
-                            }
-                        } else if (label == "Special Requests") {
-                            Column {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp)
-                                        .clickable { isDropdownExpanded = !isDropdownExpanded }
-                                ) {
-                                    Icon(Icons.Default.Info, contentDescription = null, tint = Green1)
-                                    Spacer(modifier = Modifier.width(16.dp))
-                                    Text(
-                                        text = label,
-                                        color = if (currentDestination == route) Green1 else Color.Gray,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    Icon(
-                                        painter = painterResource(id = if (isDropdownExpanded) R.drawable.expand_less else R.drawable.expand_more),
-                                        contentDescription = null,
-                                        tint = Green1,
-                                        modifier = Modifier.size(12.dp)
-                                    )
+                        // Header
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .padding(bottom = 16.dp)
+                                .clickable {
+                                    scope.launch {
+                                        drawerState.close()
+                                        navController.navigate(Screen.Profile.route)
+                                    }
                                 }
+                        ) {
+                            CircleAvatar(
+                                text = userData.firstname.take(1),
+                                backgroundColor = Green4,
+                                textColor = Green1
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(userData.firstname + " " + userData.lastname, fontWeight = FontWeight.Bold)
+                                Text(userData.email, fontSize = 12.sp, color = Color.Gray)
+                            }
+                        }
+                        Divider(color = Color.Gray, thickness = 1.dp)
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                                if (isDropdownExpanded) {
-                                    statuses.forEach { status ->
+                        // Menu Items
+                        menuItems.forEach { (label, route) ->
+                            when {
+                                label == "NO FACILITY YET" || label.endsWith("FACILITY") -> {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp)
+                                    ) {
+                                        Text(
+                                            text = label,
+                                            fontSize = 18.sp,
+                                            color = if (label == "NO FACILITY YET") Color.Red else Green1,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.align(Alignment.Center)
+                                        )
+                                    }
+                                }
+                                label in listOf("Products", "Sales", "Purchases") -> {
+                                    Column {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             modifier = Modifier
                                                 .fillMaxWidth()
+                                                .padding(vertical = 8.dp)
+                                                .clickable { onExpandMenu(label) }
                                                 .padding(8.dp)
-                                                .padding(start = 48.dp)
-                                                .clickable {
-                                                    isDropdownExpanded = false
-                                                    scope.launch {
-                                                        drawerState.close()
-                                                        navController.navigate(Screen.AdminOrders.createRoute(status))
-                                                    }
-                                                }
                                         ) {
-                                            when (status) {
-                                                "To Review" -> Icon(painterResource(R.drawable.review), null, tint = Green1, modifier = Modifier.size(24.dp))
-                                                "In Progress" -> Icon(painterResource(R.drawable.progress), null, tint = Green1, modifier = Modifier.size(24.dp))
-                                                "Completed" -> Icon(painterResource(R.drawable.completed), null, tint = Green1, modifier = Modifier.size(24.dp))
-                                                "Cancelled" -> Icon(painterResource(R.drawable.cancelled), null, tint = Green1, modifier = Modifier.size(24.dp))
-                                                "Turned Down" -> Icon(painterResource(R.drawable.turned_down), null, tint = Green1, modifier = Modifier.size(24.dp))
-                                            }
-                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Icon(
+                                                imageVector = when (label) {
+                                                    "Products" -> Icons.Default.List
+                                                    "Sales" -> Icons.Default.ShoppingCart
+                                                    "Purchases" -> Icons.Default.ShoppingCart
+                                                    else -> Icons.Default.List
+                                                },
+                                                contentDescription = null,
+                                                tint = if (currentDestination == route) Green1 else Color.Gray
+                                            )
+                                            Spacer(modifier = Modifier.width(12.dp))
                                             Text(
-                                                text = status,
-                                                color = Color.Gray,
-                                                fontWeight = FontWeight.Bold
+                                                text = label,
+                                                color = if (currentDestination == route) Green1 else Color.Gray,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            Icon(
+                                                painter = painterResource(
+                                                    id = if (expandedMenus.contains(label))
+                                                        R.drawable.expand_less
+                                                    else
+                                                        R.drawable.expand_more
+                                                ),
+                                                contentDescription = null,
+                                                tint = if (currentDestination == route) Green1 else Color.Gray,
+                                                modifier = Modifier.size(16.dp)
                                             )
                                         }
+
+                                        if (expandedMenus.contains(label)) {
+                                            val subItems = when (label) {
+                                                "Products" -> listOf(
+                                                    "In-Store Products" to Screen.CoopInventory.route,
+                                                    "Online Products" to Screen.CoopInventory.route
+                                                )
+                                                "Sales" -> listOf(
+                                                    "In-Store Sales" to Screen.CoopSales.route,
+                                                    "Online Sales" to Screen.CoopSales.route
+                                                )
+                                                "Purchases" -> listOf(
+                                                    "Suppliers" to Screen.CoopPurchases.route,
+                                                    "Purchase Orders" to Screen.CoopPurchases.route
+                                                )
+                                                else -> emptyList()
+                                            }
+
+                                            subItems.forEach { (subLabel, subRoute) ->
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(start = 44.dp, top = 8.dp)
+                                                        .clickable {
+                                                            scope.launch {
+                                                                drawerState.close()
+                                                                navController.navigate(subRoute)
+                                                            }
+                                                        }
+                                                        .padding(8.dp)
+                                                ) {
+                                                    Text(
+                                                        text = subLabel,
+                                                        color = Color.Gray
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                else -> {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp)
+                                            .clickable {
+                                                scope.launch {
+                                                    drawerState.close()
+                                                    navController.navigate(route) {
+                                                        popUpTo(navController.graph.startDestinationId) {
+                                                            inclusive = true
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            .padding(8.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = when (label) {
+                                                "Home" -> Icons.Default.Home
+                                                "Settings" -> Icons.Default.Settings
+                                                "Reports" -> Icons.Default.Info
+                                                else -> Icons.Default.Home
+                                            },
+                                            contentDescription = null,
+                                            tint = if (currentDestination == route) Green1 else Color.Gray
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            text = label,
+                                            color = if (currentDestination == route) Green1 else Color.Gray,
+                                            fontWeight = FontWeight.Bold
+                                        )
                                     }
                                 }
                             }
-                        } else {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp)
-                                    .clickable {
+                        }
+                    }
+                }
+            },
+            drawerState = drawerState
+        ) {
+            Scaffold(
+                topBar = {
+                    if (userData != null && shouldShowNavigation) {
+                        when {
+                            userData.role.startsWith("Coop") || userData.role == "Admin" -> {
+                                NavDrawerTopBar(
+                                    navController = navController,
+                                    title = topBarTitle,
+                                    onSidebarToggle = {
                                         scope.launch {
-                                            drawerState.close()
-                                            navController.navigate(route) {
-                                                popUpTo(navController.graph.startDestinationId) {
-                                                    inclusive = true
-                                                }
+                                            if (drawerState.isClosed) {
+                                                drawerState.open()
+                                            } else {
+                                                drawerState.close()
                                             }
                                         }
                                     }
-                            ) {
-                                when (label) {
-                                    "Home" -> Icon(Icons.Default.Home, contentDescription = null, tint = Green1)
-                                    "Members" -> Icon(Icons.Default.Face, contentDescription = null, tint = Green1)
-                                    "Clients & Customers" -> Icon(Icons.Default.Person, contentDescription = null, tint = Green1)
-                                    "Settings" -> Icon(Icons.Default.Settings, contentDescription = null, tint = Green1)
-                                    "Profile" -> Icon(Icons.Default.Person, contentDescription = null, tint = Green1)
-                                    "Inventory" -> Icon(Icons.Default.List, contentDescription = null, tint = Green1)
-                                    "Sales" -> Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Green1)
-                                    "Purchases" -> Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = Green1)
-                                    "Reports" -> Icon(Icons.Default.Info, contentDescription = null, tint = Green1)
-                                }
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Text(
-                                    text = label,
-                                    color = if (currentDestination == route) Green1 else Color.Gray,
-                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            else -> {
+                                TopBar(
+                                    title = topBarTitle,
+                                    navController = navController,
+                                    containerColor = Green4,
+                                    currentDestination = currentDestination
                                 )
                             }
                         }
                     }
-                }
-            }
-        },
-        drawerState = drawerState
-    ) {
-        Scaffold(
-                topBar = {
-                if (userData != null && shouldShowNavigation) {
-                    when {
-                        userData.role.startsWith("Coop") -> {
-                            NavDrawerTopBar(
-                                navController = navController,
-                                title = topBarTitle,
-//
-//
-//                                Idk ano ginagawa nito pero cinomment ko muna kasi di mastart yung app.
-//
-//
-//                                role = userData!!.role,
-//                                orderViewModel = OrderViewModel(),
-//                                transactionViewModel = TransactionViewModel(),
-//                                onUpdateOrder = {},
-//                                userViewModel = userViewModel,
-//                                locationViewModel = LocationViewModel(),
-//                                onLogoutEvent = {
-//                                    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-//                                    if (uid.isNotEmpty()) {
-//                                        userViewModel.logout(uid = uid)
-//                                    }
-//                                    navController.navigate(Screen.Login.route) {
-//                                        popUpTo(Screen.Login.route) { inclusive = true }
-//                                    }
-//                                },
-//                                onProfileUpdateEvent = {},
-                                onSidebarToggle = {
-                                    scope.launch {
-                                        if (drawerState.isClosed) {
-                                            drawerState.open()
-                                        } else {
-                                            drawerState.close()
-                                        }
-                                    }
-                                }
-                            )
-                        }
-                        userData.role == "Admin" -> {
-                            NavDrawerTopBar(
-                                navController = navController,
-                                title = topBarTitle,
-//                                role = userData.role,
-//                                orderViewModel = OrderViewModel(),
-//                                transactionViewModel = TransactionViewModel(),
-//                                onUpdateOrder = {},
-//                                userViewModel = userViewModel,
-//                                locationViewModel = LocationViewModel(),
-//                                onLogoutEvent = {
-//                                    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-//                                    if (uid.isNotEmpty()) {
-//                                        userViewModel.logout(uid = uid)
-//                                    }
-//                                    navController.navigate(Screen.Login.route) {
-//                                        popUpTo(Screen.Login.route) { inclusive = true }
-//                                    }
-//                                },
-//                                onProfileUpdateEvent = {},
-                                onSidebarToggle = {
-                                    scope.launch {
-                                        if (drawerState.isClosed) {
-                                            drawerState.open()
-                                        } else {
-                                            drawerState.close()
-                                        }
-                                    }
-                                }
-                            )
-                        }
-                        else -> {
-                            TopBar(
-                                title = topBarTitle,
-                                navController = navController,
-                                containerColor = Green4,
-                                currentDestination = navController.currentBackStackEntry?.destination?.route
-                            )
-                        }
+                    Toast(message = toastMessage, status = toastStatus, visibility = showToast)
+                },
+                bottomBar = {
+                    if (shouldShowNavigation && !(userData.role.startsWith("Coop") || userData.role == "Admin")) {
+                        NavDrawerBottomBar(
+                            role = userData.role,
+                            navController = navController
+                        )
                     }
                 }
-                Toast(message = toastMessage, status = toastStatus, visibility = showToast)
-            },
-            bottomBar = {
-                if (shouldShowNavigation && !(userData.role.startsWith("Coop") || userData.role == "Admin")) {
-                    NavDrawerBottomBar(
-                        role = userData.role,
-                        navController = navController
-                    )
-                }
+            ) { paddingValues ->
+                NavGraph(
+                    navController = navController,
+                    userRole = userData.role.toString(),
+                    onNavigate = onTopBarTitleChange,
+                    onEvent = onToastEvent,
+                    modifier = if (shouldShowNavigation) {
+                        Modifier.padding(paddingValues)
+                    } else {
+                        Modifier
+                    }
+                )
             }
-        ) { paddingValues ->
-            NavGraph(
-                navController = navController,
-                userRole = userData?.role.toString(),
-                onNavigate = { topBarTitle = it },
-                onEvent = {
-                    toastEvent = Triple(it.first, it.second, it.third)
-                },
-                modifier = if (shouldShowNavigation) {
-                    Modifier.padding(paddingValues)
-                } else {
-                    Modifier
-                }
-            )
         }
     }
 }

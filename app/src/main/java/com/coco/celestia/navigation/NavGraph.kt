@@ -381,7 +381,8 @@ fun NavGraph(
             CoopDashboard(
                 orderViewModel = orderViewModel,
                 productViewModel = productViewModel,
-                role = userRole)
+                role = userRole,
+                facilityViewModel = facilityViewModel)
         }
         composable(route = Screen.CoopOrder.route) {
             onNavigate("Orders")
