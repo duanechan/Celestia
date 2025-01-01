@@ -403,7 +403,7 @@ fun App() {
                                                     "Online Sales" to Screen.CoopSales.route
                                                 )
                                                 "Purchases" -> listOf(
-                                                    "Suppliers" to Screen.CoopPurchases.route,
+                                                    "Vendors" to Screen.CoopVendors.route,
                                                     "Purchase Orders" to Screen.CoopPurchases.route
                                                 )
                                                 else -> emptyList()

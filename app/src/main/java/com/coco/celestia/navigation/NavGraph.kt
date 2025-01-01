@@ -50,7 +50,9 @@ import com.coco.celestia.screens.coop.facility.CoopProductInventory
 import com.coco.celestia.screens.coop.facility.CoopPurchases
 import com.coco.celestia.screens.coop.facility.CoopReports
 import com.coco.celestia.screens.coop.facility.CoopSales
+import com.coco.celestia.screens.coop.facility.CoopVendorAddForm
 import com.coco.celestia.screens.coop.facility.OrderRequest
+import com.coco.celestia.screens.coop.facility.Vendors
 import com.coco.celestia.screens.farmer.FarmerDashboard
 import com.coco.celestia.screens.farmer.FarmerItems
 import com.coco.celestia.screens.farmer.FarmerManageOrder
@@ -71,6 +73,7 @@ import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.VendorViewModel
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.WeightUnit
 import com.google.firebase.auth.FirebaseAuth
@@ -542,6 +545,27 @@ fun NavGraph(
         }
         composable(Screen.CoopPurchases.route) {
             CoopPurchases(navController)
+        }
+        composable(Screen.CoopVendors.route) {
+            onNavigate("Vendors")
+            val viewModel: VendorViewModel = viewModel()
+            Vendors(
+                navController = navController,
+                onAddVendor = { navController.navigate(Screen.CoopAddVendor.route) },
+                viewModel = viewModel
+            )
+        }
+        composable(Screen.CoopAddVendor.route) {
+            val viewModel: VendorViewModel = viewModel()
+            CoopVendorAddForm(
+                viewModel = viewModel,
+                onSuccess = {
+                    navController.navigateUp()
+                },
+                onCancel = {
+                    navController.navigateUp()
+                }
+            )
         }
         composable(
             route = Screen.FarmerProductInventory.route,

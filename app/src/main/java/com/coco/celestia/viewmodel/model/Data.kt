@@ -98,6 +98,17 @@ data class ItemData(
     val items: MutableList<ProductData> = mutableListOf(),
 )
 
+data class VendorData(
+    val firstName: String = "",
+    val lastName: String = "",
+    val companyName: String = "",
+    val email: String = "",
+    val phoneNumber: String = "",
+    val address: String = "",
+    val remarks: String = "",
+    val isActive: Boolean = true
+)
+
 data class Notification(
     val timestamp: String = "",
     val message: String = "",
