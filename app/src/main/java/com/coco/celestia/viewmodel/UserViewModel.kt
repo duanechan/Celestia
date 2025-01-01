@@ -269,7 +269,6 @@ class UserViewModel : ViewModel() {
             val user = auth.currentUser
             _passwordState.value = PasswordState.LOADING
             if (user != null) {
-                Log.d("userMail", "$currentPassword $newPassword")
                 val credential = EmailAuthProvider.getCredential(user.email!!, currentPassword)
                 user.reauthenticate(credential)
                     .addOnCompleteListener { reAuthTask ->
@@ -333,7 +332,7 @@ class UserViewModel : ViewModel() {
                     override fun doTransaction(currentData: MutableData): Transaction.Result {
                         currentData.children.forEach { child ->
                             var user = child.getValue(UserData::class.java) ?: UserData()
-                            if (emails.contains(user.email) && !user.role.startsWith("Coop")) {
+                            if (emails.contains(user.email) && user.role == "Client") {
                                 user.role = "Coop${facility.replaceFirstChar { it.uppercase() }}"
                                 child.value = user
                             }

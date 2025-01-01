@@ -1,7 +1,9 @@
 package com.coco.celestia.screens.coop.admin
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,7 +16,10 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -281,11 +286,26 @@ fun AddFacilityForm(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Image(
-                        painter = painterResource(id = selectedIcon),
-                        contentDescription = "Facility Image",
-                        modifier = Modifier.size(40.dp).clickable { iconPickerShown = true }
-                    )
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .border(BorderStroke(2.dp, Green1), RoundedCornerShape(5.dp))
+                            .size(75.dp)
+                    ) {
+                        if (selectedIcon == R.drawable.facility) {
+                            Image(
+                                imageVector = Icons.Default.AddCircle,
+                                contentDescription = "Facility Image",
+                                modifier = Modifier.size(40.dp).clickable { iconPickerShown = true }
+                            )
+                        } else {
+                            Image(
+                                painter = painterResource(id = selectedIcon),
+                                contentDescription = "Facility Image",
+                                modifier = Modifier.size(40.dp).clickable { iconPickerShown = true }
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(

@@ -135,6 +135,7 @@ class OrderViewModel : ViewModel() {
                         userSnapshot.children.mapNotNull { orderSnapshot ->
                             orderSnapshot.getValue(OrderData::class.java)
                         }.filter { order ->
+                            // TODO: Update this filter
                             val isCoffee = order.orderData.type.equals("CoopCoffee", ignoreCase = true)
                             val isMeat = order.orderData.type.equals("CoopMeat", ignoreCase = true)
                             val isCoffeeOrMeat = order.orderData.type.equals("CoopCoffee", ignoreCase = true) ||
