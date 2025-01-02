@@ -26,7 +26,7 @@ class PurchaseOrderViewModel : ViewModel() {
     val purchaseOrderData: LiveData<List<PurchaseOrder>> = _purchaseOrderData
     val purchaseOrderState: LiveData<PurchaseOrderState> = _purchaseOrderState
 
-    fun fetchPurchaseOrders(filter: String = "all", searchQuery: String = "") {
+    fun fetchPurchaseOrders(filter: String = "all", searchQuery: String = "", facilityName: String? = null) {
         viewModelScope.launch {
             _purchaseOrderState.value = PurchaseOrderState.LOADING
 
@@ -36,6 +36,11 @@ class PurchaseOrderViewModel : ViewModel() {
 
                     val purchaseOrders = snapshot.children
                         .mapNotNull { it.getValue(PurchaseOrder::class.java) }
+                        .filter { purchaseOrder ->
+                            if (facilityName != null) {
+                                purchaseOrder.facility == facilityName
+                            } else true
+                        }
                         .filter { purchaseOrder ->
                             if (searchQuery.isNotEmpty()) {
                                 searchKeywords.any { keyword ->
@@ -47,8 +52,8 @@ class PurchaseOrderViewModel : ViewModel() {
                         }
                         .filter { purchaseOrder ->
                             when (filter.lowercase()) {
-                                "draft" -> true // Add your draft condition here
-                                "approved" -> true // Add your approved condition here
+                                "draft" -> true
+                                "approved" -> true
                                 else -> true
                             }
                         }

@@ -27,7 +27,7 @@ class VendorViewModel : ViewModel() {
     val vendorData: LiveData<List<VendorData>> = _vendorData
     val vendorState: LiveData<VendorState> = _vendorState
 
-    fun fetchVendors(filter: String = "all", searchQuery: String = "") {
+    fun fetchVendors(filter: String = "all", searchQuery: String = "", facilityName: String? = null) {
         viewModelScope.launch {
             _vendorState.value = VendorState.LOADING
 
@@ -37,6 +37,11 @@ class VendorViewModel : ViewModel() {
 
                     val vendors = snapshot.children
                         .mapNotNull { it.getValue(VendorData::class.java) }
+                        .filter { vendor ->
+                            if (facilityName != null) {
+                                vendor.facility == facilityName
+                            } else true
+                        }
                         .filter { vendor ->
                             if (searchQuery.isNotEmpty()) {
                                 searchKeywords.any { keyword ->
@@ -49,8 +54,8 @@ class VendorViewModel : ViewModel() {
                         }
                         .filter { vendor ->
                             when (filter.lowercase()) {
-                                "active" -> true
-                                "inactive" -> false
+                                "active" -> vendor.isActive
+                                "inactive" -> !vendor.isActive
                                 else -> true
                             }
                         }

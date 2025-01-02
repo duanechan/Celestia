@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.coop.facility.forms
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,15 +45,20 @@ import com.coco.celestia.viewmodel.model.VendorData
 @Composable
 fun CoopVendorAddForm(
     viewModel: VendorViewModel,
+    facilityName: String,
     onSuccess: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var vendorData by remember { mutableStateOf(VendorData()) }
+    var vendorData by remember { mutableStateOf(VendorData(facility = facilityName)) }
     var hasErrors by remember { mutableStateOf(false) }
     var showErrorMessages by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(facilityName) {
+        Log.d("CoopVendorAddForm", "Current Facility: $facilityName")
+    }
 
     fun validateForm(): Boolean {
         return vendorData.firstName.isNotBlank() &&
@@ -250,6 +257,7 @@ fun CoopVendorAddForm(
                             showErrorMessages = true
                             if (!hasErrors && validateForm()) {
                                 isLoading = true
+                                Log.d("CoopVendorAddForm", "Submitting vendor with facility: ${vendorData.facility}")
                                 viewModel.addVendor(
                                     vendor = vendorData,
                                     onSuccess = {

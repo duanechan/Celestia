@@ -122,6 +122,7 @@ data class VendorData(
     val phoneNumber: String = "",
     val address: String = "",
     val remarks: String = "",
+    val facility: String = "",
     val isActive: Boolean = true
 )
 
@@ -133,6 +134,7 @@ data class PurchaseOrder(
     val shipmentPreference: String = "",
     val customerNotes: String = "",
     val termsAndConditions: String = "",
+    val facility: String = "",
     val items: List<PurchaseOrderItem> = emptyList()
 )
 

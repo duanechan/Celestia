@@ -227,7 +227,7 @@ fun CoopProductInventory(
 }
 
 @Composable
-private fun LoadingScreen(message: String) {
+fun LoadingScreen(message: String) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -249,7 +249,7 @@ private fun LoadingScreen(message: String) {
 }
 
 @Composable
-private fun ErrorScreen(message: String) {
+fun ErrorScreen(message: String) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -305,7 +305,7 @@ private fun EmptyProductsScreen(isInStore: Boolean, facilityName: String) {
 }
 
 @Composable
-private fun NoFacilityScreen() {
+fun NoFacilityScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()

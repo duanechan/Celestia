@@ -41,143 +41,176 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.viewmodel.VendorState
 import com.coco.celestia.viewmodel.VendorViewModel
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.viewmodel.FacilityState
+import com.coco.celestia.viewmodel.FacilityViewModel
 
 @Composable
 fun Vendors(
     navController: NavController,
+    currentEmail: String,
     onAddVendor: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: VendorViewModel = viewModel()
+    viewModel: VendorViewModel = viewModel(),
+    facilityViewModel: FacilityViewModel = viewModel()
 ) {
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("All", "Active", "Inactive")
-
     var searchQuery by remember { mutableStateOf("") }
 
     val vendors by viewModel.vendorData.observeAsState(emptyList())
     val vendorState by viewModel.vendorState.observeAsState(VendorState.LOADING)
+    val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
+    val facilityState by facilityViewModel.facilityState.observeAsState(FacilityState.LOADING)
 
-    LaunchedEffect(selectedTabIndex) {
-        val filter = when (selectedTabIndex) {
-            0 -> "all"
-            1 -> "active"
-            2 -> "inactive"
-            else -> "all"
-        }
-        viewModel.fetchVendors(filter)
+    LaunchedEffect(Unit) {
+        facilityViewModel.fetchFacilities()
     }
 
-    Scaffold(
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddVendor,
-                containerColor = White1,
-                contentColor = Green1
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Vendor")
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(CoopBackground)
+    ) {
+        when (facilityState) {
+            is FacilityState.LOADING -> {
+                LoadingScreen("Loading facilities...")
             }
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                label = { Text("Search Vendors") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 5.dp, bottom = 16.dp, start = 16.dp, end = 16.dp),
-                leadingIcon = {
-                    Icon(Icons.Default.Search, contentDescription = "Search Icon")
+            is FacilityState.ERROR -> {
+                ErrorScreen((facilityState as FacilityState.ERROR).message)
+            }
+            else -> {
+                val userFacility = facilitiesData.find { facility ->
+                    facility.emails.contains(currentEmail)
                 }
-            )
 
-            TabRow(
-                selectedTabIndex = selectedTabIndex,
-                modifier = Modifier.fillMaxWidth(),
-                containerColor = Color.Transparent,
-                contentColor = Green1,
-                indicator = { tabPositions ->
-                    Box(
-                        Modifier
-                            .tabIndicatorOffset(tabPositions[selectedTabIndex])
-                            .height(4.dp)
-                            .background(Green1, shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                    )
-                }
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = { selectedTabIndex = index },
-                        text = {
-                            Text(
-                                title,
-                                color = if (selectedTabIndex == index) Green1 else Color.Gray
-                            )
+                if (userFacility != null) {
+                    LaunchedEffect(selectedTabIndex) {
+                        val filter = when (selectedTabIndex) {
+                            0 -> "all"
+                            1 -> "active"
+                            2 -> "inactive"
+                            else -> "all"
                         }
-                    )
-                }
-            }
-
-            when (vendorState) {
-                VendorState.LOADING -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-
-                VendorState.EMPTY -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("No vendors found")
-                    }
-                }
-
-                VendorState.SUCCESS -> {
-                    val filteredVendors = vendors.filter {
-                        it.firstName.contains(searchQuery, ignoreCase = true) ||
-                                it.lastName.contains(searchQuery, ignoreCase = true) ||
-                                it.email.contains(searchQuery, ignoreCase = true)
+                        viewModel.fetchVendors(filter, userFacility.name)
                     }
 
-                    if (filteredVendors.isEmpty()) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                    Scaffold(
+                        floatingActionButton = {
+                            FloatingActionButton(
+                                onClick = onAddVendor,
+                                containerColor = White1,
+                                contentColor = Green1
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = "Add Vendor")
+                            }
+                        }
+                    ) { paddingValues ->
+                        Column(
+                            modifier = modifier
+                                .fillMaxSize()
+                                .padding(paddingValues)
                         ) {
-                            Text("No results found for \"$searchQuery\"")
-                        }
-                    } else {
-                        LazyColumn {
-                            items(filteredVendors) { vendor ->
-                                VendorItem(
-                                    vendor = vendor,
-                                    onClick = { }
-                                )
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                label = { Text("Search Vendors") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 5.dp, bottom = 16.dp, start = 16.dp, end = 16.dp),
+                                leadingIcon = {
+                                    Icon(Icons.Default.Search, contentDescription = "Search Icon")
+                                }
+                            )
+
+                            TabRow(
+                                selectedTabIndex = selectedTabIndex,
+                                modifier = Modifier.fillMaxWidth(),
+                                containerColor = Color.Transparent,
+                                contentColor = Green1,
+                                indicator = { tabPositions ->
+                                    Box(
+                                        Modifier
+                                            .tabIndicatorOffset(tabPositions[selectedTabIndex])
+                                            .height(4.dp)
+                                            .background(Green1, shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                    )
+                                }
+                            ) {
+                                tabs.forEachIndexed { index, title ->
+                                    Tab(
+                                        selected = selectedTabIndex == index,
+                                        onClick = { selectedTabIndex = index },
+                                        text = {
+                                            Text(
+                                                title,
+                                                color = if (selectedTabIndex == index) Green1 else Color.Gray
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+
+                            when (vendorState) {
+                                VendorState.LOADING -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
+                                }
+
+                                VendorState.EMPTY -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("No vendors found for ${userFacility.name}")
+                                    }
+                                }
+
+                                VendorState.SUCCESS -> {
+                                    val filteredVendors = vendors.filter {
+                                        it.firstName.contains(searchQuery, ignoreCase = true) ||
+                                                it.lastName.contains(searchQuery, ignoreCase = true) ||
+                                                it.email.contains(searchQuery, ignoreCase = true)
+                                    }
+
+                                    if (filteredVendors.isEmpty()) {
+                                        Box(
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text("No results found for \"$searchQuery\"")
+                                        }
+                                    } else {
+                                        LazyColumn {
+                                            items(filteredVendors) { vendor ->
+                                                VendorItem(
+                                                    vendor = vendor,
+                                                    onClick = { }
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+
+                                is VendorState.ERROR -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = (vendorState as VendorState.ERROR).message,
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
-                }
-
-                is VendorState.ERROR -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = (vendorState as VendorState.ERROR).message,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
+                } else {
+                    NoFacilityScreen()
                 }
             }
         }
