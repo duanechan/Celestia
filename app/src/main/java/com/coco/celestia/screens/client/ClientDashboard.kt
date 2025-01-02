@@ -17,6 +17,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -25,6 +26,8 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.R
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
@@ -86,11 +90,61 @@ fun ClientDashboard(
             .fillMaxSize()
             .background(White1)
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .background(Color.White, shape = RoundedCornerShape(12.dp)),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Search,
+                contentDescription = "Search",
+                modifier = Modifier.padding(start = 16.dp)
+            )
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    TextField(
+                        value = "",
+                        onValueChange = {},
+                        placeholder = { Text("Search") },
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 1,
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        )
+                    )
+                }
+                Column(
+                    modifier = Modifier.padding(start = 8.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.filter2),
+                        contentDescription = "Filter",
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable {}
+                    )
+                }
+            }
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxHeight()
                 .verticalScroll(rememberScrollState())
-                .padding(top = 0.dp)
+                .padding(top = 60.dp)
         ) {
             val sampleItems = listOf(
                 CarouselItem(R.drawable.greenbeansimg, "Green Beans", "In Season", "Php 40/Kg"),
