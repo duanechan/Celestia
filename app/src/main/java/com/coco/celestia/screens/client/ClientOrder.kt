@@ -2,6 +2,7 @@ package com.coco.celestia.screens.client
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,8 +32,13 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -51,11 +58,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.CLGText
 import com.coco.celestia.ui.theme.ClientBG
 import com.coco.celestia.ui.theme.CDarkOrange
+import com.coco.celestia.ui.theme.Green1
+import com.coco.celestia.ui.theme.Green4
 import com.coco.celestia.ui.theme.LGContainer
+import com.coco.celestia.ui.theme.White1
+import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
@@ -82,258 +94,87 @@ fun ClientOrder(
         )
         userViewModel.fetchUser(uid)
     }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ClientBG)
+            .background(White1)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxHeight()
                 .verticalScroll(rememberScrollState())
-                .semantics { testTag = "android:id/ClientOrderColumn" }
         ) {
-            Spacer(modifier = Modifier.height(10.dp))
-
-            var text by remember { mutableStateOf("") }
-            var selectedStatus by remember { mutableStateOf("All") }
-            var expanded by remember { mutableStateOf(false) }
-            val statuses = listOf("All", "Pending", "Accepted", "Partially Fulfilled", "Planting",
-                "Harvesting", "Harvesting Meat", "Delivering", "Completed", "Cancelled", "Rejected")
-
-            Row(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 15.dp, start = 25.dp, end = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .fillMaxSize()
+                    .background(Green4)
             ) {
-                SearchBar(
-                    query = text,
-                    onQueryChange = { newText -> text = newText },
-                    onSearch = {},
-                    active = false,
-                    onActiveChange = {},
-                    placeholder = {
-                        Text(
-                            text = "Search...",
-                            color = Color.Black,
-                            fontSize = 15.sp
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search Icon"
-                        )
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 8.dp),
-                    content =  {}
+                val filters = listOf(
+                    "Pending",
+                    "Confirmed",
+                    "For Pick Up",
+                    "To Deliver",
+                    "Delivered"
                 )
+                var selectedTabIndex by remember { mutableStateOf(0) }
 
-                Box(
+                Row(
                     modifier = Modifier
-                        .padding(top = 40.dp)
-                        .semantics { testTag = "android:id/FilterButton" }
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .background(Color.White, shape = RoundedCornerShape(12.dp)),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Button(
-                        onClick = { expanded = true },
-                        modifier = Modifier,
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .background(LGContainer)
-                                .padding(17.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.List,
-                                contentDescription = "Filter Icon",
-                                tint = Color.White
-                            )
-                        }
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        modifier = Modifier.padding(start = 16.dp)
+                    )
 
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.semantics { testTag = "android:id/StatusDropdown" }
-                    ) {
-                        statuses.forEach { status ->
-                            DropdownMenuItem(
-                                text = { Text(text = status) },
-                                onClick = {
-                                    selectedStatus = status.replace(" ", "_")
-                                    expanded = false
-                                },
-                                modifier = Modifier.semantics { testTag = "android:id/Status_${status}" }
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-            when (orderState) {
-                is OrderState.LOADING -> {
-                    Text("Loading orders...", modifier = Modifier.semantics { testTag = "android:id/LoadingText" })
-                }
-
-                is OrderState.ERROR -> {
-                    Text(
-                        "Failed to load orders: ${(orderState as OrderState.ERROR).message}",
-                        modifier = Modifier.semantics { testTag = "android:id/ErrorText" }
+                    TextField(
+                        value = "", //text
+                        onValueChange = {}, //newText -> text = newText
+                        placeholder = { Text("Search") },
+                        modifier = Modifier
+                            .weight(1f),
+                        maxLines = 1,
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        )
                     )
                 }
-
-                is OrderState.EMPTY -> {
-                    Text("No orders available.", modifier = Modifier.semantics { testTag = "android:id/EmptyText" })
-                }
-
-                is OrderState.SUCCESS -> {
-                    val filteredOrders = orderData.filter { order ->
-                        (selectedStatus == "All" || order.status.equals(selectedStatus, ignoreCase = true)) &&
-                                (order.orderId.contains(text, ignoreCase = true) ||
-                                        userData?.let { "${it.firstname} ${it.lastname}" }
-                                            ?.contains(text, ignoreCase = true) == true)
-                    }
-
-                    if (filteredOrders.isEmpty()) {
-                        Text(
-                            text = "No results.",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Gray,
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .semantics { testTag = "android:id/NoResultsText" }
-                        )
-                    } else {
-                        var orderCount = 1
-                        filteredOrders.forEach { order ->
-                            userData?.let { user ->
-                                OrderCards(orderCount, order, user, navController)
-                            } ?: run {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.semantics { testTag = "android:id/ProgressIndicator" }
+                ScrollableTabRow(
+                    selectedTabIndex = selectedTabIndex,
+                    edgePadding = 0.dp
+                ) {
+                    filters.forEachIndexed { index, label ->
+                        Tab(
+                            selected = selectedTabIndex == index,
+                            onClick = { selectedTabIndex = index },
+                            modifier = Modifier.background(Green4), // Apply Green4 to all tabs
+                            text = {
+                                Text(
+                                    text = label,
+                                    fontFamily = mintsansFontFamily,
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    color = Green1,
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
-                            orderCount++
-                        }
+                        )
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(100.dp))
-        }
-    }
-}
+                Column {
+                    // Column for Orders
 
-@Composable
-fun OrderCards(orderCount: Int, order: OrderData, user: UserData, navController: NavController) {
-    val clientName = "${user.firstname} ${user.lastname}"
-    val orderId = order.orderId.substring(6, 10).uppercase()
-    val orderStatus = order.status
-    val formattedStatus = orderStatus.replace("_", " ")
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 10.dp, start = 16.dp, end = 16.dp)
-    ) {
-        Card(
-            modifier = Modifier
-                .weight(1f)
-                .height(165.dp)
-                .clickable {
-                    navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId))
                 }
-                .semantics { testTag = "android:id/OrderCard_$orderId" },
-            colors = CardDefaults.cardColors(containerColor = CDarkOrange)
-        ) {
-            Box(
-                modifier = Modifier.padding(16.dp)
-            ) {
-                // Main content in a Column
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(width = 50.dp, height = 100.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(Color.White),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                text = orderCount.toString(),
-                                fontSize = 30.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black,
-                                modifier = Modifier
-                                    .padding(5.dp)
-                                    .widthIn(max = 40.dp)
-                                    .wrapContentSize()
-                                    .semantics { testTag = "android:id/OrderNumber_$orderCount" },
-                                textAlign = TextAlign.Center
-                            )
-                        }
-
-                        Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.Start
-                        ) {
-                            Text(
-                                text = formattedStatus,
-                                fontSize = 28.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = CLGText,
-                                modifier = Modifier
-                                    .padding(top = 5.dp, start = 10.dp)
-                                    .semantics { testTag = "android:id/OrderStatus_$orderId" }
-                            )
-                            Text(
-                                text = "Order ID: $orderId",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Normal,
-                                color = Color.White,
-                                modifier = Modifier
-                                    .padding(start = 10.dp)
-                                    .semantics { testTag = "android:id/OrderID_$orderId" }
-                            )
-
-                            Text(
-                                text = "Client Name: $clientName",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Normal,
-                                color = Color.White,
-                                modifier = Modifier
-                                    .padding(top = 5.dp, start = 10.dp)
-                                    .semantics { testTag = "android:id/ClientName_$clientName" }
-                            )
-
-                        }
-                    }
-                }
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
-                    contentDescription = "Navigate to Details",
-                    tint = Color.White,
-                    modifier = Modifier
-                        .size(20.dp)
-                        .align(Alignment.CenterEnd)
-                        .semantics { testTag = "android:id/DetailsIcon_$orderId" }
-                )
             }
         }
     }
 }
+
