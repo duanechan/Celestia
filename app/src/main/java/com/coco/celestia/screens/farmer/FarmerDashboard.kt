@@ -10,9 +10,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
@@ -21,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -87,29 +95,6 @@ fun FarmerDashboard(
         }
     }
 
-//    val inSeasonProducts = products.filter { product ->
-//        val currentMonth = LocalDate.now().month
-//        val sanitizedStartSeason = product.startSeason.trim().uppercase(Locale.getDefault())
-//        val sanitizedEndSeason = product.endSeason.trim().uppercase(Locale.getDefault())
-//
-//        val startMonth = try {
-//            Month.valueOf(sanitizedStartSeason)
-//        } catch (e: IllegalArgumentException) { return@filter false }
-//
-//        val endMonth = try {
-//            Month.valueOf(sanitizedEndSeason)
-//        } catch (e: IllegalArgumentException) { return@filter false }
-//
-//        when {
-//            startMonth.value <= endMonth.value -> {
-//                currentMonth.value in startMonth.value..endMonth.value
-//            }
-//            else -> {
-//                currentMonth.value >= startMonth.value || currentMonth.value <= endMonth.value
-//            }
-//        }
-//    }
-
     when (itemState) {
         is ItemState.LOADING -> {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -155,7 +140,7 @@ fun FarmerDashboard(
                     }
                 }
 
-                // In Season Products
+                // orders overview
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -170,7 +155,7 @@ fun FarmerDashboard(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Order Progress Overview",
+                                text = "Orders Overview",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Cocoa
@@ -179,45 +164,8 @@ fun FarmerDashboard(
                                 onClick = { showInSeasonDialog = true },
                                 modifier = Modifier.padding(start = 8.dp)
                             ){}
-//                            {
-//                                Text("See All", color = Cocoa, fontWeight = FontWeight.Bold)
-//                            }
                         }
-
-//                        InSeasonProducts(products = inSeasonProducts)
-                    }
-                }
-
-                // Product Stock Levels
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
-                        .background(LightApricot, shape = RoundedCornerShape(12.dp))
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Quotation Review",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Cocoa
-                            )
-
-                            TextButton(onClick = { showAllDialog = true }) {
-                                Text(
-                                    text = "See All",
-                                    color = Cocoa,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                        StockLevelBarGraph(items = itemData)
+                        FarmerOrderOverview(orders = orderData)
                     }
                 }
 
@@ -270,13 +218,6 @@ fun FarmerDashboard(
         }
     }
 
-//    if (showInSeasonDialog) {
-//        InSeasonProductListDialog(
-//            products = inSeasonProducts,
-//            onDismiss = { showInSeasonDialog = false }
-//        )
-//    }
-
     if (showAllDialog) {
         ProductListDialog(
             items = itemData,
@@ -285,8 +226,9 @@ fun FarmerDashboard(
     }
 }
 
+//TODO: to connect order status numbers to the actual orders. atm it is only a placeholder
 @Composable
-fun InSeasonProducts(products: List<ProductData>) {
+fun FarmerOrderOverview(orders: List<OrderData>) {
     val currentMonth = LocalDate.now().month
 
     val statusCounts = mapOf(
@@ -296,10 +238,17 @@ fun InSeasonProducts(products: List<ProductData>) {
         "Rejected" to 2
     )
 
+    val statusIcons: Map<String, Any> = mapOf(
+        "In Progress" to R.drawable.hourglass,
+        "Pending" to Icons.Default.Refresh,
+        "Accepted" to Icons.Default.CheckCircle,
+        "Rejected" to Icons.Default.Close
+    )
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(10.dp),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
@@ -308,12 +257,50 @@ fun InSeasonProducts(products: List<ProductData>) {
         ) {
             statusCounts.forEach { (status, count) ->
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    when (val icon = statusIcons[status]) {
+                        is Int -> {
+                            Icon(
+                                painter = painterResource(id = icon),
+                                contentDescription = "$status Icon",
+                                tint = Color.Unspecified,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        is ImageVector -> {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = "$status Icon",
+                                tint = when (status) {
+                                    "Accepted" -> Color(0xFF4CAF50) // Green
+                                    "Rejected" -> Color(0xFFF44336) // Red
+                                    "In Progress" -> Color(0xFF000000)
+                                    "Pending" -> Color(0xFFFFC107) // Orange
+                                    else -> Color.Gray
+                                },
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        else -> {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "Default Icon",
+                                tint = Color.Gray,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Status count
                     Text(
                         text = count.toString(),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
                     )
+
+                    // Status label
                     Text(
                         text = status,
                         fontSize = 10.sp,
@@ -324,8 +311,9 @@ fun InSeasonProducts(products: List<ProductData>) {
         }
         Spacer(modifier = Modifier.height(20.dp))
 
+        // Current month label
         Text(
-            text = currentMonth.name,
+            text = currentMonth.name.lowercase().replaceFirstChar { it.uppercase() },
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = Cocoa,
@@ -334,6 +322,7 @@ fun InSeasonProducts(products: List<ProductData>) {
     }
 }
 
+//adjust color of order box
 @Composable
 fun OrderStatusSection(
     navController: NavController,
@@ -403,38 +392,6 @@ fun OrderStatusSection(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun StockLevelBarGraph(items: List<ProductData>) {
-    val inNeedOfReviewCount = items.count { it.quantity < 500 }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(10.dp),
-        horizontalAlignment = Alignment.Start
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .background(
-                    color = Color(0xFFC0CFB2),
-                    shape = RoundedCornerShape(8.dp)
-                )
-                .clickable {
-                    // Action for button click
-                }
-                .padding(vertical = 12.dp, horizontal = 16.dp)
-        ) {
-            Text(
-                text = "$inNeedOfReviewCount items in need of review",
-                fontSize = 14.sp,
-                color = Color.DarkGray
-            )
         }
     }
 }
