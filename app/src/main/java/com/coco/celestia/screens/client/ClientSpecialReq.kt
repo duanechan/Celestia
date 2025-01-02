@@ -58,6 +58,8 @@ import com.coco.celestia.viewmodel.model.ProductReqValidation
 import com.coco.celestia.viewmodel.model.SpecialRequest
 import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 
@@ -159,6 +161,9 @@ fun AddSpecialReq(
 
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
+    val currentDateTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
+    val formattedDateTime = currentDateTime.format(formatter)
 
     var subjectEmpty by remember { mutableStateOf(false) }
     var targetDateEmpty by remember { mutableStateOf(false) }
@@ -299,7 +304,10 @@ fun AddSpecialReq(
         }
 
         Button(
-            onClick = { productRows.add(ProductReq()) },
+            onClick = {
+                productRows.add(ProductReq())
+                productEmpty.add(ProductReqValidation())
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
@@ -423,7 +431,8 @@ fun AddSpecialReq(
                         additionalRequest = additional,
                         uid = uid,
                         status = "To Review",
-                        name = "${userData?.firstname} ${userData?.lastname}"
+                        name = "${userData?.firstname} ${userData?.lastname}",
+                        dateRequested = formattedDateTime
                     )
 
                     specialRequestViewModel.addSpecialRequest(
