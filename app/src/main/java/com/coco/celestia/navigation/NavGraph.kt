@@ -94,6 +94,8 @@ fun NavGraph(
     transactionViewModel: TransactionViewModel = viewModel(),
     userViewModel: UserViewModel = viewModel(),
     specialRequestViewModel: SpecialRequestViewModel = viewModel(),
+    vendorViewModel: VendorViewModel = viewModel(),
+    purchaseOrderViewModel: PurchaseOrderViewModel = viewModel(),
     onNavigate: (String) -> Unit,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit,
     modifier: Modifier
@@ -548,21 +550,26 @@ fun NavGraph(
         }
         composable(Screen.CoopPurchases.route) {
             onNavigate("Purchase Orders")
-            val purchaseOrderViewModel: PurchaseOrderViewModel = viewModel()
             CoopPurchases(
                 navController = navController,
+                currentEmail = userEmail,
                 purchaseOrderViewModel = purchaseOrderViewModel,
+                facilityViewModel = facilityViewModel,
                 modifier = Modifier
             )
         }
         composable(Screen.CoopPurchaseForm.route) {
             onNavigate("New Purchase Order")
-            val purchaseOrderViewModel: PurchaseOrderViewModel = viewModel()
-            val vendorViewModel: VendorViewModel = viewModel()
+            val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
+
+            val userFacility = facilitiesData.find { facility ->
+                facility.emails.contains(userEmail)
+            }
 
             CoopPurchaseForm(
                 purchaseOrderViewModel = purchaseOrderViewModel,
                 vendorViewModel = vendorViewModel,
+                facilityName = userFacility?.name ?: "",
                 onSuccess = {
                     navController.popBackStack()
                 },
@@ -574,23 +581,26 @@ fun NavGraph(
         }
         composable(Screen.CoopVendors.route) {
             onNavigate("Vendors")
-            val viewModel: VendorViewModel = viewModel()
             Vendors(
                 navController = navController,
+                currentEmail = userEmail,
                 onAddVendor = { navController.navigate(Screen.CoopAddVendor.route) },
-                viewModel = viewModel
+                viewModel = vendorViewModel,
+                facilityViewModel = facilityViewModel
             )
         }
         composable(Screen.CoopAddVendor.route) {
-            val viewModel: VendorViewModel = viewModel()
+            val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
+
+            val userFacility = facilitiesData.find { facility ->
+                facility.emails.contains(userEmail)
+            }
+
             CoopVendorAddForm(
-                viewModel = viewModel,
-                onSuccess = {
-                    navController.navigateUp()
-                },
-                onCancel = {
-                    navController.navigateUp()
-                }
+                viewModel = vendorViewModel,
+                facilityName = userFacility?.name ?: "",
+                onSuccess = { navController.navigateUp() },
+                onCancel = { navController.navigateUp() }
             )
         }
         composable(

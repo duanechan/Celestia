@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.coop.facility.forms
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -83,6 +84,229 @@ import java.util.Locale
 // TODO: Add checks for every field
 // TODO: Dropdown for shipment preference
 // TODO: Dropdown for accounts (idk what categories to put there)
+
+@Composable
+fun CoopPurchaseForm(
+    purchaseOrderViewModel: PurchaseOrderViewModel,
+    vendorViewModel: VendorViewModel,
+    facilityName: String,
+    onSuccess: () -> Unit,
+    onCancel: () -> Unit,
+    navController: NavController,
+    modifier: Modifier = Modifier
+) {
+    LaunchedEffect(facilityName) {
+        Log.d("CoopPurchaseForm", "Current Facility: $facilityName")
+    }
+
+    var purchaseOrderData by remember {
+        mutableStateOf(
+            PurchaseOrder(
+                vendor = "",
+                purchaseNumber = generatePurchaseNumber(),
+                referenceNumber = "",
+                date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
+                shipmentPreference = "",
+                customerNotes = "",
+                termsAndConditions = "",
+                items = emptyList(),
+                facility = facilityName
+            )
+        )
+    }
+
+    var hasErrors by remember { mutableStateOf(false) }
+    var showErrorMessages by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var items by remember { mutableStateOf<List<PurchaseOrderItem>>(emptyList()) }
+    var showAddItemDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        vendorViewModel.fetchVendors(facilityName = facilityName)
+    }
+
+    fun validateForm(): Boolean {
+        return purchaseOrderData.purchaseNumber.isNotBlank() &&
+                purchaseOrderData.referenceNumber.isNotBlank() &&
+                purchaseOrderData.date.isNotBlank() &&
+                purchaseOrderData.vendor.isNotBlank() &&
+                purchaseOrderData.shipmentPreference.isNotBlank() &&
+                items.isNotEmpty()
+    }
+
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        cursorColor = Green1,
+        focusedBorderColor = Green1,
+        unfocusedBorderColor = Green1,
+        focusedLabelColor = Green1,
+        unfocusedLabelColor = Green1,
+    )
+
+    if (errorMessage != null) {
+        AlertDialog(
+            onDismissRequest = { errorMessage = null },
+            title = { Text("Error") },
+            text = { Text(errorMessage ?: "") },
+            confirmButton = {
+                TextButton(onClick = { errorMessage = null }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    if (isLoading) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("Adding Purchase Order") },
+            text = {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    Text("Please wait...")
+                }
+            },
+            confirmButton = { }
+        )
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .background(White2)
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = White1
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Header Section
+                PurchaseFormHeader(
+                    purchaseOrderData = purchaseOrderData,
+                    onPurchaseOrderChange = { purchaseOrderData = it },
+                    vendorViewModel = vendorViewModel,
+                    hasErrors = hasErrors,
+                    showErrorMessages = showErrorMessages,
+                    textFieldColors = textFieldColors
+                )
+
+                // Shipment Preference Field
+                OutlinedTextField(
+                    value = purchaseOrderData.shipmentPreference,
+                    onValueChange = { purchaseOrderData = purchaseOrderData.copy(shipmentPreference = it) },
+                    label = { Text("Shipment Preference") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = textFieldColors,
+                    isError = showErrorMessages && purchaseOrderData.shipmentPreference.isBlank(),
+                    supportingText = if (showErrorMessages && purchaseOrderData.shipmentPreference.isBlank()) {
+                        { Text("Shipment preference is required") }
+                    } else null
+                )
+
+                // Items Section
+                PurchaseFormItemsSection(
+                    items = items,
+                    onShowAddItem = { showAddItemDialog = true }
+                )
+
+                // Notes Section
+                OutlinedTextField(
+                    value = purchaseOrderData.customerNotes,
+                    onValueChange = { purchaseOrderData = purchaseOrderData.copy(customerNotes = it) },
+                    label = { Text("Customer Notes") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3,
+                    colors = textFieldColors
+                )
+
+                OutlinedTextField(
+                    value = purchaseOrderData.termsAndConditions,
+                    onValueChange = { purchaseOrderData = purchaseOrderData.copy(termsAndConditions = it) },
+                    label = { Text("Terms and Conditions") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3,
+                    colors = textFieldColors
+                )
+
+                // Action Buttons
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onCancel,
+                        modifier = Modifier.weight(1f),
+                        enabled = !isLoading
+                    ) {
+                        Text(
+                            text = "Cancel",
+                            color = Green1
+                        )
+                    }
+
+                    Button(
+                        onClick = {
+                            showErrorMessages = true
+                            if (!hasErrors && validateForm()) {
+                                isLoading = true
+                                Log.d("CoopPurchaseForm", "Submitting purchase order with facility: ${purchaseOrderData.facility}")
+                                purchaseOrderViewModel.addPurchaseOrder(
+                                    purchaseOrder = purchaseOrderData.copy(items = items),
+                                    onSuccess = {
+                                        isLoading = false
+                                        onSuccess()
+                                        navController.navigate(Screen.CoopPurchases.route) {
+                                            popUpTo(Screen.CoopPurchases.route) {
+                                                inclusive = true
+                                            }
+                                        }
+                                    },
+                                    onError = { error ->
+                                        isLoading = false
+                                        errorMessage = error
+                                    }
+                                )
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isLoading,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Green1,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Submit")
+                    }
+                }
+            }
+        }
+    }
+
+    if (showAddItemDialog) {
+        PurchaseOrderItemForm(
+            onAddItem = { newItem ->
+                items = items + newItem
+                hasErrors = !validateForm()
+            },
+            onDismiss = { showAddItemDialog = false }
+        )
+    }
+}
 
 @Composable
 fun PurchaseFormHeader(
@@ -400,222 +624,6 @@ fun PurchaseFormItemsSection(
                 }
             }
         }
-    }
-}
-
-@Composable
-fun CoopPurchaseForm(
-    purchaseOrderViewModel: PurchaseOrderViewModel,
-    vendorViewModel: VendorViewModel,
-    onSuccess: () -> Unit,
-    onCancel: () -> Unit,
-    navController: NavController,
-    modifier: Modifier = Modifier
-) {
-    var purchaseOrderData by remember {
-        mutableStateOf(
-            PurchaseOrder(
-                vendor = "",
-                purchaseNumber = generatePurchaseNumber(),
-                referenceNumber = "",
-                date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
-                shipmentPreference = "",
-                customerNotes = "",
-                termsAndConditions = "",
-                items = emptyList()
-            )
-        )
-    }
-
-    var hasErrors by remember { mutableStateOf(false) }
-    var showErrorMessages by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var items by remember { mutableStateOf<List<PurchaseOrderItem>>(emptyList()) }
-    var showAddItemDialog by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        vendorViewModel.fetchVendors()
-    }
-
-    fun validateForm(): Boolean {
-        return purchaseOrderData.purchaseNumber.isNotBlank() &&
-                purchaseOrderData.referenceNumber.isNotBlank() &&
-                purchaseOrderData.date.isNotBlank() &&
-                purchaseOrderData.vendor.isNotBlank() &&
-                purchaseOrderData.shipmentPreference.isNotBlank() &&
-                items.isNotEmpty()
-    }
-
-    val textFieldColors = OutlinedTextFieldDefaults.colors(
-        cursorColor = Green1,
-        focusedBorderColor = Green1,
-        unfocusedBorderColor = Green1,
-        focusedLabelColor = Green1,
-        unfocusedLabelColor = Green1,
-    )
-
-    if (errorMessage != null) {
-        AlertDialog(
-            onDismissRequest = { errorMessage = null },
-            title = { Text("Error") },
-            text = { Text(errorMessage ?: "") },
-            confirmButton = {
-                TextButton(onClick = { errorMessage = null }) {
-                    Text("OK")
-                }
-            }
-        )
-    }
-
-    if (isLoading) {
-        AlertDialog(
-            onDismissRequest = { },
-            title = { Text("Adding Purchase Order") },
-            text = {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                    Text("Please wait...")
-                }
-            },
-            confirmButton = { }
-        )
-    }
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .background(White2)
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = White1
-            )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Header Section
-                PurchaseFormHeader(
-                    purchaseOrderData = purchaseOrderData,
-                    onPurchaseOrderChange = { purchaseOrderData = it },
-                    vendorViewModel = vendorViewModel,
-                    hasErrors = hasErrors,
-                    showErrorMessages = showErrorMessages,
-                    textFieldColors = textFieldColors
-                )
-
-                // Shipment Preference Field
-                OutlinedTextField(
-                    value = purchaseOrderData.shipmentPreference,
-                    onValueChange = { purchaseOrderData = purchaseOrderData.copy(shipmentPreference = it) },
-                    label = { Text("Shipment Preference") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = textFieldColors,
-                    isError = showErrorMessages && purchaseOrderData.shipmentPreference.isBlank(),
-                    supportingText = if (showErrorMessages && purchaseOrderData.shipmentPreference.isBlank()) {
-                        { Text("Shipment preference is required") }
-                    } else null
-                )
-
-                // Items Section
-                PurchaseFormItemsSection(
-                    items = items,
-                    onShowAddItem = { showAddItemDialog = true }
-                )
-
-                // Notes Section
-                OutlinedTextField(
-                    value = purchaseOrderData.customerNotes,
-                    onValueChange = { purchaseOrderData = purchaseOrderData.copy(customerNotes = it) },
-                    label = { Text("Customer Notes") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 3,
-                    colors = textFieldColors
-                )
-
-                OutlinedTextField(
-                    value = purchaseOrderData.termsAndConditions,
-                    onValueChange = { purchaseOrderData = purchaseOrderData.copy(termsAndConditions = it) },
-                    label = { Text("Terms and Conditions") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 3,
-                    colors = textFieldColors
-                )
-
-                // Action Buttons
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onCancel,
-                        modifier = Modifier.weight(1f),
-                        enabled = !isLoading
-                    ) {
-                        Text(
-                            text = "Cancel",
-                            color = Green1
-                        )
-                    }
-
-                    Button(
-                        onClick = {
-                            showErrorMessages = true
-                            if (!hasErrors && validateForm()) {
-                                isLoading = true
-                                purchaseOrderViewModel.addPurchaseOrder(
-                                    purchaseOrder = purchaseOrderData.copy(items = items),
-                                    onSuccess = {
-                                        isLoading = false
-                                        onSuccess()
-                                        navController.navigate(Screen.CoopPurchases.route) {
-                                            popUpTo(Screen.CoopPurchases.route) {
-                                                inclusive = true
-                                            }
-                                        }
-                                    },
-                                    onError = { error ->
-                                        isLoading = false
-                                        errorMessage = error
-                                    }
-                                )
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
-                        enabled = !isLoading,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Green1,
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Text("Submit")
-                    }
-                }
-            }
-        }
-    }
-
-    if (showAddItemDialog) {
-        PurchaseOrderItemForm(
-            onAddItem = { newItem ->
-                items = items + newItem
-                hasErrors = !validateForm()
-            },
-            onDismiss = { showAddItemDialog = false }
-        )
     }
 }
 
