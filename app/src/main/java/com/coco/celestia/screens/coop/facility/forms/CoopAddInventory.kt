@@ -1,4 +1,4 @@
-package com.coco.celestia.screens.coop.facility
+package com.coco.celestia.screens.coop.facility.forms
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

@@ -109,6 +109,25 @@ data class VendorData(
     val isActive: Boolean = true
 )
 
+data class PurchaseOrder(
+    val vendor: String = "",
+    val purchaseNumber: String = "",
+    val referenceNumber: String = "",
+    val date: String = "",
+    val shipmentPreference: String = "",
+    val customerNotes: String = "",
+    val termsAndConditions: String = "",
+    val items: List<PurchaseOrderItem> = emptyList()
+)
+
+data class PurchaseOrderItem(
+    val itemName: String = "",
+    val description: String = "",
+    val account: String = "",
+    val quantity: Int = 0,
+    val rate: Double = 0.0
+)
+
 data class Notification(
     val timestamp: String = "",
     val message: String = "",

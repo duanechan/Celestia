@@ -42,17 +42,18 @@ import com.coco.celestia.screens.coop.admin.AdminOrders
 import com.coco.celestia.screens.coop.admin.AdminSettings
 import com.coco.celestia.screens.coop.admin.ClientDetails
 import com.coco.celestia.screens.coop.admin.OrganizationProfileScreen
-import com.coco.celestia.screens.coop.facility.AddProductForm
-import com.coco.celestia.screens.coop.facility.CoopAddInventory
+import com.coco.celestia.screens.coop.facility.forms.AddProductForm
+import com.coco.celestia.screens.coop.facility.forms.CoopAddInventory
 import com.coco.celestia.screens.coop.facility.CoopDashboard
 import com.coco.celestia.screens.coop.facility.CoopInventory
 import com.coco.celestia.screens.coop.facility.CoopProductInventory
 import com.coco.celestia.screens.coop.facility.CoopPurchases
 import com.coco.celestia.screens.coop.facility.CoopReports
 import com.coco.celestia.screens.coop.facility.CoopSales
-import com.coco.celestia.screens.coop.facility.CoopVendorAddForm
+import com.coco.celestia.screens.coop.facility.forms.CoopVendorAddForm
 import com.coco.celestia.screens.coop.facility.OrderRequest
 import com.coco.celestia.screens.coop.facility.Vendors
+import com.coco.celestia.screens.coop.facility.forms.CoopPurchaseForm
 import com.coco.celestia.screens.farmer.FarmerDashboard
 import com.coco.celestia.screens.farmer.FarmerItems
 import com.coco.celestia.screens.farmer.FarmerManageOrder
@@ -70,6 +71,7 @@ import com.coco.celestia.viewmodel.LocationViewModel
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.PurchaseOrderViewModel
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
@@ -544,7 +546,30 @@ fun NavGraph(
             CoopSales(navController)
         }
         composable(Screen.CoopPurchases.route) {
-            CoopPurchases(navController)
+            onNavigate("Purchase Orders")
+            val purchaseOrderViewModel: PurchaseOrderViewModel = viewModel()
+            CoopPurchases(
+                navController = navController,
+                purchaseOrderViewModel = purchaseOrderViewModel,
+                modifier = Modifier
+            )
+        }
+        composable(Screen.CoopPurchaseForm.route) {
+            onNavigate("New Purchase Order")
+            val purchaseOrderViewModel: PurchaseOrderViewModel = viewModel()
+            val vendorViewModel: VendorViewModel = viewModel()
+
+            CoopPurchaseForm(
+                purchaseOrderViewModel = purchaseOrderViewModel,
+                vendorViewModel = vendorViewModel,
+                onSuccess = {
+                    navController.popBackStack()
+                },
+                navController = navController,
+                onCancel = {
+                    navController.popBackStack()
+                }
+            )
         }
         composable(Screen.CoopVendors.route) {
             onNavigate("Vendors")
