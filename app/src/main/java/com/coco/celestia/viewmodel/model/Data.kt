@@ -47,7 +47,10 @@ data class SpecialRequest(
     val additionalRequest: String = "",
     val status: String = "",
     val name: String = "",
-    val uid: String = ""
+    val uid: String = "",
+    val dateRequested: String = "",
+    val dateAccepted: String = "",
+    val dateCompleted: String = ""
 )
 
 data class ProductReq(

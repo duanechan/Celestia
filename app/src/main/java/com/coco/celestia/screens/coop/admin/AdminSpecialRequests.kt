@@ -8,11 +8,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -28,6 +31,8 @@ import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.SpecialReqState
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.model.SpecialRequest
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun AdminSpecialRequests(
@@ -36,7 +41,7 @@ fun AdminSpecialRequests(
 ) {
     val reqData by specialRequestViewModel.specialReqData.observeAsState(emptyList())
     val reqState by specialRequestViewModel.specialReqState.observeAsState(OrderState.LOADING)
-
+    var numReq by remember { mutableIntStateOf(0) }
     val keywords by remember { mutableStateOf(status) }
 
     LaunchedEffect(keywords) {
@@ -55,8 +60,8 @@ fun AdminSpecialRequests(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Change to total number of orders
-            Text("All(0)")
+            numReq = reqData.size
+            Text("All($numReq)")
 
             Row {
                 Icon(
@@ -73,12 +78,24 @@ fun AdminSpecialRequests(
             }
         }
 
+        Box (modifier = Modifier
+            .fillMaxWidth()
+            .background(White2)
+            .padding(4.dp)
+        )
+
         when (reqState) {
             is SpecialReqState.LOADING -> LoadingOrders()
             is SpecialReqState.ERROR -> OrdersError(errorMessage = (reqState as SpecialReqState.ERROR).message)
             is SpecialReqState.EMPTY -> EmptyOrders()
             is SpecialReqState.SUCCESS -> {
-                LazyColumn(modifier = Modifier.semantics { testTag = "android:id/OrderList" }) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(White2)
+                        .semantics { testTag = "android:id/OrderList" },
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     itemsIndexed(reqData) { _, request ->
                         DisplayRequestItem(
                             request
@@ -95,6 +112,10 @@ fun DisplayRequestItem(
     requests: SpecialRequest
 ) {
     var profilePicture by remember { mutableStateOf<Uri?>(null) }
+    val inputFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
+    val dateTime = LocalDateTime.parse(requests.dateRequested, inputFormatter)
+    val dateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy")
+    val date = dateTime.format(dateFormatter)
 
     LaunchedEffect(Unit) {
         ImageService.fetchProfilePicture(requests.uid) { uri ->
@@ -102,40 +123,58 @@ fun DisplayRequestItem(
         }
     }
 
-    Column {
+    Column (
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ){
         Row {
             Image(
                 painter = rememberImagePainter(
                     data = profilePicture),
                 contentDescription = "profile_pic",
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(25.dp))
             )
 
-            Column {
+            Column (
+                modifier = Modifier
+                    .padding(start = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ){
                 Text(
                     text = requests.name
                 )
 
                 Text(
-                    text = requests.status
+                    text = requests.status,
+                    fontWeight = FontWeight.Bold,
+                    color = Green1
                 )
             }
         }
 
         Text(
-            text = "Date"
+            text = "Date Requested: $date"
         )
 
         Text(
-            text = "Date"
+            text = if (requests.dateAccepted.isEmpty()) "Date Accepted: N/A" else "Date Accepted: ${requests.dateAccepted}"
         )
 
         Text(
-            text = "Date"
+            text = if (requests.dateCompleted.isEmpty()) "Date Completed: N/A" else "Date Completed: ${requests.dateCompleted}"
         )
 
         Text(
-            text = "Subject"
+            text = requests.subject,
+            fontWeight = FontWeight.Bold,
+            color = Green1,
+            modifier = Modifier
+                .padding(top = 6.dp)
         )
     }
 }
