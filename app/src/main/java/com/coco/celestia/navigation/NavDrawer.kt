@@ -206,18 +206,27 @@ fun TopBar(
                 }
             },
             actions = {
-                Icon(
-                    imageVector = Icons.Default.DateRange,
-                    tint = Green1,
-                    contentDescription = "Calendar Icon",
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .size(30.dp)
-                        .clickable {
-                            navController.navigate(Screen.Calendar.route)
-                        }
-                )
+                IconButton(onClick = { navController.navigate(Screen.Notifications.route) }) {
+                    Icon(
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = "Notifications",
+                        tint = Green1
+                    )
+                }
             },
+//            actions = {
+//                Icon(
+//                    imageVector = Icons.Default.DateRange,
+//                    tint = Green1,
+//                    contentDescription = "Calendar Icon",
+//                    modifier = Modifier
+//                        .padding(10.dp)
+//                        .size(30.dp)
+//                        .clickable {
+//                            navController.navigate(Screen.Calendar.route)
+//                        }
+//                )
+//            },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.Transparent,
                 titleContentColor = Green1

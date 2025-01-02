@@ -102,23 +102,6 @@ fun ClientDashboard(
     }
 }
 
-@Composable
-fun BoxButton(text: String, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .size(80.dp)
-            .background(Green2, shape = RoundedCornerShape(8.dp))
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            color = Color.White,
-            fontSize = 12.sp,
-            textAlign = TextAlign.Center
-        )
-    }
-}
 
 
 // Data class for Carousel item
