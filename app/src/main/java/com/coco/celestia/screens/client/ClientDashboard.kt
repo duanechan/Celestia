@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.R
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
@@ -134,102 +135,21 @@ fun ClientDashboard(
                 thickness = 1.dp,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
-
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Row of Box Buttons
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                BoxButton(text = "Request an Order", onClick = { showRequestPopup = true })
+                BoxButton(text = "Request an Order", onClick = {navController.navigate(Screen.ClientSpecialReq.route)})
                 BoxButton(text = "View Order History", onClick = {})
                 BoxButton(text = "View Contacts", onClick = {})
                 BoxButton(text = "To Receive", onClick = {})
             }
             Spacer(modifier = Modifier.height(12.dp))
         }
-    }
-
-    if (showRequestPopup) {
-        AlertDialog(
-            onDismissRequest = { showRequestPopup = false },
-            title = {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .clickable { showRequestPopup = false }
-                                .padding(8.dp),
-                            tint = Green1
-                        )
-                    }
-                    Text(
-                        text = "How would you like to order? Choose between smaller amounts or bulk quantities.",
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = mintsansFontFamily,
-                        fontSize = 18.sp,
-                        color = Green1,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
-                    )
-                }
-            },
-            text = {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceAround,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                    ) {
-                        Text(
-                            text = "Standard Order",
-                            modifier = Modifier
-                                .clickable {
-                                    Toast.makeText(context, "Retail Order Selected", Toast.LENGTH_SHORT).show()
-                                    showRequestPopup = false
-                                }
-                                .padding(8.dp),
-                            fontFamily = mintsansFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                            color = Green1
-                        )
-                        Text(
-                            text = "Bulk Order",
-                            modifier = Modifier
-                                .clickable {
-                                    Toast.makeText(context, "Bulk Order Selected", Toast.LENGTH_SHORT).show()
-                                    showRequestPopup = false
-                                }
-                                .padding(8.dp),
-                            fontFamily = mintsansFontFamily,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                            color = Green1
-                        )
-                    }
-                }
-            },
-            confirmButton = {}
-        )
-    }
-    if (showDialog) {
-        ClientNotification(notifications = notifications, onDismiss = { showDialog = false })
     }
 }
 
