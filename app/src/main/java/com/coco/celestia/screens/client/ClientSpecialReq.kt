@@ -33,7 +33,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +52,9 @@ import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.Green4
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
+import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.ProductReq
+import com.coco.celestia.viewmodel.model.ProductReqValidation
 import com.coco.celestia.viewmodel.model.SpecialRequest
 import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
@@ -140,24 +145,29 @@ fun DisplaySpecialReq(
 
 @Composable
 fun AddSpecialReq(
-    specialRequestViewModel: SpecialRequestViewModel
+    specialRequestViewModel: SpecialRequestViewModel,
+    userViewModel: UserViewModel
 ) {
     var subject by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    val productRows = remember { mutableStateListOf(Pair ("", 0)) }
+    val productRows = remember { mutableStateListOf(ProductReq()) }
     var targetDate by remember { mutableStateOf("") }
     var collectionMethod by remember { mutableStateOf("") }
     var additional by remember { mutableStateOf("") }
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+    val userData by userViewModel.userData.observeAsState()
 
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
 
     var subjectEmpty by remember { mutableStateOf(false) }
     var targetDateEmpty by remember { mutableStateOf(false) }
-    val productEmpty = remember { mutableStateListOf(Pair(false, false)) }
+    val productEmpty = remember { mutableStateListOf(ProductReqValidation()) }
     var collectionMethodEmpty by remember { mutableStateOf(false) }
 
+    LaunchedEffect(Unit) {
+        userViewModel.fetchUser(uid)
+    }
     Column (
         modifier = Modifier
             .fillMaxSize()
@@ -224,7 +234,7 @@ fun AddSpecialReq(
             )
         }
 
-        productRows.forEachIndexed { index, pair ->
+        productRows.forEachIndexed { index, productRow ->
             Row (
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -232,10 +242,10 @@ fun AddSpecialReq(
             ) {
                 // Dropdown
                 OutlinedTextField(
-                    value = pair.first,
+                    value = productRow.name,
                     onValueChange = { newValue ->
-                        productRows[index] = pair.copy(first = newValue)
-                        productEmpty[index] = productEmpty[index].copy(first = newValue.isEmpty())
+                        productRows[index] = productRow.copy(name = newValue)
+                        productEmpty[index] = productEmpty[index].copy(name = newValue.isEmpty())
                     },
                     modifier = Modifier
                         .padding(vertical = 4.dp)
@@ -244,12 +254,12 @@ fun AddSpecialReq(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 OutlinedTextField(
-                    value = if (pair.second == 0) "" else pair.second.toString(),
+                    value = if (productRow.quantity == 0) "" else productRow.quantity.toString(),
                     onValueChange = { newValue ->
                         val newIntValue = newValue.toIntOrNull()
                         if (newIntValue != null) {
-                            productRows[index] = pair.copy(second = newIntValue)
-                            productEmpty[index] = productEmpty[index].copy(second = newIntValue <= 0)
+                            productRows[index] = productRow.copy(quantity = newIntValue)
+                            productEmpty[index] = productEmpty[index].copy(quantity = newIntValue <= 0)
                         }
                     },
                     modifier = Modifier
@@ -271,7 +281,7 @@ fun AddSpecialReq(
                 }
             }
 
-            if (productEmpty[index].first) {
+            if (productEmpty[index].name) {
                 Text(
                     text = "Product name cannot be empty!",
                     color = Color.Red,
@@ -279,7 +289,7 @@ fun AddSpecialReq(
                 )
             }
 
-            if (productEmpty[index].second) {
+            if (productEmpty[index].quantity) {
                 Text(
                     text = "Quantity must be greater than 0!",
                     color = Color.Red,
@@ -289,7 +299,7 @@ fun AddSpecialReq(
         }
 
         Button(
-            onClick = { productRows.add(Pair("", 0)) },
+            onClick = { productRows.add(ProductReq()) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
@@ -396,21 +406,24 @@ fun AddSpecialReq(
                 collectionMethodEmpty = collectionMethod.isEmpty()
 
                 productEmpty.forEachIndexed{ index, _ ->
-                    productEmpty[index] = Pair(
-                        productRows[index].first.isEmpty(),
-                        productRows[index].second <= 0
+                    productEmpty[index] = ProductReqValidation(
+                        productRows[index].name.isEmpty(),
+                        productRows[index].quantity <= 0
                     )
                 }
 
                 if (!subjectEmpty && !targetDateEmpty && !collectionMethodEmpty &&
-                    productEmpty.all { !it.first && !it.second }) {
+                    productEmpty.all { !it.name && !it.quantity }) {
                     val specialReq = SpecialRequest (
                         subject = subject,
                         description = description,
                         products = productRows,
                         targetDate = targetDate,
                         collectionMethod = collectionMethod,
-                        additionalRequest = additional
+                        additionalRequest = additional,
+                        uid = uid,
+                        status = "To Review",
+                        name = "${userData?.firstname} ${userData?.lastname}"
                     )
 
                     specialRequestViewModel.addSpecialRequest(

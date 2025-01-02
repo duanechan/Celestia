@@ -206,7 +206,7 @@ fun AppStateAndContent(
     } else {
         listOf(
             "Home" to Screen.Admin.route,
-            "Special Requests" to Screen.AdminOrders.route,
+            "Special Requests" to Screen.AdminSpecialRequests.route,
             "Members" to Screen.AdminUserManagement.route,
             "Clients & Customers" to Screen.AdminClients.route,
             "Settings" to Screen.AdminSettings.route
@@ -291,6 +291,8 @@ fun AppStateAndContent(
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
 fun App() {
+    var isDropdownExpanded by remember { mutableStateOf(false) }
+
     AppStateAndContent { navController, userData, facilityData, topBarTitle, toastStatus, showToast,
                          toastMessage, drawerState, scope, expandedMenus, menuItems, statuses,
                          shouldShowNavigation, currentDestination, onTopBarTitleChange, onToastEvent,
@@ -431,6 +433,66 @@ fun App() {
                                             }
                                         }
                                     }
+                                }
+
+                                label == "Special Requests" -> {
+                                    Column {
+                                        Row (
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(8.dp)
+                                                .clickable { isDropdownExpanded = !isDropdownExpanded }
+                                        ) {
+                                            Icon(Icons.Default.Info, contentDescription = null, tint = Green1)
+                                            Spacer(modifier = Modifier.width(16.dp))
+                                            Text(
+                                                text = label,
+                                                color = if (currentDestination == route) Green1 else Color.Gray,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            Icon(
+                                                painter = painterResource(id = if (isDropdownExpanded) R.drawable.expand_less else R.drawable.expand_more),
+                                                contentDescription = null,
+                                                tint = Green1,
+                                                modifier = Modifier.size(12.dp)
+                                            )
+                                        }
+
+                                        if (isDropdownExpanded) {
+                                            statuses.forEach { status ->
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(8.dp)
+                                                        .padding(start = 48.dp)
+                                                        .clickable {
+                                                            isDropdownExpanded = false
+                                                            scope.launch {
+                                                                drawerState.close()
+                                                                navController.navigate(Screen.AdminSpecialRequests.createRoute(status))
+                                                            }
+                                                        }
+                                                ) {
+                                                    when (status) {
+                                                        "To Review" -> Icon(painterResource(R.drawable.review), null, tint = Green1, modifier = Modifier.size(24.dp))
+                                                        "In Progress" -> Icon(painterResource(R.drawable.progress), null, tint = Green1, modifier = Modifier.size(24.dp))
+                                                        "Completed" -> Icon(painterResource(R.drawable.completed), null, tint = Green1, modifier = Modifier.size(24.dp))
+                                                        "Cancelled" -> Icon(painterResource(R.drawable.cancelled), null, tint = Green1, modifier = Modifier.size(24.dp))
+                                                        "Turned Down" -> Icon(painterResource(R.drawable.turned_down), null, tint = Green1, modifier = Modifier.size(24.dp))
+                                                    }
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text(
+                                                        text = status,
+                                                        color = Color.Gray,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        }
                                 }
                                 else -> {
                                     Row(

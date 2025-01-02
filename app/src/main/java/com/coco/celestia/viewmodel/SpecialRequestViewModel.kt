@@ -5,8 +5,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.viewmodel.model.SpecialRequest
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.launch
 
 sealed class SpecialReqState {
@@ -18,9 +21,9 @@ sealed class SpecialReqState {
 
 class SpecialRequestViewModel : ViewModel() {
     private val database : DatabaseReference = FirebaseDatabase.getInstance().getReference("special_requests")
-    private val _specialReqData = MutableLiveData<SpecialRequest>()
+    private val _specialReqData = MutableLiveData<List<SpecialRequest>>()
     private val _specialReqState = MutableLiveData<SpecialReqState>()
-    val specialReqData: LiveData<SpecialRequest> = _specialReqData
+    val specialReqData: LiveData<List<SpecialRequest>> = _specialReqData
     val specialReqState: LiveData<SpecialReqState> = _specialReqState
 
     fun addSpecialRequest(
@@ -38,5 +41,29 @@ class SpecialRequestViewModel : ViewModel() {
                     _specialReqState.value = SpecialReqState.ERROR(exception.message ?: "Unknown Error")
                 }
         }
+    }
+
+    fun fetchSpecialRequests(
+        filter: String
+    ) {
+        _specialReqState.value = SpecialReqState.LOADING
+        database.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val requests = snapshot.children.flatMap { userSnapshot ->
+                    userSnapshot.children.mapNotNull { requestSnapshot ->
+                        requestSnapshot.getValue(SpecialRequest::class.java)
+                    }.filter { request ->
+                        request.status.equals(filter, ignoreCase = true)
+                    }
+                }
+
+                _specialReqData.value = requests
+                _specialReqState.value = if (requests.isEmpty()) SpecialReqState.EMPTY else SpecialReqState.SUCCESS
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                _specialReqState.value = SpecialReqState.ERROR(error.message)
+            }
+        })
     }
 }

@@ -323,7 +323,7 @@ fun NavDrawerBottomBar(
                                 }
                             }
                             "Admin" -> {
-                                navController.navigate(Screen.AdminOrders.route) { // Navigate to AdminOrders screen
+                                navController.navigate(Screen.AdminSpecialRequests.route) { // Navigate to AdminOrders screen
                                     popUpTo(navController.graph.startDestinationId)
                                 }
                             }

@@ -38,7 +38,7 @@ import com.coco.celestia.screens.client.DisplaySpecialReq
 import com.coco.celestia.screens.coop.admin.AccessControlScreen
 import com.coco.celestia.screens.coop.admin.AdminClients
 import com.coco.celestia.screens.coop.admin.AdminHome
-import com.coco.celestia.screens.coop.admin.AdminOrders
+import com.coco.celestia.screens.coop.admin.AdminSpecialRequests
 import com.coco.celestia.screens.coop.admin.AdminSettings
 import com.coco.celestia.screens.coop.admin.ClientDetails
 import com.coco.celestia.screens.coop.admin.OrganizationProfileScreen
@@ -79,6 +79,7 @@ import com.coco.celestia.viewmodel.VendorViewModel
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.WeightUnit
 import com.google.firebase.auth.FirebaseAuth
+import org.apache.commons.math3.analysis.function.Log
 
 @Composable
 fun NavGraph(
@@ -247,7 +248,8 @@ fun NavGraph(
         composable(route = Screen.ClientAddSpecialReq.route) {
             onNavigate("Request an Order")
             AddSpecialReq(
-                specialRequestViewModel
+                specialRequestViewModel,
+                userViewModel
             )
         }
 
@@ -338,16 +340,15 @@ fun NavGraph(
             )
         }
         composable(
-            route = Screen.AdminOrders.route,
+            route = Screen.AdminSpecialRequests.route,
             arguments = listOf(navArgument("status") { type = NavType.StringType })
         ) {
             val status = it.arguments?.getString("status") ?: ""
+
             onNavigate("Special Requests")
-            AdminOrders(
-                userRole = userRole,
-                orderViewModel = orderViewModel,
-                transactionViewModel = transactionViewModel,
-                onUpdateOrder = { onEvent(it) }
+            AdminSpecialRequests(
+                specialRequestViewModel,
+                status
             )
         }
 //        composable(route = Screen.AdminAddProduct.route) {

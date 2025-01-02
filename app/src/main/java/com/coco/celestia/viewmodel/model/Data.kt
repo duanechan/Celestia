@@ -41,10 +41,23 @@ data class OrderData(
 data class SpecialRequest(
     val subject: String = "",
     val description: String = "",
-    val products: List<Pair<String, Int>> = emptyList(),
+    val products: List<ProductReq> = emptyList(),
     val targetDate: String = "",
     val collectionMethod: String = "",
-    val additionalRequest: String = ""
+    val additionalRequest: String = "",
+    val status: String = "",
+    val name: String = "",
+    val uid: String = ""
+)
+
+data class ProductReq(
+    val name: String = "",
+    val quantity: Int = 0
+)
+
+data class ProductReqValidation(
+    val name: Boolean = false,
+    val quantity: Boolean = false
 )
 
 data class FullFilledBy (
