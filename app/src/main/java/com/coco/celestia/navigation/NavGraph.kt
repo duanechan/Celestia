@@ -35,6 +35,7 @@ import com.coco.celestia.screens.client.ClientDashboard
 import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.client.ClientOrderDetails
 import com.coco.celestia.screens.client.DisplaySpecialReq
+import com.coco.celestia.screens.client.ProductDetailScreen
 import com.coco.celestia.screens.coop.admin.AccessControlScreen
 import com.coco.celestia.screens.coop.admin.AdminClients
 import com.coco.celestia.screens.coop.admin.AdminHome
@@ -225,7 +226,7 @@ fun NavGraph(
                 userViewModel = userViewModel,
                 productViewModel = productViewModel,
                 orderViewModel = orderViewModel,
-                transactionViewModel = transactionViewModel
+//                transactionViewModel = transactionViewModel
             )
         }
         composable(route = Screen.ClientOrder.route) {
@@ -686,6 +687,11 @@ fun NavGraph(
                 ClientOrderDetails(navController, it)
             }
         }
+
+        composable(route = Screen.ProductDetails.route) {
+            ProductDetailScreen(navController)
+        }
+
         composable(
             route = "add_order/{productType}",
             arguments = listOf(navArgument("productType") { type = NavType.StringType })
