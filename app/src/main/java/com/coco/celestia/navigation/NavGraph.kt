@@ -243,6 +243,7 @@ fun NavGraph(
         }
 
         composable(route = Screen.ClientSpecialReq.route) {
+            onNavigate("Requests")
             DisplaySpecialReq(
                 navController
             )

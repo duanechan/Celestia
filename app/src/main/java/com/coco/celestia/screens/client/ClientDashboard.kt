@@ -65,50 +65,67 @@ fun ClientDashboard(
             .fillMaxSize()
             .background(White1)
     ) {
-        // Search Bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-                .background(Color.White, shape = RoundedCornerShape(12.dp)),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Search",
-                modifier = Modifier.padding(start = 16.dp)
-            )
-            TextField(
-                value = "",
-                onValueChange = {},
-                placeholder = { Text("Search") },
+        Column {
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 8.dp),
-                maxLines = 1,
-                singleLine = true,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                )
-            )
-        }
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(Color.White, shape = RoundedCornerShape(12.dp))
+                        .padding(horizontal = 8.dp), // Inner padding for the search bar
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                    TextField(
+                        value = "",
+                        onValueChange = {},
+                        placeholder = { Text("Search") },
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        )
+                    )
+                }
 
-        // Main Content
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .verticalScroll(rememberScrollState())
-                .padding(top = 60.dp)
-        ) {
-            val sampleItems = listOf(
-                CarouselItem(R.drawable.greenbeansimg, "Green Beans", "In Season", "Php 40/Kg"),
-                CarouselItem(R.drawable.arabicaimg, "Tinapong: Arabica", "Freshly Harvested", "Php 120/Kg"),
-                CarouselItem(R.drawable.sortedimg, "Coffee Beans", "Organic", "Php 200/Kg")
-            )
-            SlideshowCarousel(items = sampleItems, navController = navController)
+                Icon(
+                    painter = painterResource(R.drawable.filter2),
+                    contentDescription = "Filter",
+                    modifier = Modifier
+                        .size(48.dp)
+                        .padding(start = 10.dp, end = 10.dp)
+                        .clickable {
+                            showDialog = true
+                        }
+                )
+            }
+
+            // Main Content
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = 8.dp)
+            ) {
+                val sampleItems = listOf(
+                    CarouselItem(R.drawable.greenbeansimg, "Green Beans", "In Season", "Php 40/Kg"),
+                    CarouselItem(R.drawable.arabicaimg, "Tinapong: Arabica", "Freshly Harvested", "Php 120/Kg"),
+                    CarouselItem(R.drawable.sortedimg, "Coffee Beans", "Organic", "Php 200/Kg")
+                )
+                SlideshowCarousel(items = sampleItems, navController = navController)
+            }
         }
     }
 }

@@ -160,7 +160,7 @@ fun ClientOrder(
                                 Text(
                                     text = label,
                                     fontFamily = mintsansFontFamily,
-                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    modifier = Modifier.padding(horizontal = 12.dp),
                                     color = Green1,
                                     fontWeight = FontWeight.Bold
                                 )

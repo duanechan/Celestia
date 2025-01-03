@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -29,6 +30,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -50,7 +53,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green4
+import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.ProductReq
@@ -70,64 +75,79 @@ fun DisplaySpecialReq(
     Box (
         modifier = Modifier.fillMaxSize()
     ) {
-        Column (
+        Column(
             modifier = Modifier
-                .fillMaxSize()
-                .background(Green4)
-        ){
-            val filters = listOf(
-                "To Review",
-                "In Progress",
-                "Completed",
-                "Cancelled"
-            )
-
-            Row (
+                .fillMaxHeight()
+                .verticalScroll(rememberScrollState())
+        ) {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-                    .background(Color.White, shape = RoundedCornerShape(12.dp)),
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxSize()
+                    .background(Green4)
             ) {
-                Icon (
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
-                    modifier = Modifier.padding(start = 16.dp)
+                val filters = listOf(
+                    "To Review",
+                    "In Progress",
+                    "Completed",
+                    "Cancelled"
                 )
+                var selectedTabIndex by remember { mutableStateOf(0) }
 
-                TextField(
-                    value = "", //text
-                    onValueChange = {}, //newText -> text = newText
-                    placeholder = { Text("Search") },
+                Row(
                     modifier = Modifier
-                        .weight(1f),
-                    maxLines = 1,
-                    singleLine = true,
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .background(Color.White, shape = RoundedCornerShape(12.dp)),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        modifier = Modifier.padding(start = 16.dp)
                     )
-                )
-            }
 
-            Row (
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                filters.forEach { label ->
-                    Text(
-                        text = label
+                    TextField(
+                        value = "", //text
+                        onValueChange = {}, //newText -> text = newText
+                        placeholder = { Text("Search") },
+                        modifier = Modifier
+                            .weight(1f),
+                        maxLines = 1,
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        )
                     )
                 }
-            }
+                ScrollableTabRow(
+                    selectedTabIndex = selectedTabIndex,
+                    edgePadding = 0.dp
+                ) {
+                    filters.forEachIndexed { index, label ->
+                        Tab(
+                            selected = selectedTabIndex == index,
+                            onClick = { selectedTabIndex = index },
+                            modifier = Modifier.background(Green4),
+                            text = {
+                                Text(
+                                    text = label,
+                                    fontFamily = mintsansFontFamily,
+                                    modifier = Modifier.padding(horizontal = 5.dp),
+                                    color = Green1,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        )
+                    }
+                }
 
-            Column {
-                //Column for Orders
+                Column {
+                    // Column for Orders
+
+                }
             }
         }
 
