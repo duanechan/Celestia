@@ -67,14 +67,9 @@ class ProductViewModel : ViewModel() {
             _productState.value = ProductState.LOADING
             try {
                 val snapshot = database.get().await()
-                val products = mutableListOf<ProductData>()
-                for (product in snapshot.children) {
-                    val productData = product.getValue(ProductData::class.java)
-                    if (productData?.name == productName) {
-                        products.add(productData)
-                        break
-                    }
-                }
+                val products = snapshot.children
+                    .mapNotNull { it.getValue(ProductData::class.java) }
+                    .filter { it.name == productName }
                 _productData.value = products
                 _productState.value =
                     if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS

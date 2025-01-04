@@ -792,8 +792,17 @@ fun NavGraph(
             }
         }
 
-        composable(route = Screen.ProductDetails.route) {
-            ProductDetailScreen(navController)
+        composable(
+            route = Screen.ProductDetails.route,
+            arguments = listOf(navArgument("product") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val productName = backStackEntry.arguments?.getString("product").toString()
+
+            ProductDetailScreen(
+                navController = navController,
+                productViewModel = productViewModel,
+                productName = productName
+            )
         }
 
         composable(

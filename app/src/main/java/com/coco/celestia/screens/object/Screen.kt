@@ -86,8 +86,8 @@ sealed class Screen(val route: String) {
     data object ClientContact: Screen( route = "client_contact")
     data object ClientSpecialReq: Screen( route = "client_special_req")
     data object ClientAddSpecialReq: Screen( route = "client_add_special_req")
-    object ProductDetails {
-        const val route = "product_detail" // No arguments needed
+    data object ProductDetails: Screen(route = "client/{product}") {
+        fun createRoute(product: String) = "client/$product"
     }
     data object Cart: Screen(route = "client/cart")
     data object CheckoutEvent: Screen(route = "client/cart/checkout")

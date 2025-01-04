@@ -147,7 +147,12 @@ fun SlideshowCarousel(items: List<CarouselItem>, navController: NavController) {
         ) { index ->
             CarouselCard(item = items[index]) {
                 // Navigate to ProductDetailScreen without passing any data
-                navController.navigate(Screen.ProductDetails.route)
+                // TODO: Need to pass the actual product displayed. For now, I'm using the item.title
+                // Best case:
+                // items[0].title = "Green Beans"
+                // fetchProduct(items[0].title] from ProductViewModel
+                // Return Green Beans product data
+                navController.navigate(Screen.ProductDetails.createRoute(items[index].title))
             }
         }
     }
