@@ -48,9 +48,12 @@ fun CoopVendorAddForm(
     facilityName: String,
     onSuccess: () -> Unit,
     onCancel: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    email: String? = null
 ) {
-    var vendorData by remember { mutableStateOf(VendorData(facility = facilityName)) }
+    var vendorData by remember {
+        mutableStateOf(VendorData(email = email ?: "", facility = facilityName))
+    }
     var hasErrors by remember { mutableStateOf(false) }
     var showErrorMessages by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
@@ -107,9 +110,7 @@ fun CoopVendorAddForm(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = White1
-            )
+            colors = CardDefaults.cardColors(containerColor = White1)
         ) {
             Column(
                 modifier = Modifier
@@ -257,7 +258,7 @@ fun CoopVendorAddForm(
                             showErrorMessages = true
                             if (!hasErrors && validateForm()) {
                                 isLoading = true
-                                Log.d("CoopVendorAddForm", "Submitting vendor with facility: ${vendorData.facility}")
+                                Log.d("CoopVendorAddForm", "Submitting vendor with email: ${vendorData.email}, facility: ${vendorData.facility}")
                                 viewModel.addVendor(
                                     vendor = vendorData,
                                     onSuccess = {

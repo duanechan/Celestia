@@ -11,6 +11,9 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.launch
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 sealed class PurchaseOrderState {
     data object LOADING : PurchaseOrderState()
@@ -35,7 +38,10 @@ class PurchaseOrderViewModel : ViewModel() {
                     val searchKeywords = searchQuery.split(" ").map { it.trim() }
 
                     val purchaseOrders = snapshot.children
-                        .mapNotNull { it.getValue(PurchaseOrder::class.java) }
+                        .mapNotNull {
+                            val order = it.getValue(PurchaseOrder::class.java)
+                            order?.copy(id = it.key ?: "")
+                        }
                         .filter { purchaseOrder ->
                             if (facilityName != null) {
                                 purchaseOrder.facility == facilityName
@@ -52,9 +58,9 @@ class PurchaseOrderViewModel : ViewModel() {
                         }
                         .filter { purchaseOrder ->
                             when (filter.lowercase()) {
-                                "draft" -> true
-                                "approved" -> true
-                                else -> true
+                                "draft" -> purchaseOrder.savedAsDraft
+                                "all" -> true
+                                else -> !purchaseOrder.savedAsDraft
                             }
                         }
 
@@ -70,6 +76,26 @@ class PurchaseOrderViewModel : ViewModel() {
         }
     }
 
+    suspend fun getPurchaseOrder(purchaseNumber: String): PurchaseOrder? {
+        return suspendCoroutine { continuation ->
+            database.orderByChild("purchaseNumber")
+                .equalTo(purchaseNumber)
+                .addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val order = snapshot.children.firstOrNull()?.let {
+                            val purchaseOrder = it.getValue(PurchaseOrder::class.java)
+                            purchaseOrder?.copy(id = it.key ?: "")
+                        }
+                        continuation.resume(order)
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        continuation.resumeWithException(Exception(error.message))
+                    }
+                })
+        }
+    }
+
     fun addPurchaseOrder(
         purchaseOrder: PurchaseOrder,
         onSuccess: () -> Unit,
@@ -77,17 +103,24 @@ class PurchaseOrderViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
-                val newPurchaseOrderRef = database.push()
-                newPurchaseOrderRef.setValue(purchaseOrder)
-                    .addOnSuccessListener { onSuccess() }
-                    .addOnFailureListener { onError(it.message ?: "Error adding purchase order") }
+                if (purchaseOrder.id.isNotEmpty()) {
+                    // Update existing purchase order
+                    database.child(purchaseOrder.id).setValue(purchaseOrder)
+                        .addOnSuccessListener { onSuccess() }
+                        .addOnFailureListener { onError(it.message ?: "Error updating purchase order") }
+                } else {
+                    // Create new purchase order
+                    val newPurchaseOrderRef = database.push()
+                    newPurchaseOrderRef.setValue(purchaseOrder)
+                        .addOnSuccessListener { onSuccess() }
+                        .addOnFailureListener { onError(it.message ?: "Error adding purchase order") }
+                }
             } catch (e: Exception) {
-                onError(e.message ?: "Error adding purchase order")
+                onError(e.message ?: "Error processing purchase order")
             }
         }
     }
 
-    // TODO: Implement this when there is already the purchase order details screen
     fun updatePurchaseOrder(
         purchaseOrderId: String,
         purchaseOrder: PurchaseOrder,
@@ -105,7 +138,6 @@ class PurchaseOrderViewModel : ViewModel() {
         }
     }
 
-    // TODO: Implement this when there is already the purchase order details screen
     fun deletePurchaseOrder(
         purchaseOrderId: String,
         onSuccess: () -> Unit,

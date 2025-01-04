@@ -1,7 +1,13 @@
 package com.coco.celestia.screens.coop.facility
 
 import android.annotation.SuppressLint
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,7 +20,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.PurchaseOrderState
@@ -25,7 +35,6 @@ import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
 
-// TODO: fix bug on switching between all and draft tabs
 // TODO: filtering options
 
 @Composable
@@ -40,6 +49,7 @@ fun CoopPurchases(
     var searchQuery by remember { mutableStateOf("") }
     val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
     val facilityState by facilityViewModel.facilityState.observeAsState(FacilityState.LOADING)
+    var hasInitialFetch by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         facilityViewModel.fetchFacilities()
@@ -63,8 +73,15 @@ fun CoopPurchases(
                 }
 
                 if (userFacility != null) {
-                    LaunchedEffect(Unit) {
-                        purchaseOrderViewModel.fetchPurchaseOrders(facilityName = userFacility.name)
+                    LaunchedEffect(userFacility.name, searchQuery) {
+                        if (!hasInitialFetch || searchQuery.isNotEmpty()) {
+                            purchaseOrderViewModel.fetchPurchaseOrders(
+                                filter = if (selectedTab == "Draft") "draft" else "all",
+                                searchQuery = searchQuery,
+                                facilityName = userFacility.name
+                            )
+                            hasInitialFetch = true
+                        }
                     }
 
                     Column(
@@ -76,116 +93,123 @@ fun CoopPurchases(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = { newQuery ->
+                                    searchQuery = newQuery
+                                },
                                 modifier = Modifier.weight(1f),
-                                horizontalArrangement = Arrangement.Start
-                            ) {
-                                TextButton(
-                                    onClick = {
-                                        selectedTab = "All"
-                                        purchaseOrderViewModel.fetchPurchaseOrders(
-                                            filter = "all",
-                                            searchQuery = searchQuery,
-                                            facilityName = userFacility.name
-                                        )
-                                    },
-                                    colors = ButtonDefaults.textButtonColors(
-                                        contentColor = if (selectedTab == "All")
-                                            Green1
-                                        else
-                                            MaterialTheme.colorScheme.onSurface
+                                placeholder = { Text("Search purchase orders...") },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Search,
+                                        contentDescription = "Search",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
-                                ) {
-                                    Text(
-                                        text = "All",
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-                                }
-                                TextButton(
-                                    onClick = {
-                                        selectedTab = "Draft"
-                                        purchaseOrderViewModel.fetchPurchaseOrders(
-                                            filter = "draft",
-                                            searchQuery = searchQuery,
-                                            facilityName = userFacility.name
-                                        )
-                                    },
-                                    colors = ButtonDefaults.textButtonColors(
-                                        contentColor = if (selectedTab == "Draft")
-                                            Green1
-                                        else
-                                            MaterialTheme.colorScheme.onSurface
-                                    )
-                                ) {
-                                    Text(
-                                        text = "Draft",
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-                                }
-                            }
+                                },
+                                trailingIcon = if (searchQuery.isNotEmpty()) {
+                                    {
+                                        IconButton(onClick = {
+                                            searchQuery = ""
+                                        }) {
+                                            Icon(
+                                                Icons.Default.Clear,
+                                                contentDescription = "Clear search",
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                } else null,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    cursorColor = Green1,
+                                    focusedBorderColor = Green1,
+                                    unfocusedBorderColor = Green1,
+                                    focusedLabelColor = Green1,
+                                    unfocusedLabelColor = Green1,
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                singleLine = true
+                            )
 
-                            IconButton(onClick = { /* Handle filter click */ }) {
+                            IconButton(
+                                onClick = { /* Handle filter click */ },
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .background(
+                                        color = White1,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.List,
-                                    contentDescription = "Filter"
+                                    contentDescription = "Filter",
+                                    tint = Green1
                                 )
                             }
                         }
 
-                        OutlinedTextField(
-                            value = searchQuery,
-                            onValueChange = { newQuery ->
-                                searchQuery = newQuery
-                                purchaseOrderViewModel.fetchPurchaseOrders(
-                                    filter = selectedTab.lowercase(),
-                                    searchQuery = newQuery,
-                                    facilityName = userFacility.name
-                                )
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            placeholder = { Text("Search purchase orders...") },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Search,
-                                    contentDescription = "Search",
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            },
-                            trailingIcon = if (searchQuery.isNotEmpty()) {
-                                {
-                                    IconButton(onClick = {
-                                        searchQuery = ""
-                                        purchaseOrderViewModel.fetchPurchaseOrders(
-                                            filter = selectedTab.lowercase(),
-                                            facilityName = userFacility.name
-                                        )
-                                    }) {
-                                        Icon(
-                                            Icons.Default.Clear,
-                                            contentDescription = "Clear search",
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 8.dp)
+                            ) {
+                                val tabs = listOf("All", "Draft")
+                                tabs.forEachIndexed { index, tab ->
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        TextButton(
+                                            onClick = { selectedTab = tab },
+                                            colors = ButtonDefaults.textButtonColors(
+                                                contentColor = if (selectedTab == tab)
+                                                    Green1
+                                                else
+                                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        ) {
+                                            Text(
+                                                text = tab,
+                                                style = MaterialTheme.typography.titleMedium
+                                            )
+                                        }
+
+                                        AnimatedVisibility(
+                                            visible = selectedTab == tab,
+                                            enter = fadeIn() + expandVertically(),
+                                            exit = fadeOut() + shrinkVertically()
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .padding(horizontal = 16.dp)
+                                                    .fillMaxWidth()
+                                                    .height(2.dp)
+                                                    .background(
+                                                        color = Green1,
+                                                        shape = RoundedCornerShape(1.dp)
+                                                    )
+                                            )
+                                        }
                                     }
                                 }
-                            } else null,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                cursorColor = Green1,
-                                focusedBorderColor = Green1,
-                                unfocusedBorderColor = Green1,
-                                focusedLabelColor = Green1,
-                                unfocusedLabelColor = Green1,
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            singleLine = true
-                        )
+                            }
+                        }
 
-                        when (val state = purchaseOrderViewModel.purchaseOrderState.value) {
-                            is PurchaseOrderState.LOADING -> {
+                        // Content
+                        val purchaseOrderState = purchaseOrderViewModel.purchaseOrderState.value
+                        val purchaseOrders = purchaseOrderViewModel.purchaseOrderData.value
+
+                        val filteredOrders = when (selectedTab) {
+                            "Draft" -> purchaseOrders?.filter { it.savedAsDraft }
+                            else -> purchaseOrders?.filter { !it.savedAsDraft }
+                        }
+
+                        when {
+                            purchaseOrderState is PurchaseOrderState.LOADING && purchaseOrders.isNullOrEmpty() -> {
                                 Box(
                                     modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
@@ -193,47 +217,51 @@ fun CoopPurchases(
                                     CircularProgressIndicator(color = Green1)
                                 }
                             }
-                            is PurchaseOrderState.SUCCESS -> {
+                            !filteredOrders.isNullOrEmpty() -> {
                                 LazyColumn {
-                                    items(purchaseOrderViewModel.purchaseOrderData.value ?: emptyList()) { purchaseOrder ->
+                                    items(filteredOrders) { purchaseOrder ->
                                         PurchaseOrderCard(
                                             purchaseOrder = purchaseOrder,
+                                            onClick = {
+                                                if (purchaseOrder.savedAsDraft) {
+                                                    navController.navigate(Screen.CoopPurchaseForm.createRouteWithDraft(purchaseOrder.purchaseNumber))
+                                                } else {
+                                                    navController.navigate(Screen.CoopPurchaseDetails.createRoute(purchaseOrder.purchaseNumber))
+                                                }
+                                            },
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .padding(bottom = 8.dp)
+                                                .padding(vertical = 8.dp)
                                         )
                                     }
                                 }
                             }
-                            is PurchaseOrderState.EMPTY -> {
+                            purchaseOrderState is PurchaseOrderState.EMPTY || filteredOrders?.isEmpty() == true -> {
                                 Box(
                                     modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text("No purchase orders found for ${userFacility.name}")
+                                    Text(
+                                        if (selectedTab == "Draft")
+                                            "No draft orders found for ${userFacility.name}"
+                                        else
+                                            "No purchase orders found for ${userFacility.name}"
+                                    )
                                 }
                             }
-                            is PurchaseOrderState.ERROR -> {
+                            purchaseOrderState is PurchaseOrderState.ERROR -> {
                                 Box(
                                     modifier = Modifier.fillMaxSize(),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(state.message)
-                                }
-                            }
-                            else -> {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text("Loading purchase orders...")
+                                    Text(purchaseOrderState.message)
                                 }
                             }
                         }
                     }
 
                     FloatingActionButton(
-                        onClick = { navController.navigate(Screen.CoopPurchaseForm.route) },
+                        onClick = { navController.navigate(Screen.CoopPurchaseForm.createRoute()) },
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(16.dp),
@@ -253,15 +281,21 @@ fun CoopPurchases(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PurchaseOrderCard(
     purchaseOrder: PurchaseOrder,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
+        onClick = onClick,
         modifier = modifier,
         colors = CardDefaults.cardColors(
             containerColor = White1
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
         )
     ) {
         Column(
@@ -275,11 +309,13 @@ fun PurchaseOrderCard(
             ) {
                 Text(
                     text = purchaseOrder.vendor,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Green1
                 )
                 Text(
                     text = "PHP${calculateTotalAmount(purchaseOrder.items)}",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Green1
                 )
             }
 
@@ -290,12 +326,507 @@ fun PurchaseOrderCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "${purchaseOrder.date} • ${purchaseOrder.purchaseNumber}",
+                    text = "${purchaseOrder.dateAdded} • ${purchaseOrder.purchaseNumber}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Reference #: ${purchaseOrder.referenceNumber}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Text(
+                    text = "Expected Delivery: ${purchaseOrder.expectedDate}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
+    }
+}
+
+@Composable
+fun PurchaseOrderDetailsScreen(
+    purchaseNumber: String,
+    viewModel: PurchaseOrderViewModel,
+    onNavigateUp: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val purchaseOrderState by viewModel.purchaseOrderState.observeAsState()
+    val purchaseOrderData by viewModel.purchaseOrderData.observeAsState(emptyList())
+    val selectedPurchaseOrder = purchaseOrderData.find { it.purchaseNumber == purchaseNumber }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(CoopBackground)
+    ) {
+        when (purchaseOrderState) {
+            is PurchaseOrderState.LOADING -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Green1)
+                }
+            }
+            is PurchaseOrderState.ERROR -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = (purchaseOrderState as PurchaseOrderState.ERROR).message,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center
+                        )
+                        Button(
+                            onClick = onNavigateUp,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Green1
+                            )
+                        ) {
+                            Text("Go Back")
+                        }
+                    }
+                }
+            }
+            is PurchaseOrderState.SUCCESS -> {
+                if (selectedPurchaseOrder != null) {
+                    PurchaseDetails(
+                        purchaseOrder = selectedPurchaseOrder,
+                        modifier = modifier
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Purchase order not found",
+                                style = MaterialTheme.typography.titleMedium,
+                                textAlign = TextAlign.Center
+                            )
+                            Button(
+                                onClick = onNavigateUp,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Green1
+                                )
+                            ) {
+                                Text("Go Back")
+                            }
+                        }
+                    }
+                }
+            }
+            is PurchaseOrderState.EMPTY -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "No purchase order data available",
+                            style = MaterialTheme.typography.titleMedium,
+                            textAlign = TextAlign.Center
+                        )
+                        Button(
+                            onClick = onNavigateUp,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Green1
+                            )
+                        ) {
+                            Text("Go Back")
+                        }
+                    }
+                }
+            }
+            null -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Green1)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PurchaseDetails(
+    purchaseOrder: PurchaseOrder,
+    modifier: Modifier = Modifier
+) {
+    var selectedTab by remember { mutableStateOf(0) }
+    val tabs = listOf("DETAILS", "BILLS", "RECEIVES", "HISTORY")
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(White2)
+    ) {
+        // Header Section
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(White1)
+                .padding(16.dp)
+        ) {
+            Text(
+                text = purchaseOrder.purchaseNumber,
+                style = MaterialTheme.typography.titleLarge,
+                color = Green1
+            )
+
+            Text(
+                text = purchaseOrder.vendor,
+                style = MaterialTheme.typography.titleLarge,
+                color = Green1,
+                textDecoration = TextDecoration.Underline,
+                modifier = Modifier.padding(top = 16.dp)
+            )
+
+            Text(
+                text = "Total Amount",
+                style = MaterialTheme.typography.titleMedium,
+                color = Green1,
+                modifier = Modifier.padding(top = 16.dp)
+            )
+
+            Text(
+                text = "PHP${calculateTotalAmount(purchaseOrder.items)}",
+                style = MaterialTheme.typography.headlineMedium,
+                color = Green1
+            )
+
+            // Reference Number Row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Reference#",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Green1
+                )
+                Text(
+                    text = purchaseOrder.referenceNumber,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Green1
+                )
+            }
+
+            // Order Date Row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Order Date",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Green1
+                )
+                Text(
+                    text = purchaseOrder.dateAdded,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Green1
+                )
+            }
+
+            // Expected Delivery Date Row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Expected Delivery Date",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Green1
+                )
+                Text(
+                    text = purchaseOrder.expectedDate,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Green1
+                )
+            }
+        }
+
+        // Tabs
+        TabRow(
+            selectedTabIndex = selectedTab,
+            containerColor = White1,
+            contentColor = Green1,
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .clipToBounds(),
+            divider = {},
+            indicator = { tabPositions ->
+                TabRowDefaults.Indicator(
+                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                    color = Green1,
+                    height = 2.dp
+                )
+            }
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTab == index,
+                    onClick = { selectedTab = index },
+                    text = {
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (selectedTab == index) Green1
+                            else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
+        // Tab Content
+        when (selectedTab) {
+            0 -> DetailsTab(purchaseOrder)
+            1 -> BillsTab()
+            2 -> ReceivesTab()
+            3 -> CommentsHistoryTab()
+        }
+    }
+}
+
+@Composable
+private fun DetailsTab(purchaseOrder: PurchaseOrder) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        // More Information Card
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = White1
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                ExpandableSection(
+                    title = "More Information",
+                    initiallyExpanded = false
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp)
+                    ) {
+                        Text(
+                            text = "Shipment preference",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Green1
+                        )
+                        Text(
+                            text = purchaseOrder.shipmentPreference,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Green1,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        // Items Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = White1
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = "Items",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Divider(modifier = Modifier.padding(vertical = 16.dp), color = Green4)
+                purchaseOrder.items.forEach { item ->
+                    ItemRow(item)
+                    Divider(modifier = Modifier.padding(vertical = 16.dp), color = Green4)
+                }
+
+                // Totals
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Sub Total",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = "PHP${calculateTotalAmount(purchaseOrder.items)}",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Total",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = "PHP${calculateTotalAmount(purchaseOrder.items)}",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            }
+        }
+    }
+}
+
+@SuppressLint("DefaultLocale")
+@Composable
+private fun ItemRow(item: PurchaseOrderItem) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text(
+                    text = item.itemName,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = "${item.quantity} x PHP${String.format("%.2f", item.rate)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Text(
+                text = "PHP${String.format("%,.2f", item.quantity * item.rate)}",
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+    }
+}
+
+@Composable
+private fun ExpandableSection(
+    title: String,
+    initiallyExpanded: Boolean = false,
+    content: @Composable () -> Unit
+) {
+    var isExpanded by remember { mutableStateOf(initiallyExpanded) }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { isExpanded = !isExpanded }
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Icon(
+                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp
+                else Icons.Default.KeyboardArrowDown,
+                contentDescription = if (isExpanded) "Collapse" else "Expand"
+            )
+        }
+        AnimatedVisibility(visible = isExpanded) {
+            content()
+        }
+    }
+}
+
+@Composable
+private fun BillsTab() {
+    // Placeholder for Bills tab content
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Bills Content")
+    }
+}
+
+@Composable
+private fun ReceivesTab() {
+    // Placeholder for Receives tab content
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Receives Content")
+    }
+}
+
+@Composable
+private fun CommentsHistoryTab() {
+    // Placeholder for Comments & History tab content
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Comments & History Content")
     }
 }
 

@@ -127,14 +127,18 @@ data class VendorData(
 )
 
 data class PurchaseOrder(
+    val id: String = "",
     val vendor: String = "",
     val purchaseNumber: String = "",
     val referenceNumber: String = "",
-    val date: String = "",
+    val dateAdded: String = "",
+    val expectedDate: String = "",
     val shipmentPreference: String = "",
     val customerNotes: String = "",
     val termsAndConditions: String = "",
     val facility: String = "",
+    val status: String = "",
+    val savedAsDraft: Boolean = false,
     val items: List<PurchaseOrderItem> = emptyList()
 )
 

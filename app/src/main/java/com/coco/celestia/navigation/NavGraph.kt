@@ -53,6 +53,8 @@ import com.coco.celestia.screens.coop.facility.CoopReports
 import com.coco.celestia.screens.coop.facility.CoopSales
 import com.coco.celestia.screens.coop.facility.forms.CoopVendorAddForm
 import com.coco.celestia.screens.coop.facility.OrderRequest
+import com.coco.celestia.screens.coop.facility.PurchaseOrderDetailsScreen
+import com.coco.celestia.screens.coop.facility.VendorDetailsScreen
 import com.coco.celestia.screens.coop.facility.Vendors
 import com.coco.celestia.screens.coop.facility.forms.CoopPurchaseForm
 import com.coco.celestia.screens.farmer.FarmerDashboard
@@ -560,10 +562,20 @@ fun NavGraph(
                 modifier = Modifier
             )
         }
-        composable(Screen.CoopPurchaseForm.route) {
-            onNavigate("New Purchase Order")
-            val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
+        composable(
+            route = Screen.CoopPurchaseForm.route,
+            arguments = listOf(
+                navArgument("draftId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) { backStackEntry ->
+            val draftId = backStackEntry.arguments?.getString("draftId")
+            onNavigate(if (draftId != null) "Edit Purchase Order" else "New Purchase Order")
 
+            val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
             val userFacility = facilitiesData.find { facility ->
                 facility.emails.contains(userEmail)
             }
@@ -572,6 +584,7 @@ fun NavGraph(
                 purchaseOrderViewModel = purchaseOrderViewModel,
                 vendorViewModel = vendorViewModel,
                 facilityName = userFacility?.name ?: "",
+                draftId = draftId,
                 onSuccess = {
                     navController.popBackStack()
                 },
@@ -579,6 +592,19 @@ fun NavGraph(
                 onCancel = {
                     navController.popBackStack()
                 }
+            )
+        }
+        composable(
+            route = Screen.CoopPurchaseDetails.route,
+            arguments = listOf(
+                navArgument("purchaseNumber") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val purchaseNumber = backStackEntry.arguments?.getString("purchaseNumber")
+            PurchaseOrderDetailsScreen(
+                purchaseNumber = purchaseNumber ?: "",
+                viewModel = purchaseOrderViewModel,
+                onNavigateUp = { navController.navigateUp() }
             )
         }
         composable(Screen.CoopVendors.route) {
@@ -603,6 +629,17 @@ fun NavGraph(
                 facilityName = userFacility?.name ?: "",
                 onSuccess = { navController.navigateUp() },
                 onCancel = { navController.navigateUp() }
+            )
+        }
+        composable(
+            route = Screen.CoopVendorDetails.route,
+            arguments = listOf(navArgument("email") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            VendorDetailsScreen(
+                email = email,
+                viewModel = vendorViewModel,
+                onNavigateUp = { navController.navigateUp() }
             )
         }
         composable(

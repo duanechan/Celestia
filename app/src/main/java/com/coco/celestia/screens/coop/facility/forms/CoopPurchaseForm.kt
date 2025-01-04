@@ -1,6 +1,5 @@
 package com.coco.celestia.screens.coop.facility.forms
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -68,6 +66,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.FilterChip
@@ -82,7 +81,6 @@ import java.time.format.TextStyle
 import java.util.Locale
 
 // TODO: Add checks for every field
-// TODO: Dropdown for shipment preference
 // TODO: Dropdown for accounts (idk what categories to put there)
 
 @Composable
@@ -93,24 +91,24 @@ fun CoopPurchaseForm(
     onSuccess: () -> Unit,
     onCancel: () -> Unit,
     navController: NavController,
+    draftId: String? = null,
     modifier: Modifier = Modifier
 ) {
-    LaunchedEffect(facilityName) {
-        Log.d("CoopPurchaseForm", "Current Facility: $facilityName")
-    }
-
     var purchaseOrderData by remember {
         mutableStateOf(
             PurchaseOrder(
                 vendor = "",
                 purchaseNumber = generatePurchaseNumber(),
                 referenceNumber = "",
-                date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
+                dateAdded = LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
+                expectedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
                 shipmentPreference = "",
                 customerNotes = "",
                 termsAndConditions = "",
                 items = emptyList(),
-                facility = facilityName
+                facility = facilityName,
+                status = "processing",
+                savedAsDraft = false
             )
         )
     }
@@ -121,6 +119,23 @@ fun CoopPurchaseForm(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var items by remember { mutableStateOf<List<PurchaseOrderItem>>(emptyList()) }
     var showAddItemDialog by remember { mutableStateOf(false) }
+    var showShipmentDropdown by remember { mutableStateOf(false) }
+
+    LaunchedEffect(draftId) {
+        if (draftId != null) {
+            try {
+                val draft = purchaseOrderViewModel.getPurchaseOrder(draftId)
+                draft?.let { draftOrder ->
+                    purchaseOrderData = draftOrder
+                    items = draftOrder.items
+                }
+            } catch (e: Exception) {
+                errorMessage = "Failed to load draft: ${e.message}"
+            }
+        }
+    }
+
+    val shipmentOptions = listOf("Taxi", "Public Utility Jeepney", "Private Vehicle")
 
     LaunchedEffect(Unit) {
         vendorViewModel.fetchVendors(facilityName = facilityName)
@@ -129,7 +144,7 @@ fun CoopPurchaseForm(
     fun validateForm(): Boolean {
         return purchaseOrderData.purchaseNumber.isNotBlank() &&
                 purchaseOrderData.referenceNumber.isNotBlank() &&
-                purchaseOrderData.date.isNotBlank() &&
+                purchaseOrderData.expectedDate.isNotBlank() &&
                 purchaseOrderData.vendor.isNotBlank() &&
                 purchaseOrderData.shipmentPreference.isNotBlank() &&
                 items.isNotEmpty()
@@ -159,7 +174,7 @@ fun CoopPurchaseForm(
     if (isLoading) {
         AlertDialog(
             onDismissRequest = { },
-            title = { Text("Adding Purchase Order") },
+            title = { Text("Processing Purchase Order") },
             text = {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -200,26 +215,69 @@ fun CoopPurchaseForm(
                     vendorViewModel = vendorViewModel,
                     hasErrors = hasErrors,
                     showErrorMessages = showErrorMessages,
-                    textFieldColors = textFieldColors
+                    textFieldColors = textFieldColors,
+                    isEditingDraft = draftId != null
                 )
 
-                // Shipment Preference Field
-                OutlinedTextField(
-                    value = purchaseOrderData.shipmentPreference,
-                    onValueChange = { purchaseOrderData = purchaseOrderData.copy(shipmentPreference = it) },
-                    label = { Text("Shipment Preference") },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = textFieldColors,
-                    isError = showErrorMessages && purchaseOrderData.shipmentPreference.isBlank(),
-                    supportingText = if (showErrorMessages && purchaseOrderData.shipmentPreference.isBlank()) {
-                        { Text("Shipment preference is required") }
-                    } else null
-                )
+                // Shipment Preference Dropdown
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = purchaseOrderData.shipmentPreference,
+                        onValueChange = { },
+                        label = { Text("Shipment Preference") },
+                        readOnly = true,
+                        trailingIcon = {
+                            IconButton(onClick = { showShipmentDropdown = !showShipmentDropdown }) {
+                                Icon(
+                                    if (showShipmentDropdown) Icons.Default.KeyboardArrowUp
+                                    else Icons.Default.KeyboardArrowDown,
+                                    "Toggle shipment dropdown"
+                                )
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showShipmentDropdown = !showShipmentDropdown },
+                        colors = textFieldColors,
+                        isError = showErrorMessages && purchaseOrderData.shipmentPreference.isBlank(),
+                        supportingText = if (showErrorMessages && purchaseOrderData.shipmentPreference.isBlank()) {
+                            { Text("Shipment preference is required") }
+                        } else null
+                    )
+
+                    DropdownMenu(
+                        expanded = showShipmentDropdown,
+                        onDismissRequest = { showShipmentDropdown = false },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.surface)
+                    ) {
+                        shipmentOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = option,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                },
+                                onClick = {
+                                    purchaseOrderData = purchaseOrderData.copy(shipmentPreference = option)
+                                    showShipmentDropdown = false
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
 
                 // Items Section
                 PurchaseFormItemsSection(
                     items = items,
-                    onShowAddItem = { showAddItemDialog = true }
+                    onShowAddItem = { showAddItemDialog = true },
+                    onRemoveItem = { index ->
+                        items = items.filterIndexed { i, _ -> i != index }
+                        hasErrors = !validateForm()
+                    }
                 )
 
                 // Notes Section
@@ -259,21 +317,61 @@ fun CoopPurchaseForm(
                         )
                     }
 
+                    OutlinedButton(
+                        onClick = {
+                            isLoading = true
+                            purchaseOrderViewModel.addPurchaseOrder(
+                                purchaseOrder = purchaseOrderData.copy(
+                                    items = items,
+                                    savedAsDraft = true,
+                                    status = "draft"
+                                ),
+                                onSuccess = {
+                                    isLoading = false
+                                    onSuccess()
+                                    navController.navigate(Screen.CoopPurchases.route) {
+                                        popUpTo(Screen.CoopPurchases.route) { inclusive = true }
+                                    }
+                                },
+                                onError = { error ->
+                                    isLoading = false
+                                    errorMessage = error
+                                }
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isLoading,
+                        border = BorderStroke(1.dp, Green1)
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (draftId != null) "Update Draft" else "Save as Draft",
+                                color = Green1,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+
                     Button(
                         onClick = {
                             showErrorMessages = true
                             if (!hasErrors && validateForm()) {
                                 isLoading = true
-                                Log.d("CoopPurchaseForm", "Submitting purchase order with facility: ${purchaseOrderData.facility}")
                                 purchaseOrderViewModel.addPurchaseOrder(
-                                    purchaseOrder = purchaseOrderData.copy(items = items),
+                                    purchaseOrder = purchaseOrderData.copy(
+                                        items = items,
+                                        savedAsDraft = false,
+                                        status = "processing"
+                                    ),
                                     onSuccess = {
                                         isLoading = false
                                         onSuccess()
                                         navController.navigate(Screen.CoopPurchases.route) {
-                                            popUpTo(Screen.CoopPurchases.route) {
-                                                inclusive = true
-                                            }
+                                            popUpTo(Screen.CoopPurchases.route) { inclusive = true }
                                         }
                                     },
                                     onError = { error ->
@@ -290,7 +388,7 @@ fun CoopPurchaseForm(
                             contentColor = Color.White
                         )
                     ) {
-                        Text("Submit")
+                        Text(if (draftId != null) "Update" else "Submit")
                     }
                 }
             }
@@ -315,7 +413,8 @@ fun PurchaseFormHeader(
     vendorViewModel: VendorViewModel,
     hasErrors: Boolean,
     showErrorMessages: Boolean,
-    textFieldColors: TextFieldColors
+    textFieldColors: TextFieldColors,
+    isEditingDraft: Boolean = false
 ) {
     var showVendorDropdown by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -323,12 +422,12 @@ fun PurchaseFormHeader(
     if (showDatePicker) {
         AlertDialog(
             onDismissRequest = { showDatePicker = false },
-            title = { Text("Select Date") },
+            title = { Text("Select Expected Date") },
             text = {
                 CalendarPicker(
-                    selectedDate = purchaseOrderData.date,
+                    selectedDate = purchaseOrderData.expectedDate,
                     onDateSelected = { newDate ->
-                        onPurchaseOrderChange(purchaseOrderData.copy(date = newDate))
+                        onPurchaseOrderChange(purchaseOrderData.copy(expectedDate = newDate))
                     },
                     onDismiss = { showDatePicker = false }
                 )
@@ -346,7 +445,7 @@ fun PurchaseFormHeader(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Purchase Order Information",
+            text = if (isEditingDraft) "Edit Purchase Order" else "Purchase Order Information",
             style = MaterialTheme.typography.titleMedium,
             color = Green1
         )
@@ -444,13 +543,13 @@ fun PurchaseFormHeader(
         )
 
         OutlinedTextField(
-            value = purchaseOrderData.date,
+            value = purchaseOrderData.expectedDate,
             onValueChange = { },
-            label = { Text("Date") },
+            label = { Text("Expected Date") },
             readOnly = true,
             trailingIcon = {
                 IconButton(onClick = { showDatePicker = true }) {
-                    Icon(Icons.Default.DateRange, "Select date")
+                    Icon(Icons.Default.DateRange, "Select expected date")
                 }
             },
             modifier = Modifier
@@ -564,7 +663,8 @@ fun CalendarPicker(
 @Composable
 fun PurchaseFormItemsSection(
     items: List<PurchaseOrderItem>,
-    onShowAddItem: () -> Unit
+    onShowAddItem: () -> Unit,
+    onRemoveItem: (Int) -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -593,7 +693,8 @@ fun PurchaseFormItemsSection(
                 .fillMaxWidth()
                 .heightIn(max = 200.dp)
         ) {
-            items(items) { item ->
+            items(items.size) { index ->
+                val item = items[index]
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -604,27 +705,82 @@ fun PurchaseFormItemsSection(
                             .fillMaxWidth()
                             .padding(8.dp)
                     ) {
-                        Text(
-                            text = item.itemName,
-                            style = MaterialTheme.typography.titleSmall
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = item.itemName,
+                                style = MaterialTheme.typography.titleSmall,
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(
+                                onClick = { onRemoveItem(index) },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = "Remove item",
+                                    tint = Color.Red
+                                )
+                            }
+                        }
+
                         Text(
                             text = item.description,
                             style = MaterialTheme.typography.bodyMedium
                         )
+
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Qty: ${item.quantity}")
-                            Text("Rate: ${item.rate}")
-                            Text("Total: ${item.quantity * item.rate}")
+                            Text("Rate: ${formatCurrency(item.rate)}")
+                            Text("Total: ${formatCurrency(item.quantity * item.rate)}")
                         }
                     }
                 }
             }
         }
+
+        if (items.isNotEmpty()) {
+            val totalAmount = items.sumOf { it.quantity * it.rate }
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Total Amount",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        formatCurrency(totalAmount),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Green1
+                    )
+                }
+            }
+        }
     }
+}
+
+private fun formatCurrency(amount: Double): String {
+    return "₱%.2f".format(amount)
 }
 
 @Composable
