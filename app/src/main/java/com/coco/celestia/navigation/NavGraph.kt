@@ -43,6 +43,7 @@ import com.coco.celestia.screens.coop.admin.AdminSpecialRequests
 import com.coco.celestia.screens.coop.admin.AdminSettings
 import com.coco.celestia.screens.coop.admin.ClientDetails
 import com.coco.celestia.screens.coop.admin.OrganizationProfileScreen
+import com.coco.celestia.screens.coop.admin.SpecialRequestDetails
 import com.coco.celestia.screens.coop.facility.forms.AddProductForm
 import com.coco.celestia.screens.coop.facility.forms.CoopAddInventory
 import com.coco.celestia.screens.coop.facility.CoopDashboard
@@ -102,6 +103,7 @@ fun NavGraph(
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit,
     modifier: Modifier
 ) {
+    val reqData by specialRequestViewModel.specialReqData.observeAsState()
     val uid = FirebaseAuth.getInstance().uid.toString()
     val userEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
     val productName by productViewModel.productName.observeAsState("")
@@ -360,8 +362,30 @@ fun NavGraph(
             onNavigate("Special Requests")
             AdminSpecialRequests(
                 specialRequestViewModel,
+                navController,
                 status
             )
+        }
+
+        composable(
+            route = Screen.AdminSpecialRequestsDetails.route,
+            arguments = listOf(navArgument("requestUid") { type = NavType.StringType })
+        ) {
+            val requestUid = it.arguments?.getString("requestUid") ?: ""
+            val selectedRequest = reqData?.find { request ->
+                request.specialRequestUID == requestUid
+            }
+
+            selectedRequest?.let { request ->
+                onNavigate(request.subject)
+                SpecialRequestDetails(
+                    navController,
+                    userViewModel,
+                    specialRequestViewModel,
+                    request
+                )
+            }
+
         }
 //        composable(route = Screen.AdminAddProduct.route) {
 //            onNavigate("Add Product")

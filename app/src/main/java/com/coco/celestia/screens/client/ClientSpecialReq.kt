@@ -6,8 +6,6 @@ import android.app.DatePickerDialog
 import android.widget.DatePicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -67,6 +65,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
+import java.util.UUID
 
 @Composable
 fun DisplaySpecialReq(
@@ -449,10 +448,12 @@ fun AddSpecialReq(
                         targetDate = targetDate,
                         collectionMethod = collectionMethod,
                         additionalRequest = additional,
+                        email = userData?.email.toString(),
                         uid = uid,
                         status = "To Review",
                         name = "${userData?.firstname} ${userData?.lastname}",
-                        dateRequested = formattedDateTime
+                        dateRequested = formattedDateTime,
+                        specialRequestUID = "SR-${UUID.randomUUID()}"
                     )
 
                     specialRequestViewModel.addSpecialRequest(

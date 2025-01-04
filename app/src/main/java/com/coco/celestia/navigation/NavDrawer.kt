@@ -55,6 +55,7 @@ import com.coco.celestia.util.routeHandler
 fun NavDrawerTopBar(
     navController: NavController,
     title: String,
+    currentDestination: String?,
     onSidebarToggle: () -> Unit,
 ) {
 
@@ -82,12 +83,25 @@ fun NavDrawerTopBar(
             }
         },
         navigationIcon = {
-            IconButton(onClick = { onSidebarToggle() }) {
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "Menu Button",
-                    tint = Green1
-                )
+            if (currentDestination == Screen.AdminSpecialRequestsDetails.route) {
+                IconButton(
+                    onClick = { navController.popBackStack() },
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.back),
+                        contentDescription = "Back Button",
+                        tint = Green1,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            } else {
+                IconButton(onClick = { onSidebarToggle() }) {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "Menu Button",
+                        tint = Green1
+                    )
+                }
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(

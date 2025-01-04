@@ -545,6 +545,7 @@ fun App() {
                                 NavDrawerTopBar(
                                     navController = navController,
                                     title = topBarTitle,
+                                    currentDestination = currentDestination,
                                     onSidebarToggle = {
                                         scope.launch {
                                             if (drawerState.isClosed) {

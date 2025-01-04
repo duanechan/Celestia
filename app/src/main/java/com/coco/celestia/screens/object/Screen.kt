@@ -1,5 +1,7 @@
 package com.coco.celestia.screens.`object`
 
+import com.coco.celestia.viewmodel.model.SpecialRequest
+
 sealed class Screen(val route: String) {
     data object Splash: Screen(route = "splash")
     data object Login: Screen(route = "login")
@@ -30,6 +32,9 @@ sealed class Screen(val route: String) {
     data object AdminAddProduct: Screen( route = "admin_add_product")
     data object AdminSpecialRequests: Screen( route = "admin_orders/{status}") {
         fun createRoute(status: String) = "admin_orders/$status"
+    }
+    data object AdminSpecialRequestsDetails: Screen( route = "admin_special_request_details/{requestUid}") {
+        fun createRoute(requestUid: String) = "admin_special_request_details/$requestUid"
     }
     data object AdminSettings: Screen( route = "admin_setting")
     data object AdminClients: Screen( route = "admin_clients")

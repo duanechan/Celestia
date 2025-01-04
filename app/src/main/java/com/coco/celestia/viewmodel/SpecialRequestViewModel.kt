@@ -66,4 +66,45 @@ class SpecialRequestViewModel : ViewModel() {
             }
         })
     }
+
+    fun updateSpecialRequest (specialReq: SpecialRequest) {
+        viewModelScope.launch {
+            _specialReqState.value = SpecialReqState.LOADING
+            database.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        for (user in snapshot.children) {
+                            var found = false
+                            val requests = user.children
+
+                            for (request in requests) {
+                                val requestUid = request.child("specialRequestUID").getValue(String::class.java)
+                                if (requestUid == specialReq.specialRequestUID) {
+                                    request.ref.setValue(specialReq)
+                                        .addOnSuccessListener {
+                                            _specialReqState.value = SpecialReqState.SUCCESS
+                                        }
+                                        .addOnFailureListener { exception ->
+                                            _specialReqState.value = SpecialReqState.ERROR(exception.message ?: "Unknown Error")
+                                        }
+                                    found = true
+                                    break
+                                }
+                            }
+
+                            if(found) {
+                                break
+                            }
+                        }
+                    } else {
+                        _specialReqState.value = SpecialReqState.EMPTY
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    _specialReqState.value = SpecialReqState.ERROR(error.message)
+                }
+            })
+        }
+    }
 }
