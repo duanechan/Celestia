@@ -66,13 +66,71 @@ class ProductViewModel : ViewModel() {
         viewModelScope.launch {
             _productState.value = ProductState.LOADING
             try {
+                if (productName.isBlank()) {
+                    _productState.value = ProductState.EMPTY
+                    return@launch
+                }
+
                 val snapshot = database.get().await()
-                val products = snapshot.children
-                    .mapNotNull { it.getValue(ProductData::class.java) }
-                    .filter { it.name == productName }
-                _productData.value = products
-                _productState.value =
-                    if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
+
+                if (snapshot.exists()) {
+                    val products = snapshot.children.mapNotNull { child ->
+                        try {
+                            val name = child.child("name").getValue(String::class.java) ?: ""
+                            if (name == productName) {
+                                val description = child.child("description").getValue(String::class.java) ?: ""
+                                val quantity = child.child("quantity").getValue(Int::class.java) ?: 0
+                                val productType = child.child("type").getValue(String::class.java) ?: ""
+                                val price = child.child("price").getValue(Double::class.java) ?: 0.0
+                                val vendor = child.child("vendor").getValue(String::class.java) ?: ""
+                                val purchasingCost = child.child("purchasingCost").getValue(Double::class.java) ?: 0.0
+                                val openingStock = child.child("openingStock").getValue(Double::class.java) ?: 0.0
+                                val reorderPoint = child.child("reorderPoint").getValue(Double::class.java) ?: 0.0
+                                val weightUnit = child.child("weightUnit").getValue(String::class.java) ?: Constants.WEIGHT_GRAMS
+
+                                val rawInStore = child.child("inStore").getValue()
+                                val isInStore = when (rawInStore) {
+                                    is Boolean -> rawInStore
+                                    is String -> rawInStore.toLowerCase() == "true"
+                                    else -> false
+                                }
+
+                                val dateAdded = child.child("dateAdded").getValue(String::class.java) ?: ""
+                                val collectionMethod = child.child("collectionMethod").getValue(String::class.java) ?: Constants.COLLECTION_PICKUP
+                                val paymentMethod = child.child("paymentMethod").getValue(String::class.java) ?: Constants.PAYMENT_CASH
+
+                                ProductData(
+                                    name = name,
+                                    description = description,
+                                    quantity = quantity,
+                                    type = productType,
+                                    price = price,
+                                    vendor = vendor,
+                                    purchasingCost = purchasingCost,
+                                    openingStock = openingStock,
+                                    reorderPoint = reorderPoint,
+                                    weightUnit = weightUnit,
+                                    isInStore = isInStore,
+                                    dateAdded = dateAdded,
+                                    collectionMethod = collectionMethod,
+                                    paymentMethod = paymentMethod
+                                )
+                            } else null
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+
+                    _productData.value = products
+                    _productState.value = if (products.isEmpty()) {
+                        ProductState.EMPTY
+                    } else {
+                        ProductState.SUCCESS
+                    }
+                } else {
+                    _productData.value = emptyList()
+                    _productState.value = ProductState.EMPTY
+                }
             } catch (e: Exception) {
                 _productState.value = ProductState.ERROR(e.message ?: "Unknown error")
             }

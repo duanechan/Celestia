@@ -190,7 +190,9 @@ fun CoopProductInventory(
                                     itemsIndexed(filteredProducts) { index, product ->
                                         ProductCard(
                                             product = product,
-                                            onClick = {}
+                                            onClick = {
+                                                navController.navigate(Screen.CoopInventoryDetails.createRoute(product.name))
+                                            }
                                         )
                                         if (index < filteredProducts.lastIndex) {
                                             Spacer(modifier = Modifier.height(8.dp))
@@ -345,7 +347,9 @@ fun ProductCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = product.name,
+                    text = product.name.split(" ").joinToString(" ") {
+                        it.lowercase().replaceFirstChar { char -> char.uppercase() }
+                    },
                     color = Green1,
                     modifier = Modifier.semantics { testTag = "android:id/ProductName" }
                 )

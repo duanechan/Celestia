@@ -72,7 +72,6 @@ fun AddProductForm(
     quantity: Int,
     price: Double,
     purchasingCost: Double,
-    openingStock: Double,
     reorderPoint: Double,
     isInStore: Boolean,
     weightUnit: String,
@@ -84,7 +83,6 @@ fun AddProductForm(
     onPriceChange: (String) -> Unit,
     onVendorChange: (String) -> Unit,
     onPurchasingCostChange: (String) -> Unit,
-    onOpeningStockChange: (String) -> Unit,
     onReorderPointChange: (String) -> Unit,
     onIsInStoreChange: (Boolean) -> Unit,
     onWeightUnitChange: (String) -> Unit,
@@ -342,16 +340,6 @@ fun AddProductForm(
                 )
 
                 OutlinedTextField(
-                    value = if (openingStock == 0.0) "" else openingStock.toString(),
-                    onValueChange = onOpeningStockChange,
-                    label = { Text("Opening Stock") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { testTag = "android:id/OpeningStockField" },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal)
-                )
-
-                OutlinedTextField(
                     value = if (reorderPoint == 0.0) "" else reorderPoint.toString(),
                     onValueChange = onReorderPointChange,
                     label = { Text("Reorder Point") },
@@ -452,7 +440,7 @@ fun AddProductForm(
                         price = price,
                         vendor = vendor,
                         purchasingCost = purchasingCost,
-                        openingStock = openingStock,
+                        openingStock = quantity.toDouble(), // Opening stock is now set to quantity
                         reorderPoint = reorderPoint,
                         weightUnit = weightUnit,
                         isInStore = isInStore,

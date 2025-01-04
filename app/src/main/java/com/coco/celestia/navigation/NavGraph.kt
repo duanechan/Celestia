@@ -48,6 +48,7 @@ import com.coco.celestia.screens.coop.facility.forms.AddProductForm
 import com.coco.celestia.screens.coop.facility.forms.CoopAddInventory
 import com.coco.celestia.screens.coop.facility.CoopDashboard
 import com.coco.celestia.screens.coop.facility.CoopInventory
+import com.coco.celestia.screens.coop.facility.CoopInventoryDetails
 import com.coco.celestia.screens.coop.facility.CoopProductInventory
 import com.coco.celestia.screens.coop.facility.CoopPurchases
 import com.coco.celestia.screens.coop.facility.CoopReports
@@ -448,6 +449,21 @@ fun NavGraph(
                 userEmail = userEmail
             )
         }
+        composable(
+            route = Screen.CoopInventoryDetails.route,
+            arguments = listOf(
+                navArgument("productName") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val productName = backStackEntry.arguments?.getString("productName") ?: ""
+            onNavigate("Product Details")
+            CoopInventoryDetails(
+                productName = productName,
+                productViewModel = productViewModel
+            )
+        }
         composable(route = Screen.AddOrder.route) {
             onNavigate("Add Order")
             AddOrderPanel(
@@ -542,7 +558,6 @@ fun NavGraph(
                 quantity = quantity,
                 price = price,
                 purchasingCost = purchasingCost,
-                openingStock = openingStock,
                 reorderPoint = reorderPoint,
                 isInStore = isInStore,
                 weightUnit = weightUnit,
@@ -554,7 +569,6 @@ fun NavGraph(
                 onPriceChange = { newValue -> price = newValue.toDoubleOrNull() ?: 0.0 },
                 onVendorChange = { productViewModel.updateVendor(it) },
                 onPurchasingCostChange = { newValue -> purchasingCost = newValue.toDoubleOrNull() ?: 0.0 },
-                onOpeningStockChange = { newValue -> openingStock = newValue.toDoubleOrNull() ?: 0.0 },
                 onReorderPointChange = { newValue -> reorderPoint = newValue.toDoubleOrNull() ?: 0.0 },
                 onIsInStoreChange = { isInStore = it },
                 onWeightUnitChange = { weightUnit = it },

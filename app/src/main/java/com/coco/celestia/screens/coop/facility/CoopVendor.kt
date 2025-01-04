@@ -377,7 +377,7 @@ private fun VendorDetailContent(
         modifier = modifier.fillMaxSize()
     ) {
         var selectedTab by remember { mutableStateOf(0) }
-        val tabs = listOf("DETAILS", "TRANSACTIONS", "COMMENTS & HISTORY")
+        val tabs = listOf("DETAILS", "TRANSACTIONS", "HISTORY")
 
         TabRow(
             selectedTabIndex = selectedTab,
