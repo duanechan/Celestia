@@ -437,7 +437,9 @@ fun NavDrawerBottomBar(
                     selected = currentDestination == Screen.Notifications.route,
                     onClick = {
                         navController.navigate(Screen.Notifications.route) {
-                            popUpTo(navController.graph.startDestinationId)
+                            popUpTo(navController.graph.startDestinationId) {
+                                inclusive = false
+                            }
                         }
                     },
                     colors = NavigationBarItemDefaults.colors(

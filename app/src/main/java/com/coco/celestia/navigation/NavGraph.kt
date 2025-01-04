@@ -60,6 +60,7 @@ import com.coco.celestia.screens.coop.facility.forms.CoopPurchaseForm
 import com.coco.celestia.screens.farmer.FarmerDashboard
 import com.coco.celestia.screens.farmer.FarmerItems
 import com.coco.celestia.screens.farmer.FarmerManageOrder
+import com.coco.celestia.screens.farmer.FarmerNotification
 import com.coco.celestia.screens.farmer.FarmerProductTypeInventory
 import com.coco.celestia.screens.farmer.FarmerTransactions
 import com.coco.celestia.screens.farmer.details.FarmerItemDetails
@@ -702,6 +703,11 @@ fun NavGraph(
                 )
             }
         }
+
+//        composable(Screen.FarmerNotification.route) {
+//            FarmerNotification()
+//        }
+
 
         composable(route = Screen.Profile.route) {
             onNavigate("Profile")

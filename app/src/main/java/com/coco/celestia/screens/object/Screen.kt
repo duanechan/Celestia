@@ -90,6 +90,7 @@ sealed class Screen(val route: String) {
     data object Farmer: Screen( route = "farmer_dashboard")
     data object FarmerManageOrder: Screen( route = "farmer_manage_order")
     data object FarmerItems: Screen( route = "farmer_items")
+//    data object FarmerNotification : Screen("farmer_notification")
     data object FarmerTransactions: Screen( route = "farmer_transactions")
     data object FarmerAddProduct: Screen(route = "farmer_add_product")
     data object FarmerItemDetails : Screen(route = "farmer_item_detail/{productName}") {
