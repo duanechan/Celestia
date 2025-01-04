@@ -4,8 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.ProductData
-import com.coco.celestia.viewmodel.model.WeightUnit
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.launch
@@ -25,10 +25,15 @@ class ProductViewModel : ViewModel() {
     private val _productData = MutableLiveData<List<ProductData>>()
     private val _productState = MutableLiveData<ProductState>()
     private val _productName = MutableLiveData<String>()
+    private val _description = MutableLiveData<String>()
+    private val _vendor = MutableLiveData<String>()
     private val _from = MutableLiveData<String>()
+
     val productData: LiveData<List<ProductData>> = _productData
     val productState: LiveData<ProductState> = _productState
     val productName: LiveData<String> = _productName
+    val description: LiveData<String> = _description
+    val vendor: LiveData<String> = _vendor
     val from: LiveData<String> = _from
 
     private val _featuredProducts = MutableLiveData<List<ProductData>>()
@@ -49,6 +54,14 @@ class ProductViewModel : ViewModel() {
         _productName.value = newName
     }
 
+    fun updateDescription(newDescription: String) {
+        _description.value = newDescription
+    }
+
+    fun updateVendor(newVendor: String) {
+        _vendor.value = newVendor
+    }
+
     fun fetchProduct(productName: String) {
         viewModelScope.launch {
             _productState.value = ProductState.LOADING
@@ -56,7 +69,7 @@ class ProductViewModel : ViewModel() {
                 val snapshot = database.get().await()
                 val products = mutableListOf<ProductData>()
                 for (product in snapshot.children) {
-                    val productData = snapshot.getValue(ProductData::class.java)
+                    val productData = product.getValue(ProductData::class.java)
                     if (productData?.name == productName) {
                         products.add(productData)
                         break
@@ -83,36 +96,45 @@ class ProductViewModel : ViewModel() {
             _productState.value = ProductState.LOADING
             try {
                 val snapshot = database.orderByChild("type").equalTo(type).get().await()
-
                 if (snapshot.exists()) {
-
                     val products = snapshot.children.mapNotNull { child ->
                         try {
                             val name = child.child("name").getValue(String::class.java) ?: ""
+                            val description = child.child("description").getValue(String::class.java) ?: ""
                             val quantity = child.child("quantity").getValue(Int::class.java) ?: 0
                             val productType = child.child("type").getValue(String::class.java) ?: ""
                             val price = child.child("price").getValue(Double::class.java) ?: 0.0
-                            val weightUnit = child.child("weightUnit").getValue(String::class.java)?.let {
-                                WeightUnit.valueOf(it)
-                            } ?: WeightUnit.GRAMS
+                            val vendor = child.child("vendor").getValue(String::class.java) ?: ""
+                            val purchasingCost = child.child("purchasingCost").getValue(Double::class.java) ?: 0.0
+                            val openingStock = child.child("openingStock").getValue(Double::class.java) ?: 0.0
+                            val reorderPoint = child.child("reorderPoint").getValue(Double::class.java) ?: 0.0
+                            val weightUnit = child.child("weightUnit").getValue(String::class.java) ?: Constants.WEIGHT_GRAMS
                             val isInStore = child.child("inStore").getValue(Boolean::class.java) ?: true
                             val dateAdded = child.child("dateAdded").getValue(String::class.java) ?: ""
+                            val collectionMethod = child.child("collectionMethod").getValue(String::class.java) ?: Constants.COLLECTION_PICKUP
+                            val paymentMethod = child.child("paymentMethod").getValue(String::class.java) ?: Constants.PAYMENT_CASH
 
                             ProductData(
                                 name = name,
+                                description = description,
                                 quantity = quantity,
                                 type = productType,
                                 price = price,
+                                vendor = vendor,
+                                purchasingCost = purchasingCost,
+                                openingStock = openingStock,
+                                reorderPoint = reorderPoint,
                                 weightUnit = weightUnit,
                                 isInStore = isInStore,
-                                dateAdded = dateAdded
+                                dateAdded = dateAdded,
+                                collectionMethod = collectionMethod,
+                                paymentMethod = paymentMethod
                             ).also {
                             }
                         } catch (e: Exception) {
                             null
                         }
                     }
-
                     _productData.value = products
                     _productState.value = if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
                 } else {

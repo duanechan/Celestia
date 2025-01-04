@@ -71,19 +71,40 @@ data class FullFilledBy (
 
 data class ProductData(
     val name: String = "",
+    val description: String = "",
     val quantity: Int = 0,
     val type: String = "",
     val price: Double = 0.0,
-    val weightUnit: WeightUnit = WeightUnit.GRAMS,
+    val vendor: String = "",
+    val purchasingCost: Double = 0.0,
+    val openingStock: Double = 0.0,
+    val reorderPoint: Double = 0.0,
+    val weightUnit: String = Constants.WEIGHT_GRAMS,
     val isInStore: Boolean = true,
-    val dateAdded: String = ""
+    val dateAdded: String = "",
+    val collectionMethod: String = Constants.COLLECTION_PICKUP,
+    val paymentMethod: String = Constants.PAYMENT_CASH
 ) {
-    constructor() : this("", 0, "", 0.0, WeightUnit.GRAMS, true, "")
+    constructor() : this(
+        "", "", 0, "", 0.0, "", 0.0,
+        0.0, 0.0, Constants.WEIGHT_GRAMS, true, "",
+        Constants.COLLECTION_PICKUP, Constants.PAYMENT_CASH
+    )
 }
 
-@Keep
-enum class WeightUnit {
-    GRAMS, KILOGRAMS, POUNDS
+object Constants {
+    // Weight Units
+    const val WEIGHT_GRAMS = "GRAMS"
+    const val WEIGHT_KILOGRAMS = "KILOGRAMS"
+    const val WEIGHT_POUNDS = "POUNDS"
+
+    // Collection Methods
+    const val COLLECTION_PICKUP = "PICKUP"
+    const val COLLECTION_DELIVERY = "DELIVERY"
+
+    // Payment Methods
+    const val PAYMENT_CASH = "CASH"
+    const val PAYMENT_GCASH = "GCASH"
 }
 
 data class TransactionData(

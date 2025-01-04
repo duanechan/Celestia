@@ -60,7 +60,6 @@ import com.coco.celestia.screens.coop.facility.forms.CoopPurchaseForm
 import com.coco.celestia.screens.farmer.FarmerDashboard
 import com.coco.celestia.screens.farmer.FarmerItems
 import com.coco.celestia.screens.farmer.FarmerManageOrder
-import com.coco.celestia.screens.farmer.FarmerNotification
 import com.coco.celestia.screens.farmer.FarmerProductTypeInventory
 import com.coco.celestia.screens.farmer.FarmerTransactions
 import com.coco.celestia.screens.farmer.details.FarmerItemDetails
@@ -80,10 +79,9 @@ import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.VendorViewModel
+import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.ProductData
-import com.coco.celestia.viewmodel.model.WeightUnit
 import com.google.firebase.auth.FirebaseAuth
-import org.apache.commons.math3.analysis.function.Log
 
 @Composable
 fun NavGraph(
@@ -116,7 +114,14 @@ fun NavGraph(
     var role by remember { mutableStateOf("") }
     var price by remember { mutableStateOf(0.0) }
     var isInStore by remember { mutableStateOf(true) }
-    var weightUnit by remember { mutableStateOf(WeightUnit.KILOGRAMS) }
+    var weightUnit by remember { mutableStateOf(Constants.WEIGHT_KILOGRAMS) }
+    var description by remember { mutableStateOf("") }
+    var vendor by remember { mutableStateOf("") }
+    var purchasingCost by remember { mutableStateOf(0.0) }
+    var openingStock by remember { mutableStateOf(0.0) }
+    var reorderPoint by remember { mutableStateOf(0.0) }
+    var isDelivery by remember { mutableStateOf(false) }
+    var isGcash by remember { mutableStateOf(false) }
 
     NavHost(
         navController = navController,
@@ -477,9 +482,6 @@ fun NavGraph(
 //            )
 //        }
         composable(route = Screen.AddProductInventory.route) {
-            var price by remember { mutableStateOf(0.0) }
-            var isInStore by remember { mutableStateOf(true) }
-            var weightUnit by remember { mutableStateOf(WeightUnit.KILOGRAMS) }
             var facilityName by remember { mutableStateOf("") }
             var quantity by remember { mutableStateOf(0) }
 
@@ -487,9 +489,16 @@ fun NavGraph(
 
             LaunchedEffect(email) {
                 productViewModel.updateProductName("")
+                productViewModel.updateDescription("")
+                productViewModel.updateVendor("")
                 price = 0.0
+                purchasingCost = 0.0
+                openingStock = 0.0
+                reorderPoint = 0.0
                 isInStore = true
-                weightUnit = WeightUnit.KILOGRAMS
+                isDelivery = false
+                isGcash = false
+                weightUnit = Constants.WEIGHT_KILOGRAMS
                 facilityViewModel.fetchFacilities()
 
                 // Derive the facility name based on the email
@@ -505,15 +514,28 @@ fun NavGraph(
                 userViewModel = userViewModel,
                 productViewModel = productViewModel,
                 facilityViewModel = facilityViewModel,
+                vendorViewModel = vendorViewModel,
                 quantity = quantity,
                 price = price,
+                purchasingCost = purchasingCost,
+                openingStock = openingStock,
+                reorderPoint = reorderPoint,
                 isInStore = isInStore,
                 weightUnit = weightUnit,
+                isDelivery = isDelivery,
+                isGcash = isGcash,
                 onProductNameChange = { productViewModel.onProductNameChange(it) },
+                onDescriptionChange = { productViewModel.updateDescription(it) },
                 onQuantityChange = { newValue -> quantity = newValue.toIntOrNull() ?: 0 },
                 onPriceChange = { newValue -> price = newValue.toDoubleOrNull() ?: 0.0 },
+                onVendorChange = { productViewModel.updateVendor(it) },
+                onPurchasingCostChange = { newValue -> purchasingCost = newValue.toDoubleOrNull() ?: 0.0 },
+                onOpeningStockChange = { newValue -> openingStock = newValue.toDoubleOrNull() ?: 0.0 },
+                onReorderPointChange = { newValue -> reorderPoint = newValue.toDoubleOrNull() ?: 0.0 },
                 onIsInStoreChange = { isInStore = it },
                 onWeightUnitChange = { weightUnit = it },
+                onCollectionMethodChange = { isDelivery = it },
+                onPaymentMethodChange = { isGcash = it },
                 onAddClick = {
                     navController.navigate(Screen.CoopInventory.route) {
                         popUpTo(Screen.CoopInventory.route) { inclusive = true }
@@ -530,21 +552,35 @@ fun NavGraph(
                 productViewModel = productViewModel,
                 transactionViewModel = transactionViewModel,
                 productName = productName,
+                description = description,
                 quantityAmount = quantityAmount,
                 productType = productType,
                 price = price,
+                vendor = vendor,
+                purchasingCost = purchasingCost,
+                openingStock = openingStock,
+                reorderPoint = reorderPoint,
                 isInStore = isInStore,
                 weightUnit = weightUnit,
+                isDelivery = isDelivery,
+                isGcash = isGcash,
                 onEvent = { onEvent(it) }
             )
 
             LaunchedEffect(Unit) {
                 productViewModel.updateProductName("")
+                productViewModel.updateDescription("")
+                productViewModel.updateVendor("")
                 quantityAmount = 0
                 productType = ""
                 price = 0.0
+                purchasingCost = 0.0
+                openingStock = 0.0
+                reorderPoint = 0.0
                 isInStore = true
-                weightUnit = WeightUnit.KILOGRAMS
+                isDelivery = false
+                isGcash = false
+                weightUnit = Constants.WEIGHT_KILOGRAMS
             }
         }
         composable(Screen.CoopReports.route) {

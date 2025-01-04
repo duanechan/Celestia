@@ -556,7 +556,7 @@ fun AddOrderForm(
         orderDate = formattedDateTime,
         targetDate = selectedDate,
         status = "PENDING",
-        orderData = ProductData(productName.toString(), quantity, productType.toString(), productPrice.toDouble()),
+//        orderData = ProductData(productName.toString(), quantity, productType.toString(), productPrice.toDouble()),
         client = "${userData?.firstname} ${userData?.lastname}",
         barangay = userData?.barangay.toString(),
         street = userData?.streetNumber.toString()

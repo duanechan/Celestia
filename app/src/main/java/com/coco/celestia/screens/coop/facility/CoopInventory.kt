@@ -211,7 +211,8 @@ fun CoopProductInventory(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(16.dp)
-                            .semantics { testTag = "android:id/AddProductFAB" }
+                            .semantics { testTag = "android:id/AddProductFAB" },
+                        containerColor = White1
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
@@ -368,7 +369,7 @@ fun ProductCard(
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Quantity: ${product.quantity} ${product.weightUnit.name.lowercase()}",
+                text = "Quantity: ${product.quantity} ${product.weightUnit.lowercase()}",
                 color = Green1,
                 modifier = Modifier.semantics { testTag = "android:id/ProductQuantity" }
             )
