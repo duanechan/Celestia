@@ -10,6 +10,7 @@ data class UserData(
     val firstname: String = "",
     val lastname: String = "",
     var role: String = "",
+    val basket: MutableList<BasketItem> = mutableListOf(),
     val phoneNumber: String = "",
     val streetNumber: String = "",
     val barangay: String = "",
@@ -36,6 +37,12 @@ data class OrderData(
     val fulfilledBy: List<FullFilledBy> = emptyList(),
     val partialQuantity: Int = 0,
     val fulfilled: Int = 0
+)
+
+data class BasketItem(
+    val product: String = "",
+    val quantity: Int = 0,
+    val isRetail: Boolean = false,
 )
 
 data class SpecialRequest(
@@ -77,6 +84,8 @@ data class ProductData(
     val quantity: Int = 0,
     val type: String = "",
     val price: Double = 0.0,
+    val shelfLife: Int = 0,
+    val origin: String = "",
     val vendor: String = "",
     val purchasingCost: Double = 0.0,
     val openingStock: Double = 0.0,
@@ -88,7 +97,7 @@ data class ProductData(
     val paymentMethod: String = Constants.PAYMENT_CASH
 ) {
     constructor() : this(
-        "", "", 0, "", 0.0, "", 0.0,
+        "", "", 0, "", 0.0, 0, "", "", 0.0,
         0.0, 0.0, Constants.WEIGHT_GRAMS, true, "",
         Constants.COLLECTION_PICKUP, Constants.PAYMENT_CASH
     )
