@@ -1,6 +1,5 @@
 package com.coco.celestia.screens.client
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -9,6 +8,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
@@ -31,12 +33,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.R
-import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.UserViewModel
-import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
@@ -66,6 +66,7 @@ fun ClientDashboard(
             .background(White1)
     ) {
         Column {
+            // Search Bar and Filter
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -76,7 +77,7 @@ fun ClientDashboard(
                     modifier = Modifier
                         .weight(1f)
                         .background(Color.White, shape = RoundedCornerShape(12.dp))
-                        .padding(horizontal = 8.dp), // Inner padding for the search bar
+                        .padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -112,21 +113,93 @@ fun ClientDashboard(
                 )
             }
 
-            // Main Content
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState())
-                    .padding(top = 8.dp)
-            ) {
-                val sampleItems = listOf(
-                    CarouselItem(R.drawable.greenbeansimg, "Green Beans", "In Season", "Php 40/Kg"),
-                    CarouselItem(R.drawable.arabicaimg, "Tinapong: Arabica", "Freshly Harvested", "Php 120/Kg"),
-                    CarouselItem(R.drawable.sortedimg, "Coffee Beans", "Organic", "Php 200/Kg")
-                )
-                SlideshowCarousel(items = sampleItems, navController = navController)
-            }
+            // Carousel
+            val sampleItems = listOf(
+                CarouselItem(R.drawable.greenbeansimg, "Green Beans", "In Season", "Php 40/Kg"),
+                CarouselItem(R.drawable.arabicaimg, "Tinapong: Arabica", "Freshly Harvested", "Php 120/Kg"),
+                CarouselItem(R.drawable.sortedimg, "Coffee Beans", "Organic", "Php 200/Kg")
+            )
+            SlideshowCarousel(items = sampleItems, navController = navController)
+
+            ProductCatalog()
         }
+    }
+}
+
+@Composable
+fun ProductCatalog() {
+    val products = listOf(
+        ProductItem(R.drawable.product_image, "Potato", "Php 50/Kg"),
+        ProductItem(R.drawable.product_image, "Carrot", "Php 60/Kg"),
+        ProductItem(R.drawable.product_image, "Cucumber", "Php 40/Kg"),
+        ProductItem(R.drawable.product_image, "Red Onion", "Php 90/Kg"),
+        ProductItem(R.drawable.product_image, "Bell Pepper", "Php 80/Kg"),
+        ProductItem(R.drawable.product_image, "Eggplant", "Php 55/Kg")
+    )
+
+    Text(
+        text = "Vegetables",
+        fontWeight = FontWeight.Bold,
+        fontSize = 30.sp,
+        color = Color.Black,
+        modifier = Modifier.padding(start = 16.dp, top = 16.dp)
+    )
+    Text(
+        text = "Products",
+        fontWeight = FontWeight.Bold,
+        fontSize = 17.sp,
+        color = Color.Black,
+        modifier = Modifier.padding(start = 16.dp, top = 16.dp)
+    )
+
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(3),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        contentPadding = PaddingValues(8.dp)
+    ) {
+        items(products) { product ->
+            ProductCard(product)
+        }
+    }
+}
+
+@Composable
+fun ProductCard(product: ProductItem) {
+    Column(
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+            .wrapContentHeight()
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color.White)
+            .padding(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Image(
+            painter = painterResource(product.imageRes),
+            contentDescription = product.name,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(80.dp)
+                .clip(RoundedCornerShape(8.dp))
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = product.name,
+            fontWeight = FontWeight.Bold,
+            fontSize = 14.sp,
+            color = Color.Black,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = product.price,
+            fontSize = 12.sp,
+            color = Color.Gray,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
@@ -146,33 +219,7 @@ fun SlideshowCarousel(items: List<CarouselItem>, navController: NavController) {
             animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing)
         ) { index ->
             CarouselCard(item = items[index]) {
-                // Navigate to ProductDetailScreen without passing any data
-                // TODO: Need to pass the actual product displayed. For now, I'm using the item.title
-                // Best case:
-                // items[0].title = "Green Beans"
-                // fetchProduct(items[0].title] from ProductViewModel
-                // Return Green Beans product data
-                navController.navigate(Screen.ProductDetails.createRoute(items[index].title))
-            }
-        }
-    }
-
-    // Navigation Indicators
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        items.forEachIndexed { index, _ ->
-            Box(
-                modifier = Modifier
-                    .width(35.dp)
-                    .height(5.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(if (index == currentIndex) Green1 else Color.Gray)
-            )
-
-            if (index < items.size - 1) {
-                Spacer(modifier = Modifier.width(5.dp))
+                navController.navigate("product_details/${items[index].title}")
             }
         }
     }
@@ -201,30 +248,8 @@ fun CarouselCard(item: CarouselItem, onClick: () -> Unit) {
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
-
-        Text(
-            text = "Featured Products",
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.sp,
-            color = Color.White,
-            modifier = Modifier.padding(16.dp)
-        )
-
-        Text(
-            text = item.subtitle,
-            fontWeight = FontWeight.Medium,
-            fontSize = 13.sp,
-            color = Color.White,
-            modifier = Modifier.padding(top = 32.dp, start = 16.dp)
-        )
-
         Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .padding(16.dp)
-                .align(Alignment.BottomEnd),
-            verticalArrangement = Arrangement.Bottom,
-            horizontalAlignment = Alignment.End
+            modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
         ) {
             Text(
                 text = item.title,
@@ -232,21 +257,24 @@ fun CarouselCard(item: CarouselItem, onClick: () -> Unit) {
                 fontSize = 18.sp,
                 color = Color.White
             )
-            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = item.price,
-                fontWeight = FontWeight.Medium,
-                fontSize = 12.sp,
+                fontSize = 14.sp,
                 color = Color.White
             )
         }
     }
 }
 
-// Data class for Carousel item
+// Data classes for the carousel and products
 data class CarouselItem(
     val imageRes: Int,
     val title: String,
     val subtitle: String,
+    val price: String
+)
+data class ProductItem(
+    val imageRes: Int,
+    val name: String,
     val price: String
 )
