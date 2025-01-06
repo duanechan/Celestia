@@ -97,7 +97,7 @@ class UserViewModel : ViewModel() {
                     val users = mutableListOf<UserData>()
                     for (userSnapshot in snapshot.children) {
                         val userInfo = parseUserData(userSnapshot)
-                        users.add(userInfo!!)
+                        users.add(userInfo)
                     }
                     _usersData.value = users
                     _userState.value = UserState.SUCCESS

@@ -11,6 +11,8 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 sealed class SpecialReqState {
     data object LOADING : SpecialReqState()
@@ -44,16 +46,37 @@ class SpecialRequestViewModel : ViewModel() {
     }
 
     fun fetchSpecialRequests(
-        filter: String
+        filter: String,
+        orderBy: String,
+        ascending: Boolean
     ) {
         _specialReqState.value = SpecialReqState.LOADING
         database.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
+                val formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
+
                 val requests = snapshot.children.flatMap { userSnapshot ->
                     userSnapshot.children.mapNotNull { requestSnapshot ->
                         requestSnapshot.getValue(SpecialRequest::class.java)
                     }.filter { request ->
                         request.status.equals(filter, ignoreCase = true)
+                    }
+                }.let { unsortedRequests ->
+                    if (orderBy.isNotEmpty()) {
+                        val sortedRequests = unsortedRequests.sortedBy { request ->
+                            try {
+                                when (orderBy) {
+                                    "Requested" -> request.dateRequested.let { LocalDateTime.parse(it, formatter) }
+                                    "Accepted" -> request.dateAccepted.let { LocalDateTime.parse(it, formatter) }
+                                    else -> null
+                                }
+                            } catch (e: Exception) {
+                                null
+                            }
+                        }
+                        if (!ascending) sortedRequests.reversed() else sortedRequests
+                    } else {
+                        unsortedRequests
                     }
                 }
 

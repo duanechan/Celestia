@@ -56,6 +56,7 @@ import com.coco.celestia.ui.theme.Green4
 import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.ProductReq
 import com.coco.celestia.viewmodel.model.ProductReqValidation
 import com.coco.celestia.viewmodel.model.SpecialRequest
@@ -387,20 +388,20 @@ fun AddSpecialReq(
             verticalAlignment = Alignment.CenterVertically
         ) {
             RadioButton(
-                selected = collectionMethod == "Pick Up",
-                onClick = { collectionMethod = "Pick Up"}
+                selected = collectionMethod == Constants.COLLECTION_PICKUP,
+                onClick = { collectionMethod = Constants.COLLECTION_PICKUP}
             )
-            Text("Pick Up")
+            Text(Constants.COLLECTION_PICKUP)
         }
 
         Row (
             verticalAlignment = Alignment.CenterVertically
         ) {
             RadioButton(
-                selected = collectionMethod == "Deliver",
-                onClick = { collectionMethod = "Deliver"}
+                selected = collectionMethod == Constants.COLLECTION_DELIVERY,
+                onClick = { collectionMethod = Constants.COLLECTION_DELIVERY}
             )
-            Text("Deliver")
+            Text(Constants.COLLECTION_DELIVERY)
         }
 
         if (collectionMethodEmpty) {

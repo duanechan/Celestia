@@ -3,6 +3,7 @@
 package com.coco.celestia.screens.coop.admin
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,7 +37,9 @@ import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.SpecialReqState
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
+import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.SpecialRequest
 import com.coco.celestia.viewmodel.model.UserData
 import java.time.LocalDateTime
@@ -52,9 +55,16 @@ fun AdminSpecialRequests(
     val reqState by specialRequestViewModel.specialReqState.observeAsState(OrderState.LOADING)
     var numReq by remember { mutableIntStateOf(0) }
     val keywords by remember { mutableStateOf(status) }
+    var orderBy by remember { mutableStateOf("") }
+    var ascending by remember { mutableStateOf(true) }
 
-    LaunchedEffect(keywords) {
-        specialRequestViewModel.fetchSpecialRequests(status)
+    LaunchedEffect(keywords, orderBy, ascending) {
+        orderBy = if (status == "To Review") {
+            "Requested"
+        } else {
+            "Accepted"
+        }
+        specialRequestViewModel.fetchSpecialRequests(status, orderBy, ascending)
     }
 
     Column {
@@ -74,7 +84,11 @@ fun AdminSpecialRequests(
                 Icon(
                     painter = painterResource(R.drawable.sort),
                     contentDescription = null,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable {
+                            ascending = !ascending
+                        }
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 Icon(
@@ -122,9 +136,9 @@ fun DisplayRequestItem(
 ) {
     var profilePicture by remember { mutableStateOf<Uri?>(null) }
     val inputFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
-    val dateTime = LocalDateTime.parse(request.dateRequested, inputFormatter)
+    val reqDateTime = LocalDateTime.parse(request.dateRequested, inputFormatter)
     val dateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy")
-    val date = dateTime.format(dateFormatter)
+    val requestDate = reqDateTime.format(dateFormatter)
 
     LaunchedEffect(Unit) {
         ImageService.fetchProfilePicture(request.uid) { uri ->
@@ -137,9 +151,7 @@ fun DisplayRequestItem(
             .fillMaxWidth()
             .background(Color.White)
             .clickable {
-                if (request.status == "To Review") {
-                    navController.navigate(Screen.AdminSpecialRequestsDetails.createRoute(request.specialRequestUID))
-                }
+                navController.navigate(Screen.AdminSpecialRequestsDetails.createRoute(request.specialRequestUID))
             }
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -172,7 +184,7 @@ fun DisplayRequestItem(
         }
 
         Text(
-            text = "Date Requested: $date"
+            text = "Date Requested: $requestDate"
         )
 
         Text(
@@ -250,22 +262,115 @@ fun SpecialRequestDetails(
     specialRequestViewModel: SpecialRequestViewModel,
     request: SpecialRequest
 ) {
-    val usersData by userViewModel.usersData.observeAsState()
-    val inputFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
-    val dateTime = LocalDateTime.parse(request.dateRequested, inputFormatter)
-    val dateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy")
-    val date = dateTime.format(dateFormatter)
+    val currentDateTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
+    val formattedDateTime = currentDateTime.format(formatter)
 
     var showDialog by remember { mutableStateOf(false) }
     var action by remember { mutableStateOf("") }
+    val usersData by userViewModel.usersData.observeAsState()
+    val userState by userViewModel.userState.observeAsState()
 
     LaunchedEffect(Unit) {
         userViewModel.fetchUsers()
     }
 
-    val user = usersData?.let { user ->
-        user.find { it.email == request.email }
+    val user = usersData.let { user ->
+        user?.find { it.email == request.email }
     }
+
+    Column {
+        DisplayRequestDetails(
+            user,
+            request
+        )
+
+        if (request.status == "To Review") {
+            Box (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+                Row (
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            action = "Decline"
+                            showDialog = true
+                        }
+                    ) {
+                        Text("Decline")
+                    }
+
+                    Button(
+                        onClick = {
+                            action = "Accept"
+                            showDialog = true
+                        },
+                        colors = ButtonDefaults.buttonColors(Green4)
+                    ) {
+                        Text("Accept")
+                    }
+                }
+            }
+        } else {
+            // Add track request and update request if needed
+        }
+
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false},
+                title = {
+                    Text("Confirmation")
+                },
+                text = {
+                    Text("Are you sure you want to $action this request?")
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showDialog = false
+                            if (action == "Accept") {
+                                specialRequestViewModel.updateSpecialRequest(
+                                    request.copy(
+                                        status = "In Progress",
+                                        dateAccepted = formattedDateTime
+                                    )
+                                )
+                                navController.navigate(Screen.AdminSpecialRequests.createRoute("In Progress"))
+                            } else {
+                                specialRequestViewModel.updateSpecialRequest(request.copy(status = "Turned Down"))
+                                navController.navigate(Screen.AdminSpecialRequests.createRoute("Turned Down"))
+                            }
+                        }
+                    ) {
+                        Text("Yes")
+                    }
+                },
+                dismissButton = {
+                    Button(
+                        onClick = { showDialog = false }
+                    ) {
+                        Text("No")
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun DisplayRequestDetails(
+    user: UserData?,
+    request: SpecialRequest
+) {
+    val inputFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
+    val dateTime = LocalDateTime.parse(request.dateRequested, inputFormatter)
+    val dateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy")
+    val date = dateTime.format(dateFormatter)
 
     Column (
         modifier = Modifier
@@ -336,174 +441,97 @@ fun SpecialRequestDetails(
             modifier = Modifier.padding(8.dp)
         )
 
-        DisplayRequestDetails(
-            user,
-            request
+        Text(
+            text = "Request Details",
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .padding(8.dp)
         )
 
-        Box (
+        Column (
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
+                .clip(shape = RoundedCornerShape(12.dp))
+                .background(Green4)
         ) {
-            Row (
+            Text(
+                text = "Product/s and Quantity",
                 modifier = Modifier
-                    .align(Alignment.BottomEnd),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = {
-                        action = "Decline"
-                        showDialog = true
-                    }
-                ) {
-                    Text("Decline")
-                }
+                    .padding(horizontal = 12.dp)
+                    .padding(top = 12.dp, bottom = 4.dp)
+            )
 
-                Button(
-                    onClick = {
-                        action = "Accept"
-                        showDialog = true
-                    },
-                    colors = ButtonDefaults.buttonColors(Green4)
-                ) {
-                    Text("Accept")
+            request.products.forEachIndexed { index, product ->
+                Row (
+                    modifier = Modifier
+                        .padding(horizontal = 14.dp)
+                        .padding(2.dp)
+                ){
+                    Text(
+                        text = "${index + 1}. ${product.name}: ${product.quantity} kg"
+                    )
                 }
             }
-        }
 
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false},
-                title = {
-                    Text("Confirmation")
-                },
-                text = {
-                    Text("Are you sure you want to $action this request?")
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            showDialog = false
-                            if (action == "Accept") {
-                                specialRequestViewModel.updateSpecialRequest(request.copy(status = "In Progress"))
-                                navController.navigate(Screen.AdminSpecialRequests.createRoute("In Progress"))
-                            } else {
-                                specialRequestViewModel.updateSpecialRequest(request.copy(status = "Turned Down"))
-                                navController.navigate(Screen.AdminSpecialRequests.createRoute("Turned Down"))
-                            }
-                        }
-                    ) {
-                        Text("Yes")
-                    }
-                },
-                dismissButton = {
-                    Button(
-                        onClick = { showDialog = false }
-                    ) {
-                        Text("No")
-                    }
-                }
-            )
-        }
-    }
-}
-
-@Composable
-fun DisplayRequestDetails(
-    user: UserData?,
-    request: SpecialRequest
-) {
-    Text(
-        text = "Request Details",
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier
-            .padding(8.dp)
-    )
-
-    Column (
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .clip(shape = RoundedCornerShape(12.dp))
-            .background(Green4)
-    ) {
-        Text(
-            text = "Product/s and Quantity",
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(top = 12.dp, bottom = 4.dp)
-        )
-
-        request.products.forEachIndexed { index, product ->
-            Row (
+            Text(
+                text = "Target Delivery Date: ${request.targetDate}",
                 modifier = Modifier
-                    .padding(horizontal = 14.dp)
-                    .padding(2.dp)
-            ){
+                    .padding(horizontal = 12.dp)
+                    .padding(top = 12.dp, bottom = 4.dp)
+            )
+
+            Text(
+                text = "Collection Method: ${request.collectionMethod}",
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .padding(top = 12.dp, bottom = 4.dp)
+            )
+
+            if (request.collectionMethod == Constants.COLLECTION_DELIVERY) {
                 Text(
-                    text = "${index + 1}. ${product.name}: ${product.quantity} kg"
+                    text = "Delivery Location:",
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                        .padding(top = 12.dp, bottom = 4.dp)
+                )
+
+                Text(
+                    text = "${user?.streetNumber}, ${user?.barangay}",
+                    modifier = Modifier
+                        .padding(horizontal = 14.dp)
+                        .padding(2.dp)
+                )
+            } else {
+                Text(
+                    text = "Pick Up Location:",
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                        .padding(top = 12.dp, bottom = 4.dp)
+                )
+
+                Text(
+                    text = "City Vet Office, Baguio City",
+                    modifier = Modifier
+                        .padding(horizontal = 14.dp)
+                        .padding(2.dp)
                 )
             }
-        }
 
-        Text(
-            text = "Target Delivery Date: ${request.targetDate}",
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(top = 12.dp, bottom = 4.dp)
-        )
-
-        Text(
-            text = "Collection Method: ${request.collectionMethod}",
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(top = 12.dp, bottom = 4.dp)
-        )
-
-        if (request.collectionMethod == "Deliver") {
             Text(
-                text = "Delivery Location:",
+                text = "Additional Request/s:",
                 modifier = Modifier
                     .padding(horizontal = 12.dp)
                     .padding(top = 12.dp, bottom = 4.dp)
             )
 
             Text(
-                text = "${user?.streetNumber}, ${user?.barangay}",
+                text = request.additionalRequest.ifEmpty { "N/A" },
                 modifier = Modifier
                     .padding(horizontal = 14.dp)
                     .padding(2.dp)
-            )
-        } else {
-            Text(
-                text = "Pick Up Location:",
-                modifier = Modifier
-                    .padding(horizontal = 12.dp)
-                    .padding(top = 12.dp, bottom = 4.dp)
-            )
-
-            Text(
-                text = "City Vet Office, Baguio City",
-                modifier = Modifier
-                    .padding(horizontal = 14.dp)
-                    .padding(2.dp)
+                    .padding(bottom = 6.dp)
             )
         }
-
-        Text(
-            text = "Additional Request/s:",
-            modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(top = 12.dp, bottom = 4.dp)
-        )
-
-        Text(
-            text = request.additionalRequest.ifEmpty { "N/A" },
-            modifier = Modifier
-                .padding(horizontal = 14.dp)
-                .padding(2.dp)
-                .padding(bottom = 6.dp)
-        )
     }
 }
