@@ -846,6 +846,7 @@ fun NavGraph(
         }
 
         composable(route = Screen.Basket.route) {
+            onNavigate("Basket")
             BasketScreen(userViewModel = userViewModel)
         }
 
@@ -854,10 +855,11 @@ fun NavGraph(
             arguments = listOf(navArgument("product") { type = NavType.StringType })
         ) { backStackEntry ->
             val productName = backStackEntry.arguments?.getString("product").toString()
-
+            onNavigate(productName)
             ProductDetailScreen(
                 navController = navController,
                 userViewModel = userViewModel,
+                orderViewModel = orderViewModel,
                 productViewModel = productViewModel,
                 productName = productName,
                 onEvent = { onEvent(it) }

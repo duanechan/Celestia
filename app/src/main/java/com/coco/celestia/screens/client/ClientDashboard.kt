@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.R
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
@@ -219,7 +220,7 @@ fun SlideshowCarousel(items: List<CarouselItem>, navController: NavController) {
             animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing)
         ) { index ->
             CarouselCard(item = items[index]) {
-                navController.navigate("product_details/${items[index].title}")
+                navController.navigate(Screen.ProductDetails.createRoute(items[index].title))
             }
         }
     }
