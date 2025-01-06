@@ -26,6 +26,8 @@ import com.coco.celestia.screens.Profile
 import com.coco.celestia.screens.RegisterScreen
 import com.coco.celestia.screens.SplashScreen
 import com.coco.celestia.screens.client.AddSpecialReq
+import com.coco.celestia.screens.client.Basket
+import com.coco.celestia.screens.client.BasketScreen
 import com.coco.celestia.screens.coop.admin.AddUserForm
 import com.coco.celestia.screens.coop.admin.AdminUserManagement
 import com.coco.celestia.screens.coop.admin.CheckAddUser
@@ -83,6 +85,7 @@ import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.VendorViewModel
 import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.ProductData
+import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -827,6 +830,10 @@ fun NavGraph(
             }
         }
 
+        composable(route = Screen.Basket.route) {
+            BasketScreen(userViewModel = userViewModel)
+        }
+
         composable(
             route = Screen.ProductDetails.route,
             arguments = listOf(navArgument("product") { type = NavType.StringType })
@@ -835,8 +842,10 @@ fun NavGraph(
 
             ProductDetailScreen(
                 navController = navController,
+                userViewModel = userViewModel,
                 productViewModel = productViewModel,
-                productName = productName
+                productName = productName,
+                onEvent = { onEvent(it) }
             )
         }
 

@@ -6,6 +6,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.coco.celestia.viewmodel.model.BasketItem
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.EmailAuthProvider
@@ -21,6 +22,8 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.MutableData
 import com.google.firebase.database.Transaction
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.getValue
+import com.google.firebase.database.snapshots
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -69,8 +72,7 @@ class UserViewModel : ViewModel() {
             try {
                 val snapshot = database.child(uid).get().await()
                 if (snapshot.exists()) {
-                    val userInfo = snapshot.getValue(UserData::class.java)
-                    _userData.value = userInfo!!
+                    _userData.value = parseUserData(snapshot)
                     _userState.value = UserState.SUCCESS
                 } else {
                     _userData.value = UserData()
@@ -94,7 +96,7 @@ class UserViewModel : ViewModel() {
                 if (snapshot.exists()) {
                     val users = mutableListOf<UserData>()
                     for (userSnapshot in snapshot.children) {
-                        val userInfo = userSnapshot.getValue(UserData::class.java)
+                        val userInfo = parseUserData(userSnapshot)
                         users.add(userInfo!!)
                     }
                     _usersData.value = users
@@ -119,7 +121,7 @@ class UserViewModel : ViewModel() {
                     if (snapshot.exists()) {
                         onResult(
                             snapshot.children.mapNotNull { userSnapshot ->
-                                userSnapshot.getValue(UserData::class.java)
+                                parseUserData(userSnapshot)
                             }
                         )
                     } else {
@@ -305,7 +307,7 @@ class UserViewModel : ViewModel() {
                         .addOnSuccessListener { snapshot ->
                             val userRole = snapshot.child("role").getValue(String::class.java)
                             if (userRole != null) {
-                                _userData.value = snapshot.getValue(UserData::class.java)
+                                _userData.value = parseUserData(snapshot)
                                 _userState.value = UserState.LOGIN_SUCCESS(userRole)
                             } else {
                                 _userState.value = UserState.ERROR("Role not found")
@@ -322,6 +324,23 @@ class UserViewModel : ViewModel() {
                 _userState.value = UserState.ERROR("No internet connection.")
             }
         }
+    }
+
+    private fun parseUserData(snapshot: DataSnapshot): UserData {
+        return UserData(
+            email = snapshot.child("email").getValue(String::class.java) ?: "",
+            firstname = snapshot.child("firstname").getValue(String::class.java) ?: "",
+            lastname = snapshot.child("lastname").getValue(String::class.java) ?: "",
+            role = snapshot.child("role").getValue(String::class.java) ?: "",
+            basket = snapshot.child("basket").children.mapNotNull { item ->
+                item.getValue(BasketItem::class.java)
+            },
+            phoneNumber = snapshot.child("phoneNumber").getValue(String::class.java) ?: "",
+            streetNumber = snapshot.child("streetNumber").getValue(String::class.java) ?: "",
+            barangay = snapshot.child("barangay").getValue(String::class.java) ?: "",
+            online = snapshot.child("online").getValue(Boolean::class.java) ?: false,
+            isChecked = snapshot.child("isChecked").getValue(Boolean::class.java) ?: false
+        )
     }
 
     fun assignFacility(emails: List<String>, facility: String) {
@@ -412,6 +431,29 @@ class UserViewModel : ViewModel() {
                     _userState.value = UserState.ERROR(error.message)
                 }
             })
+        }
+    }
+
+    fun addItem(uid: String, item: BasketItem) {
+        viewModelScope.launch {
+            _userState.value = UserState.LOADING
+            try {
+                val query = database.child(uid).child("basket").push()
+                query.addValueEventListener(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        snapshot.ref.setValue(item)
+                            .addOnSuccessListener { _userState.value = UserState.SUCCESS }
+                            .addOnFailureListener { _userState.value = UserState.ERROR(it.message ?: "Unknown error") }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        _userState.value = UserState.ERROR(error.message)
+                    }
+
+                })
+            } catch (e: Exception) {
+                _userState.value = UserState.ERROR(e.message ?: "Unknown error")
+            }
         }
     }
 

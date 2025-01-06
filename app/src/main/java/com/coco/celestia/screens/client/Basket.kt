@@ -52,16 +52,6 @@ import com.coco.celestia.viewmodel.model.BasketItem
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 
-@Preview
-@Composable
-private fun Basket_Prev() {
-    CelestiaTheme {
-        Surface {
-            BasketScreen(userViewModel = UserViewModel())
-        }
-    }
-}
-
 @Composable
 fun BasketScreen(userViewModel: UserViewModel) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
@@ -116,17 +106,18 @@ fun BasketItemCard(item: BasketItem) {
         elevation = CardDefaults.elevatedCardElevation(8.dp, 4.dp),
         modifier = Modifier
             .fillMaxWidth()
+            .padding(vertical = 12.dp)
     ) {
         Box(
             modifier = Modifier
                 .background(Green4)
                 .fillMaxSize()
-                .padding(vertical = 12.dp)
+                .padding(vertical = 8.dp)
         ) {
             Row(modifier = Modifier.fillMaxWidth()) {
                 Checkbox(checked = false, onCheckedChange = {})
                 Image(
-                    painter = rememberImagePainter(image) ?: painterResource(R.drawable.product_image),
+                    painter = rememberImagePainter(image),
                     contentDescription = item.product,
                     modifier = Modifier
                         .size(75.dp)

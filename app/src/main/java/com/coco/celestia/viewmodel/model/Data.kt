@@ -9,7 +9,7 @@ data class UserData(
     val firstname: String = "",
     val lastname: String = "",
     var role: String = "",
-    val basket: MutableList<BasketItem> = mutableListOf(),
+    val basket: List<BasketItem> = emptyList(),
     val phoneNumber: String = "",
     val streetNumber: String = "",
     val barangay: String = "",
@@ -41,6 +41,7 @@ data class OrderData(
 data class BasketItem(
     val product: String = "",
     val quantity: Int = 0,
+    val price: Double = 0.0,
     val isRetail: Boolean = false,
 )
 

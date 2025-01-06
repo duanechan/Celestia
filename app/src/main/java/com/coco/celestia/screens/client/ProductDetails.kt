@@ -36,19 +36,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
+import com.coco.celestia.components.toast.ToastStatus
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green4
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.BasketItem
 import com.coco.celestia.viewmodel.model.ProductData
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.selects.select
 
 @Composable
 fun ProductDetailScreen(
     navController: NavController,
+    userViewModel: UserViewModel,
     productViewModel: ProductViewModel,
-    productName: String
+    productName: String,
+    onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val productData by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState()
@@ -73,7 +80,13 @@ fun ProductDetailScreen(
         ProductState.LOADING -> CircularProgressIndicator()
         ProductState.SUCCESS -> {
             if (productData.isNotEmpty()) {
-                ProductDetails(productData[0], productImage)
+                ProductDetails(
+                    navController = navController,
+                    userViewModel = userViewModel,
+                    product = productData[0],
+                    productImage = productImage,
+                    onAddItem = { onEvent(it) }
+                )
             }
         }
         else -> Text(text = productName)
@@ -81,7 +94,14 @@ fun ProductDetailScreen(
 }
 
 @Composable
-fun ProductDetails(product: ProductData, productImage: Uri?) {
+fun ProductDetails(
+    navController: NavController,
+    userViewModel: UserViewModel,
+    product: ProductData,
+    productImage: Uri?,
+    onAddItem: (Triple<ToastStatus, String, Long>) -> Unit
+) {
+    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var selectedQuantity by remember { mutableIntStateOf(0) }
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -99,19 +119,55 @@ fun ProductDetails(product: ProductData, productImage: Uri?) {
         item { ProductDetails_Breakdown(selectedQuantity = selectedQuantity, price = product.price) }
         item { ProductDetails_Description(description = product.description) }
         item { ProductDetails_ShelfLife() }
-        item { ProductDetails_Action() }
+        item {
+            ProductDetails_Action(
+                onCheckout = {},
+                onAddItem = {
+                    if (selectedQuantity > 0) {
+                        userViewModel.addItem(
+                            uid = uid,
+                            item = BasketItem(
+                                product = product.name,
+                                price = product.price * selectedQuantity,
+                                quantity = selectedQuantity,
+                                isRetail = true
+                            )
+                        )
+                        onAddItem(
+                            Triple(
+                                ToastStatus.SUCCESSFUL,
+                                "$selectedQuantity kg of ${product.name} added to the basket!",
+                                System.currentTimeMillis()
+                            )
+                        )
+                        navController.navigate(Screen.Basket.route)
+                    } else {
+                        onAddItem(
+                            Triple(
+                                ToastStatus.WARNING,
+                                "Insufficient quantity.",
+                                System.currentTimeMillis()
+                            )
+                        )
+                    }
+                }
+            )
+        }
     }
 }
 
 @Composable
-fun ProductDetails_Action() {
+fun ProductDetails_Action(
+    onCheckout: () -> Unit,
+    onAddItem: () -> Unit,
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(horizontal = 25.dp, vertical = 15.dp)
     ) {
         Button(
             colors = ButtonDefaults.buttonColors(containerColor = Green4, contentColor = Green1),
-            onClick = {},
+            onClick = { onAddItem() },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = "Add to Basket", fontSize = 25.sp, fontWeight = FontWeight.Bold, color = Green1)
@@ -119,7 +175,7 @@ fun ProductDetails_Action() {
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             colors = ButtonDefaults.buttonColors(containerColor = Green4, contentColor = Green1),
-            onClick = {},
+            onClick = { onCheckout() },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(text = "Checkout", fontSize = 25.sp, fontWeight = FontWeight.Bold, color = Green1)
