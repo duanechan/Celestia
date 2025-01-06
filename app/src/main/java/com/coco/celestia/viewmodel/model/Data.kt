@@ -1,6 +1,5 @@
 package com.coco.celestia.viewmodel.model
 
-import androidx.annotation.Keep
 import com.coco.celestia.R
 import java.time.LocalDate
 import java.time.YearMonth

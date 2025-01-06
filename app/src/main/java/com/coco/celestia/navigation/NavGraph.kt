@@ -708,6 +708,25 @@ fun NavGraph(
             )
         }
         composable(
+            route = Screen.CoopEditVendor.route,
+            arguments = listOf(navArgument("email") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val email = backStackEntry.arguments?.getString("email") ?: ""
+            val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
+
+            val userFacility = facilitiesData.find { facility ->
+                facility.emails.contains(userEmail)
+            }
+
+            CoopVendorAddForm(
+                viewModel = vendorViewModel,
+                facilityName = userFacility?.name ?: "",
+                email = email,
+                onSuccess = { navController.navigateUp() },
+                onCancel = { navController.navigateUp() }
+            )
+        }
+        composable(
             route = Screen.CoopVendorDetails.route,
             arguments = listOf(navArgument("email") { type = NavType.StringType })
         ) { backStackEntry ->
@@ -715,7 +734,8 @@ fun NavGraph(
             VendorDetailsScreen(
                 email = email,
                 viewModel = vendorViewModel,
-                onNavigateUp = { navController.navigateUp() }
+                onNavigateUp = { navController.navigateUp() },
+                navController = navController
             )
         }
         composable(

@@ -1,6 +1,5 @@
 package com.coco.celestia.screens.coop.facility.forms
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -40,7 +39,6 @@ import com.coco.celestia.viewmodel.VendorViewModel
 import com.coco.celestia.viewmodel.model.VendorData
 
 // TODO: Add checks for every field
-// TODO: To add other fields later on (if there will still be other fields)
 
 @Composable
 fun CoopVendorAddForm(
@@ -52,15 +50,31 @@ fun CoopVendorAddForm(
     email: String? = null
 ) {
     var vendorData by remember {
-        mutableStateOf(VendorData(email = email ?: "", facility = facilityName))
+        mutableStateOf(
+            VendorData(
+                email = email ?: "",
+                facility = facilityName,
+                isActive = true
+            )
+        )
     }
     var hasErrors by remember { mutableStateOf(false) }
     var showErrorMessages by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isEditMode by remember { mutableStateOf(email != null) }
 
-    LaunchedEffect(facilityName) {
-        Log.d("CoopVendorAddForm", "Current Facility: $facilityName")
+    // Fetch vendor data if in edit mode
+    LaunchedEffect(email) {
+        if (email != null) {
+            isLoading = true
+            viewModel.fetchVendorByEmail(email) { fetchedVendor ->
+                fetchedVendor?.let {
+                    vendorData = it.copy(facility = facilityName)
+                }
+                isLoading = false
+            }
+        }
     }
 
     fun validateForm(): Boolean {
@@ -86,7 +100,7 @@ fun CoopVendorAddForm(
     if (isLoading) {
         AlertDialog(
             onDismissRequest = { },
-            title = { Text("Adding Vendor") },
+            title = { Text(if (isEditMode) "Loading Vendor" else "Adding Vendor") },
             text = {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -193,6 +207,7 @@ fun CoopVendorAddForm(
                             Text("Please enter a valid email address")
                         }
                     },
+                    enabled = !isEditMode,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     modifier = Modifier.fillMaxWidth(),
                     colors = textFieldColors
@@ -258,18 +273,32 @@ fun CoopVendorAddForm(
                             showErrorMessages = true
                             if (!hasErrors && validateForm()) {
                                 isLoading = true
-                                Log.d("CoopVendorAddForm", "Submitting vendor with email: ${vendorData.email}, facility: ${vendorData.facility}")
-                                viewModel.addVendor(
-                                    vendor = vendorData,
-                                    onSuccess = {
-                                        isLoading = false
-                                        onSuccess()
-                                    },
-                                    onError = { error ->
-                                        isLoading = false
-                                        errorMessage = error
-                                    }
-                                )
+                                if (isEditMode) {
+                                    viewModel.updateVendor(
+                                        email = email!!,
+                                        vendor = vendorData,
+                                        onSuccess = {
+                                            isLoading = false
+                                            onSuccess()
+                                        },
+                                        onError = { error ->
+                                            isLoading = false
+                                            errorMessage = error
+                                        }
+                                    )
+                                } else {
+                                    viewModel.addVendor(
+                                        vendor = vendorData,
+                                        onSuccess = {
+                                            isLoading = false
+                                            onSuccess()
+                                        },
+                                        onError = { error ->
+                                            isLoading = false
+                                            errorMessage = error
+                                        }
+                                    )
+                                }
                             }
                         },
                         modifier = Modifier.weight(1f),
@@ -279,7 +308,7 @@ fun CoopVendorAddForm(
                             contentColor = Color.White
                         )
                     ) {
-                        Text("Submit")
+                        Text(if (isEditMode) "Update" else "Submit")
                     }
                 }
             }

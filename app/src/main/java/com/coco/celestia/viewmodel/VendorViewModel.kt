@@ -27,16 +27,42 @@ class VendorViewModel : ViewModel() {
     val vendorData: LiveData<List<VendorData>> = _vendorData
     val vendorState: LiveData<VendorState> = _vendorState
 
+    private var currentListener: ValueEventListener? = null
+
     fun fetchVendors(filter: String = "all", searchQuery: String = "", facilityName: String? = null) {
         viewModelScope.launch {
             _vendorState.value = VendorState.LOADING
 
-            database.addValueEventListener(object : ValueEventListener {
+            currentListener?.let {
+                database.removeEventListener(it)
+            }
+
+            currentListener = object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val searchKeywords = searchQuery.split(" ").map { it.trim() }
-
                     val vendors = snapshot.children
-                        .mapNotNull { it.getValue(VendorData::class.java) }
+                        .mapNotNull { childSnapshot ->
+                            try {
+                                val data = childSnapshot.value as? Map<*, *>
+                                if (data != null) {
+                                    VendorData(
+                                        firstName = data["firstName"] as? String ?: "",
+                                        lastName = data["lastName"] as? String ?: "",
+                                        companyName = data["companyName"] as? String ?: "",
+                                        email = data["email"] as? String ?: "",
+                                        phoneNumber = data["phoneNumber"] as? String ?: "",
+                                        address = data["address"] as? String ?: "",
+                                        remarks = data["remarks"] as? String ?: "",
+                                        facility = data["facility"] as? String ?: "",
+                                        isActive = data["active"] as? Boolean ?: true
+                                    )
+                                } else {
+                                    childSnapshot.getValue(VendorData::class.java)
+                                }
+                            } catch (e: Exception) {
+                                null
+                            }
+                        }
                         .filter { vendor ->
                             if (facilityName != null) {
                                 vendor.facility == facilityName
@@ -59,7 +85,6 @@ class VendorViewModel : ViewModel() {
                                 else -> true
                             }
                         }
-
                     _vendorData.value = vendors
                     _vendorState.value = if (vendors.isEmpty()) VendorState.EMPTY else VendorState.SUCCESS
                 }
@@ -67,15 +92,77 @@ class VendorViewModel : ViewModel() {
                 override fun onCancelled(error: DatabaseError) {
                     _vendorState.value = VendorState.ERROR(error.message)
                 }
-            })
+            }
+
+            database.addValueEventListener(currentListener!!)
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        currentListener?.let {
+            database.removeEventListener(it)
+        }
+    }
+
+    fun fetchVendorByEmail(email: String, onSuccess: (VendorData?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                database.orderByChild("email").equalTo(email).get()
+                    .addOnSuccessListener { snapshot ->
+                        if (snapshot.exists()) {
+                            try {
+                                val data = snapshot.children.first().value as? Map<*, *>
+                                if (data != null) {
+                                    val vendor = VendorData(
+                                        firstName = data["firstName"] as? String ?: "",
+                                        lastName = data["lastName"] as? String ?: "",
+                                        companyName = data["companyName"] as? String ?: "",
+                                        email = data["email"] as? String ?: "",
+                                        phoneNumber = data["phoneNumber"] as? String ?: "",
+                                        address = data["address"] as? String ?: "",
+                                        remarks = data["remarks"] as? String ?: "",
+                                        facility = data["facility"] as? String ?: "",
+                                        isActive = data["active"] as? Boolean ?: true
+                                    )
+                                    onSuccess(vendor)
+                                } else {
+                                    val vendor = snapshot.children.first().getValue(VendorData::class.java)
+                                    onSuccess(vendor)
+                                }
+                            } catch (e: Exception) {
+                                onSuccess(null)
+                            }
+                        } else {
+                            onSuccess(null)
+                        }
+                    }
+                    .addOnFailureListener {
+                        onSuccess(null)
+                    }
+            } catch (e: Exception) {
+                onSuccess(null)
+            }
         }
     }
 
     fun addVendor(vendor: VendorData, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             try {
+                val vendorMap = mapOf(
+                    "firstName" to vendor.firstName,
+                    "lastName" to vendor.lastName,
+                    "companyName" to vendor.companyName,
+                    "email" to vendor.email,
+                    "phoneNumber" to vendor.phoneNumber,
+                    "address" to vendor.address,
+                    "remarks" to vendor.remarks,
+                    "facility" to vendor.facility,
+                    "active" to vendor.isActive
+                )
+
                 val newVendorRef = database.push()
-                newVendorRef.setValue(vendor)
+                newVendorRef.setValue(vendorMap)
                     .addOnSuccessListener { onSuccess() }
                     .addOnFailureListener { onError(it.message ?: "Error adding vendor") }
             } catch (e: Exception) {
@@ -84,26 +171,125 @@ class VendorViewModel : ViewModel() {
         }
     }
 
-    // TODO: Implement this when there is already the vendor details screen
-    fun updateVendor(vendorId: String, vendor: VendorData, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    fun updateVendor(email: String, vendor: VendorData, onSuccess: () -> Unit, onError: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                database.child(vendorId).setValue(vendor)
-                    .addOnSuccessListener { onSuccess() }
-                    .addOnFailureListener { onError(it.message ?: "Error updating vendor") }
+                val vendorMap = mapOf(
+                    "firstName" to vendor.firstName,
+                    "lastName" to vendor.lastName,
+                    "companyName" to vendor.companyName,
+                    "email" to vendor.email,
+                    "phoneNumber" to vendor.phoneNumber,
+                    "address" to vendor.address,
+                    "remarks" to vendor.remarks,
+                    "facility" to vendor.facility,
+                    "active" to vendor.isActive
+                )
+
+                database.orderByChild("email").equalTo(email).get()
+                    .addOnSuccessListener { snapshot ->
+                        if (snapshot.exists()) {
+                            val vendorKey = snapshot.children.first().key!!
+                            database.child(vendorKey).setValue(vendorMap)
+                                .addOnSuccessListener { onSuccess() }
+                                .addOnFailureListener { onError(it.message ?: "Error updating vendor") }
+                        } else {
+                            onError("Vendor not found")
+                        }
+                    }
+                    .addOnFailureListener {
+                        onError(it.message ?: "Error finding vendor")
+                    }
             } catch (e: Exception) {
                 onError(e.message ?: "Error updating vendor")
             }
         }
     }
 
-    // TODO: Implement this when there is already the vendor details screen
-    fun deleteVendor(vendorId: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+    fun toggleVendorStatus(
+        email: String,
+        currentVendor: VendorData,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
         viewModelScope.launch {
             try {
-                database.child(vendorId).removeValue()
-                    .addOnSuccessListener { onSuccess() }
-                    .addOnFailureListener { onError(it.message ?: "Error deleting vendor") }
+                // Update the local list immediately
+                _vendorData.value = _vendorData.value?.map { vendor ->
+                    if (vendor.email == email) {
+                        vendor.copy(isActive = !vendor.isActive)
+                    } else {
+                        vendor
+                    }
+                }
+
+                database.orderByChild("email").equalTo(email).get()
+                    .addOnSuccessListener { snapshot ->
+                        if (snapshot.exists()) {
+                            val vendorKey = snapshot.children.first().key!!
+                            database.child(vendorKey).child("active").setValue(!currentVendor.isActive)  // Use 'active' in Firebase
+                                .addOnSuccessListener { onSuccess() }
+                                .addOnFailureListener { error ->
+                                    _vendorData.value = _vendorData.value?.map { vendor ->
+                                        if (vendor.email == email) {
+                                            vendor.copy(isActive = currentVendor.isActive)
+                                        } else {
+                                            vendor
+                                        }
+                                    }
+                                    onError(error.message ?: "Error updating vendor status")
+                                }
+                        } else {
+                            _vendorData.value = _vendorData.value?.map { vendor ->
+                                if (vendor.email == email) {
+                                    vendor.copy(isActive = currentVendor.isActive)
+                                } else {
+                                    vendor
+                                }
+                            }
+                            onError("Vendor not found")
+                        }
+                    }
+                    .addOnFailureListener { error ->
+                        _vendorData.value = _vendorData.value?.map { vendor ->
+                            if (vendor.email == email) {
+                                vendor.copy(isActive = currentVendor.isActive)
+                            } else {
+                                vendor
+                            }
+                        }
+                        onError(error.message ?: "Error finding vendor")
+                    }
+            } catch (e: Exception) {
+                _vendorData.value = _vendorData.value?.map { vendor ->
+                    if (vendor.email == email) {
+                        vendor.copy(isActive = currentVendor.isActive)
+                    } else {
+                        vendor
+                    }
+                }
+                onError(e.message ?: "Error toggling vendor status")
+            }
+        }
+    }
+
+    fun deleteVendor(email: String, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                database.orderByChild("email").equalTo(email).get()
+                    .addOnSuccessListener { snapshot ->
+                        if (snapshot.exists()) {
+                            val vendorKey = snapshot.children.first().key!!
+                            database.child(vendorKey).removeValue()
+                                .addOnSuccessListener { onSuccess() }
+                                .addOnFailureListener { onError(it.message ?: "Error deleting vendor") }
+                        } else {
+                            onError("Vendor not found")
+                        }
+                    }
+                    .addOnFailureListener {
+                        onError(it.message ?: "Error finding vendor")
+                    }
             } catch (e: Exception) {
                 onError(e.message ?: "Error deleting vendor")
             }
