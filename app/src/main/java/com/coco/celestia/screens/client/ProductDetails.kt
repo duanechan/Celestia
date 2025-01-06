@@ -30,29 +30,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
+import com.coco.celestia.R
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green4
+import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.BasketItem
+import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.selects.select
+import java.util.UUID
 
 @Composable
 fun ProductDetailScreen(
     navController: NavController,
     userViewModel: UserViewModel,
+    orderViewModel: OrderViewModel,
     productViewModel: ProductViewModel,
     productName: String,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
@@ -63,7 +69,6 @@ fun ProductDetailScreen(
 
     LaunchedEffect(Unit) {
         productViewModel.fetchProduct(productName)
-        println("$productName $productState")
     }
 
     LaunchedEffect(productData) {
@@ -83,9 +88,10 @@ fun ProductDetailScreen(
                 ProductDetails(
                     navController = navController,
                     userViewModel = userViewModel,
+                    orderViewModel = orderViewModel,
                     product = productData[0],
                     productImage = productImage,
-                    onAddItem = { onEvent(it) }
+                    onEvent = { onEvent(it) },
                 )
             }
         }
@@ -97,9 +103,10 @@ fun ProductDetailScreen(
 fun ProductDetails(
     navController: NavController,
     userViewModel: UserViewModel,
+    orderViewModel: OrderViewModel,
     product: ProductData,
     productImage: Uri?,
-    onAddItem: (Triple<ToastStatus, String, Long>) -> Unit
+    onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var selectedQuantity by remember { mutableIntStateOf(0) }
@@ -118,10 +125,18 @@ fun ProductDetails(
         item { Divider(thickness = 1.dp, modifier = Modifier.shadow(elevation  = 4.dp)) }
         item { ProductDetails_Breakdown(selectedQuantity = selectedQuantity, price = product.price) }
         item { ProductDetails_Description(description = product.description) }
-        item { ProductDetails_ShelfLife() }
         item {
             ProductDetails_Action(
-                onCheckout = {},
+                onCheckout = {
+
+                    onEvent(
+                        Triple(
+                            ToastStatus.SUCCESSFUL,
+                            "Order placed.",
+                            System.currentTimeMillis()
+                        )
+                    )
+                },
                 onAddItem = {
                     if (selectedQuantity > 0) {
                         userViewModel.addItem(
@@ -133,7 +148,7 @@ fun ProductDetails(
                                 isRetail = true
                             )
                         )
-                        onAddItem(
+                        onEvent(
                             Triple(
                                 ToastStatus.SUCCESSFUL,
                                 "$selectedQuantity kg of ${product.name} added to the basket!",
@@ -142,7 +157,7 @@ fun ProductDetails(
                         )
                         navController.navigate(Screen.Basket.route)
                     } else {
-                        onAddItem(
+                        onEvent(
                             Triple(
                                 ToastStatus.WARNING,
                                 "Insufficient quantity.",
@@ -180,26 +195,6 @@ fun ProductDetails_Action(
         ) {
             Text(text = "Checkout", fontSize = 25.sp, fontWeight = FontWeight.Bold, color = Green1)
         }
-    }
-}
-
-@Composable
-fun ProductDetails_ShelfLife() {
-    // TODO: Get shelf life and origin (how?)
-    Column(modifier = Modifier.padding(horizontal = 15.dp, vertical = 25.dp)) {
-        Text(
-            text = "Shelf Life:",
-            fontSize = 13.sp,
-            textAlign = TextAlign.Justify,
-            color = Green1
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Origin:",
-            fontSize = 13.sp,
-            textAlign = TextAlign.Justify,
-            color = Green1
-        )
     }
 }
 
@@ -271,7 +266,7 @@ fun ProductDetails_Header(name: String, image: Uri?) {
             .height(200.dp)
     ) {
         Image(
-            painter = rememberImagePainter(image),
+            painter = if (image != null) rememberImagePainter(image) else painterResource(R.drawable.product_image),
             contentDescription = name,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
