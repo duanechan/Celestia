@@ -92,6 +92,7 @@ fun CoopPurchaseForm(
     onCancel: () -> Unit,
     navController: NavController,
     draftId: String? = null,
+    purchaseNumber: String? = null,
     modifier: Modifier = Modifier
 ) {
     var purchaseOrderData by remember {
@@ -121,21 +122,31 @@ fun CoopPurchaseForm(
     var showAddItemDialog by remember { mutableStateOf(false) }
     var showShipmentDropdown by remember { mutableStateOf(false) }
 
-    LaunchedEffect(draftId) {
-        if (draftId != null) {
-            try {
-                val draft = purchaseOrderViewModel.getPurchaseOrder(draftId)
-                draft?.let { draftOrder ->
-                    purchaseOrderData = draftOrder
-                    items = draftOrder.items
+    LaunchedEffect(draftId, purchaseNumber) {
+        try {
+            when {
+                purchaseNumber != null -> {
+                    val existingOrder = purchaseOrderViewModel.getPurchaseOrder(purchaseNumber)
+                    existingOrder?.let { order ->
+                        purchaseOrderData = order
+                        items = order.items
+                    }
                 }
-            } catch (e: Exception) {
-                errorMessage = "Failed to load draft: ${e.message}"
+                draftId != null -> {
+                    val draft = purchaseOrderViewModel.getPurchaseOrder(draftId)
+                    draft?.let { draftOrder ->
+                        purchaseOrderData = draftOrder
+                        items = draftOrder.items
+                    }
+                }
             }
+        } catch (e: Exception) {
+            errorMessage = "Failed to load data: ${e.message}"
         }
     }
 
     val shipmentOptions = listOf("Taxi", "Public Utility Jeepney", "Private Vehicle")
+    val isEdit = !purchaseNumber.isNullOrEmpty()
 
     LaunchedEffect(Unit) {
         vendorViewModel.fetchVendors(facilityName = facilityName)
@@ -145,7 +156,6 @@ fun CoopPurchaseForm(
         return purchaseOrderData.purchaseNumber.isNotBlank() &&
                 purchaseOrderData.referenceNumber.isNotBlank() &&
                 purchaseOrderData.expectedDate.isNotBlank() &&
-                purchaseOrderData.vendor.isNotBlank() &&
                 purchaseOrderData.shipmentPreference.isNotBlank() &&
                 items.isNotEmpty()
     }
@@ -208,7 +218,6 @@ fun CoopPurchaseForm(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Header Section
                 PurchaseFormHeader(
                     purchaseOrderData = purchaseOrderData,
                     onPurchaseOrderChange = { purchaseOrderData = it },
@@ -216,7 +225,7 @@ fun CoopPurchaseForm(
                     hasErrors = hasErrors,
                     showErrorMessages = showErrorMessages,
                     textFieldColors = textFieldColors,
-                    isEditingDraft = draftId != null
+                    isEditingDraft = draftId != null && !isEdit
                 )
 
                 // Shipment Preference Dropdown
@@ -317,42 +326,45 @@ fun CoopPurchaseForm(
                         )
                     }
 
-                    OutlinedButton(
-                        onClick = {
-                            isLoading = true
-                            purchaseOrderViewModel.addPurchaseOrder(
-                                purchaseOrder = purchaseOrderData.copy(
-                                    items = items,
-                                    savedAsDraft = true,
-                                    status = "draft"
-                                ),
-                                onSuccess = {
-                                    isLoading = false
-                                    onSuccess()
-                                    navController.navigate(Screen.CoopPurchases.route) {
-                                        popUpTo(Screen.CoopPurchases.route) { inclusive = true }
+                    // Show "Save as Draft" button when not in edit mode (new purchase or draft)
+                    if (!isEdit) {
+                        OutlinedButton(
+                            onClick = {
+                                isLoading = true
+                                purchaseOrderViewModel.addPurchaseOrder(
+                                    purchaseOrder = purchaseOrderData.copy(
+                                        items = items,
+                                        savedAsDraft = true,
+                                        status = "draft"
+                                    ),
+                                    onSuccess = {
+                                        isLoading = false
+                                        onSuccess()
+                                        navController.navigate(Screen.CoopPurchases.route) {
+                                            popUpTo(Screen.CoopPurchases.route) { inclusive = true }
+                                        }
+                                    },
+                                    onError = { error ->
+                                        isLoading = false
+                                        errorMessage = error
                                     }
-                                },
-                                onError = { error ->
-                                    isLoading = false
-                                    errorMessage = error
-                                }
-                            )
-                        },
-                        modifier = Modifier.weight(1f),
-                        enabled = !isLoading,
-                        border = BorderStroke(1.dp, Green1)
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.Center
+                                )
+                            },
+                            modifier = Modifier.weight(1f),
+                            enabled = !isLoading,
+                            border = BorderStroke(1.dp, Green1)
                         ) {
-                            Text(
-                                text = if (draftId != null) "Update Draft" else "Save as Draft",
-                                color = Green1,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Save as Draft",
+                                    color = Green1,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
                         }
                     }
 
@@ -365,7 +377,7 @@ fun CoopPurchaseForm(
                                     purchaseOrder = purchaseOrderData.copy(
                                         items = items,
                                         savedAsDraft = false,
-                                        status = "processing"
+                                        status = if (isEdit) purchaseOrderData.status else "processing"
                                     ),
                                     onSuccess = {
                                         isLoading = false
@@ -388,7 +400,7 @@ fun CoopPurchaseForm(
                             contentColor = Color.White
                         )
                     ) {
-                        Text(if (draftId != null) "Update" else "Submit")
+                        Text(if (isEdit) "Update" else "Submit")
                     }
                 }
             }
@@ -568,7 +580,7 @@ fun CalendarPicker(
     onDismiss: () -> Unit
 ) {
     var selectedYear by remember { mutableStateOf(LocalDate.now().year) }
-    var selectedMonth by remember { mutableStateOf(LocalDate.now().monthValue - 1) } // 0-based month
+    var selectedMonth by remember { mutableStateOf(LocalDate.now().monthValue - 1) }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -779,10 +791,6 @@ fun PurchaseFormItemsSection(
     }
 }
 
-private fun formatCurrency(amount: Double): String {
-    return "₱%.2f".format(amount)
-}
-
 @Composable
 fun PurchaseOrderItemForm(
     onAddItem: (PurchaseOrderItem) -> Unit,
@@ -940,6 +948,10 @@ fun PurchaseOrderItemForm(
             }
         }
     )
+}
+
+private fun formatCurrency(amount: Double): String {
+    return "₱%.2f".format(amount)
 }
 
 private fun generatePurchaseNumber(): String {

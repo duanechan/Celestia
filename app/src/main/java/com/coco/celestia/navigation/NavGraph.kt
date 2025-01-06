@@ -648,11 +648,24 @@ fun NavGraph(
                     type = NavType.StringType
                     nullable = true
                     defaultValue = null
+                },
+                navArgument("purchaseNumber") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
                 }
             )
         ) { backStackEntry ->
             val draftId = backStackEntry.arguments?.getString("draftId")
-            onNavigate(if (draftId != null) "Edit Purchase Order" else "New Purchase Order")
+            val purchaseNumber = backStackEntry.arguments?.getString("purchaseNumber")
+
+            onNavigate(
+                when {
+                    !purchaseNumber.isNullOrEmpty() -> "Edit Purchase Order"
+                    !draftId.isNullOrEmpty() -> "Edit Draft"
+                    else -> "New Purchase Order"
+                }
+            )
 
             val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
             val userFacility = facilitiesData.find { facility ->
@@ -664,6 +677,7 @@ fun NavGraph(
                 vendorViewModel = vendorViewModel,
                 facilityName = userFacility?.name ?: "",
                 draftId = draftId,
+                purchaseNumber = purchaseNumber,
                 onSuccess = {
                     navController.popBackStack()
                 },
@@ -675,14 +689,15 @@ fun NavGraph(
         }
         composable(
             route = Screen.CoopPurchaseDetails.route,
-            arguments = listOf(
-                navArgument("purchaseNumber") { type = NavType.StringType }
-            )
+            arguments = listOf(navArgument("purchaseNumber") { type = NavType.StringType })
         ) { backStackEntry ->
-            val purchaseNumber = backStackEntry.arguments?.getString("purchaseNumber")
+            val purchaseNumber = backStackEntry.arguments?.getString("purchaseNumber") ?: ""
+            val facilityName = backStackEntry.arguments?.getString("facilityName") ?: ""
             PurchaseOrderDetailsScreen(
-                purchaseNumber = purchaseNumber ?: "",
-                viewModel = purchaseOrderViewModel,
+                purchaseNumber = purchaseNumber,
+                purchaseOrderViewModel = purchaseOrderViewModel,
+                facilityName = facilityName,
+                navController = navController,
                 onNavigateUp = { navController.navigateUp() }
             )
         }

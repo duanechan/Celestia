@@ -104,12 +104,10 @@ class PurchaseOrderViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 if (purchaseOrder.id.isNotEmpty()) {
-                    // Update existing purchase order
                     database.child(purchaseOrder.id).setValue(purchaseOrder)
                         .addOnSuccessListener { onSuccess() }
                         .addOnFailureListener { onError(it.message ?: "Error updating purchase order") }
                 } else {
-                    // Create new purchase order
                     val newPurchaseOrderRef = database.push()
                     newPurchaseOrderRef.setValue(purchaseOrder)
                         .addOnSuccessListener { onSuccess() }
@@ -121,33 +119,75 @@ class PurchaseOrderViewModel : ViewModel() {
         }
     }
 
-    fun updatePurchaseOrder(
-        purchaseOrderId: String,
-        purchaseOrder: PurchaseOrder,
+    fun updatePurchaseOrderStatus(
+        purchaseOrderNumber: String,
+        newStatus: String,
         onSuccess: () -> Unit,
-        onError: (String) -> Unit
+        onError: (String) -> Unit = {}
     ) {
         viewModelScope.launch {
             try {
-                database.child(purchaseOrderId).setValue(purchaseOrder)
-                    .addOnSuccessListener { onSuccess() }
-                    .addOnFailureListener { onError(it.message ?: "Error updating purchase order") }
+                database.orderByChild("purchaseNumber")
+                    .equalTo(purchaseOrderNumber)
+                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            val purchaseOrderSnapshot = snapshot.children.firstOrNull()
+                            if (purchaseOrderSnapshot != null) {
+                                // Get the purchase order and update its status
+                                val purchaseOrder = purchaseOrderSnapshot.getValue(PurchaseOrder::class.java)
+                                purchaseOrder?.let {
+                                    val updatedOrder = it.copy(status = newStatus)
+                                    database.child(purchaseOrderSnapshot.key!!)
+                                        .setValue(updatedOrder)
+                                        .addOnSuccessListener { onSuccess() }
+                                        .addOnFailureListener { error ->
+                                            onError(error.message ?: "Error updating purchase order status")
+                                        }
+                                }
+                            } else {
+                                onError("Purchase order not found")
+                            }
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            onError(error.message)
+                        }
+                    })
             } catch (e: Exception) {
-                onError(e.message ?: "Error updating purchase order")
+                onError(e.message ?: "Error updating purchase order status")
             }
         }
     }
 
     fun deletePurchaseOrder(
-        purchaseOrderId: String,
+        purchaseOrderNumber: String,
         onSuccess: () -> Unit,
-        onError: (String) -> Unit
+        onError: (String) -> Unit = {}
     ) {
         viewModelScope.launch {
             try {
-                database.child(purchaseOrderId).removeValue()
-                    .addOnSuccessListener { onSuccess() }
-                    .addOnFailureListener { onError(it.message ?: "Error deleting purchase order") }
+                database.orderByChild("purchaseNumber")
+                    .equalTo(purchaseOrderNumber)
+                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            val purchaseOrderSnapshot = snapshot.children.firstOrNull()
+                            if (purchaseOrderSnapshot != null) {
+                                // Delete the found purchase order
+                                database.child(purchaseOrderSnapshot.key!!)
+                                    .removeValue()
+                                    .addOnSuccessListener { onSuccess() }
+                                    .addOnFailureListener { error ->
+                                        onError(error.message ?: "Error deleting purchase order")
+                                    }
+                            } else {
+                                onError("Purchase order not found")
+                            }
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            onError(error.message)
+                        }
+                    })
             } catch (e: Exception) {
                 onError(e.message ?: "Error deleting purchase order")
             }
