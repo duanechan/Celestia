@@ -308,7 +308,7 @@ fun PurchaseOrderCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = purchaseOrder.vendor,
+                    text = purchaseOrder.vendor.ifBlank { "No Vendor Yet" },
                     style = MaterialTheme.typography.titleMedium,
                     color = Green1
                 )
@@ -358,12 +358,13 @@ fun PurchaseOrderCard(
 @Composable
 fun PurchaseOrderDetailsScreen(
     purchaseNumber: String,
-    viewModel: PurchaseOrderViewModel,
+    purchaseOrderViewModel: PurchaseOrderViewModel,
+    facilityName: String,
+    navController: NavController,
     onNavigateUp: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
-    val purchaseOrderState by viewModel.purchaseOrderState.observeAsState()
-    val purchaseOrderData by viewModel.purchaseOrderData.observeAsState(emptyList())
+    val purchaseOrderState by purchaseOrderViewModel.purchaseOrderState.observeAsState()
+    val purchaseOrderData by purchaseOrderViewModel.purchaseOrderData.observeAsState(emptyList())
     val selectedPurchaseOrder = purchaseOrderData.find { it.purchaseNumber == purchaseNumber }
 
     Box(
@@ -409,7 +410,26 @@ fun PurchaseOrderDetailsScreen(
                 if (selectedPurchaseOrder != null) {
                     PurchaseDetails(
                         purchaseOrder = selectedPurchaseOrder,
-                        modifier = modifier
+                        navController = navController,
+                        purchaseOrderViewModel = purchaseOrderViewModel,
+                        onDelete = {
+                            // Handle delete
+                            purchaseOrderViewModel.deletePurchaseOrder(
+                                purchaseOrderNumber = selectedPurchaseOrder.purchaseNumber,
+                                onSuccess = {
+                                    onNavigateUp()
+                                }
+                            )
+                        },
+                        onMarkAsCancelled = {
+                            purchaseOrderViewModel.updatePurchaseOrderStatus(
+                                purchaseOrderNumber = selectedPurchaseOrder.purchaseNumber,
+                                newStatus = "cancelled",
+                                onSuccess = {
+                                    purchaseOrderViewModel.fetchPurchaseOrders(facilityName)
+                                }
+                            )
+                        }
                     )
                 } else {
                     Box(
@@ -477,10 +497,89 @@ fun PurchaseOrderDetailsScreen(
 @Composable
 fun PurchaseDetails(
     purchaseOrder: PurchaseOrder,
+    navController: NavController,
+    purchaseOrderViewModel: PurchaseOrderViewModel,
+    onDelete: () -> Unit = {},
+    onMarkAsCancelled: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("DETAILS", "BILLS", "RECEIVES", "HISTORY")
+    var showMenu by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var isDeleting by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val tabs = listOf("DETAILS", "HISTORY")
+
+    // Delete Dialog
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text("Delete Purchase Order") },
+            text = { Text("Are you sure you want to delete this purchase order?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        isDeleting = true
+                        showDeleteConfirmation = false
+                        purchaseOrderViewModel.deletePurchaseOrder(
+                            purchaseOrderNumber = purchaseOrder.purchaseNumber,
+                            onSuccess = {
+                                isDeleting = false
+                                onDelete()
+                                navController.popBackStack()
+                            },
+                            onError = { error ->
+                                isDeleting = false
+                                errorMessage = error
+                            }
+                        )
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showDeleteConfirmation = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Error Dialog
+    if (errorMessage != null) {
+        AlertDialog(
+            onDismissRequest = { errorMessage = null },
+            title = { Text("Error") },
+            text = { Text(errorMessage ?: "") },
+            confirmButton = {
+                TextButton(onClick = { errorMessage = null }) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+
+    // Loading Dialog
+    if (isDeleting) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("Deleting Purchase Order") },
+            text = {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    Text("Please wait...")
+                }
+            },
+            confirmButton = { }
+        )
+    }
 
     Column(
         modifier = modifier
@@ -494,18 +593,86 @@ fun PurchaseDetails(
                 .background(White1)
                 .padding(16.dp)
         ) {
-            Text(
-                text = purchaseOrder.purchaseNumber,
-                style = MaterialTheme.typography.titleLarge,
-                color = Green1
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(
+                    text = purchaseOrder.purchaseNumber,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Green1
+                )
+
+                Box {
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = "More options",
+                            tint = Green1
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Edit") },
+                            onClick = {
+                                navController.navigate(Screen.CoopPurchaseForm.createRouteForEdit(purchaseOrder.purchaseNumber))
+                                showMenu = false
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Edit,
+                                    contentDescription = "Edit"
+                                )
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Delete") },
+                            onClick = {
+                                showDeleteConfirmation = true
+                                showMenu = false
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Delete"
+                                )
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Mark as Cancelled") },
+                            onClick = {
+                                onMarkAsCancelled()
+                                showMenu = false
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = "Mark as Cancelled"
+                                )
+                            }
+                        )
+                    }
+                }
+            }
 
             Text(
-                text = purchaseOrder.vendor,
+                text = if (purchaseOrder.vendor.isNotBlank()) purchaseOrder.vendor else "No Vendor Yet",
                 style = MaterialTheme.typography.titleLarge,
                 color = Green1,
                 textDecoration = TextDecoration.Underline,
                 modifier = Modifier.padding(top = 16.dp)
+            )
+
+            Text(
+                text = purchaseOrder.status.replaceFirstChar { it.uppercase() },
+                style = MaterialTheme.typography.titleMedium,
+                color = Green1,
+                modifier = Modifier.padding(top = 8.dp)
             )
 
             Text(
@@ -617,112 +784,118 @@ fun PurchaseDetails(
         // Tab Content
         when (selectedTab) {
             0 -> DetailsTab(purchaseOrder)
-            1 -> BillsTab()
-            2 -> ReceivesTab()
-            3 -> CommentsHistoryTab()
+            1 -> CommentsHistoryTab()
         }
     }
 }
 
 @Composable
 private fun DetailsTab(purchaseOrder: PurchaseOrder) {
-    Column(
+    LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
     ) {
-        // More Information Card
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = White1
-            )
-        ) {
-            Column(
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // More Information Card
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(bottom = 16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = White1
+                )
             ) {
-                ExpandableSection(
-                    title = "More Information",
-                    initiallyExpanded = false
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
                 ) {
-                    Column(
+                    ExpandableSection(
+                        title = "More Information",
+                        initiallyExpanded = false
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 16.dp)
+                        ) {
+                            Text(
+                                text = "Shipment preference",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Green1
+                            )
+                            Text(
+                                text = purchaseOrder.shipmentPreference,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Green1,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Items Card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),  // Added bottom padding here
+                colors = CardDefaults.cardColors(
+                    containerColor = White1
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Items",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Divider(modifier = Modifier.padding(vertical = 16.dp), color = Green4)
+                    purchaseOrder.items.forEach { item ->
+                        ItemRow(item)
+                        Divider(modifier = Modifier.padding(vertical = 16.dp), color = Green4)
+                    }
+
+                    // Totals
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 16.dp)
+                            .padding(bottom = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Shipment preference",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Green1
+                            text = "Sub Total",
+                            style = MaterialTheme.typography.bodyLarge
                         )
                         Text(
-                            text = purchaseOrder.shipmentPreference,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Green1,
-                            modifier = Modifier.padding(top = 4.dp)
+                            text = "PHP${calculateTotalAmount(purchaseOrder.items)}",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Total",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = "PHP${calculateTotalAmount(purchaseOrder.items)}",
+                            style = MaterialTheme.typography.titleMedium
                         )
                     }
                 }
             }
-        }
 
-        // Items Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = White1
-            )
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = "Items",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                Divider(modifier = Modifier.padding(vertical = 16.dp), color = Green4)
-                purchaseOrder.items.forEach { item ->
-                    ItemRow(item)
-                    Divider(modifier = Modifier.padding(vertical = 16.dp), color = Green4)
-                }
-
-                // Totals
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Sub Total",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Text(
-                        text = "PHP${calculateTotalAmount(purchaseOrder.items)}",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Total",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = "PHP${calculateTotalAmount(purchaseOrder.items)}",
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            }
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
@@ -792,32 +965,6 @@ private fun ExpandableSection(
 }
 
 @Composable
-private fun BillsTab() {
-    // Placeholder for Bills tab content
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Bills Content")
-    }
-}
-
-@Composable
-private fun ReceivesTab() {
-    // Placeholder for Receives tab content
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Receives Content")
-    }
-}
-
-@Composable
 private fun CommentsHistoryTab() {
     // Placeholder for Comments & History tab content
     Box(
@@ -826,7 +973,7 @@ private fun CommentsHistoryTab() {
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text("Comments & History Content")
+        Text("History Content")
     }
 }
 
