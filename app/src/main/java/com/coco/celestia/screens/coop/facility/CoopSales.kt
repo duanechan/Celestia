@@ -25,6 +25,8 @@ import androidx.compose.ui.semantics.testTag
 import com.coco.celestia.ui.theme.CoopBackground
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.White1
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 data class SaleItem(
     val id: String,
@@ -34,10 +36,8 @@ data class SaleItem(
 )
 
 data class OrderItem(
-    val id: String,
-    val product: String,
-    val quantity: Int,
-    val date: String
+    val status: String,
+    val totalActivities: Int
 )
 
 @Composable
@@ -48,41 +48,56 @@ fun CoopSales(
     var selectedTab by remember { mutableStateOf("Orders") }
     var searchQuery by remember { mutableStateOf("") }
     val tabs = listOf("Orders", "Sales")
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-    // Sample Data
+    // Sample Data for Orders and Sales
+    val statuses = listOf(
+        "Pending", "Confirmed", "To Deliver", "To Receive", "Completed", "Cancelled", "Return/Refund"
+    )
+
     val sampleOrders = remember {
-        listOf(
-            OrderItem("Order #001", "Tomatoes", 10, "2024-01-01"),
-            OrderItem("Order #002", "Potatoes", 5, "2024-01-02"),
-            OrderItem("Order #003", "Carrots", 8, "2024-01-03")
-        )
+        statuses.map { status ->
+            OrderItem(status = status, totalActivities = (0..20).random())
+        }
     }
 
     val sampleSales = remember {
         listOf(
-            SaleItem("Sale #001", "Rice", 50.0, "2024-01-01"),
-            SaleItem("Sale #002", "Corn", 30.0, "2024-01-01"),
-            SaleItem("Sale #003", "Fertilizer", 100.0, "2024-01-02")
+            SaleItem("Sale #001", "Rice", 50.0, "2022-12-01"),
+            SaleItem("Sale #002", "Corn", 30.0, "2023-10-01"),
+            SaleItem("Sale #003", "Fertilizer", 100.0, "2024-02-02"),
+            SaleItem("Sale #004", "Vegetables", 20.0, "2024-01-05")
         )
     }
 
-    // Filtering based on search query
+    // Filtering logic
     val filteredOrders = sampleOrders.filter {
-        it.product.contains(searchQuery, ignoreCase = true) ||
-                it.id.contains(searchQuery, ignoreCase = true) ||
-                it.date.contains(searchQuery, ignoreCase = true)
+        it.status.contains(searchQuery, ignoreCase = true)
     }
 
-    val filteredSales = sampleSales.filter {
-        it.item.contains(searchQuery, ignoreCase = true) ||
-                it.id.contains(searchQuery, ignoreCase = true) ||
-                it.date.contains(searchQuery, ignoreCase = true)
-    }
+    var sortOption by remember { mutableStateOf("A-Z") }
+
+    val filteredAndSortedSales = sampleSales
+        .filter {
+            it.item.contains(searchQuery, ignoreCase = true) ||
+                    it.id.contains(searchQuery, ignoreCase = true) ||
+                    it.date.contains(searchQuery, ignoreCase = true)
+        }
+        .sortedWith(when (sortOption) {
+            "A-Z" -> compareBy { it.item }
+            "Z-A" -> compareByDescending { it.item }
+            "By Year" -> compareBy { LocalDate.parse(it.date, formatter).year }
+            "By Month" -> compareBy { LocalDate.parse(it.date, formatter).withDayOfMonth(1) }
+            "By Week" -> compareBy { LocalDate.parse(it.date, formatter).dayOfYear / 7 }
+            "By Day" -> compareBy { LocalDate.parse(it.date, formatter) }
+            else -> compareBy { it.item }
+        })
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .height(40.dp)
     ) {
         Column(
             modifier = Modifier
@@ -95,8 +110,10 @@ fun CoopSales(
                 onValueChange = { newQuery -> searchQuery = newQuery },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                placeholder = { Text("Search...") },
+                    .padding(bottom = 5.dp)
+                    .height(48.dp),
+                placeholder = {
+                    Text(text = "Search...")},
                 leadingIcon = {
                     Icon(
                         Icons.Default.Search,
@@ -174,7 +191,55 @@ fun CoopSales(
             // Tab Content
             when (selectedTab) {
                 "Orders" -> OrdersContent(filteredOrders)
-                "Sales" -> SalesContent(filteredSales)
+
+                "Sales" -> {
+                    // Sort Options
+                    var expanded by remember { mutableStateOf(false) } // State for dropdown menu
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Sort by:", style = MaterialTheme.typography.bodyMedium)
+
+                        Box {
+                            Button(
+                                onClick = { expanded = !expanded },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Green1,
+                                    contentColor = White1
+                                ),
+                                modifier = Modifier
+                                    .height(30.dp)
+                                    .width(150.dp)
+                            ) {
+                                Text(text = sortOption)
+                            }
+
+                            DropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
+                                modifier = Modifier
+                                    .background(White1)
+                            ) {
+                                listOf("A-Z", "Z-A", "By Year", "By Month", "By Week", "By Day").forEach { option ->
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            sortOption = option
+                                            expanded = false
+                                        },
+                                        text = { Text(option) }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    SalesContent(filteredAndSortedSales)
+                }
             }
         }
 
@@ -235,7 +300,6 @@ fun SalesContent(filteredSales: List<SaleItem>) {
     }
 }
 
-
 @Composable
 fun OrderCard(
     order: OrderItem,
@@ -250,48 +314,58 @@ fun OrderCard(
             defaultElevation = 2.dp
         )
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+            // Icon on the left side
+            Icon(
+                imageVector = when (order.status) {
+                    "Pending" -> Icons.Default.Info
+                    "Confirmed" -> Icons.Default.CheckCircle
+                    "To Deliver" -> Icons.Default.LocationOn
+                    "To Receive" -> Icons.Default.KeyboardArrowDown
+                    "Completed" -> Icons.Default.Done
+                    "Cancelled" -> Icons.Default.Close
+                    "Return/Refund" -> Icons.Default.ArrowBack
+                    else -> Icons.Default.Info
+                },
+                contentDescription = order.status,
+                tint = Green1,
+                modifier = Modifier
+                    .size(40.dp)
+                    .padding(end = 16.dp)
+            )
+
+            Column(
+                modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = order.product,
+                    text = "${order.totalActivities}",
                     style = MaterialTheme.typography.titleMedium,
                     color = Green1
                 )
-                Text(
-                    text = "Qty: ${order.quantity}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Green1
-                )
-            }
 
-            Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
                 Text(
-                    text = order.id,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = order.date,
+                    text = order.status,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowRight,
+                contentDescription = "Navigate to Details",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }
-
 
 @Composable
 fun SaleCard(
@@ -322,7 +396,7 @@ fun SaleCard(
                     color = Green1
                 )
                 Text(
-                    text = "PHP${"%.2f".format(sale.amount)}",
+                    text = "PHP ${"%.2f".format(sale.amount)}",
                     style = MaterialTheme.typography.titleMedium,
                     color = Green1
                 )
