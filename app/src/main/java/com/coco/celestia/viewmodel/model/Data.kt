@@ -3,6 +3,8 @@ package com.coco.celestia.viewmodel.model
 import com.coco.celestia.R
 import java.time.LocalDate
 import java.time.YearMonth
+import kotlin.reflect.KProperty
+import kotlin.reflect.KProperty1
 
 data class UserData(
     val email: String = "",
@@ -39,11 +41,17 @@ data class OrderData(
 )
 
 data class BasketItem(
+    val id: String = "",
     val product: String = "",
     val quantity: Int = 0,
     val price: Double = 0.0,
     val isRetail: Boolean = false,
 )
+
+inline fun <reified BasketItem> BasketItem.toMap(): Map<String, Any?> =
+    BasketItem::class.members
+        .filterIsInstance<KProperty1<BasketItem, *>>()
+        .associate { prop -> prop.name to prop.get(this) }
 
 data class SpecialRequest(
     val subject: String = "",

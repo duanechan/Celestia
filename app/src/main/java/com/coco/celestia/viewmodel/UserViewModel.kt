@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.viewmodel.model.BasketItem
 import com.coco.celestia.viewmodel.model.UserData
+import com.coco.celestia.viewmodel.model.toMap
 import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
@@ -24,6 +25,7 @@ import com.google.firebase.database.Transaction
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.getValue
 import com.google.firebase.database.snapshots
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -438,19 +440,33 @@ class UserViewModel : ViewModel() {
         viewModelScope.launch {
             _userState.value = UserState.LOADING
             try {
-                val query = database.child(uid).child("basket").push()
-                query.addValueEventListener(object : ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-                        snapshot.ref.setValue(item)
-                            .addOnSuccessListener { _userState.value = UserState.SUCCESS }
-                            .addOnFailureListener { _userState.value = UserState.ERROR(it.message ?: "Unknown error") }
-                    }
+                val query = database.child(uid).child("basket").child(item.id)
+                val x = query.setValue(item.toMap())
+                    .addOnSuccessListener { _userState.value = UserState.SUCCESS }
+                    .addOnFailureListener { _userState.value = UserState.ERROR(it.message ?: "Unknown error") }
+            } catch (e: Exception) {
+                _userState.value = UserState.ERROR(e.message ?: "Unknown error")
+            }
+        }
+    }
 
-                    override fun onCancelled(error: DatabaseError) {
-                        _userState.value = UserState.ERROR(error.message)
-                    }
+    fun clearCheckoutItems(uid: String, updatedBasket: List<BasketItem>) {
+        viewModelScope.launch {
+            _userState.value = UserState.LOADING
+            try {
+                val query = database.child(uid).child("basket")
 
-                })
+                val updates = updatedBasket.associate {
+                    "${it.id}" to null
+                }
+                query.updateChildren(updates).await()
+
+                _userData.value = _userData.value?.copy(
+                    basket = _userData.value?.basket?.filter { basketItem ->
+                        !updatedBasket.any { it.id == basketItem.id }
+                    } ?: emptyList()
+                )
+                _userState.value = UserState.SUCCESS
             } catch (e: Exception) {
                 _userState.value = UserState.ERROR(e.message ?: "Unknown error")
             }

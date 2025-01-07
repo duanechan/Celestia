@@ -11,11 +11,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -79,23 +83,38 @@ fun ProductDetailScreen(
         }
     }
 
-    when (productState) {
-        ProductState.EMPTY -> Text(text = productName)
-        is ProductState.ERROR -> Text(text = "Error fetching product: ${(productState as ProductState.ERROR).message}")
-        ProductState.LOADING -> CircularProgressIndicator()
-        ProductState.SUCCESS -> {
-            if (productData.isNotEmpty()) {
-                ProductDetails(
-                    navController = navController,
-                    userViewModel = userViewModel,
-                    orderViewModel = orderViewModel,
-                    product = productData[0],
-                    productImage = productImage,
-                    onEvent = { onEvent(it) },
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        when (productState) {
+            ProductState.EMPTY -> {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = "Unknown Product",
+                    tint = Green1,
+                    modifier = Modifier.size(50.dp)
                 )
+                Spacer(modifier = Modifier.padding(4.dp))
+                Text(text = "Product not found.")
             }
+            is ProductState.ERROR -> Text(text = "Error fetching product: ${(productState as ProductState.ERROR).message}")
+            ProductState.LOADING -> CircularProgressIndicator()
+            ProductState.SUCCESS -> {
+                if (productData.isNotEmpty()) {
+                    ProductDetails(
+                        navController = navController,
+                        userViewModel = userViewModel,
+                        orderViewModel = orderViewModel,
+                        product = productData[0],
+                        productImage = productImage,
+                        onEvent = { onEvent(it) },
+                    )
+                }
+            }
+            else -> Text(text = productName)
         }
-        else -> Text(text = productName)
     }
 }
 
@@ -128,7 +147,6 @@ fun ProductDetails(
         item {
             ProductDetails_Action(
                 onCheckout = {
-
                     onEvent(
                         Triple(
                             ToastStatus.SUCCESSFUL,
@@ -142,6 +160,7 @@ fun ProductDetails(
                         userViewModel.addItem(
                             uid = uid,
                             item = BasketItem(
+                                id = UUID.randomUUID().toString(),
                                 product = product.name,
                                 price = product.price * selectedQuantity,
                                 quantity = selectedQuantity,

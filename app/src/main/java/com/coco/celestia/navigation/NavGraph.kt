@@ -966,7 +966,11 @@ fun NavGraph(
 
         composable(route = Screen.Basket.route) {
             onNavigate("Basket")
-            BasketScreen(userViewModel = userViewModel)
+            BasketScreen(
+                productViewModel = productViewModel,
+                userViewModel = userViewModel,
+                onEvent = { onEvent(it) }
+            )
         }
 
         composable(

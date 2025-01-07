@@ -159,6 +159,15 @@ fun TopBar(
                 }
             },
             navigationIcon = {
+                if (navController.currentDestination.toString().contains(Screen.ClientOrder.route)) {
+                    IconButton(onClick = { navController.navigate(Screen.Basket.route) }) {
+                        Icon(
+                            painter = painterResource(R.drawable.shopping_basket),
+                            contentDescription = "Basket",
+                            tint = Green1
+                        )
+                    }
+                }
                 if (currentDestination == Screen.AdminAddProduct.route) {
                     IconButton(
                         onClick = { navController.popBackStack() },
