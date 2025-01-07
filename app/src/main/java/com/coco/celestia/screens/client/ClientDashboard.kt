@@ -61,13 +61,12 @@ fun ClientDashboard(
         delay(1000)
     }
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(White1)
+            .verticalScroll(rememberScrollState())
     ) {
-        Column {
-            // Search Bar and Filter
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -123,13 +122,12 @@ fun ClientDashboard(
             SlideshowCarousel(items = sampleItems, navController = navController)
 
             ProductCatalog()
-        }
     }
 }
 
 @Composable
 fun ProductCatalog() {
-    val products = listOf(
+    val vegetableProducts = listOf(
         ProductItem(R.drawable.product_image, "Potato", "Php 50/Kg"),
         ProductItem(R.drawable.product_image, "Carrot", "Php 60/Kg"),
         ProductItem(R.drawable.product_image, "Cucumber", "Php 40/Kg"),
@@ -138,44 +136,76 @@ fun ProductCatalog() {
         ProductItem(R.drawable.product_image, "Eggplant", "Php 55/Kg")
     )
 
+    val coffeeProducts = listOf(
+        ProductItem(R.drawable.product_image, "Arabica Beans", "Php 300/Kg"),
+        ProductItem(R.drawable.product_image, "Roasted Beans", "Php 250/Kg"),
+        ProductItem(R.drawable.product_image, "Green Beans", "Php 400/Kg")
+    )
+
+    val meatProducts = listOf(
+        ProductItem(R.drawable.product_image, "Kiniing", "Php 200/Kg"),
+        ProductItem(R.drawable.product_image, "Pork Belly", "Php 350/Kg"),
+        ProductItem(R.drawable.product_image, "Raw Meat", "Php 100/Kg")
+    )
+
+    Column(modifier = Modifier.padding(8.dp)) {
+        ProductGrid("Vegetables", vegetableProducts)
+        ProductGrid("Coffee", coffeeProducts)
+        ProductGrid("Meat", meatProducts)
+    }
+}
+
+@Composable
+fun ProductGrid(title: String, products: List<ProductItem>) {
     Text(
-        text = "Vegetables",
+        text = title,
         fontWeight = FontWeight.Bold,
         fontSize = 30.sp,
+        fontFamily = mintsansFontFamily,
         color = Color.Black,
         modifier = Modifier.padding(start = 16.dp, top = 16.dp)
     )
     Text(
         text = "Products",
         fontWeight = FontWeight.Bold,
-        fontSize = 17.sp,
+        fontSize = 15.sp,
+        fontFamily = mintsansFontFamily,
         color = Color.Black,
-        modifier = Modifier.padding(start = 16.dp, top = 16.dp)
+        modifier = Modifier.padding(start = 20.dp, top = 8.dp)
     )
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        contentPadding = PaddingValues(8.dp)
-    ) {
-        items(products) { product ->
-            ProductCard(product)
+    Column(modifier = Modifier.padding(8.dp)) {
+        products.chunked(3).forEach { rowProducts ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                rowProducts.forEach { product ->
+                    ProductCard(
+                        product = product,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 4.dp)
+                    )
+                }
+
+                repeat(3 - rowProducts.size) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
         }
     }
 }
 
 @Composable
-fun ProductCard(product: ProductItem) {
+fun ProductCard(product: ProductItem, modifier: Modifier = Modifier) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .padding(8.dp)
-            .fillMaxWidth()
-            .wrapContentHeight()
             .clip(RoundedCornerShape(8.dp))
-            .background(Color.White)
-            .padding(8.dp),
+            .background(White1)
+            .fillMaxWidth()
+            .clickable { /* should navigate to product details */ },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
@@ -183,8 +213,8 @@ fun ProductCard(product: ProductItem) {
             contentDescription = product.name,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .size(80.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .size(110.dp)
+                .clip(RoundedCornerShape(10.dp))
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
@@ -192,12 +222,14 @@ fun ProductCard(product: ProductItem) {
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
             color = Color.Black,
+            fontFamily = mintsansFontFamily,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = product.price,
             fontSize = 12.sp,
+            fontFamily = mintsansFontFamily,
             color = Color.Gray,
             textAlign = TextAlign.Center
         )
