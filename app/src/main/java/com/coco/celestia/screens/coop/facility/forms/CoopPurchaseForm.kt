@@ -82,6 +82,7 @@ import java.util.Locale
 
 // TODO: Add checks for every field
 // TODO: Dropdown for accounts (idk what categories to put there)
+//  - Removed Fields: Accounts, Shipment Preference, Reference Number, Terms and Conditions
 
 @Composable
 fun CoopPurchaseForm(
@@ -100,12 +101,9 @@ fun CoopPurchaseForm(
             PurchaseOrder(
                 vendor = "",
                 purchaseNumber = generatePurchaseNumber(),
-                referenceNumber = "",
                 dateAdded = LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
                 expectedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
-                shipmentPreference = "",
                 customerNotes = "",
-                termsAndConditions = "",
                 items = emptyList(),
                 facility = facilityName,
                 status = "processing",
@@ -120,7 +118,6 @@ fun CoopPurchaseForm(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var items by remember { mutableStateOf<List<PurchaseOrderItem>>(emptyList()) }
     var showAddItemDialog by remember { mutableStateOf(false) }
-    var showShipmentDropdown by remember { mutableStateOf(false) }
 
     LaunchedEffect(draftId, purchaseNumber) {
         try {
@@ -145,7 +142,6 @@ fun CoopPurchaseForm(
         }
     }
 
-    val shipmentOptions = listOf("Taxi", "Public Utility Jeepney", "Private Vehicle")
     val isEdit = !purchaseNumber.isNullOrEmpty()
 
     LaunchedEffect(Unit) {
@@ -154,9 +150,7 @@ fun CoopPurchaseForm(
 
     fun validateForm(): Boolean {
         return purchaseOrderData.purchaseNumber.isNotBlank() &&
-                purchaseOrderData.referenceNumber.isNotBlank() &&
                 purchaseOrderData.expectedDate.isNotBlank() &&
-                purchaseOrderData.shipmentPreference.isNotBlank() &&
                 items.isNotEmpty()
     }
 
@@ -228,57 +222,6 @@ fun CoopPurchaseForm(
                     isEditingDraft = draftId != null && !isEdit
                 )
 
-                // Shipment Preference Dropdown
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
-                        value = purchaseOrderData.shipmentPreference,
-                        onValueChange = { },
-                        label = { Text("Shipment Preference") },
-                        readOnly = true,
-                        trailingIcon = {
-                            IconButton(onClick = { showShipmentDropdown = !showShipmentDropdown }) {
-                                Icon(
-                                    if (showShipmentDropdown) Icons.Default.KeyboardArrowUp
-                                    else Icons.Default.KeyboardArrowDown,
-                                    "Toggle shipment dropdown"
-                                )
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showShipmentDropdown = !showShipmentDropdown },
-                        colors = textFieldColors,
-                        isError = showErrorMessages && purchaseOrderData.shipmentPreference.isBlank(),
-                        supportingText = if (showErrorMessages && purchaseOrderData.shipmentPreference.isBlank()) {
-                            { Text("Shipment preference is required") }
-                        } else null
-                    )
-
-                    DropdownMenu(
-                        expanded = showShipmentDropdown,
-                        onDismissRequest = { showShipmentDropdown = false },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.surface)
-                    ) {
-                        shipmentOptions.forEach { option ->
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = option,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                },
-                                onClick = {
-                                    purchaseOrderData = purchaseOrderData.copy(shipmentPreference = option)
-                                    showShipmentDropdown = false
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-                }
-
                 // Items Section
                 PurchaseFormItemsSection(
                     items = items,
@@ -293,16 +236,7 @@ fun CoopPurchaseForm(
                 OutlinedTextField(
                     value = purchaseOrderData.customerNotes,
                     onValueChange = { purchaseOrderData = purchaseOrderData.copy(customerNotes = it) },
-                    label = { Text("Customer Notes") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 3,
-                    colors = textFieldColors
-                )
-
-                OutlinedTextField(
-                    value = purchaseOrderData.termsAndConditions,
-                    onValueChange = { purchaseOrderData = purchaseOrderData.copy(termsAndConditions = it) },
-                    label = { Text("Terms and Conditions") },
+                    label = { Text("Notes") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3,
                     colors = textFieldColors
@@ -413,7 +347,11 @@ fun CoopPurchaseForm(
                 items = items + newItem
                 hasErrors = !validateForm()
             },
-            onDismiss = { showAddItemDialog = false }
+            onDismiss = { showAddItemDialog = false },
+            //Sample products -> actual data will be fetched na from the inventory items
+            productList = listOf ("Tomato", "Potato", "Carrot", "Cabbage", "Lettuce"),
+            currentStockMap = mapOf("Tomato" to 100, "Potato" to 50, "Carrot" to 75)
+
         )
     }
 }
@@ -541,23 +479,9 @@ fun PurchaseFormHeader(
         }
 
         OutlinedTextField(
-            value = purchaseOrderData.referenceNumber,
-            onValueChange = { onPurchaseOrderChange(purchaseOrderData.copy(referenceNumber = it)) },
-            label = { Text("Reference Number") },
-            isError = showErrorMessages && purchaseOrderData.referenceNumber.isBlank(),
-            supportingText = {
-                if (showErrorMessages && purchaseOrderData.referenceNumber.isBlank()) {
-                    Text("Reference number is required")
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            colors = textFieldColors
-        )
-
-        OutlinedTextField(
             value = purchaseOrderData.expectedDate,
             onValueChange = { },
-            label = { Text("Expected Date") },
+            label = { Text("Date of Purchase") },
             readOnly = true,
             trailingIcon = {
                 IconButton(onClick = { showDatePicker = true }) {
@@ -794,19 +718,28 @@ fun PurchaseFormItemsSection(
 @Composable
 fun PurchaseOrderItemForm(
     onAddItem: (PurchaseOrderItem) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    productList: List<String>,
+    currentStockMap: Map<String, Int>
 ) {
     var itemName by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var account by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") } // Optional field
     var quantity by remember { mutableStateOf("") }
     var rate by remember { mutableStateOf("") }
     var showErrorMessages by remember { mutableStateOf(false) }
+    var showDropdown by remember { mutableStateOf(false) }
 
+    // Filtered suggestions based on input
+    val filteredSuggestions = productList.filter {
+        it.contains(itemName, ignoreCase = true) && itemName.isNotBlank()
+    }
+
+    // Get the current stock based on the selected item name
+    val currentStock = currentStockMap[itemName] ?: 0
+
+    // Validate form (description is optional)
     fun validateForm(): Boolean {
         return itemName.isNotBlank() &&
-                description.isNotBlank() &&
-                account.isNotBlank() &&
                 quantity.isNotBlank() &&
                 rate.isNotBlank() &&
                 quantity.toIntOrNull() != null &&
@@ -831,44 +764,66 @@ fun PurchaseOrderItemForm(
                     unfocusedLabelColor = Green1,
                 )
 
-                OutlinedTextField(
-                    value = itemName,
-                    onValueChange = { itemName = it },
-                    label = { Text("Item Name") },
-                    isError = showErrorMessages && itemName.isBlank(),
-                    supportingText = {
-                        if (showErrorMessages && itemName.isBlank()) {
-                            Text("Item name is required")
-                        }
-                    },
+                // Dropdown and fields
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = textFieldColors
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Dropdown for Item Name
+                    Box(modifier = Modifier.weight(1f)) {
+                        OutlinedTextField(
+                            value = itemName,
+                            onValueChange = {
+                                itemName = it
+                                showDropdown = it.isNotBlank()
+                            },
+                            label = { Text("Item Name") },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = textFieldColors,
+                            isError = showErrorMessages && itemName.isBlank(),
+                            supportingText = if (showErrorMessages && itemName.isBlank()) {
+                                { Text("Item name is required") }
+                            } else null
+                        )
+                        DropdownMenu(
+                            expanded = showDropdown,
+                            onDismissRequest = { showDropdown = false }
+                        ) {
+                            filteredSuggestions.forEach { suggestion ->
+                                DropdownMenuItem(
+                                    text = { Text(suggestion) },
+                                    onClick = {
+                                        itemName = suggestion
+                                        showDropdown = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    //TODO: Add button when clicked should open to the AddInventoryItems.kt, So like if wala pa ung product na yon pwede muna niya i-add
+                    // Add button beside Item Name
+                    Button(
+                        onClick = { /* No functionality added yet */ },
+                        modifier = Modifier.padding(start = 8.dp)
+                    ) {
+                        Text("Add")
+                    }
+                }
+
+                // Display current stock
+                Text(
+                    text = "Current Stock: $currentStock",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary
                 )
 
+                // Description field (optional)
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
-                    label = { Text("Description") },
-                    isError = showErrorMessages && description.isBlank(),
-                    supportingText = {
-                        if (showErrorMessages && description.isBlank()) {
-                            Text("Description is required")
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = textFieldColors
-                )
-
-                OutlinedTextField(
-                    value = account,
-                    onValueChange = { account = it },
-                    label = { Text("Account") },
-                    isError = showErrorMessages && account.isBlank(),
-                    supportingText = {
-                        if (showErrorMessages && account.isBlank()) {
-                            Text("Account is required")
-                        }
-                    },
+                    label = { Text("Description (Optional)") },
                     modifier = Modifier.fillMaxWidth(),
                     colors = textFieldColors
                 )
@@ -897,7 +852,7 @@ fun PurchaseOrderItemForm(
                             rate = it
                         }
                     },
-                    label = { Text("Rate") },
+                    label = { Text("Price per Unit") },
                     isError = showErrorMessages && (rate.isBlank() || rate.toDoubleOrNull() == null),
                     supportingText = {
                         if (showErrorMessages && rate.isBlank()) {
@@ -913,38 +868,44 @@ fun PurchaseOrderItemForm(
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    showErrorMessages = true
-                    if (validateForm()) {
-                        onAddItem(
-                            PurchaseOrderItem(
-                                itemName = itemName,
-                                description = description,
-                                account = account,
-                                quantity = quantity.toInt(),
-                                rate = rate.toDouble()
+            // Row containing Cancel and Add buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = "Cancel",
+                        color = Green1
+                    )
+                }
+
+                Button(
+                    onClick = {
+                        showErrorMessages = true
+                        if (validateForm()) {
+                            onAddItem(
+                                PurchaseOrderItem(
+                                    itemName = itemName,
+                                    description = description, // Optional
+                                    quantity = quantity.toInt(),
+                                    rate = rate.toDouble()
+                                )
                             )
-                        )
-                        onDismiss()
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Green1,
-                    contentColor = Color.White
-                )
-            ) {
-                Text("Add")
-            }
-        },
-        dismissButton = {
-            OutlinedButton(
-                onClick = onDismiss
-            ) {
-                Text(
-                    text = "Cancel",
-                    color = Green1
-                )
+                            onDismiss()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Green1,
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Add")
+                }
             }
         }
     )
