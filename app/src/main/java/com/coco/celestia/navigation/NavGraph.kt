@@ -62,6 +62,7 @@ import com.coco.celestia.screens.coop.facility.PurchaseOrderDetailsScreen
 import com.coco.celestia.screens.coop.facility.VendorDetailsScreen
 import com.coco.celestia.screens.coop.facility.Vendors
 import com.coco.celestia.screens.coop.facility.forms.CoopPurchaseForm
+import com.coco.celestia.screens.coop.facility.forms.SalesAddForm
 import com.coco.celestia.screens.farmer.FarmerDashboard
 import com.coco.celestia.screens.farmer.FarmerItems
 import com.coco.celestia.screens.farmer.FarmerManageOrder
@@ -80,6 +81,7 @@ import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.PurchaseOrderViewModel
+import com.coco.celestia.viewmodel.SalesViewModel
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
@@ -104,6 +106,7 @@ fun NavGraph(
     userViewModel: UserViewModel = viewModel(),
     specialRequestViewModel: SpecialRequestViewModel = viewModel(),
     vendorViewModel: VendorViewModel = viewModel(),
+    salesViewModel: SalesViewModel = viewModel(),
     purchaseOrderViewModel: PurchaseOrderViewModel = viewModel(),
     onNavigate: (String) -> Unit,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit,
@@ -560,20 +563,43 @@ fun NavGraph(
             )
         }
 
-//        composable(
-//            route = Screen.CoopProductInventory.route,
-//            arguments = listOf(
-//                navArgument("type") { type = NavType.StringType })
-//        ) { backStack ->
-//            val type = backStack.arguments?.getString("type")
-//
-//            productType = type ?: ""
-//            onNavigate("Inventory")
-//            ProductTypeInventory(
-//                type = productType,
-//                userRole = userRole
-//            )
-//        }
+        composable(Screen.CoopAddSales.route) {
+            val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
+            val userFacility = facilitiesData.find { facility ->
+                facility.emails.contains(userEmail)
+            }
+
+            SalesAddForm(
+                viewModel = salesViewModel,
+                productViewModel = productViewModel,
+                facilityName = userFacility?.name ?: "",
+                userRole = userRole,
+                onSuccess = { navController.navigateUp() },
+                onCancel = { navController.navigateUp() }
+            )
+        }
+
+        composable(
+            route = Screen.CoopEditSales.route,
+            arguments = listOf(navArgument("salesId") { type = NavType.StringType })
+        ) { entry ->
+            val salesId = entry.arguments?.getString("salesId")
+            val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
+            val userFacility = facilitiesData.find { facility ->
+                facility.emails.contains(userEmail)
+            }
+
+            SalesAddForm(
+                viewModel = salesViewModel,
+                productViewModel = productViewModel,
+                facilityName = userFacility?.name ?: "",
+                userRole = userRole,
+                salesId = salesId,
+                onSuccess = { navController.navigateUp() },
+                onCancel = { navController.navigateUp() }
+            )
+        }
+
         composable(route = Screen.AddProductInventory.route) {
             var facilityName by remember { mutableStateOf("") }
             var quantity by remember { mutableStateOf(0) }

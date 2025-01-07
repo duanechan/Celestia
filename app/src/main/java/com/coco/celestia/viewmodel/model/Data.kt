@@ -198,6 +198,17 @@ data class PurchaseOrderItem(
     val rate: Double = 0.0
 )
 
+data class SalesData(
+    val salesId: String = "",
+    val productName: String = "",
+    val quantity: Int = 0,
+    val price: Double = 0.0,
+    val date: String = "",
+    val weightUnit: String = Constants.WEIGHT_GRAMS,
+    val notes: String = "",
+    val facility: String = ""
+)
+
 data class Notification(
     val timestamp: String = "",
     val message: String = "",

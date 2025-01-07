@@ -34,18 +34,11 @@ import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.White1
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
+import com.coco.celestia.viewmodel.SalesState
+import com.coco.celestia.viewmodel.SalesViewModel
+import com.coco.celestia.viewmodel.model.SalesData
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-
-
-// TODO: Lipat ito sa Data.kt
-data class SalesData(
-    val id: String = "",
-    val item: String = "",
-    val amount: Double = 0.0,
-    val date: String = "",
-    val inStore: Boolean = true
-)
 
 data class OrderItem(
     val status: String,
@@ -61,6 +54,8 @@ fun CoopSales(
     modifier: Modifier = Modifier
 ) {
     val facilityViewModel: FacilityViewModel = viewModel()
+    val salesViewModel: SalesViewModel = viewModel()
+
     val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
     val facilityState by facilityViewModel.facilityState.observeAsState(FacilityState.LOADING)
 
@@ -97,9 +92,17 @@ fun CoopSales(
                     }
                 } else {
                     if (isInStore) {
-                        InStoreSalesContentUI(navController, facilityName)
+                        InStoreSalesContentUI(
+                            navController = navController,
+                            facilityName = facilityName,
+                            viewModel = salesViewModel
+                        )
                     } else {
-                        OnlineSalesContentUI(navController, facilityName)
+                        OnlineSalesContentUI(
+                            navController = navController,
+                            facilityName = facilityName,
+                            viewModel = salesViewModel
+                        )
                     }
                 }
             }
@@ -110,260 +113,302 @@ fun CoopSales(
 @Composable
 private fun InStoreSalesContentUI(
     navController: NavController,
-    facilityName: String
+    facilityName: String,
+    viewModel: SalesViewModel
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var showSortDropdown by remember { mutableStateOf(false) }
     var sortOption by remember { mutableStateOf("A-Z") }
 
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    val sampleInStoreSales = remember {
-        listOf(
-            SalesData("InStoreSale #001", "Rice", 70.0, "2023-11-01"),
-            SalesData("InStoreSale #002", "Fertilizer", 120.0, "2023-12-05"),
-            SalesData("InStoreSale #003", "Corn", 80.0, "2024-01-10")
-        )
+    val salesState by viewModel.salesState.observeAsState(SalesState.LOADING)
+    val salesData by viewModel.salesData.observeAsState(emptyList())
+
+    // Fetch sales for the facility when the component loads
+    LaunchedEffect(facilityName) {
+        viewModel.fetchSales(facility = facilityName)
     }
 
-    val filteredAndSortedSales = sampleInStoreSales
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+    val filteredAndSortedSales = salesData
         .filter {
-            // Filter by any detail in the SalesData
             searchQuery.isBlank() || listOf(
-                it.id,
-                it.item,
-                it.amount.toString(),
-                it.date
+                it.salesId,
+                it.productName,
+                it.price.toString(),
+                it.quantity.toString(),
+                it.date,
+                it.notes
             ).any { field -> field.contains(searchQuery, ignoreCase = true) }
         }
         .sortedWith(
             when (sortOption) {
-                "A-Z" -> compareBy { it.item }
-                "Z-A" -> compareByDescending { it.item }
+                "A-Z" -> compareBy { it.productName }
+                "Z-A" -> compareByDescending { it.productName }
                 "By Year" -> compareBy { LocalDate.parse(it.date, formatter).year }
                 "By Month" -> compareBy { LocalDate.parse(it.date, formatter).withDayOfMonth(1) }
                 "By Week" -> compareBy { LocalDate.parse(it.date, formatter).dayOfYear / 7 }
                 "By Day" -> compareBy { LocalDate.parse(it.date, formatter) }
-                else -> compareBy { it.item }
+                else -> compareBy { it.productName }
             }
         )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // Search Field and Sort Button Row
-        Row(
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            // Search Field
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { newQuery -> searchQuery = newQuery },
+            // Search Field and Sort Button Row
+            Row(
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 8.dp)
-                    .height(48.dp),
-                placeholder = {
-                    Text(text = "Search sales...")
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                trailingIcon = if (searchQuery.isNotEmpty()) {
-                    {
-                        IconButton(onClick = { searchQuery = "" }) {
-                            Icon(
-                                Icons.Default.Clear,
-                                contentDescription = "Clear search",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                } else null,
-                colors = OutlinedTextFieldDefaults.colors(
-                    cursorColor = Green1,
-                    focusedBorderColor = Green1,
-                    unfocusedBorderColor = Green1,
-                ),
-                shape = RoundedCornerShape(8.dp),
-                singleLine = true
-            )
-
-            // Sort Icon Button
-            Box {
-                IconButton(
-                    onClick = { showSortDropdown = !showSortDropdown },
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Search Field
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { newQuery -> searchQuery = newQuery },
                     modifier = Modifier
-                        .background(White1, CircleShape)
-                        .size(48.dp)
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.sort),
-                        contentDescription = "Sort",
-                        modifier = Modifier
-                            .size(24.dp)
-                            .padding(4.dp)
-                    )
-                }
+                        .weight(1f)
+                        .padding(end = 8.dp)
+                        .height(48.dp),
+                    placeholder = {
+                        Text(text = "Search sales...")
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    trailingIcon = if (searchQuery.isNotEmpty()) {
+                        {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = "Clear search",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    } else null,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        cursorColor = Green1,
+                        focusedBorderColor = Green1,
+                        unfocusedBorderColor = Green1,
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    singleLine = true
+                )
 
-                DropdownMenu(
-                    expanded = showSortDropdown,
-                    onDismissRequest = { showSortDropdown = false },
-                    modifier = Modifier.background(White1)
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("A-Z") },
-                        onClick = {
-                            sortOption = "A-Z"
-                            showSortDropdown = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Z-A") },
-                        onClick = {
-                            sortOption = "Z-A"
-                            showSortDropdown = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("By Year") },
-                        onClick = {
-                            sortOption = "By Year"
-                            showSortDropdown = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("By Month") },
-                        onClick = {
-                            sortOption = "By Month"
-                            showSortDropdown = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("By Week") },
-                        onClick = {
-                            sortOption = "By Week"
-                            showSortDropdown = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("By Day") },
-                        onClick = {
-                            sortOption = "By Day"
-                            showSortDropdown = false
-                        }
-                    )
+                // Sort Icon Button
+                Box {
+                    IconButton(
+                        onClick = { showSortDropdown = !showSortDropdown },
+                        modifier = Modifier
+                            .background(White1, CircleShape)
+                            .size(48.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.sort),
+                            contentDescription = "Sort",
+                            modifier = Modifier
+                                .size(24.dp)
+                                .padding(4.dp)
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = showSortDropdown,
+                        onDismissRequest = { showSortDropdown = false },
+                        modifier = Modifier.background(White1)
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("A-Z") },
+                            onClick = {
+                                sortOption = "A-Z"
+                                showSortDropdown = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Z-A") },
+                            onClick = {
+                                sortOption = "Z-A"
+                                showSortDropdown = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("By Year") },
+                            onClick = {
+                                sortOption = "By Year"
+                                showSortDropdown = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("By Month") },
+                            onClick = {
+                                sortOption = "By Month"
+                                showSortDropdown = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("By Week") },
+                            onClick = {
+                                sortOption = "By Week"
+                                showSortDropdown = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("By Day") },
+                            onClick = {
+                                sortOption = "By Day"
+                                showSortDropdown = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            when (salesState) {
+                SalesState.LOADING -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = Green1)
+                    }
+                }
+                SalesState.EMPTY -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No sales found")
+                    }
+                }
+                is SalesState.ERROR -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text((salesState as SalesState.ERROR).message)
+                    }
+                }
+                SalesState.SUCCESS -> {
+                    SalesContent(filteredAndSortedSales)
                 }
             }
         }
 
-        // Sales Content
-        SalesContent(filteredAndSortedSales)
+        // Floating Action Button
+        FloatingActionButton(
+            onClick = {
+                navController.navigate(Screen.CoopAddSales.route)
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp),
+            containerColor = White1,
+            contentColor = Green1
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add Sale"
+            )
+        }
     }
-//
-//    // Floating Action Button
-//    FloatingActionButton(
-//        onClick = {
-//            navController.navigate(Screen.AddInStoreSale.createRoute(facilityName))
-//        },
-//        modifier = Modifier
-//            .align(Alignment.BottomEnd)
-//            .padding(16.dp),
-//        containerColor = White1,
-//        contentColor = Green1
-//    ) {
-//        Icon(
-//            imageVector = Icons.Default.Add,
-//            contentDescription = "Add In-Store Sale"
-//        )
-//    }
 }
 
+@Composable
+private fun SalesContent(sales: List<SalesData>) {
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(sales) { sale ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = White1)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = sale.productName,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Green1
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Quantity: ${sale.quantity}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "Price: ₱${sale.price}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "Date: ${sale.date}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    if (sale.notes.isNotBlank()) {
+                        Text(
+                            text = "Notes: ${sale.notes}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
 
-
-
-// Floating Action Button
-//    //TODO: Add nalang this kung kailangan, cinomment out ko muna kase wala pang route ng pag-add
-//    FloatingActionButton(
-//        onClick = {
-//            val route = if (isInStore) {
-//                Screen.AddInStoreSale.createRoute(facilityName)
-//            } else {
-//                Screen.AddOnlineSale.createRoute(facilityName)
-//            }
-//            navController.navigate(route)
-//        },
-//        modifier = Modifier
-//            .padding(16.dp),
-//        containerColor = White1,
-//        contentColor = Green1
-//    ) {
-//        Icon(
-//            imageVector = Icons.Default.Add,
-//            contentDescription = "Add ${if (isInStore) "In-Store" else "Online"} Sale"
-//        )
-//    }
+// TODO: I'll modify this kapag naayos na yung ordering sa client side
+// TODO: Pati yung Sales tab modify nalang din since currently nagpapakita yung in-store sales
 @Composable
 private fun OnlineSalesContentUI(
     navController: NavController,
-    facilityName: String
+    facilityName: String,
+    viewModel: SalesViewModel
 ) {
     var selectedTab by remember { mutableStateOf("Orders") }
     var searchQuery by remember { mutableStateOf("") }
+    var showSortDropdown by remember { mutableStateOf(false) }
+    var sortOption by remember { mutableStateOf("A-Z") }
+
     val tabs = listOf("Orders", "Sales")
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-    // Data for Orders
-    val statuses = listOf(
-        "Pending", "Confirmed", "To Deliver", "To Receive",
-        "Completed", "Cancelled", "Return/Refund"
-    )
+    val salesState by viewModel.salesState.observeAsState(SalesState.LOADING)
+    val salesData by viewModel.salesData.observeAsState(emptyList())
 
-    val sampleOrders = remember {
-        statuses.map { status ->
-            OrderItem(status = status, totalActivities = (0..20).random())
-        }
+    // Fetch sales for the facility when the component loads
+    LaunchedEffect(facilityName) {
+        viewModel.fetchSales(facility = facilityName)
     }
 
-    val sampleOnlineSales = remember {
-        listOf(
-            SalesData("OnlineSale #001", "Corn", 80.0, "2024-01-01"),
-            SalesData("OnlineSale #002", "Vegetables", 50.0, "2024-02-10"),
-            SalesData("OnlineSale #003", "Rice", 100.0, "2023-12-05"),
-            SalesData("OnlineSale #004", "Fertilizer", 200.0, "2023-11-20")
-        )
-    }
-
-    // Sorting logic
-    var showSortDropdown by remember { mutableStateOf(false) }
-    var sortOption by remember { mutableStateOf("A-Z") }
-    val filteredAndSortedSales = sampleOnlineSales
+    val filteredAndSortedSales = salesData
         .filter {
-            // Filter by any detail in the SalesData
             searchQuery.isBlank() || listOf(
-                it.id,
-                it.item,
-                it.amount.toString(),
-                it.date
+                it.salesId,
+                it.productName,
+                it.price.toString(),
+                it.quantity.toString(),
+                it.date,
+                it.notes
             ).any { field -> field.contains(searchQuery, ignoreCase = true) }
         }
         .sortedWith(
             when (sortOption) {
-                "A-Z" -> compareBy { it.item }
-                "Z-A" -> compareByDescending { it.item }
+                "A-Z" -> compareBy { it.productName }
+                "Z-A" -> compareByDescending { it.productName }
                 "By Year" -> compareBy { LocalDate.parse(it.date, formatter).year }
                 "By Month" -> compareBy { LocalDate.parse(it.date, formatter).withDayOfMonth(1) }
                 "By Week" -> compareBy { LocalDate.parse(it.date, formatter).dayOfYear / 7 }
                 "By Day" -> compareBy { LocalDate.parse(it.date, formatter) }
-                else -> compareBy { it.item }
+                else -> compareBy { it.productName }
             }
         )
 
@@ -421,7 +466,14 @@ private fun OnlineSalesContentUI(
 
         // Tab Content
         when (selectedTab) {
-            "Orders" -> OrdersContent(sampleOrders)
+            "Orders" -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Orders functionality coming soon")
+                }
+            }
             "Sales" -> {
                 // Search Field and Sort Button Row
                 Row(
@@ -535,7 +587,36 @@ private fun OnlineSalesContentUI(
                         }
                     }
                 }
-                SalesContent(filteredAndSortedSales)
+
+                when (salesState) {
+                    SalesState.LOADING -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = Green1)
+                        }
+                    }
+                    SalesState.EMPTY -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("No sales found")
+                        }
+                    }
+                    is SalesState.ERROR -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text((salesState as SalesState.ERROR).message)
+                        }
+                    }
+                    SalesState.SUCCESS -> {
+                        SalesContent(filteredAndSortedSales)
+                    }
+                }
             }
         }
     }
@@ -557,26 +638,6 @@ fun OrdersContent(filteredOrders: List<OrderItem>) {
             contentAlignment = Alignment.Center
         ) {
             Text("No orders found matching your query.")
-        }
-    }
-}
-
-@Composable
-fun SalesContent(filteredSales: List<SalesData>) {
-    if (filteredSales.isNotEmpty()) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(filteredSales) { sale ->
-                SaleCard(sale = sale, modifier = Modifier.padding(vertical = 8.dp))
-            }
-        }
-    } else {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("No sales found matching your query.")
         }
     }
 }
@@ -648,58 +709,58 @@ fun OrderCard(
     }
 }
 
-@Composable
-fun SaleCard(
-    sale: SalesData,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = White1
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = sale.item,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Green1
-                )
-                Text(
-                    text = "PHP ${"%.2f".format(sale.amount)}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Green1
-                )
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = sale.id,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = sale.date,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
+//@Composable
+//fun SaleCard(
+//    sale: SalesData,
+//    modifier: Modifier = Modifier
+//) {
+//    Card(
+//        modifier = modifier.fillMaxWidth(),
+//        colors = CardDefaults.cardColors(
+//            containerColor = White1
+//        ),
+//        elevation = CardDefaults.cardElevation(
+//            defaultElevation = 2.dp
+//        )
+//    ) {
+//        Column(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(16.dp)
+//        ) {
+//            Row(
+//                modifier = Modifier.fillMaxWidth(),
+//                horizontalArrangement = Arrangement.SpaceBetween
+//            ) {
+//                Text(
+//                    text = sale.item,
+//                    style = MaterialTheme.typography.titleMedium,
+//                    color = Green1
+//                )
+//                Text(
+//                    text = "PHP ${"%.2f".format(sale.amount)}",
+//                    style = MaterialTheme.typography.titleMedium,
+//                    color = Green1
+//                )
+//            }
+//
+//            Spacer(modifier = Modifier.height(4.dp))
+//
+//            Row(
+//                modifier = Modifier.fillMaxWidth(),
+//                horizontalArrangement = Arrangement.SpaceBetween
+//            ) {
+//                Text(
+//                    text = sale.id,
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    color = MaterialTheme.colorScheme.onSurfaceVariant
+//                )
+//                Text(
+//                    text = sale.date,
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    color = MaterialTheme.colorScheme.onSurfaceVariant
+//                )
+//            }
+//        }
+//    }
+//}
