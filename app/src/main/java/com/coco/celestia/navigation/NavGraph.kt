@@ -511,6 +511,55 @@ fun NavGraph(
                 isInStore = false
             )
         }
+
+        composable(
+            route = Screen.CoopInStoreSales.route,
+            arguments = listOf(navArgument("facilityName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val facilityName = backStackEntry.arguments?.getString("facilityName") ?: ""
+
+            val currentEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
+            onNavigate("In-Store Sales")
+            CoopSales(
+                navController = navController,
+                facilityName = facilityName,
+                userEmail = currentEmail,
+                isInStore = true
+            )
+        }
+
+        composable(
+            route = Screen.CoopOnlineSales.route,
+            arguments = listOf(navArgument("facilityName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val facilityName = backStackEntry.arguments?.getString("facilityName") ?: ""
+
+            val currentEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
+            onNavigate("Online Sales")
+            CoopSales(
+                navController = navController,
+                facilityName = facilityName,
+                userEmail = currentEmail,
+                isInStore = false
+            )
+        }
+
+        composable(
+            route = Screen.CoopSales.route,
+            arguments = listOf(navArgument("facilityName") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val facilityName = backStackEntry.arguments?.getString("facilityName") ?: ""
+
+            val currentEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
+            onNavigate("Sales")
+            CoopSales(
+                navController = navController,
+                facilityName = facilityName,
+                userEmail = currentEmail,
+                isInStore = false
+            )
+        }
+
 //        composable(
 //            route = Screen.CoopProductInventory.route,
 //            arguments = listOf(
@@ -627,9 +676,6 @@ fun NavGraph(
         }
         composable(Screen.CoopReports.route) {
             CoopReports(navController)
-        }
-        composable(Screen.CoopSales.route) {
-            CoopSales(navController)
         }
         composable(Screen.CoopPurchases.route) {
             onNavigate("Purchase Orders")

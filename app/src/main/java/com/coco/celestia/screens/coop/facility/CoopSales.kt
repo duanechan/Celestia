@@ -20,19 +20,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.CoopBackground
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.White1
+import com.coco.celestia.viewmodel.FacilityState
+import com.coco.celestia.viewmodel.FacilityViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-data class SaleItem(
-    val id: String,
-    val item: String,
-    val amount: Double,
-    val date: String
+
+// TODO: Lipat ito sa Data.kt
+data class SalesData(
+    val id: String = "",
+    val item: String = "",
+    val amount: Double = 0.0,
+    val date: String = "",
+    val inStore: Boolean = true
 )
 
 data class OrderItem(
@@ -43,7 +51,63 @@ data class OrderItem(
 @Composable
 fun CoopSales(
     navController: NavController,
+    facilityName: String,
+    userEmail: String,
+    isInStore: Boolean,
     modifier: Modifier = Modifier
+) {
+    val facilityViewModel: FacilityViewModel = viewModel()
+    val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
+    val facilityState by facilityViewModel.facilityState.observeAsState(FacilityState.LOADING)
+
+    LaunchedEffect(Unit) {
+        facilityViewModel.fetchFacilities()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        when (facilityState) {
+            is FacilityState.LOADING -> LoadingScreen("Loading facilities...")
+            is FacilityState.ERROR -> ErrorScreen((facilityState as FacilityState.ERROR).message)
+            else -> {
+                val userFacility = facilitiesData.find { facility ->
+                    facility.emails.contains(userEmail)
+                }
+
+                if (userFacility == null) {
+                    NoFacilityScreen()
+                } else if (userFacility.name != facilityName) {
+                    LaunchedEffect(Unit) {
+                        if (isInStore) {
+                            navController.navigate(Screen.CoopInStoreSales.createRoute(userFacility.name)) {
+                                popUpTo(navController.graph.startDestinationId)
+                            }
+                        } else {
+                            navController.navigate(Screen.CoopOnlineSales.createRoute(userFacility.name)) {
+                                popUpTo(navController.graph.startDestinationId)
+                            }
+                        }
+                    }
+                } else {
+                    SalesContentUI(
+                        navController = navController,
+                        facilityName = facilityName,
+                        isInStore = isInStore
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SalesContentUI(
+    navController: NavController,
+    facilityName: String,
+    isInStore: Boolean,
 ) {
     var selectedTab by remember { mutableStateOf("Orders") }
     var searchQuery by remember { mutableStateOf("") }
@@ -52,7 +116,8 @@ fun CoopSales(
 
     // Sample Data for Orders and Sales
     val statuses = listOf(
-        "Pending", "Confirmed", "To Deliver", "To Receive", "Completed", "Cancelled", "Return/Refund"
+        "Pending", "Confirmed", "To Deliver", "To Receive",
+        "Completed", "Cancelled", "Return/Refund"
     )
 
     val sampleOrders = remember {
@@ -63,10 +128,10 @@ fun CoopSales(
 
     val sampleSales = remember {
         listOf(
-            SaleItem("Sale #001", "Rice", 50.0, "2022-12-01"),
-            SaleItem("Sale #002", "Corn", 30.0, "2023-10-01"),
-            SaleItem("Sale #003", "Fertilizer", 100.0, "2024-02-02"),
-            SaleItem("Sale #004", "Vegetables", 20.0, "2024-01-05")
+            SalesData("Sale #001", "Rice", 50.0, "2022-12-01"),
+            SalesData("Sale #002", "Corn", 30.0, "2023-10-01"),
+            SalesData("Sale #003", "Fertilizer", 100.0, "2024-02-02"),
+            SalesData("Sale #004", "Vegetables", 20.0, "2024-01-05")
         )
     }
 
@@ -93,139 +158,133 @@ fun CoopSales(
             else -> compareBy { it.item }
         })
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .height(40.dp)
+            .padding(16.dp)
     ) {
-        Column(
+        // Search Bar
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { newQuery -> searchQuery = newQuery },
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            // Search Bar
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { newQuery -> searchQuery = newQuery },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 5.dp)
-                    .height(48.dp),
-                placeholder = {
-                    Text(text = "Search...")},
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                },
-                trailingIcon = if (searchQuery.isNotEmpty()) {
-                    {
-                        IconButton(onClick = { searchQuery = "" }) {
-                            Icon(
-                                Icons.Default.Clear,
-                                contentDescription = "Clear search",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                .fillMaxWidth()
+                .padding(bottom = 5.dp)
+                .height(48.dp),
+            placeholder = {
+                Text(text = "Search...")
+            },
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = "Search",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            trailingIcon = if (searchQuery.isNotEmpty()) {
+                {
+                    IconButton(onClick = { searchQuery = "" }) {
+                        Icon(
+                            Icons.Default.Clear,
+                            contentDescription = "Clear search",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
-                } else null,
-                colors = OutlinedTextFieldDefaults.colors(
-                    cursorColor = Green1,
-                    focusedBorderColor = Green1,
-                    unfocusedBorderColor = Green1,
-                ),
-                shape = RoundedCornerShape(8.dp),
-                singleLine = true
-            )
+                }
+            } else null,
+            colors = OutlinedTextFieldDefaults.colors(
+                cursorColor = Green1,
+                focusedBorderColor = Green1,
+                unfocusedBorderColor = Green1,
+            ),
+            shape = RoundedCornerShape(8.dp),
+            singleLine = true
+        )
 
-            // Tabs for Orders and Sales
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                tabs.forEach { tab ->
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally
+        // Tabs for Orders and Sales
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            tabs.forEach { tab ->
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    TextButton(
+                        onClick = { selectedTab = tab },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = if (selectedTab == tab)
+                                Green1
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     ) {
-                        TextButton(
-                            onClick = { selectedTab = tab },
-                            colors = ButtonDefaults.textButtonColors(
-                                contentColor = if (selectedTab == tab)
-                                    Green1
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        ) {
-                            Text(
-                                text = tab,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
+                        Text(
+                            text = tab,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
 
-                        AnimatedVisibility(
-                            visible = selectedTab == tab,
-                            enter = fadeIn() + expandVertically(),
-                            exit = fadeOut() + shrinkVertically()
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .padding(horizontal = 16.dp)
-                                    .fillMaxWidth()
-                                    .height(2.dp)
-                                    .background(
-                                        color = Green1,
-                                        shape = RoundedCornerShape(1.dp)
-                                    )
-                            )
-                        }
+                    AnimatedVisibility(
+                        visible = selectedTab == tab,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .fillMaxWidth()
+                                .height(2.dp)
+                                .background(
+                                    color = Green1,
+                                    shape = RoundedCornerShape(1.dp)
+                                )
+                        )
                     }
                 }
             }
+        }
 
-            // Tab Content
-            when (selectedTab) {
-                "Orders" -> OrdersContent(filteredOrders)
+        // Tab Content
+        when (selectedTab) {
+            "Orders" -> OrdersContent(filteredOrders)
+            "Sales" -> {
+                // Sort Options
+                var expanded by remember { mutableStateOf(false) }
 
-                "Sales" -> {
-                    // Sort Options
-                    var expanded by remember { mutableStateOf(false) } // State for dropdown menu
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Sort by:", style = MaterialTheme.typography.bodyMedium)
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("Sort by:", style = MaterialTheme.typography.bodyMedium)
+                    Box {
+                        Button(
+                            onClick = { expanded = !expanded },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Green1,
+                                contentColor = White1
+                            ),
+                            modifier = Modifier
+                                .height(30.dp)
+                                .width(150.dp)
+                        ) {
+                            Text(text = sortOption)
+                        }
 
-                        Box {
-                            Button(
-                                onClick = { expanded = !expanded },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Green1,
-                                    contentColor = White1
-                                ),
-                                modifier = Modifier
-                                    .height(30.dp)
-                                    .width(150.dp)
-                            ) {
-                                Text(text = sortOption)
-                            }
-
-                            DropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false },
-                                modifier = Modifier
-                                    .background(White1)
-                            ) {
-                                listOf("A-Z", "Z-A", "By Year", "By Month", "By Week", "By Day").forEach { option ->
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.background(White1)
+                        ) {
+                            listOf("A-Z", "Z-A", "By Year", "By Month", "By Week", "By Day")
+                                .forEach { option ->
                                     DropdownMenuItem(
                                         onClick = {
                                             sortOption = option
@@ -234,29 +293,35 @@ fun CoopSales(
                                         text = { Text(option) }
                                     )
                                 }
-                            }
                         }
                     }
-
-                    SalesContent(filteredAndSortedSales)
                 }
+
+                SalesContent(filteredAndSortedSales)
             }
         }
 
         // Floating Action Button
-        FloatingActionButton(
-            onClick = { /* Handle navigation to create new entry */ },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp),
-            containerColor = White1,
-            contentColor = Green1
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add"
-            )
-        }
+        //TODO: Add nalang this kung kailangan, cinomment out ko muna kase wala pang route ng pag-add
+//        FloatingActionButton(
+//            onClick = {
+//                val route = if (isInStore) {
+//                    Screen.AddInStoreSale.createRoute(facilityName)
+//                } else {
+//                    Screen.AddOnlineSale.createRoute(facilityName)
+//                }
+//                navController.navigate(route)
+//            },
+//            modifier = Modifier
+//                .padding(16.dp),
+//            containerColor = White1,
+//            contentColor = Green1
+//        ) {
+//            Icon(
+//                imageVector = Icons.Default.Add,
+//                contentDescription = "Add ${if (isInStore) "In-Store" else "Online"} Sale"
+//            )
+//        }
     }
 }
 
@@ -281,7 +346,7 @@ fun OrdersContent(filteredOrders: List<OrderItem>) {
 }
 
 @Composable
-fun SalesContent(filteredSales: List<SaleItem>) {
+fun SalesContent(filteredSales: List<SalesData>) {
     if (filteredSales.isNotEmpty()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize()
@@ -369,7 +434,7 @@ fun OrderCard(
 
 @Composable
 fun SaleCard(
-    sale: SaleItem,
+    sale: SalesData,
     modifier: Modifier = Modifier
 ) {
     Card(

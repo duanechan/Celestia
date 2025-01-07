@@ -401,8 +401,8 @@ fun App() {
                                                     "Online Products" to Screen.CoopOnlineProducts.route
                                                 )
                                                 "Sales" -> listOf(
-                                                    "In-Store Sales" to Screen.CoopSales.route,
-                                                    "Online Sales" to Screen.CoopSales.route
+                                                    "In-Store Sales" to Screen.CoopInStoreSales.route,
+                                                    "Online Sales" to Screen.CoopOnlineSales.route
                                                 )
                                                 "Purchases" -> listOf(
                                                     "Vendors" to Screen.CoopVendors.route,
