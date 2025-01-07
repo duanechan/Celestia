@@ -82,7 +82,8 @@ import java.util.Locale
 
 // TODO: Add checks for every field
 // TODO: Dropdown for accounts (idk what categories to put there)
-//  - Removed Fields: Accounts, Shipment Preference, Reference Number, Terms and Conditions
+//  - Removed Fields: Accounts, Shipment Preference, Reference Number, Terms and Conditions, Statuses
+//  - Renamed: Expected Date -> dateOfPurchase
 
 @Composable
 fun CoopPurchaseForm(
@@ -102,11 +103,10 @@ fun CoopPurchaseForm(
                 vendor = "",
                 purchaseNumber = generatePurchaseNumber(),
                 dateAdded = LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
-                expectedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
+                dateOfPurchase = LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
                 customerNotes = "",
                 items = emptyList(),
                 facility = facilityName,
-                status = "processing",
                 savedAsDraft = false
             )
         )
@@ -150,7 +150,7 @@ fun CoopPurchaseForm(
 
     fun validateForm(): Boolean {
         return purchaseOrderData.purchaseNumber.isNotBlank() &&
-                purchaseOrderData.expectedDate.isNotBlank() &&
+                purchaseOrderData.dateOfPurchase.isNotBlank() &&
                 items.isNotEmpty()
     }
 
@@ -311,7 +311,7 @@ fun CoopPurchaseForm(
                                     purchaseOrder = purchaseOrderData.copy(
                                         items = items,
                                         savedAsDraft = false,
-                                        status = if (isEdit) purchaseOrderData.status else "processing"
+//                                        status = if (isEdit) purchaseOrderData.status else "processing"
                                     ),
                                     onSuccess = {
                                         isLoading = false
@@ -375,9 +375,9 @@ fun PurchaseFormHeader(
             title = { Text("Select Expected Date") },
             text = {
                 CalendarPicker(
-                    selectedDate = purchaseOrderData.expectedDate,
+                    selectedDate = purchaseOrderData.dateOfPurchase,
                     onDateSelected = { newDate ->
-                        onPurchaseOrderChange(purchaseOrderData.copy(expectedDate = newDate))
+                        onPurchaseOrderChange(purchaseOrderData.copy(dateOfPurchase = newDate))
                     },
                     onDismiss = { showDatePicker = false }
                 )
@@ -479,7 +479,7 @@ fun PurchaseFormHeader(
         }
 
         OutlinedTextField(
-            value = purchaseOrderData.expectedDate,
+            value = purchaseOrderData.dateOfPurchase,
             onValueChange = { },
             label = { Text("Date of Purchase") },
             readOnly = true,
@@ -915,8 +915,12 @@ private fun formatCurrency(amount: Double): String {
     return "₱%.2f".format(amount)
 }
 
+private var purchaseCount = 0
+
 private fun generatePurchaseNumber(): String {
-    val timestamp = System.currentTimeMillis()
-    val random = Random.nextInt(1000, 9999)
-    return "PO-${timestamp.toString().takeLast(6)}-$random"
+    purchaseCount++
+
+    val currentDate = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"))
+
+    return "PO-$currentDate-$purchaseCount"
 }

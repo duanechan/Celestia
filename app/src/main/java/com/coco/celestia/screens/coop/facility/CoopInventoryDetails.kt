@@ -332,7 +332,7 @@ private fun ProductTabs(product: ProductData) {
         }
 
         when (selectedTab) {
-            0 -> DetailsTab(product)
+            0 -> Details(product)
             1 -> TransactionsTab()
             2 -> HistoryTab()
         }
@@ -340,7 +340,7 @@ private fun ProductTabs(product: ProductData) {
 }
 
 @Composable
-private fun DetailsTab(product: ProductData) {
+private fun Details(product: ProductData) {
     val isProductInStore = remember(product) {
         product.isInStore
     }

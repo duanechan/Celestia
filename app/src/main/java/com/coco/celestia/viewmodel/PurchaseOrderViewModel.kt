@@ -26,7 +26,7 @@ class PurchaseOrderViewModel : ViewModel() {
     private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("purchase_orders")
     private val _purchaseOrderData = MutableLiveData<List<PurchaseOrder>>()
     private val _purchaseOrderState = MutableLiveData<PurchaseOrderState>()
-    val purchaseOrderData: LiveData<List<PurchaseOrder>> = _purchaseOrderData
+    val InputDate: LiveData<List<PurchaseOrder>> = _purchaseOrderData
     val purchaseOrderState: LiveData<PurchaseOrderState> = _purchaseOrderState
 
     fun fetchPurchaseOrders(filter: String = "all", searchQuery: String = "", facilityName: String? = null) {

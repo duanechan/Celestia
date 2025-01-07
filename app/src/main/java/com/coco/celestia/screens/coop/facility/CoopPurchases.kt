@@ -20,9 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -36,6 +34,8 @@ import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
 
 // TODO: filtering options
+// TODO:
+//  Note: Removed: Reference Number, More Information, Status(Processing)
 
 @Composable
 fun CoopPurchases(
@@ -201,7 +201,7 @@ fun CoopPurchases(
 
                         // Content
                         val purchaseOrderState = purchaseOrderViewModel.purchaseOrderState.value
-                        val purchaseOrders = purchaseOrderViewModel.purchaseOrderData.value
+                        val purchaseOrders = purchaseOrderViewModel.InputDate.value
 
                         val filteredOrders = when (selectedTab) {
                             "Draft" -> purchaseOrders?.filter { it.savedAsDraft }
@@ -339,14 +339,14 @@ fun PurchaseOrderCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Reference #: ${purchaseOrder.referenceNumber}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+//                Text(
+//                    text = "Reference #: ${purchaseOrder.referenceNumber}",
+//                    style = MaterialTheme.typography.bodySmall,
+//                    color = MaterialTheme.colorScheme.onSurfaceVariant
+//                )
 
                 Text(
-                    text = "Expected Delivery: ${purchaseOrder.expectedDate}",
+                    text = "Date of Purchase: ${purchaseOrder.dateOfPurchase}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -364,7 +364,7 @@ fun PurchaseOrderDetailsScreen(
     onNavigateUp: () -> Unit,
 ) {
     val purchaseOrderState by purchaseOrderViewModel.purchaseOrderState.observeAsState()
-    val purchaseOrderData by purchaseOrderViewModel.purchaseOrderData.observeAsState(emptyList())
+    val purchaseOrderData by purchaseOrderViewModel.InputDate.observeAsState(emptyList())
     val selectedPurchaseOrder = purchaseOrderData.find { it.purchaseNumber == purchaseNumber }
 
     Box(
@@ -503,12 +503,10 @@ fun PurchaseDetails(
     onMarkAsCancelled: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var selectedTab by remember { mutableStateOf(0) }
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
     var isDeleting by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    val tabs = listOf("DETAILS", "HISTORY")
 
     // Delete Dialog
     if (showDeleteConfirmation) {
@@ -620,7 +618,11 @@ fun PurchaseDetails(
                         DropdownMenuItem(
                             text = { Text("Edit") },
                             onClick = {
-                                navController.navigate(Screen.CoopPurchaseForm.createRouteForEdit(purchaseOrder.purchaseNumber))
+                                navController.navigate(
+                                    Screen.CoopPurchaseForm.createRouteForEdit(
+                                        purchaseOrder.purchaseNumber
+                                    )
+                                )
                                 showMenu = false
                             },
                             leadingIcon = {
@@ -669,11 +671,18 @@ fun PurchaseDetails(
             )
 
             Text(
-                text = purchaseOrder.status.replaceFirstChar { it.uppercase() },
-                style = MaterialTheme.typography.titleMedium,
+                text = "Vendor",
+                style = MaterialTheme.typography.titleSmall,
                 color = Green1,
                 modifier = Modifier.padding(top = 8.dp)
             )
+
+//            Text(
+//                text = purchaseOrder.status.replaceFirstChar { it.uppercase() },
+//                style = MaterialTheme.typography.titleMedium,
+//                color = Green1,
+//                modifier = Modifier.padding(top = 8.dp)
+//            )
 
             Text(
                 text = "Total Amount",
@@ -688,25 +697,6 @@ fun PurchaseDetails(
                 color = Green1
             )
 
-            // Reference Number Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Reference#",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Green1
-                )
-                Text(
-                    text = purchaseOrder.referenceNumber,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Green1
-                )
-            }
-
             // Order Date Row
             Row(
                 modifier = Modifier
@@ -715,7 +705,7 @@ fun PurchaseDetails(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Order Date",
+                    text = "Date Added",
                     style = MaterialTheme.typography.bodyLarge,
                     color = Green1
                 )
@@ -734,115 +724,53 @@ fun PurchaseDetails(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Expected Delivery Date",
+                    text = "Date of Purchase",
                     style = MaterialTheme.typography.bodyLarge,
                     color = Green1
                 )
                 Text(
-                    text = purchaseOrder.expectedDate,
+                    text = purchaseOrder.dateOfPurchase,
                     style = MaterialTheme.typography.bodyLarge,
                     color = Green1
                 )
             }
         }
 
-        // Tabs
-        TabRow(
-            selectedTabIndex = selectedTab,
-            containerColor = White1,
-            contentColor = Green1,
+        Spacer(modifier = Modifier.height(2.dp))
+
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentHeight()
-                .clipToBounds(),
-            divider = {},
-            indicator = { tabPositions ->
-                TabRowDefaults.Indicator(
-                    modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                    color = Green1,
-                    height = 2.dp
-                )
-            }
+                .background(color = White1)
+                .padding(vertical = 8.dp),
+            contentAlignment = Alignment.Center
         ) {
-            tabs.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTab == index,
-                    onClick = { selectedTab = index },
-                    text = {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = if (selectedTab == index) Green1
-                            else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    },
-                    modifier = Modifier.weight(1f)
-                )
-            }
+            Text(
+                text = "Details",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
-        // Tab Content
-        when (selectedTab) {
-            0 -> DetailsTab(purchaseOrder)
-            1 -> CommentsHistoryTab()
-        }
+        Details(purchaseOrder)
     }
 }
 
 @Composable
-private fun DetailsTab(purchaseOrder: PurchaseOrder) {
+private fun Details(purchaseOrder: PurchaseOrder) {
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
         item {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // More Information Card
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = White1
-                )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    ExpandableSection(
-                        title = "More Information",
-                        initiallyExpanded = false
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 16.dp)
-                        ) {
-                            Text(
-                                text = "Shipment preference",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = Green1
-                            )
-                            Text(
-                                text = purchaseOrder.shipmentPreference,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = Green1,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
-                        }
-                    }
-                }
-            }
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Items Card
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),  // Added bottom padding here
+                    .padding(bottom = 16.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = White1
                 )
@@ -928,52 +856,6 @@ private fun ItemRow(item: PurchaseOrderItem) {
                 style = MaterialTheme.typography.bodyLarge
             )
         }
-    }
-}
-
-@Composable
-private fun ExpandableSection(
-    title: String,
-    initiallyExpanded: Boolean = false,
-    content: @Composable () -> Unit
-) {
-    var isExpanded by remember { mutableStateOf(initiallyExpanded) }
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { isExpanded = !isExpanded }
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Icon(
-                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp
-                else Icons.Default.KeyboardArrowDown,
-                contentDescription = if (isExpanded) "Collapse" else "Expand"
-            )
-        }
-        AnimatedVisibility(visible = isExpanded) {
-            content()
-        }
-    }
-}
-
-@Composable
-private fun CommentsHistoryTab() {
-    // Placeholder for Comments & History tab content
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("History Content")
     }
 }
 

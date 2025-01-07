@@ -3,7 +3,6 @@ package com.coco.celestia.viewmodel.model
 import com.coco.celestia.R
 import java.time.LocalDate
 import java.time.YearMonth
-import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 
 data class UserData(
@@ -181,7 +180,7 @@ data class PurchaseOrder(
     val purchaseNumber: String = "",
     val referenceNumber: String = "",
     val dateAdded: String = "",
-    val expectedDate: String = "",
+    val dateOfPurchase: String = "",
     val shipmentPreference: String = "",
     val customerNotes: String = "",
     val termsAndConditions: String = "",
