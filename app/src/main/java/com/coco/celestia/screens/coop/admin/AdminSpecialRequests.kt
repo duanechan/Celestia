@@ -3,16 +3,22 @@
 package com.coco.celestia.screens.coop.admin
 
 import android.net.Uri
-import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -20,10 +26,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,8 +46,8 @@ import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.SpecialReqState
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
-import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.AssignedMember
 import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.SpecialRequest
 import com.coco.celestia.viewmodel.model.UserData
@@ -159,7 +168,7 @@ fun DisplayRequestItem(
         Row {
             Image(
                 painter = rememberImagePainter(
-                    data = profilePicture),
+                    data = profilePicture ?: R.drawable.profile),
                 contentDescription = "profile_pic",
                 modifier = Modifier
                     .size(50.dp)
@@ -266,10 +275,29 @@ fun SpecialRequestDetails(
     val formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
     val formattedDateTime = currentDateTime.format(formatter)
 
+    val inputFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
+    val dateTime = LocalDateTime.parse(request.dateRequested, inputFormatter)
+    val dateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy")
+    val date = dateTime.format(dateFormatter)
+
     var showDialog by remember { mutableStateOf(false) }
+    var showAddMemberDialog by remember { mutableStateOf(false) }
+    var checked by remember { mutableStateOf(true) }
     var action by remember { mutableStateOf("") }
     val usersData by userViewModel.usersData.observeAsState()
-    val userState by userViewModel.userState.observeAsState()
+    var assignedMember = remember { mutableStateListOf(AssignedMember()) }
+
+    var text by remember { mutableStateOf("") }
+    var product by remember { mutableStateOf("") }
+    var quantity by remember { mutableIntStateOf(0) }
+    var expanded by remember { mutableStateOf(false) }
+    var productExpanded by remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
+
+    var memberEmpty by remember { mutableStateOf(false) }
+    var productEmpty by remember { mutableStateOf(false) }
+    var quantityEmpty by remember { mutableStateOf(false) }
+    var quantityExceeded by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         userViewModel.fetchUsers()
@@ -279,12 +307,123 @@ fun SpecialRequestDetails(
         user?.find { it.email == request.email }
     }
 
-    Column {
-        DisplayRequestDetails(
-            user,
-            request
-        )
+    val filteredUsers = usersData?.filter {
+        (it.role == "CoopCoffee" || it.role == "CoopMeat")
+    }?.map { "${it.firstname} ${it.lastname}" } ?: emptyList()
 
+    val productList = request.products.map { it.name }
+
+    Column (
+        modifier = Modifier
+            .fillMaxSize()
+            .background(White2)
+    ){
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Green4)
+                .padding(horizontal = 8.dp)
+                .padding(bottom = 8.dp)
+        ) {
+            Text(
+                text = "Date of Request: $date"
+            )
+        }
+        //Request ID etc.
+        Row (
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp)
+                .padding(top = 8.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.White)
+                .border(
+                    width = 2.dp,
+                    color = Green4,
+                    shape = RoundedCornerShape(12.dp)
+                )
+        ){
+            Text(
+                text = "Request ID",
+                modifier = Modifier
+                    .padding(16.dp)
+                    .weight(1f)
+            )
+
+            Text(
+                text = request.specialRequestUID.split("-").take(4).joinToString("-"),
+                modifier = Modifier
+                    .padding(16.dp)
+                    .weight(2f)
+            )
+        }
+        // Toggle Button
+        if (request.status != "To Review") {
+            Row (
+                modifier = Modifier
+                    .padding(horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ){
+                Text(
+                    text = "Details",
+                    fontWeight = FontWeight.Bold
+                )
+
+                Switch(
+                    checked = checked,
+                    onCheckedChange = { checked = it},
+                    modifier = Modifier
+                        .graphicsLayer (
+                            scaleX = 0.6f,
+                            scaleY = 0.6f
+                        ),
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Green4,
+                        checkedTrackColor = Green1,
+                        uncheckedThumbColor = Green2,
+                        uncheckedTrackColor = Green4
+                    )
+                )
+            }
+        }
+
+        if (checked) {
+            DisplayRequestDetails(
+                user,
+                request
+            )
+        }
+
+        if (request.assignedFarmer.isEmpty()) {
+            Row (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White)
+                    .border(
+                        width = 2.dp,
+                        color = Green4,
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                verticalAlignment = Alignment.CenterVertically
+            ){
+                Text(
+                    text = "Assign a Member",
+                    modifier = Modifier
+                        .padding(16.dp)
+                )
+
+                Image(
+                    painter = painterResource(R.drawable.add),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable { showAddMemberDialog = true }
+                )
+            }
+        }
+        // Accept/ Decline
         if (request.status == "To Review") {
             Box (
                 modifier = Modifier
@@ -359,6 +498,281 @@ fun SpecialRequestDetails(
                 }
             )
         }
+
+        if (showAddMemberDialog) {
+            AlertDialog(
+                onDismissRequest = { showAddMemberDialog = false},
+                title = {
+                    Text("Assign a Member")
+                },
+                text = {
+                    Column (
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable (
+                                interactionSource = interactionSource,
+                                indication = null,
+                                onClick = {
+                                    expanded = false
+                                }
+                            )
+                    ){
+                        Row (
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Member",
+                                modifier = Modifier.padding(2.dp)
+                            )
+
+                            if (memberEmpty) {
+                                Text(
+                                    text = "Member cannot be Empty",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Red,
+                                    modifier = Modifier.padding(2.dp)
+                                )
+                            }
+                        }
+
+                        Column (
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        ) {
+                            TextField(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .border(
+                                        width = 2.dp,
+                                        color = Green2,
+                                        shape = RoundedCornerShape(12.dp)
+                                    ),
+                                value = text,
+                                onValueChange = {
+                                    text = it
+                                    expanded = true
+                                },
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Text,
+                                    imeAction = ImeAction.Done
+                                ),
+                                singleLine = true,
+                                trailingIcon = {
+                                    IconButton(onClick = { expanded = !expanded }) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.ArrowDropDown,
+                                            contentDescription = null
+                                        )
+                                    }
+                                },
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent
+                                )
+                            )
+
+                            AnimatedVisibility(visible = expanded) {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(Color.White)
+                                ) {
+                                    LazyColumn (
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                    ) {
+                                        if (text.isNotEmpty()) {
+                                            items(
+                                                filteredUsers.filter {
+                                                    it.lowercase().contains(text.lowercase())
+                                                }
+                                                    .sorted()
+                                            ) {
+                                                MemberItems(title = it) { title ->
+                                                    text = title
+                                                    expanded = false
+                                                }
+                                            }
+                                        } else {
+                                            items(
+                                                filteredUsers.sorted()
+                                            ) {
+                                                MemberItems(title = it) { title ->
+                                                    text = title
+                                                    expanded = false
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Row (
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Product",
+                                modifier = Modifier.padding(2.dp)
+                            )
+                            if (productEmpty) {
+                                Text(
+                                    text = "Product cannot be Empty",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Red,
+                                    modifier = Modifier.padding(2.dp)
+                                )
+                            }
+                        }
+
+                        Column {
+                            TextField(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .border(
+                                        width = 2.dp,
+                                        color = Green2,
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                    .clickable { productExpanded = !productExpanded },
+                                value = product,
+                                onValueChange = {
+                                    product = it
+                                    productExpanded = true
+                                },
+                                singleLine = true,
+                                trailingIcon = {
+                                    IconButton(onClick = { productExpanded = !productExpanded }) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.ArrowDropDown,
+                                            contentDescription = null,
+                                            tint = Color.Black
+                                        )
+                                    }
+                                },
+                                colors = TextFieldDefaults.colors(
+                                    disabledTextColor = Color.Black,
+                                    disabledContainerColor = Color.Transparent,
+                                    disabledIndicatorColor = Color.Transparent
+                                ),
+                                enabled = false,
+                            )
+
+                            DropdownMenu(
+                                expanded = productExpanded,
+                                onDismissRequest = { productExpanded = false}
+                            ) {
+                                productList.forEach {
+                                    DropdownMenuItem(
+                                        onClick = {
+                                            product = it
+                                            productExpanded = false
+                                        },
+                                        text = {
+                                            Text(text = it)
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        Row (
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Quantity",
+                                modifier = Modifier.padding(2.dp)
+                            )
+
+                            if (quantityEmpty) {
+                                Text(
+                                    text = "Quantity cannot be Empty",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Red,
+                                    modifier = Modifier.padding(2.dp)
+                                )
+                            }
+                        }
+
+                        TextField(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(
+                                    width = 2.dp,
+                                    color = Green2,
+                                    shape = RoundedCornerShape(12.dp)
+                                ),
+                            value = if (quantity == 0) "" else quantity.toString(),
+                            onValueChange = { newValue ->
+                                quantity = newValue.toIntOrNull() ?: 0
+                            },
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction = ImeAction.Done
+                            ),
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
+                            )
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            memberEmpty = text.isEmpty()
+                            productEmpty = product.isEmpty()
+                            quantityEmpty = quantity == 0
+
+                            val member = AssignedMember(
+
+                            )
+
+                        }
+                    ) {
+                        Text("Add")
+                    }
+                },
+                dismissButton = {
+                    Button(
+                        onClick = {
+                            text = ""
+                            product = ""
+                            quantity = 0
+                            showAddMemberDialog = false
+                        }
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun MemberItems (
+    title: String,
+    onSelect: (String) -> Unit
+) {
+    Row (
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .clickable {
+                onSelect(title)
+            }
+            .padding(4.dp)
+    ) {
+        Text(text = title, fontSize = 16.sp)
     }
 }
 
@@ -367,28 +781,11 @@ fun DisplayRequestDetails(
     user: UserData?,
     request: SpecialRequest
 ) {
-    val inputFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
-    val dateTime = LocalDateTime.parse(request.dateRequested, inputFormatter)
-    val dateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy")
-    val date = dateTime.format(dateFormatter)
-
     Column (
         modifier = Modifier
             .fillMaxWidth()
             .verticalScroll(rememberScrollState())
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Green4)
-                .padding(horizontal = 8.dp)
-                .padding(bottom = 8.dp)
-        ) {
-            Text(
-                text = "Date of Request: $date"
-            )
-        }
-
         Row (
             modifier = Modifier
                 .padding(8.dp)
@@ -453,7 +850,12 @@ fun DisplayRequestDetails(
                 .fillMaxWidth()
                 .padding(8.dp)
                 .clip(shape = RoundedCornerShape(12.dp))
-                .background(Green4)
+                .background(Color.White)
+                .border(
+                    width = 2.dp,
+                    color = Green4,
+                    shape = RoundedCornerShape(12.dp)
+                )
         ) {
             Text(
                 text = "Product/s and Quantity",

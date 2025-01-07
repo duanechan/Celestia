@@ -59,12 +59,20 @@ data class SpecialRequest(
     val dateRequested: String = "",
     val dateAccepted: String = "",
     val dateCompleted: String = "",
-    val specialRequestUID: String = ""
+    val specialRequestUID: String = "",
+    val assignedFarmer: List<AssignedMember> = emptyList()
 )
 
 data class ProductReq(
     val name: String = "",
     val quantity: Int = 0
+)
+
+data class AssignedMember(
+    val email: String = "",
+    val product: String = "",
+    val quantity: Int = 0,
+    val status: String = ""
 )
 
 data class ProductReqValidation(
