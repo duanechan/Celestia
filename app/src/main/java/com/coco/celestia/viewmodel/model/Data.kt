@@ -92,13 +92,14 @@ data class ProductData(
     val reorderPoint: Double = 0.0,
     val weightUnit: String = Constants.WEIGHT_GRAMS,
     val isInStore: Boolean = true,
+    val isActive: Boolean = true,
     val dateAdded: String = "",
     val collectionMethod: String = Constants.COLLECTION_PICKUP,
     val paymentMethod: String = Constants.PAYMENT_CASH
 ) {
     constructor() : this(
         "", "", 0, "", 0.0, 0, "", "", 0.0,
-        0.0, 0.0, Constants.WEIGHT_GRAMS, true, "",
+        0.0, 0.0, Constants.WEIGHT_GRAMS, true, true,
         Constants.COLLECTION_PICKUP, Constants.PAYMENT_CASH
     )
 }

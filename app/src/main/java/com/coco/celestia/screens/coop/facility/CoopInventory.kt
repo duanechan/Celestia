@@ -35,6 +35,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextAlign
@@ -79,7 +80,7 @@ fun CoopInventory(navController: NavController, role: String, userEmail: String)
                         modifier = Modifier
                             .fillMaxSize()
                             .height(860.dp)
-                            .background(CoopBackground)
+                            .background(White2)
                             .verticalScroll(rememberScrollState())
                             .semantics { testTag = "android:id/CoopInventoryColumn" }
                     ) {
@@ -147,7 +148,7 @@ fun CoopProductInventory(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CoopBackground)
+            .background(White2)
     ) {
         when (facilityState) {
             is FacilityState.LOADING -> {
@@ -353,22 +354,44 @@ fun ProductCard(
                     color = Green1,
                     modifier = Modifier.semantics { testTag = "android:id/ProductName" }
                 )
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = White1
-                    ),
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = Green2
-                    ),
-                    modifier = Modifier.semantics { testTag = "android:id/ProductLocation" }
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = if (product.isInStore) "In-Store" else "Online",
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        color = Green2
-                    )
+                    // Active/Inactive Status
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (product.isActive) Green4 else Color.Red.copy(alpha = 0.1f)
+                        ),
+                        modifier = Modifier.semantics { testTag = "android:id/ProductStatus" }
+                    ) {
+                        Text(
+                            text = if (product.isActive) "Active" else "Inactive",
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            color = if (product.isActive) Green1 else Color.Red
+                        )
+                    }
+
+                    // In-Store/Online Status
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = White1
+                        ),
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = Green2
+                        ),
+                        modifier = Modifier.semantics { testTag = "android:id/ProductLocation" }
+                    ) {
+                        Text(
+                            text = if (product.isInStore) "In-Store" else "Online",
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            color = Green2
+                        )
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(4.dp))

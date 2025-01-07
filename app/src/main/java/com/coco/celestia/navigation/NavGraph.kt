@@ -1,5 +1,6 @@
 package com.coco.celestia.navigation
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -87,6 +88,7 @@ import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.isActive
 
 @Composable
 fun NavGraph(
@@ -455,17 +457,15 @@ fun NavGraph(
         }
         composable(
             route = Screen.CoopInventoryDetails.route,
-            arguments = listOf(
-                navArgument("productName") {
-                    type = NavType.StringType
-                }
-            )
+            arguments = listOf(navArgument("productName") { type = NavType.StringType })
         ) { backStackEntry ->
             val productName = backStackEntry.arguments?.getString("productName") ?: ""
             onNavigate("Product Details")
             CoopInventoryDetails(
+                navController = navController,
                 productName = productName,
-                productViewModel = productViewModel
+                productViewModel = productViewModel,
+                onEvent = { onEvent(it) }
             )
         }
         composable(route = Screen.AddOrder.route) {
@@ -594,7 +594,6 @@ fun NavGraph(
                 weightUnit = Constants.WEIGHT_KILOGRAMS
                 facilityViewModel.fetchFacilities()
 
-                // Derive the facility name based on the email
                 facilityName = facilityViewModel.facilitiesData.value
                     ?.find { it.emails.contains(email) }
                     ?.name
@@ -602,6 +601,80 @@ fun NavGraph(
             }
 
             onNavigate("Add Product")
+
+            AddProductForm(
+                userViewModel = userViewModel,
+                productViewModel = productViewModel,
+                facilityViewModel = facilityViewModel,
+                vendorViewModel = vendorViewModel,
+                quantity = quantity,
+                price = price,
+                purchasingCost = purchasingCost,
+                reorderPoint = reorderPoint,
+                isInStore = isInStore,
+                weightUnit = weightUnit,
+                isDelivery = isDelivery,
+                isGcash = isGcash,
+                onProductNameChange = { productViewModel.onProductNameChange(it) },
+                onDescriptionChange = { productViewModel.updateDescription(it) },
+                onQuantityChange = { newValue -> quantity = newValue.toIntOrNull() ?: 0 },
+                onPriceChange = { newValue -> price = newValue.toDoubleOrNull() ?: 0.0 },
+                onVendorChange = { productViewModel.updateVendor(it) },
+                onPurchasingCostChange = { newValue -> purchasingCost = newValue.toDoubleOrNull() ?: 0.0 },
+                onReorderPointChange = { newValue -> reorderPoint = newValue.toDoubleOrNull() ?: 0.0 },
+                onIsInStoreChange = { isInStore = it },
+                onWeightUnitChange = { weightUnit = it },
+                onCollectionMethodChange = { isDelivery = it },
+                onPaymentMethodChange = { isGcash = it },
+                onAddClick = {
+                    navController.navigate(Screen.CoopInventory.route) {
+                        popUpTo(Screen.CoopInventory.route) { inclusive = true }
+                    }
+                },
+                onEvent = { onEvent(it) }
+            )
+        }
+
+        composable(
+            route = Screen.EditProductInventory.route,
+            arguments = listOf(
+                navArgument("productName") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val productName = Uri.decode(backStackEntry.arguments?.getString("productName") ?: "")
+            var facilityName by remember { mutableStateOf("") }
+            var quantity by remember { mutableStateOf(0) }
+
+            val email = FirebaseAuth.getInstance().currentUser?.email.orEmpty()
+
+            LaunchedEffect(Unit) {
+                productViewModel.fetchProduct(productName)
+                productViewModel.productData.value?.firstOrNull()?.let { product ->
+                    productViewModel.updateProductName(product.name)
+                    productViewModel.updateDescription(product.description)
+                    productViewModel.updateVendor(product.vendor)
+                    quantity = product.quantity
+                    price = product.price
+                    purchasingCost = product.purchasingCost
+                    reorderPoint = product.reorderPoint
+                    isInStore = product.isInStore
+                    isDelivery = product.collectionMethod == Constants.COLLECTION_DELIVERY
+                    isGcash = product.paymentMethod == Constants.PAYMENT_GCASH
+                    weightUnit = product.weightUnit
+                }
+            }
+
+            LaunchedEffect(email) {
+                facilityViewModel.fetchFacilities()
+                facilityName = facilityViewModel.facilitiesData.value
+                    ?.find { it.emails.contains(email) }
+                    ?.name
+                    .orEmpty()
+            }
+
+            onNavigate("Edit Product")
 
             AddProductForm(
                 userViewModel = userViewModel,

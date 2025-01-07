@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.`object`
 
+import android.net.Uri
 import com.coco.celestia.viewmodel.model.SpecialRequest
 
 sealed class Screen(val route: String) {
@@ -87,6 +88,9 @@ sealed class Screen(val route: String) {
         fun createRoute(type: String) = "coop_product_inventory/$type"
     }
     data object AddProductInventory : Screen("add_product_inventory")
+    data object EditProductInventory : Screen("edit_product_inventory/{productName}") {
+        fun createRoute(productName: String) = "edit_product_inventory/${Uri.encode(productName)}"
+    }
 //    data object AddProductInventory: Screen("coop_add_product_inventory/{type}") {
 //        fun createRoute(type: String) = "coop_add_product_inventory/$type"
 //    }

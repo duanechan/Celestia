@@ -14,6 +14,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
+import androidx.navigation.NavController
+import com.coco.celestia.components.toast.ToastStatus
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
@@ -22,8 +27,10 @@ import java.util.Locale
 
 @Composable
 fun CoopInventoryDetails(
+    navController: NavController,
     productName: String,
-    productViewModel: ProductViewModel
+    productViewModel: ProductViewModel,
+    onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val productState by productViewModel.productState.observeAsState()
     val productData by productViewModel.productData.observeAsState(emptyList())
@@ -40,7 +47,12 @@ fun CoopInventoryDetails(
         when (productState) {
             is ProductState.SUCCESS -> {
                 if (productData.isNotEmpty()) {
-                    ProductHeader(product = productData.first())
+                    ProductHeader(
+                        product = productData.first(),
+                        navController = navController,
+                        productViewModel = productViewModel,
+                        onEvent = onEvent
+                    )
                     ProductTabs(product = productData.first())
                 } else {
                     Box(
@@ -93,53 +105,170 @@ fun CoopInventoryDetails(
 }
 
 @Composable
-private fun ProductHeader(product: ProductData) {
-    Column(
+private fun ProductHeader(
+    product: ProductData,
+    navController: NavController,
+    productViewModel: ProductViewModel,
+    onEvent: (Triple<ToastStatus, String, Long>) -> Unit
+) {
+    var showMenu by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
             .background(White1)
     ) {
-        Text(
-            text = product.name.split(" ").joinToString(" ") { it.replaceFirstChar {
-                if (it.isLowerCase()) it.titlecase(
-                    Locale.ROOT
-                ) else it.toString()
-            } },
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
-            PriceInfoColumn(
-                title = "Selling Price",
-                price = product.price,
-                weightUnit = product.weightUnit
-            )
-
-            PriceInfoColumn(
-                title = "Purchase Cost",
-                price = product.purchasingCost,
-                weightUnit = product.weightUnit
-            )
-
-            // placeholder for now for adding image idk how to do this
-            Card(
-                modifier = Modifier.size(100.dp),
-                colors = CardDefaults.cardColors(containerColor = Green4)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("+ Add\nImage", textAlign = TextAlign.Center)
+                Text(
+                    text = product.name.split(" ").joinToString(" ") { it.replaceFirstChar {
+                        if (it.isLowerCase()) it.titlecase(
+                            Locale.ROOT
+                        ) else it.toString()
+                    } },
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                Box {
+                    IconButton(
+                        onClick = { showMenu = true },
+                        modifier = Modifier.semantics { testTag = "android:id/ProductOptionsButton" }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "More options"
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Edit") },
+                            onClick = {
+                                navController.navigate(Screen.EditProductInventory.createRoute(product.name))
+                                showMenu = false
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit"
+                                )
+                            }
+                        )
+
+                        DropdownMenuItem(
+                            text = { Text("Delete") },
+                            onClick = {
+                                showDeleteConfirmation = true
+                                showMenu = false
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete"
+                                )
+                            }
+                        )
+
+                        DropdownMenuItem(
+                            text = { Text(if (product.isActive) "Mark as Inactive" else "Mark as Active") },
+                            onClick = {
+                                productViewModel.updateActiveStatus(product.name, !product.isActive)
+                                onEvent(
+                                    Triple(
+                                        ToastStatus.SUCCESSFUL,
+                                        if (product.isActive) "Product marked as inactive" else "Product marked as active",
+                                        System.currentTimeMillis()
+                                    )
+                                )
+                                showMenu = false
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = if (product.isActive) Icons.Default.Clear else Icons.Default.CheckCircle,
+                                    contentDescription = if (product.isActive) "Mark as Inactive" else "Mark as Active"
+                                )
+                            }
+                        )
+                    }
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                PriceInfoColumn(
+                    title = "Selling Price",
+                    price = product.price,
+                    weightUnit = product.weightUnit
+                )
+
+                PriceInfoColumn(
+                    title = "Purchase Cost",
+                    price = product.purchasingCost,
+                    weightUnit = product.weightUnit
+                )
+
+                Card(
+                    modifier = Modifier.size(100.dp),
+                    colors = CardDefaults.cardColors(containerColor = Green4)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("+ Add\nImage", textAlign = TextAlign.Center)
+                    }
+                }
+            }
+        }
+
+        if (showDeleteConfirmation) {
+            AlertDialog(
+                onDismissRequest = { showDeleteConfirmation = false },
+                title = { Text("Delete Product") },
+                text = { Text("Are you sure you want to delete ${product.name}?") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            productViewModel.deleteProduct(product.name)
+                            onEvent(
+                                Triple(
+                                    ToastStatus.SUCCESSFUL,
+                                    "Product deleted successfully",
+                                    System.currentTimeMillis()
+                                )
+                            )
+                            showDeleteConfirmation = false
+                            navController.popBackStack()
+                        }
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showDeleteConfirmation = false }
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
         }
     }
 }

@@ -95,6 +95,7 @@ class ProductViewModel : ViewModel() {
                                     else -> false
                                 }
 
+                                val isActive = child.child("isActive").getValue(Boolean::class.java) ?: true
                                 val dateAdded = child.child("dateAdded").getValue(String::class.java) ?: ""
                                 val collectionMethod = child.child("collectionMethod").getValue(String::class.java) ?: Constants.COLLECTION_PICKUP
                                 val paymentMethod = child.child("paymentMethod").getValue(String::class.java) ?: Constants.PAYMENT_CASH
@@ -111,6 +112,7 @@ class ProductViewModel : ViewModel() {
                                     reorderPoint = reorderPoint,
                                     weightUnit = weightUnit,
                                     isInStore = isInStore,
+                                    isActive = isActive,
                                     dateAdded = dateAdded,
                                     collectionMethod = collectionMethod,
                                     paymentMethod = paymentMethod
@@ -163,6 +165,7 @@ class ProductViewModel : ViewModel() {
                             val reorderPoint = child.child("reorderPoint").getValue(Double::class.java) ?: 0.0
                             val weightUnit = child.child("weightUnit").getValue(String::class.java) ?: Constants.WEIGHT_GRAMS
                             val isInStore = child.child("inStore").getValue(Boolean::class.java) ?: true
+                            val isActive = child.child("isActive").getValue(Boolean::class.java) ?: true
                             val dateAdded = child.child("dateAdded").getValue(String::class.java) ?: ""
                             val collectionMethod = child.child("collectionMethod").getValue(String::class.java) ?: Constants.COLLECTION_PICKUP
                             val paymentMethod = child.child("paymentMethod").getValue(String::class.java) ?: Constants.PAYMENT_CASH
@@ -179,6 +182,7 @@ class ProductViewModel : ViewModel() {
                                 reorderPoint = reorderPoint,
                                 weightUnit = weightUnit,
                                 isInStore = isInStore,
+                                isActive = isActive,
                                 dateAdded = dateAdded,
                                 collectionMethod = collectionMethod,
                                 paymentMethod = paymentMethod
@@ -407,6 +411,48 @@ class ProductViewModel : ViewModel() {
             } catch (e: Exception) {
                 _productState.value = ProductState.ERROR(e.message ?: "Unknown error")
             }
+        }
+    }
+
+    fun getProductByName(productName: String): ProductData? {
+        return _productData.value?.find { it.name == productName }
+    }
+
+    fun updateProduct(product: ProductData) {
+        viewModelScope.launch {
+            _productState.value = ProductState.LOADING
+            val query = database.child(product.name.lowercase())
+            query.setValue(product)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        _productState.value = ProductState.SUCCESS
+                    } else {
+                        _productState.value =
+                            ProductState.ERROR(task.exception?.message ?: "Unknown error")
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    _productState.value = ProductState.ERROR(exception.message ?: "Unknown error")
+                }
+        }
+    }
+
+    fun updateActiveStatus(productName: String, isActive: Boolean) {
+        viewModelScope.launch {
+            _productState.value = ProductState.LOADING
+            val query = database.child(productName.lowercase()).child("isActive")
+            query.setValue(isActive)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        _productState.value = ProductState.SUCCESS
+                    } else {
+                        _productState.value =
+                            ProductState.ERROR(task.exception?.message ?: "Unknown error")
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    _productState.value = ProductState.ERROR(exception.message ?: "Unknown error")
+                }
         }
     }
 }

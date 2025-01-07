@@ -56,6 +56,7 @@ import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.isActive
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -440,7 +441,7 @@ fun AddProductForm(
                         price = price,
                         vendor = vendor,
                         purchasingCost = purchasingCost,
-                        openingStock = quantity.toDouble(), // Opening stock is now set to quantity
+                        openingStock = quantity.toDouble(),
                         reorderPoint = reorderPoint,
                         weightUnit = weightUnit,
                         isInStore = isInStore,
