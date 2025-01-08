@@ -420,15 +420,6 @@ fun PurchaseOrderDetailsScreen(
                                     onNavigateUp()
                                 }
                             )
-                        },
-                        onMarkAsCancelled = {
-                            purchaseOrderViewModel.updatePurchaseOrderStatus(
-                                purchaseOrderNumber = selectedPurchaseOrder.purchaseNumber,
-                                newStatus = "cancelled",
-                                onSuccess = {
-                                    purchaseOrderViewModel.fetchPurchaseOrders(facilityName)
-                                }
-                            )
                         }
                     )
                 } else {
@@ -500,7 +491,6 @@ fun PurchaseDetails(
     navController: NavController,
     purchaseOrderViewModel: PurchaseOrderViewModel,
     onDelete: () -> Unit = {},
-    onMarkAsCancelled: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var showMenu by remember { mutableStateOf(false) }
@@ -642,19 +632,6 @@ fun PurchaseDetails(
                                 Icon(
                                     Icons.Default.Delete,
                                     contentDescription = "Delete"
-                                )
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Mark as Cancelled") },
-                            onClick = {
-                                onMarkAsCancelled()
-                                showMenu = false
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Clear,
-                                    contentDescription = "Mark as Cancelled"
                                 )
                             }
                         )
