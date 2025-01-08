@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.navigation.NavController
@@ -293,7 +294,7 @@ private fun InStoreSalesContentUI(
                     }
                 }
                 SalesState.SUCCESS -> {
-                    SalesContent(filteredAndSortedSales)
+                    SalesContent(sales = filteredAndSortedSales, navController = navController)
                 }
             }
         }
@@ -318,13 +319,20 @@ private fun InStoreSalesContentUI(
 }
 
 @Composable
-private fun SalesContent(sales: List<SalesData>) {
+private fun SalesContent(
+    sales: List<SalesData>,
+    navController: NavController
+) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(sales) { sale ->
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        navController.navigate(Screen.CoopSalesDetails.createRoute(sale.salesNumber))
+                    },
                 colors = CardDefaults.cardColors(containerColor = White1)
             ) {
                 Column(
@@ -621,7 +629,7 @@ private fun OnlineSalesContentUI(
                         }
                     }
                     SalesState.SUCCESS -> {
-                        SalesContent(filteredAndSortedSales)
+                        SalesContent(sales = filteredAndSortedSales, navController = navController)
                     }
                 }
             }

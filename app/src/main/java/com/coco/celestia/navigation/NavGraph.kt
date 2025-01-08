@@ -55,6 +55,7 @@ import com.coco.celestia.screens.coop.facility.CoopProductInventory
 import com.coco.celestia.screens.coop.facility.CoopPurchases
 import com.coco.celestia.screens.coop.facility.CoopReports
 import com.coco.celestia.screens.coop.facility.CoopSales
+import com.coco.celestia.screens.coop.facility.CoopSalesDetails
 import com.coco.celestia.screens.coop.facility.forms.CoopVendorAddForm
 import com.coco.celestia.screens.coop.facility.OrderRequest
 import com.coco.celestia.screens.coop.facility.PurchaseOrderDetailsScreen
@@ -341,10 +342,14 @@ fun NavGraph(
                 firstname = firstname,
                 lastname = lastname,
                 role = role,
+                facilityViewModel = facilityViewModel,
+                userViewModel = userViewModel,
+                transactionViewModel = transactionViewModel,
                 onEmailChanged = { emailSend = it },
                 onFirstNameChanged = { firstname = it },
                 onLastNameChanged = { lastname = it },
-                onRoleChanged = { role = it }
+                onRoleChanged = { role = it },
+                onRegisterEvent = onEvent
             )
         }
         composable(route = Screen.AdminAddUserManagementDB.route) {
@@ -594,6 +599,18 @@ fun NavGraph(
                 salesNumber = salesId,
                 onSuccess = { navController.navigateUp() },
                 onCancel = { navController.navigateUp() }
+            )
+        }
+
+        composable(
+            route = Screen.CoopSalesDetails.route,
+            arguments = listOf(
+                navArgument("salesNumber") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            CoopSalesDetails(
+                navController = navController,
+                userEmail = userEmail
             )
         }
 
