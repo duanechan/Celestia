@@ -120,7 +120,7 @@ fun CoopDashboard(
             ItemCard("Inactive Items", "0")
 
             Text(
-                text = "Sales Activity",
+                text = "Order Statuses",
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp,
                 color = Color.DarkGray,
@@ -128,9 +128,13 @@ fun CoopDashboard(
             )
 
             SalesActivityCard("Pending", pendingCount.toString(), R.drawable.review)
-            SalesActivityCard("In Progress", inProgressCount.toString(), R.drawable.progress)
+            SalesActivityCard("Confirmed", inProgressCount.toString(), R.drawable.progress)
+            SalesActivityCard("To Deliver", cancelledCount.toString(), R.drawable.progress)
+            SalesActivityCard("To Receive", turnedDownCount.toString(), R.drawable.progress)
+            SalesActivityCard("Completed", cancelledCount.toString(), R.drawable.progress)
             SalesActivityCard("Cancelled", cancelledCount.toString(), R.drawable.cancelled)
-            SalesActivityCard("Turned Down", turnedDownCount.toString(), R.drawable.turned_down)
+            SalesActivityCard("Return/Refund", cancelledCount.toString(), R.drawable.cancelled)
+
 
             Text(
                 text = "Total Sales",
