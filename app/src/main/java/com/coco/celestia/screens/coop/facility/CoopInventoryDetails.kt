@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -317,7 +318,7 @@ private fun PriceInfoColumn(
 @Composable
 private fun ProductTabs(product: ProductData) {
     var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("DETAILS", "TRANSACTIONS", "HISTORY")
+    val tabs = listOf("DETAILS", "TRANSACTIONS", "PRICE HISTORY")
 
     Column {
         TabRow(
@@ -657,9 +658,8 @@ private fun PurchaseInfoSection(product: ProductData) {
 @Composable
 private fun TransactionsTab() {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+        modifier = Modifier.fillMaxSize().background(White2),
+        contentAlignment = Alignment.Center
     ) {
         LazyColumn(
             modifier = Modifier
@@ -745,12 +745,6 @@ fun TransactionsCard() {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-//            // Notes Section
-//            Text(
-//                text = "Notes: ABC details are shown hereajsdf;jslkdfas;kldfj;aklsdjfasl;dkfjas;kdjf;aljsdlkfjaskl;dfja;lsjdfaksjdf;lksjdfkljas;dfj;aslkjdf;laksjdfkajsd;fajsdfjal;sdkjf;lsdjf;laksjdfa.",
-//                style = MaterialTheme.typography.bodyMedium,
-//                color = MaterialTheme.colorScheme.onSurfaceVariant
-//            )
         }
     }
 }
@@ -761,7 +755,70 @@ private fun HistoryTab() {
         modifier = Modifier.fillMaxSize().background(White2),
         contentAlignment = Alignment.Center
     ) {
-        Text("History Coming Soon")
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Sample
+            items(3) { index ->
+                HistoryCard()
+            }
+        }
+    }
+}
+
+@Composable
+fun HistoryCard() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = White1),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Header Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Date",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Green1
+                )
+                Text(
+                    text = "Price per unit",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Quantity Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "January 8, 2025",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "PHP 23.00",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 
