@@ -28,6 +28,9 @@ import com.google.firebase.database.snapshots
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 sealed class UserState {
     data object LOADING : UserState()
@@ -172,7 +175,14 @@ class UserViewModel : ViewModel() {
                 val result = auth.createUserWithEmailAndPassword(email, password).await()
                 val user = result.user
                 user?.let {
-                    val userData = UserData(email, firstname, lastname, role)
+                    val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                    val userData = UserData(
+                        email = email,
+                        firstname = firstname,
+                        lastname = lastname,
+                        role = role,
+                        registrationDate = currentDate
+                    )
                     database.child(user.uid).setValue(userData).await()
                     _userState.value = UserState.REGISTER_SUCCESS
                     auth.signOut()
@@ -341,7 +351,8 @@ class UserViewModel : ViewModel() {
             streetNumber = snapshot.child("streetNumber").getValue(String::class.java) ?: "",
             barangay = snapshot.child("barangay").getValue(String::class.java) ?: "",
             online = snapshot.child("online").getValue(Boolean::class.java) ?: false,
-            isChecked = snapshot.child("isChecked").getValue(Boolean::class.java) ?: false
+            isChecked = snapshot.child("isChecked").getValue(Boolean::class.java) ?: false,
+            registrationDate = snapshot.child("registrationDate").getValue(String::class.java) ?: ""
         )
     }
 

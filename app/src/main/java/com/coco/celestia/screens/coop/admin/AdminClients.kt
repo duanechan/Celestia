@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.coop.admin
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,6 +45,9 @@ import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.UserData
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 @Composable
 fun AdminClients(
@@ -53,7 +58,31 @@ fun AdminClients(
 
     val usersData by userViewModel.usersData.observeAsState(emptyList())
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
+
     val clients = usersData.filter { it.role.contains("Client", ignoreCase = true) }
+
+    val today = remember { Calendar.getInstance() }
+    val currentYear = today.get(Calendar.YEAR)
+    val currentMonth = today.get(Calendar.MONTH)
+
+    val newClients = clients.filter { client ->
+        if (client.registrationDate.isBlank()) {
+            false
+        } else {
+            try {
+                val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val registrationDate = dateFormat.parse(client.registrationDate)
+                val calendar = Calendar.getInstance().apply {
+                    time = registrationDate
+                }
+
+                calendar.get(Calendar.YEAR) == currentYear &&
+                        calendar.get(Calendar.MONTH) == currentMonth
+            } catch (e: Exception) {
+                false
+            }
+        }
+    }
 
     LaunchedEffect(userState) {
         userViewModel.fetchUsers()
@@ -62,7 +91,7 @@ fun AdminClients(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F8F8))
+            .background(White2)
     ) {
         Row(
             modifier = Modifier
@@ -96,17 +125,31 @@ fun AdminClients(
 
         when (currentView) {
             "New Registered" -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No new registered clients",
-                        color = Color.Gray,
-                        fontFamily = mintsansFontFamily
-                    )
+                if (newClients.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No new registered clients this month",
+                            color = Color.Gray,
+                            fontFamily = mintsansFontFamily
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        contentPadding = PaddingValues(bottom = 16.dp)
+                    ) {
+                        items(newClients) { client ->
+                            ClientItem(client, navController)
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
                 }
             }
             "All Clients" -> {
@@ -203,6 +246,15 @@ fun ClientItem(client: UserData, navController: NavController) {
                     color = Color.Gray,
                     fontSize = 12.sp
                 )
+                if (client.registrationDate.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Registered: ${client.registrationDate}",
+                        color = Color.Gray,
+                        fontSize = 11.sp,
+                        fontStyle = FontStyle.Italic
+                    )
+                }
             }
             IconButton(onClick = {
                 navController.navigate(Screen.AdminClientDetails.createRoute(client.email))

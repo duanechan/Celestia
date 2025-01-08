@@ -15,7 +15,8 @@ data class UserData(
     val streetNumber: String = "",
     val barangay: String = "",
     val online: Boolean = false,
-    var isChecked: Boolean = false
+    var isChecked: Boolean = false,
+    val registrationDate: String = ""
 )
 
 data class FacilityData(
