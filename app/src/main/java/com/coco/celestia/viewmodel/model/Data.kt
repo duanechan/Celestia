@@ -67,7 +67,7 @@ data class SpecialRequest(
     val dateAccepted: String = "",
     val dateCompleted: String = "",
     val specialRequestUID: String = "",
-    val assignedFarmer: List<AssignedMember> = emptyList()
+    val assignedMember: List<AssignedMember> = emptyList()
 )
 
 data class ProductReq(
@@ -77,6 +77,7 @@ data class ProductReq(
 
 data class AssignedMember(
     val email: String = "",
+    val name: String = "",
     val product: String = "",
     val quantity: Int = 0,
     val status: String = ""

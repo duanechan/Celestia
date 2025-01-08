@@ -2,7 +2,9 @@
 
 package com.coco.celestia.screens.coop.admin
 
+import android.annotation.SuppressLint
 import android.net.Uri
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -264,6 +266,7 @@ fun EmptyOrders() {
     }
 }
 
+@SuppressLint("MutableCollectionMutableState")
 @Composable
 fun SpecialRequestDetails(
     navController: NavController,
@@ -285,11 +288,12 @@ fun SpecialRequestDetails(
     var checked by remember { mutableStateOf(true) }
     var action by remember { mutableStateOf("") }
     val usersData by userViewModel.usersData.observeAsState()
-    var assignedMember = remember { mutableStateListOf(AssignedMember()) }
+    val assignedMember = remember { mutableStateListOf<AssignedMember>() }
 
     var text by remember { mutableStateOf("") }
     var product by remember { mutableStateOf("") }
     var quantity by remember { mutableIntStateOf(0) }
+    var email by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     var productExpanded by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
@@ -298,7 +302,13 @@ fun SpecialRequestDetails(
     var productEmpty by remember { mutableStateOf(false) }
     var quantityEmpty by remember { mutableStateOf(false) }
     var quantityExceeded by remember { mutableStateOf(false) }
+    var unfulfilled by remember { mutableStateOf(false) }
 
+    var productPairs by remember { mutableStateOf(request.products.associate { it.name to it.quantity }.toMutableMap()) }
+    val quantityPair = productPairs[product] ?: 0
+    val unfulfilledRequests = productPairs.filter { it.value != 0 }
+
+    Log.d("quantity", quantityPair.toString())
     LaunchedEffect(Unit) {
         userViewModel.fetchUsers()
     }
@@ -309,14 +319,19 @@ fun SpecialRequestDetails(
 
     val filteredUsers = usersData?.filter {
         (it.role == "CoopCoffee" || it.role == "CoopMeat")
-    }?.map { "${it.firstname} ${it.lastname}" } ?: emptyList()
+    }?.map { "${it.firstname} ${it.lastname} - ${it.email}" } ?: emptyList()
 
     val productList = request.products.map { it.name }
+
+    fun updateQuantity(product: String, newQuantity: Int) {
+        productPairs[product] = newQuantity
+    }
 
     Column (
         modifier = Modifier
             .fillMaxSize()
             .background(White2)
+            .verticalScroll(rememberScrollState())
     ){
         Box(
             modifier = Modifier
@@ -394,8 +409,8 @@ fun SpecialRequestDetails(
             )
         }
 
-        if (request.assignedFarmer.isEmpty()) {
-            Row (
+        if (request.assignedMember.isEmpty() && request.status != "To Review") {
+            Column (
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp)
@@ -405,22 +420,112 @@ fun SpecialRequestDetails(
                         width = 2.dp,
                         color = Green4,
                         shape = RoundedCornerShape(12.dp)
-                    ),
-                verticalAlignment = Alignment.CenterVertically
+                    )
             ){
-                Text(
-                    text = "Assign a Member",
+                Row (
                     modifier = Modifier
-                        .padding(16.dp)
-                )
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Assign a Member",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(end = 16.dp)
+                    )
 
-                Image(
-                    painter = painterResource(R.drawable.add),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clickable { showAddMemberDialog = true }
-                )
+                    Image(
+                        painter = painterResource(R.drawable.add),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable { showAddMemberDialog = true }
+                    )
+                }
+
+                if (assignedMember.isNotEmpty()) {
+                    assignedMember.forEach { member ->
+                        Column (
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 8.dp)
+                                .fillMaxWidth()
+                        ){
+                            Text(
+                                text = "Name: ${member.name}",
+                            )
+
+                            Text(
+                                text = "Product: ${member.product}"
+                            )
+
+                            Text(
+                                text = "Quantity: ${member.quantity}"
+                            )
+                        }
+                    }
+
+                    if (unfulfilled) {
+                        Column (
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .padding(bottom = 8.dp)
+                                .fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Some products remain unfulfilled:",
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Red
+                            )
+
+                            unfulfilledRequests.forEach { request ->
+                                Text(
+                                    text = request.key,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Red,
+                                    modifier = Modifier
+                                        .padding(start = 6.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Box (
+                        modifier = Modifier.fillMaxWidth()
+                    ){
+                        Row (
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                        ) {
+                            Button(
+                                onClick = {
+                                    assignedMember.clear()
+                                    productPairs = request.products.associate { it.name to it.quantity }.toMutableMap()
+                                }
+                            ) {
+                                Text("Cancel")
+                            }
+
+                            Button(
+                                onClick = {
+                                    unfulfilled = unfulfilledRequests.isNotEmpty()
+
+                                    if (!unfulfilled) {
+                                        specialRequestViewModel.updateSpecialRequest(
+                                            request.copy(
+                                                assignedMember = assignedMember
+                                            )
+                                        )
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(Green4)
+                            ) {
+                                Text("Save")
+                            }
+                        }
+                    }
+                }
             }
         }
         // Accept/ Decline
@@ -458,247 +563,90 @@ fun SpecialRequestDetails(
         } else {
             // Add track request and update request if needed
         }
+    }
 
-        if (showDialog) {
-            AlertDialog(
-                onDismissRequest = { showDialog = false},
-                title = {
-                    Text("Confirmation")
-                },
-                text = {
-                    Text("Are you sure you want to $action this request?")
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            showDialog = false
-                            if (action == "Accept") {
-                                specialRequestViewModel.updateSpecialRequest(
-                                    request.copy(
-                                        status = "In Progress",
-                                        dateAccepted = formattedDateTime
-                                    )
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false},
+            title = {
+                Text("Confirmation")
+            },
+            text = {
+                Text("Are you sure you want to $action this request?")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDialog = false
+                        if (action == "Accept") {
+                            specialRequestViewModel.updateSpecialRequest(
+                                request.copy(
+                                    status = "In Progress",
+                                    dateAccepted = formattedDateTime
                                 )
-                                navController.navigate(Screen.AdminSpecialRequests.createRoute("In Progress"))
-                            } else {
-                                specialRequestViewModel.updateSpecialRequest(request.copy(status = "Turned Down"))
-                                navController.navigate(Screen.AdminSpecialRequests.createRoute("Turned Down"))
-                            }
+                            )
+                            navController.navigate(Screen.AdminSpecialRequests.createRoute("In Progress"))
+                        } else {
+                            specialRequestViewModel.updateSpecialRequest(request.copy(status = "Turned Down"))
+                            navController.navigate(Screen.AdminSpecialRequests.createRoute("Turned Down"))
                         }
-                    ) {
-                        Text("Yes")
-                    }
-                },
-                dismissButton = {
-                    Button(
-                        onClick = { showDialog = false }
-                    ) {
-                        Text("No")
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(Green4)
+                ) {
+                    Text("Yes")
                 }
-            )
-        }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { showDialog = false }
+                ) {
+                    Text("No")
+                }
+            }
+        )
+    }
 
-        if (showAddMemberDialog) {
-            AlertDialog(
-                onDismissRequest = { showAddMemberDialog = false},
-                title = {
-                    Text("Assign a Member")
-                },
-                text = {
+    if (showAddMemberDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddMemberDialog = false},
+            title = {
+                Text("Assign a Member")
+            },
+            text = {
+                Column (
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable (
+                            interactionSource = interactionSource,
+                            indication = null,
+                            onClick = {
+                                expanded = false
+                            }
+                        )
+                ){
+                    Row (
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Member",
+                            modifier = Modifier.padding(2.dp)
+                        )
+
+                        if (memberEmpty) {
+                            Text(
+                                text = "Member cannot be Empty",
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Red,
+                                modifier = Modifier.padding(2.dp)
+                            )
+                        }
+                    }
+
                     Column (
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable (
-                                interactionSource = interactionSource,
-                                indication = null,
-                                onClick = {
-                                    expanded = false
-                                }
-                            )
-                    ){
-                        Row (
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "Member",
-                                modifier = Modifier.padding(2.dp)
-                            )
-
-                            if (memberEmpty) {
-                                Text(
-                                    text = "Member cannot be Empty",
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Red,
-                                    modifier = Modifier.padding(2.dp)
-                                )
-                            }
-                        }
-
-                        Column (
-                            modifier = Modifier
-                                .fillMaxWidth()
-                        ) {
-                            TextField(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .border(
-                                        width = 2.dp,
-                                        color = Green2,
-                                        shape = RoundedCornerShape(12.dp)
-                                    ),
-                                value = text,
-                                onValueChange = {
-                                    text = it
-                                    expanded = true
-                                },
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Text,
-                                    imeAction = ImeAction.Done
-                                ),
-                                singleLine = true,
-                                trailingIcon = {
-                                    IconButton(onClick = { expanded = !expanded }) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.ArrowDropDown,
-                                            contentDescription = null
-                                        )
-                                    }
-                                },
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedContainerColor = Color.Transparent,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent
-                                )
-                            )
-
-                            AnimatedVisibility(visible = expanded) {
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(Color.White)
-                                ) {
-                                    LazyColumn (
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                    ) {
-                                        if (text.isNotEmpty()) {
-                                            items(
-                                                filteredUsers.filter {
-                                                    it.lowercase().contains(text.lowercase())
-                                                }
-                                                    .sorted()
-                                            ) {
-                                                MemberItems(title = it) { title ->
-                                                    text = title
-                                                    expanded = false
-                                                }
-                                            }
-                                        } else {
-                                            items(
-                                                filteredUsers.sorted()
-                                            ) {
-                                                MemberItems(title = it) { title ->
-                                                    text = title
-                                                    expanded = false
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        Row (
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "Product",
-                                modifier = Modifier.padding(2.dp)
-                            )
-                            if (productEmpty) {
-                                Text(
-                                    text = "Product cannot be Empty",
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Red,
-                                    modifier = Modifier.padding(2.dp)
-                                )
-                            }
-                        }
-
-                        Column {
-                            TextField(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .border(
-                                        width = 2.dp,
-                                        color = Green2,
-                                        shape = RoundedCornerShape(12.dp)
-                                    )
-                                    .clickable { productExpanded = !productExpanded },
-                                value = product,
-                                onValueChange = {
-                                    product = it
-                                    productExpanded = true
-                                },
-                                singleLine = true,
-                                trailingIcon = {
-                                    IconButton(onClick = { productExpanded = !productExpanded }) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.ArrowDropDown,
-                                            contentDescription = null,
-                                            tint = Color.Black
-                                        )
-                                    }
-                                },
-                                colors = TextFieldDefaults.colors(
-                                    disabledTextColor = Color.Black,
-                                    disabledContainerColor = Color.Transparent,
-                                    disabledIndicatorColor = Color.Transparent
-                                ),
-                                enabled = false,
-                            )
-
-                            DropdownMenu(
-                                expanded = productExpanded,
-                                onDismissRequest = { productExpanded = false}
-                            ) {
-                                productList.forEach {
-                                    DropdownMenuItem(
-                                        onClick = {
-                                            product = it
-                                            productExpanded = false
-                                        },
-                                        text = {
-                                            Text(text = it)
-                                        }
-                                    )
-                                }
-                            }
-                        }
-
-                        Row (
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "Quantity",
-                                modifier = Modifier.padding(2.dp)
-                            )
-
-                            if (quantityEmpty) {
-                                Text(
-                                    text = "Quantity cannot be Empty",
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Red,
-                                    modifier = Modifier.padding(2.dp)
-                                )
-                            }
-                        }
-
+                    ) {
                         TextField(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -707,15 +655,24 @@ fun SpecialRequestDetails(
                                     color = Green2,
                                     shape = RoundedCornerShape(12.dp)
                                 ),
-                            value = if (quantity == 0) "" else quantity.toString(),
-                            onValueChange = { newValue ->
-                                quantity = newValue.toIntOrNull() ?: 0
+                            value = text,
+                            onValueChange = {
+                                text = it
+                                expanded = true
                             },
                             keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Number,
+                                keyboardType = KeyboardType.Text,
                                 imeAction = ImeAction.Done
                             ),
                             singleLine = true,
+                            trailingIcon = {
+                                IconButton(onClick = { expanded = !expanded }) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.ArrowDropDown,
+                                        contentDescription = null
+                                    )
+                                }
+                            },
                             colors = TextFieldDefaults.colors(
                                 focusedContainerColor = Color.Transparent,
                                 unfocusedContainerColor = Color.Transparent,
@@ -723,38 +680,214 @@ fun SpecialRequestDetails(
                                 unfocusedIndicatorColor = Color.Transparent
                             )
                         )
-                    }
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            memberEmpty = text.isEmpty()
-                            productEmpty = product.isEmpty()
-                            quantityEmpty = quantity == 0
 
-                            val member = AssignedMember(
-
-                            )
-
+                        AnimatedVisibility(visible = expanded) {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(Color.White)
+                            ) {
+                                LazyColumn (
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                ) {
+                                    if (text.isNotEmpty()) {
+                                        items(
+                                            filteredUsers.filter {
+                                                it.lowercase().contains(text.lowercase())
+                                            }
+                                                .sorted()
+                                        ) {
+                                            MemberItems(title = it) { title ->
+                                                text = title
+                                                expanded = false
+                                            }
+                                        }
+                                    } else {
+                                        items(
+                                            filteredUsers.sorted()
+                                        ) {
+                                            MemberItems(title = it) { title ->
+                                                text = title
+                                                expanded = false
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
-                    ) {
-                        Text("Add")
                     }
-                },
-                dismissButton = {
-                    Button(
-                        onClick = {
+
+                    Row (
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Product",
+                            modifier = Modifier.padding(2.dp)
+                        )
+                        if (productEmpty) {
+                            Text(
+                                text = "Product cannot be Empty",
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Red,
+                                modifier = Modifier.padding(2.dp)
+                            )
+                        }
+                    }
+
+                    Column {
+                        TextField(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(
+                                    width = 2.dp,
+                                    color = Green2,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .clickable { productExpanded = !productExpanded },
+                            value = product,
+                            onValueChange = {
+                                product = it
+                                productExpanded = true
+                            },
+                            singleLine = true,
+                            trailingIcon = {
+                                IconButton(onClick = { productExpanded = !productExpanded }) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.ArrowDropDown,
+                                        contentDescription = null,
+                                        tint = Color.Black
+                                    )
+                                }
+                            },
+                            colors = TextFieldDefaults.colors(
+                                disabledTextColor = Color.Black,
+                                disabledContainerColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent
+                            ),
+                            enabled = false,
+                        )
+
+                        DropdownMenu(
+                            expanded = productExpanded,
+                            onDismissRequest = { productExpanded = false}
+                        ) {
+                            productList.forEach {
+                                DropdownMenuItem(
+                                    onClick = {
+                                        product = it
+                                        productExpanded = false
+                                    },
+                                    text = {
+                                        Text(text = it)
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    Row (
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Quantity",
+                            modifier = Modifier.padding(2.dp)
+                        )
+
+                        if (quantityEmpty) {
+                            Text(
+                                text = "Quantity cannot be Empty",
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Red,
+                                modifier = Modifier.padding(2.dp)
+                            )
+                        }
+                        if (quantityExceeded) {
+                            Text(
+                                text = "Exceeds required amount",
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Red,
+                                modifier = Modifier.padding(2.dp)
+                            )
+                        }
+                    }
+
+                    TextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(
+                                width = 2.dp,
+                                color = Green2,
+                                shape = RoundedCornerShape(12.dp)
+                            ),
+                        value = if (quantity == 0) "" else quantity.toString(),
+                        onValueChange = { newValue ->
+                            quantity = newValue.toIntOrNull() ?: 0
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done
+                        ),
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        )
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        memberEmpty = text.isEmpty()
+                        productEmpty = product.isEmpty()
+                        quantityEmpty = quantity == 0
+                        quantityExceeded = quantity > quantityPair
+
+                        if (!quantityExceeded) {
+                            val newQuantity = quantityPair - quantity
+                            updateQuantity(product, newQuantity)
+                        }
+
+                        if (!memberEmpty && !productEmpty && !quantityEmpty && !quantityExceeded) {
+                            email = text.substringAfter(" - ").trim()
+                            val name = text.substringBefore(" - ").trim()
+                            val member = AssignedMember(
+                                email = email,
+                                name = name,
+                                product = product,
+                                quantity = quantity
+                            )
+                            assignedMember.add(member)
+
                             text = ""
                             product = ""
                             quantity = 0
                             showAddMemberDialog = false
                         }
-                    ) {
-                        Text("Cancel")
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(Green4)
+                ) {
+                    Text("Add")
                 }
-            )
-        }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        text = ""
+                        product = ""
+                        quantity = 0
+                        showAddMemberDialog = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
@@ -784,7 +917,6 @@ fun DisplayRequestDetails(
     Column (
         modifier = Modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
     ) {
         Row (
             modifier = Modifier
