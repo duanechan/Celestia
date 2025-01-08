@@ -316,6 +316,7 @@ fun NavGraph(
             onNavigate("Members")
             AdminUserManagement(
                 userViewModel = userViewModel,
+                facilityViewModel = facilityViewModel,
                 transactionViewModel = transactionViewModel,
                 navController = navController
             )
