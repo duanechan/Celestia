@@ -116,8 +116,8 @@ fun CoopDashboard(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            ItemCard("Active Items", "0")
-            ItemCard("Inactive Items", "0")
+            ItemCard("In-Store Products", "0")
+            ItemCard("Online Products", "0")
 
             Text(
                 text = "Order Statuses",
@@ -134,19 +134,6 @@ fun CoopDashboard(
             SalesActivityCard("Completed", cancelledCount.toString(), R.drawable.progress)
             SalesActivityCard("Cancelled", cancelledCount.toString(), R.drawable.cancelled)
             SalesActivityCard("Return/Refund", cancelledCount.toString(), R.drawable.cancelled)
-
-
-            Text(
-                text = "Total Sales",
-                fontWeight = FontWeight.Medium,
-                fontSize = 16.sp,
-                color = Color.DarkGray,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-
-            TotalSalesCard("Today")
-            TotalSalesCard("This Week")
-            TotalSalesCard("This Month")
         }
     }
 }
