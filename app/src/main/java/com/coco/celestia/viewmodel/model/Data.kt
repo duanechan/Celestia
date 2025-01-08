@@ -199,7 +199,7 @@ data class PurchaseOrderItem(
 )
 
 data class SalesData(
-    val salesId: String = "",
+    val salesNumber: String = "",
     val productName: String = "",
     val quantity: Int = 0,
     val price: Double = 0.0,

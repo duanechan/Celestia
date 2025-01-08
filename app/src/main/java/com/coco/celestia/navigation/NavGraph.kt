@@ -27,7 +27,6 @@ import com.coco.celestia.screens.Profile
 import com.coco.celestia.screens.RegisterScreen
 import com.coco.celestia.screens.SplashScreen
 import com.coco.celestia.screens.client.AddSpecialReq
-import com.coco.celestia.screens.client.Basket
 import com.coco.celestia.screens.client.BasketScreen
 import com.coco.celestia.screens.coop.admin.AddUserForm
 import com.coco.celestia.screens.coop.admin.AdminUserManagement
@@ -88,9 +87,7 @@ import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.VendorViewModel
 import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.ProductData
-import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.isActive
 
 @Composable
 fun NavGraph(
@@ -594,7 +591,7 @@ fun NavGraph(
                 productViewModel = productViewModel,
                 facilityName = userFacility?.name ?: "",
                 userRole = userRole,
-                salesId = salesId,
+                salesNumber = salesId,
                 onSuccess = { navController.navigateUp() },
                 onCancel = { navController.navigateUp() }
             )

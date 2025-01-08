@@ -74,12 +74,12 @@ fun SalesAddForm(
     onSuccess: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
-    salesId: String? = null
+    salesNumber: String? = null
 ) {
     var salesData by remember {
         mutableStateOf(
             SalesData(
-                salesId = salesId ?: "",
+                salesNumber = generateSalesNumber(),
                 date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
                 facility = facilityName
             )
@@ -89,7 +89,7 @@ fun SalesAddForm(
     var showErrorMessages by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var isEditMode by remember { mutableStateOf(salesId != null) }
+    var isEditMode by remember { mutableStateOf(salesNumber != null) }
     var showWeightUnitDropdown by remember { mutableStateOf(false) }
     var showProductDropdown by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -119,10 +119,10 @@ fun SalesAddForm(
         Constants.WEIGHT_POUNDS
     )
 
-    LaunchedEffect(salesId) {
-        if (salesId != null) {
+    LaunchedEffect(salesNumber) {
+        if (salesNumber != null) {
             isLoading = true
-            viewModel.fetchSaleById(salesId) { fetchedSale ->
+            viewModel.fetchSaleById(salesNumber) { fetchedSale ->
                 fetchedSale?.let {
                     salesData = it.copy(facility = facilityName)
                 }
@@ -199,6 +199,15 @@ fun SalesAddForm(
                     text = "Sale Information",
                     style = MaterialTheme.typography.titleMedium,
                     color = Green1
+                )
+
+                OutlinedTextField(
+                    value = salesData.salesNumber,
+                    onValueChange = { },
+                    label = { Text("Sales Number") },
+                    readOnly = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = textFieldColors
                 )
 
                 Box(modifier = Modifier.fillMaxWidth()) {
@@ -511,4 +520,14 @@ fun SalesAddForm(
             }
         }
     }
+}
+
+private var salesCount = 0
+
+private fun generateSalesNumber(): String {
+    salesCount++
+
+    val currentDate = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"))
+
+    return "SO-$currentDate-$salesCount"
 }

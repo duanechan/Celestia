@@ -53,7 +53,7 @@ class SalesViewModel : ViewModel() {
                                 val data = childSnapshot.value as? Map<*, *>
                                 if (data != null) {
                                     SalesData(
-                                        salesId = childSnapshot.key ?: "",
+                                        salesNumber = childSnapshot.key ?: "",
                                         productName = data["productName"] as? String ?: "",
                                         quantity = (data["quantity"] as? Long)?.toInt() ?: 0,
                                         price = (data["price"] as? Number)?.toDouble() ?: 0.0,
@@ -113,7 +113,7 @@ class SalesViewModel : ViewModel() {
                     val data = snapshot.value as? Map<*, *>
                     if (data != null) {
                         val sale = SalesData(
-                            salesId = snapshot.key ?: "",
+                            salesNumber = snapshot.key ?: "",
                             productName = data["productName"] as? String ?: "",
                             quantity = (data["quantity"] as? Long)?.toInt() ?: 0,
                             price = (data["price"] as? Number)?.toDouble() ?: 0.0,
@@ -137,7 +137,7 @@ class SalesViewModel : ViewModel() {
 
     fun addSale(sale: SalesData, onSuccess: () -> Unit, onError: (String) -> Unit) {
         val newSaleRef = database.push()
-        val saleWithId = sale.copy(salesId = newSaleRef.key ?: "")
+        val saleWithId = sale.copy(salesNumber = newSaleRef.key ?: "")
 
         newSaleRef.setValue(saleWithId)
             .addOnSuccessListener { onSuccess() }
@@ -145,12 +145,12 @@ class SalesViewModel : ViewModel() {
     }
 
     fun updateSale(sale: SalesData, onSuccess: () -> Unit, onError: (String) -> Unit) {
-        if (sale.salesId.isEmpty()) {
+        if (sale.salesNumber.isEmpty()) {
             onError("Invalid sale ID")
             return
         }
 
-        database.child(sale.salesId).setValue(sale)
+        database.child(sale.salesNumber).setValue(sale)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { e -> onError(e.message ?: "Failed to update sale") }
     }
