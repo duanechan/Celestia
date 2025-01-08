@@ -37,7 +37,7 @@ sealed class Screen(val route: String) {
     data object AdminSpecialRequestsDetails: Screen( route = "admin_special_request_details/{requestUid}") {
         fun createRoute(requestUid: String) = "admin_special_request_details/$requestUid"
     }
-    data object AdminSettings: Screen( route = "admin_setting")
+    data object Settings: Screen( route = "setting")
     data object AdminClients: Screen( route = "admin_clients")
     data object OrganizationProfile: Screen(route = "organization_profile")
     data object AccessControl: Screen(route = "access_control")
