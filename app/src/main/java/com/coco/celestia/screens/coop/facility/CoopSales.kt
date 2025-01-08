@@ -330,24 +330,35 @@ private fun SalesContent(sales: List<SalesData>) {
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    Text(
-                        text = sale.productName,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Green1
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Quantity: ${sale.quantity}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Text(
-                        text = "Price: ₱${sale.price}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Text(
-                        text = "Date: ${sale.date}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "${sale.productName} (sales number)",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Green1
+                        )
+                        Text(
+                            text = sale.date,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Quantity: ${sale.quantity}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = "Price: ₱${sale.price}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
                     if (sale.notes.isNotBlank()) {
                         Text(
                             text = "Notes: ${sale.notes}",
@@ -359,6 +370,7 @@ private fun SalesContent(sales: List<SalesData>) {
         }
     }
 }
+
 
 // TODO: I'll modify this kapag naayos na yung ordering sa client side
 // TODO: Pati yung Sales tab modify nalang din since currently nagpapakita yung in-store sales
