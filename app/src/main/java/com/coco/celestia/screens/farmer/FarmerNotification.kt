@@ -19,7 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 //boolean = true will show placeholder notification content
 //boolean = false will show placeholder no notification content
 @Composable
-fun FarmerNotification(hasNotifications: Boolean = false, onRefresh: () -> Unit = {}) {
+fun FarmerNotification(hasNotifications: Boolean = true, onRefresh: () -> Unit = {}) {
     Scaffold { paddingValues ->
         Column(
             modifier = Modifier

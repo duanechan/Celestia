@@ -112,7 +112,7 @@ fun FarmerManageOrder(
                 TextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search orders...", color = Cocoa) },
+                    placeholder = { Text("Search orders...", color = DarkGreen) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Search,
@@ -122,8 +122,8 @@ fun FarmerManageOrder(
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .background(color = Apricot, shape = RoundedCornerShape(16.dp))
-                        .border(BorderStroke(1.dp, color = Cocoa), shape = RoundedCornerShape(16.dp))
+                        .background(color = White2, shape = RoundedCornerShape(16.dp))
+                        .border(BorderStroke(1.dp, color = DarkGreen), shape = RoundedCornerShape(16.dp))
                         .semantics { testTag = "android:id/searchBar" },
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
@@ -146,48 +146,48 @@ fun FarmerManageOrder(
             ) {
                 Button(
                     onClick = { selectedSection = "Recent" },
-                    colors = ButtonDefaults.buttonColors(containerColor = if (selectedSection == "Recent") GoldenYellow else Brown1),
+                    colors = ButtonDefaults.buttonColors(containerColor = if (selectedSection == "Recent") Green2 else Green3),
                     modifier = Modifier
                         .weight(1f)
                         .semantics { testTag = "android:id/recentOrdersButton" }
                 ) {
-                    Text("Recent", color = Cocoa, fontSize = 10.sp)
+                    Text("Recent", color = Color.White, fontSize = 10.sp)
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Button(
                     onClick = { selectedSection = "Pending" },
-                    colors = ButtonDefaults.buttonColors(containerColor = if (selectedSection == "Pending") GoldenYellow else Brown1),
+                    colors = ButtonDefaults.buttonColors(containerColor = if (selectedSection == "Pending") Green2 else Green3),
                     modifier = Modifier
                         .weight(1f)
                         .semantics { testTag = "android:id/pendingOrdersButton" }
                 ) {
-                    Text("Pending", color = Cocoa, fontSize = 10.sp)
+                    Text("Pending", color = Color.White, fontSize = 10.sp)
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Button(
                     onClick = { selectedSection = "Ongoing" },
-                    colors = ButtonDefaults.buttonColors(containerColor = if (selectedSection == "Ongoing") GoldenYellow else Brown1),
+                    colors = ButtonDefaults.buttonColors(containerColor = if (selectedSection == "Ongoing") Green2 else Green3),
                     modifier = Modifier
                         .weight(1f)
                         .semantics { testTag = "android:id/ongoingOrdersButton" }
                 ) {
-                    Text("Ongoing", color = Cocoa, fontSize = 10.sp)
+                    Text("Ongoing", color = Color.White, fontSize = 10.sp)
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Button(
                     onClick = { selectedSection = "CalamityAffected" },
-                    colors = ButtonDefaults.buttonColors(containerColor = if (selectedSection == "CalamityAffected") GoldenYellow else Brown1),
+                    colors = ButtonDefaults.buttonColors(containerColor = if (selectedSection == "CalamityAffected") Green2 else Green3),
                     modifier = Modifier
                         .weight(1f)
                         .semantics { testTag = "android:id/calamityAffectedOrdersButton" }
                 ) {
-                    Text("Calamity Affected", color = Cocoa, fontSize = 9.5.sp)
+                    Text("Calamity Affected", color = Color.White, fontSize = 9.5.sp)
                 }
             }
 
@@ -234,7 +234,7 @@ fun FarmerManageOrder(
                                 .padding(16.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("No matching orders available.")
+                            Text("No matching orders available.", color = DarkGreen)
                         }
                     } else {
                         filteredOrders.forEach { order ->
@@ -389,7 +389,7 @@ fun ManageOrderCards(
                 modifier = Modifier
                     .background(
                         Brush.horizontalGradient(
-                            colors = listOf(PaleGold, GoldenYellow)
+                            colors = listOf(Green3, Green4)
                         )
                     )
                     .fillMaxSize()
