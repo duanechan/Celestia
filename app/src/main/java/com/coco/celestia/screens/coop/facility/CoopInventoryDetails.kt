@@ -1,8 +1,11 @@
 package com.coco.celestia.screens.coop.facility
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -24,6 +27,9 @@ import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.model.ProductData
 import java.util.Locale
+
+//TODO: Add product ID, Format: PID-Year-Month-Day-Hours-Minutes-Seconds-Count
+//TODO: Add Date and timestamp, timestamp para maiwasan natin ung race conditions
 
 @Composable
 fun CoopInventoryDetails(
@@ -124,6 +130,12 @@ private fun ProductHeader(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
+            Text(
+                text = "PID-YYYYMMDDHHMMSS-Count", //TODO: Add product ID, Format: Year-Month-Day-Hours-Minutes-Seconds-Count
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -205,6 +217,11 @@ private fun ProductHeader(
                     }
                 }
             }
+            Text(
+                text = "Date Added: Date and Timestamp", //TODO: Add Date and timestamp, timestamp para maiwasan natin ung race conditions
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onBackground
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -301,7 +318,7 @@ private fun PriceInfoColumn(
 @Composable
 private fun ProductTabs(product: ProductData) {
     var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("DETAILS", "TRANSACTIONS", "HISTORY")
+    val tabs = listOf("DETAILS", "TRANSACTIONS", "PRICE HISTORY")
 
     Column {
         TabRow(
@@ -563,16 +580,17 @@ private fun SalesInfoSection(product: ProductData) {
         modifier = Modifier.padding(horizontal = 16.dp)
     ) {
         Text(
-            text = "Selling Price",
+            text = "Sales",
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray
         )
         Text(
-            text = "PHP${product.price}",
+            text = "100", //TODO: Change to Total Quantity Sold
+//            text = "PHP${product.price}",
             style = MaterialTheme.typography.titleLarge
         )
         Text(
-            text = "per ${product.weightUnit.lowercase()}",
+            text = "${product.weightUnit.lowercase()}",
             style = MaterialTheme.typography.bodySmall,
             color = Color.Gray
         )
@@ -580,12 +598,12 @@ private fun SalesInfoSection(product: ProductData) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Description",
+            text = "Total Amount",
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray
         )
         Text(
-            text = product.description,
+            text = "PHP 1,000.00",
             style = MaterialTheme.typography.bodyLarge
         )
     }
@@ -597,18 +615,30 @@ private fun PurchaseInfoSection(product: ProductData) {
         modifier = Modifier.padding(horizontal = 16.dp)
     ) {
         Text(
-            text = "Purchase Cost",
+            text = "Purchases",
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray
         )
         Text(
-            text = "PHP${product.purchasingCost}",
+            text = "50",
             style = MaterialTheme.typography.titleLarge
         )
         Text(
-            text = "per ${product.weightUnit.lowercase()}",
+            text = "${product.weightUnit.lowercase()}",
             style = MaterialTheme.typography.bodySmall,
             color = Color.Gray
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Total Cost of Purchases",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.Gray
+        )
+        Text(
+            text = "PHP${product.purchasingCost}", //TODO: Change to Total Purchases, not purchasing cost
+            style = MaterialTheme.typography.titleLarge
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -631,7 +661,91 @@ private fun TransactionsTab() {
         modifier = Modifier.fillMaxSize().background(White2),
         contentAlignment = Alignment.Center
     ) {
-        Text("Transactions Coming Soon")
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Sample
+            items(3) { index ->
+                TransactionsCard()
+            }
+        }
+    }
+}
+
+@Composable
+fun TransactionsCard() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = White1),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Header Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "SO Number / PO Number",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Green1
+                )
+                Text(
+                    text = "Date of Sale/Purchase",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Quantity Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Price Per Unit: {put here}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Total Amount",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Total Quantity:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "+/- Quantity", //TODO: Pag Sales deducted ung quantity, pag Purchase added ung quantity
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+        }
     }
 }
 
@@ -641,7 +755,70 @@ private fun HistoryTab() {
         modifier = Modifier.fillMaxSize().background(White2),
         contentAlignment = Alignment.Center
     ) {
-        Text("History Coming Soon")
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Sample
+            items(3) { index ->
+                HistoryCard()
+            }
+        }
+    }
+}
+
+@Composable
+fun HistoryCard() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = White1),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Header Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Date",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Green1
+                )
+                Text(
+                    text = "Price per unit",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Quantity Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "January 8, 2025",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "PHP 23.00",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 
