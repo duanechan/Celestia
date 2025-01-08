@@ -346,26 +346,26 @@ fun CoopProductInventory(
                                     selectedWeightUnit = newWeightUnit
                                 }
                             )
-
-                            FloatingActionButton(
-                                onClick = {
-                                    navController.navigate(Screen.AddProductInventory.route)
-                                },
-                                modifier = Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .padding(16.dp)
-                                    .semantics { testTag = "android:id/AddProductFAB" },
-                                containerColor = White1
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "Add Product"
-                                )
-                            }
                         }
                         is ProductState.EMPTY -> {
                             EmptyProductsScreen(isInStore, userFacility.name)
                         }
+                    }
+
+                    FloatingActionButton(
+                        onClick = {
+                            navController.navigate(Screen.AddProductInventory.route)
+                        },
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(16.dp)
+                            .semantics { testTag = "android:id/AddProductFAB" },
+                        containerColor = White1
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Product"
+                        )
                     }
                 } else {
                     NoFacilityScreen()

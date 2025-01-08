@@ -1,4 +1,4 @@
-package com.coco.celestia.screens.coop.admin
+package com.coco.celestia.screens.coop
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -34,11 +34,16 @@ import com.coco.celestia.BuildConfig
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.viewmodel.FacilityState
+import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 
+// TODO: Contact Developer Team UI
+// TODO: Configurations (admin side)
+
 @Composable
-fun AdminSettings(navController: NavController) {
+fun Settings(navController: NavController, userRole: String) {
     val appVersion = BuildConfig.VERSION_NAME
 
     Column(
@@ -69,23 +74,25 @@ fun AdminSettings(navController: NavController) {
             navController.navigate(Screen.AccessControl.route)
         }
 
-        // Configurations
-        Text(
-            text = "Configurations",
-            modifier = Modifier.padding(top = 16.dp),
-            color = Color.Gray
-        )
-        SettingsItem(text = "Coop Admin", iconResId = R.drawable.admin) {
-            navController.navigate("coop_admin") // to change
-        }
-        SettingsItem(text = "Coop Facility", iconResId = R.drawable.facility) {
-            navController.navigate("coop_facility") // to change
-        }
-        SettingsItem(text = "Clients", iconResId = R.drawable.client) {
-            navController.navigate("clients") // to change
-        }
-        SettingsItem(text = "Members", iconResId = R.drawable.members) {
-            navController.navigate("members") // to change
+        // Configurations - Only shown for Admin role
+        if (!userRole.startsWith("Coop", ignoreCase = true)) {
+            Text(
+                text = "Configurations",
+                modifier = Modifier.padding(top = 16.dp),
+                color = Color.Gray
+            )
+            SettingsItem(text = "Coop Admin", iconResId = R.drawable.admin) {
+                navController.navigate("coop_admin")
+            }
+            SettingsItem(text = "Coop Facility", iconResId = R.drawable.facility) {
+                navController.navigate("coop_facility")
+            }
+            SettingsItem(text = "Clients", iconResId = R.drawable.client) {
+                navController.navigate("clients")
+            }
+            SettingsItem(text = "Members", iconResId = R.drawable.members) {
+                navController.navigate("members")
+            }
         }
 
         // Developer
@@ -98,7 +105,7 @@ fun AdminSettings(navController: NavController) {
             navController.navigate(Screen.PrivacyPolicy.route)
         }
         SettingsItem(text = "Contact Developer Team", iconResId = R.drawable.phone) {
-            navController.navigate("contact_developer") // to change
+            navController.navigate("contact_developer")
         }
 
         // App Version
@@ -248,14 +255,25 @@ fun OrganizationProfileScreen() {
 }
 
 @Composable
-// TODO: CRUD (adding, updating, and deleting accounts)
-fun AccessControlScreen(userViewModel: UserViewModel) {
+fun AccessControlScreen(
+    userViewModel: UserViewModel,
+    facilityViewModel: FacilityViewModel,
+    currentUserEmail: String,
+    currentUserRole: String
+) {
     val usersData by userViewModel.usersData.observeAsState(emptyList())
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
-    val adminUsers = usersData.filter { it.role.equals("Admin", ignoreCase = true) }
+    val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
+    val facilityState by facilityViewModel.facilityState.observeAsState(FacilityState.LOADING)
+    val currentUserFacility = if (currentUserRole.startsWith("Coop", ignoreCase = true)) {
+        facilitiesData.find { facility ->
+            facility.emails.contains(currentUserEmail)
+        }
+    } else null
 
-    LaunchedEffect(userState) {
+    LaunchedEffect(Unit) {
         userViewModel.fetchUsers()
+        facilityViewModel.fetchFacilities()
     }
 
     Column(
@@ -265,53 +283,94 @@ fun AccessControlScreen(userViewModel: UserViewModel) {
             .padding(16.dp)
     ) {
         Text(
-            text = "People Who can access Coop Admin",
+            text = if (currentUserRole.equals("Admin", ignoreCase = true)) {
+                "System Administrators"
+            } else {
+                "People Who Can Access ${currentUserFacility?.name ?: "This Facility"}"
+            },
             color = Color.Gray,
             fontSize = 15.sp,
             fontWeight = FontWeight.Bold,
             style = TextStyle(fontFamily = mintsansFontFamily)
         )
 
-        if (adminUsers.isEmpty()) {
-            when (userState) {
-                UserState.LOADING -> {
-                    Text(text = "Loading admins...", color = Color.Gray)
-                }
-                UserState.SUCCESS -> {
-                    Text(text = "No admins found", color = Color.Gray)
-                }
-                else -> {
-                    Text(text = "Failed to load admins", color = Color.Red)
-                }
+        when {
+            facilityState == FacilityState.LOADING || userState == UserState.LOADING -> {
+                Text(
+                    text = "Loading...",
+                    color = Color.Gray,
+                    style = TextStyle(fontFamily = mintsansFontFamily)
+                )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier.padding(top = 16.dp),
-                contentPadding = PaddingValues(bottom = 16.dp)
-            ) {
-                items(adminUsers) { admin ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        colors = CardDefaults.cardColors(containerColor = White1),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = admin.email,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Green1
-                            )
+            currentUserRole.startsWith("Coop") && currentUserFacility == null -> {
+                Text(
+                    text = "You don't have access to any facility",
+                    color = Color.Gray,
+                    style = TextStyle(fontFamily = mintsansFontFamily)
+                )
+            }
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.padding(top = 16.dp),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    val filteredUsers = if (currentUserRole.equals("Admin", ignoreCase = true)) {
+                        usersData.filter { user ->
+                            user.role.equals("Admin", ignoreCase = true)
+                        }
+                    } else {
+                        usersData.filter { user ->
+                            user.role.startsWith("Coop", ignoreCase = true) &&
+                                    currentUserFacility?.emails?.contains(user.email) == true
                         }
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (filteredUsers.isEmpty()) {
+                        item {
+                            Text(
+                                text = if (currentUserRole.equals("Admin", ignoreCase = true)) {
+                                    "No administrators found"
+                                } else {
+                                    "No users found for this facility"
+                                },
+                                color = Color.Gray,
+                                style = TextStyle(fontFamily = mintsansFontFamily)
+                            )
+                        }
+                    } else {
+                        items(filteredUsers) { user ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                colors = CardDefaults.cardColors(containerColor = White1),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                ) {
+                                    Text(
+                                        text = user.email,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Green1,
+                                        style = TextStyle(fontFamily = mintsansFontFamily)
+                                    )
+
+                                    Text(
+                                        text = user.role,
+                                        fontSize = 14.sp,
+                                        color = Color.Gray,
+                                        style = TextStyle(fontFamily = mintsansFontFamily),
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
                 }
             }
         }

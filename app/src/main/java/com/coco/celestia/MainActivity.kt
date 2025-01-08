@@ -190,7 +190,7 @@ fun AppStateAndContent(
         "Sales" to Screen.CoopSales.route,
         "Purchases" to Screen.CoopPurchases.route,
         "Reports" to Screen.CoopReports.route,
-        "Settings" to Screen.AdminSettings.route
+        "Settings" to Screen.Settings.route
     )
 
     val menuItems = if (userData.role.startsWith("Coop")) {
@@ -209,7 +209,7 @@ fun AppStateAndContent(
             "Special Requests" to Screen.AdminSpecialRequests.route,
             "Members" to Screen.AdminUserManagement.route,
             "Clients & Customers" to Screen.AdminClients.route,
-            "Settings" to Screen.AdminSettings.route
+            "Settings" to Screen.Settings.route
         )
     }
 

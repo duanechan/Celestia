@@ -115,7 +115,7 @@ fun FarmerDashboard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
-                        .background(LightApricot, shape = RoundedCornerShape(12.dp))
+                        .background(White1, shape = RoundedCornerShape(12.dp))
                         .padding(16.dp)
                 ) {
                     Column {
@@ -124,7 +124,7 @@ fun FarmerDashboard(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Start,
-                            color = Cocoa
+                            color = DarkGreen
                         )
 
                         userData?.let { user ->
@@ -133,7 +133,7 @@ fun FarmerDashboard(
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
                                 textAlign = TextAlign.Start,
-                                color = Cocoa,
+                                color = DarkGreen,
                                 modifier = Modifier.padding(top = 8.dp)
                             )
                         }
@@ -145,7 +145,7 @@ fun FarmerDashboard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
-                        .background(LightApricot, shape = RoundedCornerShape(12.dp))
+                        .background(White1, shape = RoundedCornerShape(12.dp))
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(
@@ -158,7 +158,7 @@ fun FarmerDashboard(
                                 text = "Orders Overview",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Cocoa
+                                color = DarkGreen
                             )
                             TextButton(
                                 onClick = { showInSeasonDialog = true },
@@ -174,7 +174,7 @@ fun FarmerDashboard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
-                        .background(LightApricot, shape = RoundedCornerShape(12.dp))
+                        .background(White1, shape = RoundedCornerShape(12.dp))
                 ) {
                     Column(modifier = Modifier.padding(start = 16.dp, top = 5.dp, end = 10.dp, bottom = 20.dp)) {
                         Row(
@@ -186,12 +186,12 @@ fun FarmerDashboard(
                                 text = "Pending Order Requests",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Cocoa
+                                color = DarkGreen
                             )
                             TextButton(onClick = { navController.navigate("farmer_manage_order") }) {
                                 Text(
                                     text = "See All",
-                                    color = Cocoa,
+                                    color = DarkGreen,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -274,7 +274,7 @@ fun FarmerOrderOverview(orders: List<OrderData>) {
                                     "Accepted" -> Color(0xFF4CAF50) // Green
                                     "Rejected" -> Color(0xFFF44336) // Red
                                     "In Progress" -> Color(0xFF000000)
-                                    "Pending" -> Color(0xFFFFC107) // Orange
+                                    "Pending" -> Color(0xFF3F51B4) // Orange
                                     else -> Color.Gray
                                 },
                                 modifier = Modifier.size(24.dp)
@@ -316,7 +316,7 @@ fun FarmerOrderOverview(orders: List<OrderData>) {
             text = currentMonth.name.lowercase().replaceFirstChar { it.uppercase() },
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
-            color = Cocoa,
+            color = DarkGreen,
             modifier = Modifier.padding(top = 15.dp)
         )
     }
@@ -371,7 +371,7 @@ fun OrderStatusSection(
                         .padding(start = 5.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No orders found.", color = Cocoa.copy(alpha = 0.7f))
+                    Text("No orders found.", color = DarkGreen.copy(alpha = 0.7f))
                 }
             } else {
                 Column {

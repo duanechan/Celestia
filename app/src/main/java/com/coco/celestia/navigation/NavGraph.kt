@@ -38,13 +38,13 @@ import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.client.ClientOrderDetails
 import com.coco.celestia.screens.client.DisplaySpecialReq
 import com.coco.celestia.screens.client.ProductDetailScreen
-import com.coco.celestia.screens.coop.admin.AccessControlScreen
+import com.coco.celestia.screens.coop.AccessControlScreen
 import com.coco.celestia.screens.coop.admin.AdminClients
 import com.coco.celestia.screens.coop.admin.AdminHome
 import com.coco.celestia.screens.coop.admin.AdminSpecialRequests
-import com.coco.celestia.screens.coop.admin.AdminSettings
+import com.coco.celestia.screens.coop.Settings
 import com.coco.celestia.screens.coop.admin.ClientDetails
-import com.coco.celestia.screens.coop.admin.OrganizationProfileScreen
+import com.coco.celestia.screens.coop.OrganizationProfileScreen
 import com.coco.celestia.screens.coop.admin.SpecialRequestDetails
 import com.coco.celestia.screens.coop.facility.forms.AddProductForm
 import com.coco.celestia.screens.coop.facility.forms.CoopAddInventory
@@ -284,9 +284,9 @@ fun NavGraph(
                 onEvent = { onEvent(it) })
         }
 
-        composable(route = Screen.AdminSettings.route) {
+        composable(route = Screen.Settings.route) {
             onNavigate("Settings")
-            AdminSettings(navController = navController)
+            Settings(navController = navController, userRole = userRole)
         }
         composable(route = Screen.OrganizationProfile.route) {
             onNavigate("Organizational Profile")
@@ -294,7 +294,7 @@ fun NavGraph(
         }
         composable(route = Screen.AccessControl.route) {
             onNavigate("Access Control")
-            AccessControlScreen(userViewModel = userViewModel)
+            AccessControlScreen(userViewModel = userViewModel, facilityViewModel = facilityViewModel, currentUserEmail = userEmail, currentUserRole = userRole)
         }
         composable(route = Screen.PrivacyPolicy.route) {
             onNavigate("Privacy Policy")
@@ -316,6 +316,7 @@ fun NavGraph(
             onNavigate("Members")
             AdminUserManagement(
                 userViewModel = userViewModel,
+                facilityViewModel = facilityViewModel,
                 transactionViewModel = transactionViewModel,
                 navController = navController
             )
