@@ -409,119 +409,189 @@ fun SpecialRequestDetails(
             )
         }
 
-        if (request.assignedMember.isEmpty() && request.status != "To Review") {
-            Column (
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.White)
-                    .border(
-                        width = 2.dp,
-                        color = Green4,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-            ){
-                Row (
+        if (request.status != "To Review") {
+            if (request.assignedMember.isEmpty()) {
+                Column (
                     modifier = Modifier
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Assign a Member",
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(end = 16.dp)
-                    )
-
-                    Image(
-                        painter = painterResource(R.drawable.add),
-                        contentDescription = null,
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White)
+                        .border(
+                            width = 2.dp,
+                            color = Green4,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                ){
+                    Row (
                         modifier = Modifier
-                            .size(24.dp)
-                            .clickable { showAddMemberDialog = true }
-                    )
-                }
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Assign a Member",
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(end = 16.dp)
+                        )
 
-                if (assignedMember.isNotEmpty()) {
-                    assignedMember.forEach { member ->
-                        Column (
+                        Image(
+                            painter = painterResource(R.drawable.add),
+                            contentDescription = null,
                             modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .padding(bottom = 8.dp)
-                                .fillMaxWidth()
-                        ){
-                            Text(
-                                text = "Name: ${member.name}",
-                            )
-
-                            Text(
-                                text = "Product: ${member.product}"
-                            )
-
-                            Text(
-                                text = "Quantity: ${member.quantity}"
-                            )
-                        }
+                                .size(24.dp)
+                                .clickable { showAddMemberDialog = true }
+                        )
                     }
 
-                    if (unfulfilled) {
-                        Column (
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .padding(bottom = 8.dp)
-                                .fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "Some products remain unfulfilled:",
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Red
-                            )
-
-                            unfulfilledRequests.forEach { request ->
+                    if (assignedMember.isNotEmpty()) {
+                        assignedMember.forEach { member ->
+                            Column (
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .padding(bottom = 8.dp)
+                                    .fillMaxWidth()
+                            ){
                                 Text(
-                                    text = request.key,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Red,
-                                    modifier = Modifier
-                                        .padding(start = 6.dp)
+                                    text = "Name: ${member.name}",
+                                )
+
+                                Text(
+                                    text = "Product: ${member.product}"
+                                )
+
+                                Text(
+                                    text = "Quantity: ${member.quantity}"
                                 )
                             }
                         }
-                    }
 
-                    Box (
-                        modifier = Modifier.fillMaxWidth()
-                    ){
-                        Row (
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
-                        ) {
-                            Button(
-                                onClick = {
-                                    assignedMember.clear()
-                                    productPairs = request.products.associate { it.name to it.quantity }.toMutableMap()
+                        if (unfulfilled) {
+                            Column (
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .padding(bottom = 8.dp)
+                                    .fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "Some products remain unfulfilled:",
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Red
+                                )
+
+                                unfulfilledRequests.forEach { request ->
+                                    Text(
+                                        text = request.key,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Red,
+                                        modifier = Modifier
+                                            .padding(start = 6.dp)
+                                    )
                                 }
-                            ) {
-                                Text("Cancel")
                             }
+                        }
 
-                            Button(
-                                onClick = {
-                                    unfulfilled = unfulfilledRequests.isNotEmpty()
-
-                                    if (!unfulfilled) {
-                                        specialRequestViewModel.updateSpecialRequest(
-                                            request.copy(
-                                                assignedMember = assignedMember
-                                            )
-                                        )
-                                    }
-                                },
-                                colors = ButtonDefaults.buttonColors(Green4)
+                        Box (
+                            modifier = Modifier.fillMaxWidth()
+                        ){
+                            Row (
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                             ) {
-                                Text("Save")
+                                Button(
+                                    onClick = {
+                                        assignedMember.clear()
+                                        productPairs = request.products.associate { it.name to it.quantity }.toMutableMap()
+                                    }
+                                ) {
+                                    Text("Cancel")
+                                }
+
+                                Button(
+                                    onClick = {
+                                        unfulfilled = unfulfilledRequests.isNotEmpty()
+
+                                        if (!unfulfilled) {
+                                            specialRequestViewModel.updateSpecialRequest(
+                                                request.copy(
+                                                    assignedMember = assignedMember
+                                                )
+                                            )
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(Green4)
+                                ) {
+                                    Text("Save")
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                Column (
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White)
+                        .border(
+                            width = 2.dp,
+                            color = Green4,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                ) {
+                    Column (
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ){
+                        Text(
+                            text = "Assigned Member/s:",
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+
+                        Row {
+                            Text(
+                                text = "Member Name",
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.weight(2f)
+                            )
+
+                            Text(
+                                text = "Product",
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            Text(
+                                text = "Quantity",
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
+                        request.assignedMember.forEach { member ->
+                            Row (
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 2.dp)
+                            ){
+                                Text(
+                                    text = member.name,
+                                    modifier = Modifier.weight(2f)
+                                )
+
+                                Text(
+                                    text = member.product,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                Text(
+                                    text = member.quantity.toString(),
+                                    modifier = Modifier.weight(1f)
+                                )
                             }
                         }
                     }
