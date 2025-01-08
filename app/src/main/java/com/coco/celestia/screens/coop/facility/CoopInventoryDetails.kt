@@ -25,6 +25,9 @@ import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.model.ProductData
 import java.util.Locale
 
+//TODO: Add product ID, Format: PID-Year-Month-Day-Hours-Minutes-Seconds-Count
+//TODO: Add Date and timestamp, timestamp para maiwasan natin ung race conditions
+
 @Composable
 fun CoopInventoryDetails(
     navController: NavController,
@@ -124,6 +127,12 @@ private fun ProductHeader(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
+            Text(
+                text = "PID-YYYYMMDDHHMMSS-Count", //TODO: Add product ID, Format: Year-Month-Day-Hours-Minutes-Seconds-Count
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -205,6 +214,11 @@ private fun ProductHeader(
                     }
                 }
             }
+            Text(
+                text = "Date Added: Date and Timestamp", //TODO: Add Date and timestamp, timestamp para maiwasan natin ung race conditions
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onBackground
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -563,16 +577,17 @@ private fun SalesInfoSection(product: ProductData) {
         modifier = Modifier.padding(horizontal = 16.dp)
     ) {
         Text(
-            text = "Selling Price",
+            text = "Sales",
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray
         )
         Text(
-            text = "PHP${product.price}",
+            text = "100", //TODO: Change to Total Quantity Sold
+//            text = "PHP${product.price}",
             style = MaterialTheme.typography.titleLarge
         )
         Text(
-            text = "per ${product.weightUnit.lowercase()}",
+            text = "${product.weightUnit.lowercase()}",
             style = MaterialTheme.typography.bodySmall,
             color = Color.Gray
         )
@@ -580,12 +595,12 @@ private fun SalesInfoSection(product: ProductData) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Description",
+            text = "Total Amount",
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray
         )
         Text(
-            text = product.description,
+            text = "PHP 1,000.00",
             style = MaterialTheme.typography.bodyLarge
         )
     }
@@ -597,18 +612,30 @@ private fun PurchaseInfoSection(product: ProductData) {
         modifier = Modifier.padding(horizontal = 16.dp)
     ) {
         Text(
-            text = "Purchase Cost",
+            text = "Purchases",
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray
         )
         Text(
-            text = "PHP${product.purchasingCost}",
+            text = "50",
             style = MaterialTheme.typography.titleLarge
         )
         Text(
-            text = "per ${product.weightUnit.lowercase()}",
+            text = "${product.weightUnit.lowercase()}",
             style = MaterialTheme.typography.bodySmall,
             color = Color.Gray
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Total Cost of Purchases",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Color.Gray
+        )
+        Text(
+            text = "PHP${product.purchasingCost}", //TODO: Change to Total Purchases, not purchasing cost
+            style = MaterialTheme.typography.titleLarge
         )
 
         Spacer(modifier = Modifier.height(16.dp))
