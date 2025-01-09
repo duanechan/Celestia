@@ -6,11 +6,13 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -41,6 +43,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
@@ -138,6 +141,44 @@ fun AddProductForm(
             .semantics { testTag = "android:id/AddProductFormColumn" },
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        //Product ID (PID) and Product Image
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            colors = CardDefaults.cardColors(containerColor = White1)
+        ){
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
+            ) {
+                // OutlinedTextField
+                OutlinedTextField(
+                    value = "PID-YYYYMMDDHHMMSS",
+                    onValueChange = onProductNameChange,
+                    label = { Text("Product ID") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp)
+                )
+
+                // Image Card
+                Card(
+                    modifier = Modifier.size(100.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("+ Add\nImage", textAlign = TextAlign.Center)
+                    }
+                }
+            }
+        }
+
         // Product Information Section
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -257,72 +298,72 @@ fun AddProductForm(
         }
 
         // Purchasing Information Section
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-            colors = CardDefaults.cardColors(containerColor = White1)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    text = "Purchasing Information",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-
-                ExposedDropdownMenuBox(
-                    expanded = vendorExpanded,
-                    onExpandedChange = { vendorExpanded = !vendorExpanded },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { testTag = "android:id/VendorDropdown" }
-                ) {
-                    OutlinedTextField(
-                        readOnly = true,
-                        value = vendor,
-                        onValueChange = {},
-                        label = { Text("Vendor") },
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(vendorExpanded)
-                        },
-                        modifier = Modifier
-                            .menuAnchor()
-                            .fillMaxWidth()
-                    )
-
-                    ExposedDropdownMenu(
-                        expanded = vendorExpanded,
-                        onDismissRequest = { vendorExpanded = false }
-                    ) {
-                        vendors.forEach { vendorItem ->
-                            val fullName = "${vendorItem.firstName} ${vendorItem.lastName}".trim()
-                            DropdownMenuItem(
-                                text = { Text(fullName) },
-                                onClick = {
-                                    onVendorChange(fullName)
-                                    vendorExpanded = false
-                                },
-                                modifier = Modifier.semantics {
-                                    testTag = "android:id/Vendor_${fullName}"
-                                }
-                            )
-                        }
-                    }
-                }
-
-                OutlinedTextField(
-                    value = if (purchasingCost == 0.0) "" else purchasingCost.toString(),
-                    onValueChange = onPurchasingCostChange,
-                    label = { Text("Purchasing Cost") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .semantics { testTag = "android:id/PurchasingCostField" },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal)
-                )
-            }
-        }
+//        Card(
+//            modifier = Modifier.fillMaxWidth(),
+//            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+//            colors = CardDefaults.cardColors(containerColor = White1)
+//        ) {
+//            Column(
+//                modifier = Modifier.padding(16.dp),
+//                verticalArrangement = Arrangement.spacedBy(12.dp)
+//            ) {
+//                Text(
+//                    text = "Purchasing Information",
+//                    style = MaterialTheme.typography.titleMedium,
+//                    fontWeight = FontWeight.Bold
+//                )
+//
+//                ExposedDropdownMenuBox(
+//                    expanded = vendorExpanded,
+//                    onExpandedChange = { vendorExpanded = !vendorExpanded },
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .semantics { testTag = "android:id/VendorDropdown" }
+//                ) {
+//                    OutlinedTextField(
+//                        readOnly = true,
+//                        value = vendor,
+//                        onValueChange = {},
+//                        label = { Text("Vendor") },
+//                        trailingIcon = {
+//                            ExposedDropdownMenuDefaults.TrailingIcon(vendorExpanded)
+//                        },
+//                        modifier = Modifier
+//                            .menuAnchor()
+//                            .fillMaxWidth()
+//                    )
+//
+//                    ExposedDropdownMenu(
+//                        expanded = vendorExpanded,
+//                        onDismissRequest = { vendorExpanded = false }
+//                    ) {
+//                        vendors.forEach { vendorItem ->
+//                            val fullName = "${vendorItem.firstName} ${vendorItem.lastName}".trim()
+//                            DropdownMenuItem(
+//                                text = { Text(fullName) },
+//                                onClick = {
+//                                    onVendorChange(fullName)
+//                                    vendorExpanded = false
+//                                },
+//                                modifier = Modifier.semantics {
+//                                    testTag = "android:id/Vendor_${fullName}"
+//                                }
+//                            )
+//                        }
+//                    }
+//                }
+//
+//                OutlinedTextField(
+//                    value = if (purchasingCost == 0.0) "" else purchasingCost.toString(),
+//                    onValueChange = onPurchasingCostChange,
+//                    label = { Text("Purchasing Cost") },
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .semantics { testTag = "android:id/PurchasingCostField" },
+//                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal)
+//                )
+//            }
+//        }
 
         // Inventory Tracking Section
         Card(
