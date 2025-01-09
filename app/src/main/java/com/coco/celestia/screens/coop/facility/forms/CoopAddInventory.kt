@@ -156,7 +156,7 @@ fun AddProductForm(
             ) {
                 // OutlinedTextField
                 OutlinedTextField(
-                    value = "PID-YYYYMMDDHHMMSS",
+                    value = "PID-YYYYMMDD-Count",
                     onValueChange = onProductNameChange,
                     label = { Text("Product ID") },
                     modifier = Modifier
@@ -388,6 +388,35 @@ fun AddProductForm(
                     modifier = Modifier
                         .fillMaxWidth()
                         .semantics { testTag = "android:id/ReorderPointField" },
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal)
+                )
+            }
+        }
+
+        //TODO: Add Data for Notes
+        // Product Notes Section
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            colors = CardDefaults.cardColors(containerColor = White1)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Notes",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                OutlinedTextField(
+                    value = if (price == 0.0) "" else price.toString(),
+                    onValueChange = onPriceChange, //TODO
+                    label = { Text("Notes") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics { testTag = "android:id/ProductNotes" },
                     keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal)
                 )
             }

@@ -28,8 +28,8 @@ import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.model.ProductData
 import java.util.Locale
 
-//TODO: Add product ID, Format: PID-Year-Month-Day-Hours-Minutes-Seconds-Count
-//TODO: Add Date and timestamp, timestamp para maiwasan natin ung race conditions
+//TODO: Add product ID, Format: PID-Year-Month-Day-Count
+//TODO: Add timestamp para maiwasan natin ung race conditions
 
 @Composable
 fun CoopInventoryDetails(
@@ -130,12 +130,6 @@ private fun ProductHeader(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text(
-                text = "PID-YYYYMMDDHHMMSS-Count", //TODO: Add product ID, Format: Year-Month-Day-Hours-Minutes-Seconds-Count
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -217,11 +211,24 @@ private fun ProductHeader(
                     }
                 }
             }
-            Text(
-                text = "Date Added: Date and Timestamp", //TODO: Add Date and timestamp, timestamp para maiwasan natin ung race conditions
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onBackground
-            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ){
+                Text(
+                    text = "PID-YYYYMMDD-Count", //TODO: Add product ID, Format: Year-Month-Day-Count
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                Text(
+                    text = "(Timestamp) 12:00:", //TODO: Add timestamp para maiwasan natin ung race conditions
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -253,6 +260,8 @@ private fun ProductHeader(
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
         if (showDeleteConfirmation) {
@@ -364,15 +373,15 @@ private fun Details(product: ProductData) {
 
     LazyColumn(
         modifier = Modifier
-            .fillMaxSize() // Use fillMaxSize to ensure the LazyColumn covers the entire screen
-            .background(White2) // Match the background color with the card's containerColor
+            .fillMaxSize()
+            .background(White2)
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+
         item {
             Spacer(modifier = Modifier.height(16.dp))
         }
-
         // Stock Summary Card
         item {
             Card(
@@ -485,9 +494,90 @@ private fun Details(product: ProductData) {
             }
         }
 
+
+
+        // Description Card
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = White1)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = Green1
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Description",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Display Product Description", //TODO
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+
+        // Notes Card
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = White1)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = Green1
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Notes",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Add Notes: TODO", //TODO
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+
         item {
             Spacer(modifier = Modifier.height(30.dp))
         }
+
     }
 }
 
@@ -498,7 +588,20 @@ private fun StockSummaryTable(product: ProductData) {
             value = product.quantity.toString(),
             unit = product.weightUnit.lowercase()
         )
-        StockSummaryRow("Opening Stock",
+//        StockSummaryRow("Opening Stock",
+//            value = product.openingStock.toString(),
+//            unit = product.weightUnit.lowercase()
+//        )
+        // Online product check
+        if (!product.isInStore) {
+            StockSummaryRow(
+                label = "Committed Stock: TODO", //TODO: Committed stocks are those ordered stocks but not yet completed
+                value = product.quantity.toString(), //TODO: change to committed stock,
+                unit = product.weightUnit.lowercase()
+            )
+        }
+
+        StockSummaryRow("Reorder Point",
             value = product.openingStock.toString(),
             unit = product.weightUnit.lowercase()
         )
@@ -641,16 +744,33 @@ private fun PurchaseInfoSection(product: ProductData) {
             style = MaterialTheme.typography.titleLarge
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+//        Spacer(modifier = Modifier.height(16.dp))
 
+//        Text(
+//            text = "Preferred Vendor",
+//            style = MaterialTheme.typography.bodyMedium,
+//            color = Color.Gray
+//        )
+//        Text(
+//            text = product.vendor,
+//            style = MaterialTheme.typography.bodyLarge
+//        )
+    }
+}
+
+@Composable
+fun ProductDescriptionCard() {
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp)
+    ) {
         Text(
-            text = "Preferred Vendor",
+            text = "Description",
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray
         )
         Text(
-            text = product.vendor,
-            style = MaterialTheme.typography.bodyLarge
+            text = "50",
+            style = MaterialTheme.typography.titleLarge
         )
     }
 }
