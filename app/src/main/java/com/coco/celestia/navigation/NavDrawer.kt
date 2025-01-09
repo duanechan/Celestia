@@ -47,6 +47,7 @@ import com.coco.celestia.ui.theme.DOrangeCircle
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green4
 import com.coco.celestia.ui.theme.White1
+import com.coco.celestia.ui.theme.White2
 import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.util.routeHandler
 
@@ -58,7 +59,6 @@ fun NavDrawerTopBar(
     currentDestination: String?,
     onSidebarToggle: () -> Unit,
 ) {
-
     TopAppBar(
         title = {
             Row(
@@ -71,13 +71,26 @@ fun NavDrawerTopBar(
                     color = Green1,
                     fontWeight = FontWeight.Bold,
                 )
-                if (navController.currentDestination.toString().contains(Screen.AdminUserManagement.route)) {
-                    IconButton(onClick = { navController.navigate(Screen.AdminAddUserManagement.route) }) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    IconButton(onClick = { navController.navigate(Screen.Notifications.route) }) {
                         Icon(
-                            imageVector = Icons.Default.AddCircle,
-                            contentDescription = "Add User",
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Notifications",
                             tint = Green1
                         )
+                    }
+
+                    if (navController.currentDestination.toString().contains(Screen.AdminUserManagement.route)) {
+                        IconButton(onClick = { navController.navigate(Screen.AdminAddUserManagement.route) }) {
+                            Icon(
+                                imageVector = Icons.Default.AddCircle,
+                                contentDescription = "Add User",
+                                tint = Green1
+                            )
+                        }
                     }
                 }
             }
@@ -309,7 +322,7 @@ fun NavDrawerBottomBar(
                 },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = contentsColor,
-                    indicatorColor = navColor
+                    indicatorColor = White1
                 ),
                 modifier = Modifier.semantics { testTag = "android:id/dashboardPage" }
             )
@@ -365,7 +378,7 @@ fun NavDrawerBottomBar(
                     },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = contentsColor,
-                        indicatorColor = navColor
+                        indicatorColor = White1
                     ),
                     modifier = Modifier
                         .semantics { testTag = "android:id/ordersPage" }
@@ -467,7 +480,7 @@ fun NavDrawerBottomBar(
                     },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = contentsColor,
-                        indicatorColor = DOrangeCircle
+                        indicatorColor = White1
                     ),
                     modifier = Modifier.semantics { testTag = "android:id/notificationsPage" }
                 )
@@ -497,7 +510,7 @@ fun NavDrawerBottomBar(
                 },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = contentsColor,
-                    indicatorColor = navColor
+                    indicatorColor = White1
                 ),
                 modifier = Modifier.semantics { testTag = "android:id/profilePage" }
             )
