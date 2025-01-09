@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
@@ -60,14 +61,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.ui.theme.CLGText
-import com.coco.celestia.ui.theme.ClientBG
-import com.coco.celestia.ui.theme.CDarkOrange
-import com.coco.celestia.ui.theme.Green1
-import com.coco.celestia.ui.theme.Green4
-import com.coco.celestia.ui.theme.LGContainer
-import com.coco.celestia.ui.theme.White1
-import com.coco.celestia.ui.theme.mintsansFontFamily
+import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
@@ -85,14 +79,14 @@ fun ClientOrder(
     val userData by userViewModel.userData.observeAsState()
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
-    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+    val uid = FirebaseAuth.getInstance().currentUser ?.uid.toString()
 
     LaunchedEffect(Unit) {
         orderViewModel.fetchOrders(
             uid = uid,
             filter = "Coffee, Meat, Vegetable"
         )
-        userViewModel.fetchUser(uid)
+        userViewModel.fetchUser (uid)
     }
     Box(
         modifier = Modifier
@@ -171,10 +165,58 @@ fun ClientOrder(
 
                 Column {
                     // Column for Orders
-
+                    orderData.forEach { order ->
+                        OrderCard(order = order)
+                    }
                 }
             }
         }
     }
 }
 
+@Composable
+fun OrderCard(order: OrderData) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Placeholders for the order details
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .background(Color.Gray) // change to image
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            // Column for order details
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(text = "Status: ",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "Quantity: ", fontWeight = FontWeight.Bold)
+                    Text(text = "Product: ")
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = "Price: PHP ", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = "Date: ")
+            }
+        }
+    }
+}
