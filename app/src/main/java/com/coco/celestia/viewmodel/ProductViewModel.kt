@@ -218,36 +218,44 @@ class ProductViewModel : ViewModel() {
             try {
                 val snapshot = database.orderByChild("type").get().await()
                 val filterKeywords = filter.split(",").map { it.trim() }
+
                 if (snapshot.exists()) {
                     val products = snapshot.children.mapNotNull {
                         it.getValue(ProductData::class.java)
                     }.filter { product ->
-                        val coffee = product.type.equals("Coffee", ignoreCase = true) ||
-                                product.type.equals("CoopCoffee", ignoreCase = true)
-                        val meat = product.type.equals("Meat", ignoreCase = true) ||
-                                product.type.equals("CoopMeat", ignoreCase = true)
-                        val coffeeOrMeat = product.type.equals("Coffee", ignoreCase = true) ||
-                                product.type.equals("Meat", ignoreCase = true) ||
-                                product.type.equals("CoopCoffee", ignoreCase = true) ||
-                                product.type.equals("CoopMeat", ignoreCase = true)
-                        val vegetable = product.type.equals("Vegetable", ignoreCase = true)
+                        val productType = product.type.lowercase()
+
+                        // Apply keyword filtering
                         val filtered = filterKeywords.any { keyword ->
                             ProductData::class.memberProperties.any { prop ->
                                 val value = prop.get(product)
                                 value?.toString()?.contains(keyword, ignoreCase = true) == true
                             }
                         }
-                        when (role) {
-                            "Coop", "Admin" -> coffeeOrMeat && filtered
-                            "CoopCoffee" -> coffee && filtered
-                            "CoopMeat" -> meat && filtered
-                            "Farmer" -> vegetable && filtered
+
+                        when {
+                            // Admin can see all products
+                            role == "Admin" -> filtered
+
+                            // Coop users can see their specific product types
+                            role.startsWith("Coop") -> {
+                                val specificType = role.removePrefix("Coop")
+                                if (specificType.isBlank()) {
+                                    // General Coop user can see all Coop products
+                                    productType.contains("coop") && filtered
+                                } else {
+                                    // Specific Coop user can only see their product type
+                                    productType.contains(specificType.lowercase()) && filtered
+                                }
+                            }
+
+                            // Default user can see all products
                             else -> filtered
                         }
                     }
+
                     _productData.value = products
-                    _productState.value =
-                        if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
+                    _productState.value = if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
                 } else {
                     _productData.value = emptyList()
                     _productState.value = ProductState.EMPTY
