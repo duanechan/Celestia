@@ -10,6 +10,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -24,6 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -66,10 +69,6 @@ fun ClientDashboard(
         delay(1000)
     }
 
-    LaunchedEffect(searchQuery) {
-        productViewModel.fetchProducts(searchQuery, "Client")
-    }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -86,7 +85,14 @@ fun ClientDashboard(
                 modifier = Modifier
                     .weight(1f)
                     .background(Color.White, shape = RoundedCornerShape(12.dp))
-                    .padding(horizontal = 8.dp),
+                    .padding(horizontal = 8.dp)
+                    .clickable {
+                        navController.navigate(Screen.ProductCatalog.createRoute(
+                            searchQuery = "",
+                            role = "Client",
+                            showSearch = true
+                        ))
+                    },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
@@ -94,19 +100,12 @@ fun ClientDashboard(
                     contentDescription = "Search",
                     modifier = Modifier.padding(start = 8.dp)
                 )
-                TextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search") },
-                    modifier = Modifier.weight(1f),
-                    maxLines = 1,
-                    singleLine = true,
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
-                    )
+                Text(
+                    text = "Search",
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(16.dp),
+                    color = Color.Gray
                 )
             }
 
@@ -204,93 +203,177 @@ fun FilterDialog(
 }
 
 // TODO: Images for each product need to add
+// TODO: Make this scrollable
 
 @Composable
 fun ProductCatalog(
     productViewModel: ProductViewModel = viewModel(),
     facilityViewModel: FacilityViewModel = viewModel(),
     role: String,
-    navController: NavController
+    navController: NavController,
+    searchQuery: String = "",
+    showSearch: Boolean = false
 ) {
     val productState by productViewModel.productState.observeAsState()
     val products by productViewModel.productData.observeAsState()
     val facilityState by facilityViewModel.facilityState.observeAsState()
     val facilities by facilityViewModel.facilitiesData.observeAsState(emptyList())
+    var currentSearchQuery by remember { mutableStateOf(searchQuery) }
 
-    LaunchedEffect(Unit) {
-        productViewModel.fetchProducts("", role)
+    LaunchedEffect(currentSearchQuery) {
+        productViewModel.fetchProducts(currentSearchQuery, role)
         facilityViewModel.fetchFacilities()
     }
 
-    when {
-        productState is ProductState.LOADING || facilityState is FacilityState.LOADING -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        }
-
-        productState is ProductState.ERROR -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = (productState as ProductState.ERROR).message,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-        }
-
-        facilityState is FacilityState.ERROR -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = (facilityState as FacilityState.ERROR).message,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-        }
-
-        productState is ProductState.SUCCESS -> {
-            Column(
+    Column(
+        modifier = Modifier.fillMaxSize()
+            .background(White2)
+    ) {
+        if (showSearch) {
+            Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(8.dp)
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                facilities.forEach { facility ->
-                    val facilityProducts = products?.filter { product ->
-                        product.type.lowercase().contains(facility.name.lowercase())
-                    }
-
-                    if (facilityProducts != null && facilityProducts.isNotEmpty()) {
-                        ProductGrid(
-                            title = facility.name,
-                            products = facilityProducts,
-                            navController = navController
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(Color.White, shape = RoundedCornerShape(12.dp))
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search",
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                    TextField(
+                        value = currentSearchQuery,
+                        onValueChange = { currentSearchQuery = it },
+                        placeholder = { Text("Search") },
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(
+                            onSearch = {
+                                productViewModel.fetchProducts(currentSearchQuery, role)
+                            }
+                        ),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
                         )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
+                    )
                 }
+            }
+        }
 
-                if (facilities.isEmpty() || products?.isEmpty() == true) {
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
+        when {
+            productState is ProductState.LOADING || facilityState is FacilityState.LOADING -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            productState is ProductState.ERROR -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = (productState as ProductState.ERROR).message,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
+
+            facilityState is FacilityState.ERROR -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = (facilityState as FacilityState.ERROR).message,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
+
+            productState is ProductState.SUCCESS -> {
+                if (currentSearchQuery.isNotEmpty()) {
+                    val searchResults = products?.filter { product ->
+                        product.name.lowercase().contains(currentSearchQuery.lowercase()) ||
+                                product.type.lowercase().contains(currentSearchQuery.lowercase())
+                    }
+
+                    if (searchResults.isNullOrEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No products found for '$currentSearchQuery'",
+                                modifier = Modifier.padding(16.dp),
+                                fontFamily = mintsansFontFamily
+                            )
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(8.dp)
+                        ) {
+                            ProductGrid(
+                                title = "Search Results",
+                                products = searchResults,
+                                navController = navController
+                            )
+                        }
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(8.dp)
                     ) {
-                        Text(
-                            text = if (facilities.isEmpty()) "No facilities available"
-                            else "No products available",
-                            modifier = Modifier.padding(16.dp),
-                            fontFamily = mintsansFontFamily
-                        )
+                        facilities.forEach { facility ->
+                            val facilityProducts = products?.filter { product ->
+                                product.type.lowercase().contains(facility.name.lowercase())
+                            }
+
+                            if (facilityProducts != null && facilityProducts.isNotEmpty()) {
+                                ProductGrid(
+                                    title = facility.name,
+                                    products = facilityProducts,
+                                    navController = navController
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+                        }
+
+                        if (facilities.isEmpty() || products?.isEmpty() == true) {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (facilities.isEmpty()) "No facilities available"
+                                    else "No products available",
+                                    modifier = Modifier.padding(16.dp),
+                                    fontFamily = mintsansFontFamily
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -463,10 +546,5 @@ data class CarouselItem(
     val imageRes: Int,
     val title: String,
     val subtitle: String,
-    val price: String
-)
-data class ProductItem(
-    val imageRes: Int,
-    val name: String,
     val price: String
 )

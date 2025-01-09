@@ -39,6 +39,7 @@ import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.client.ClientOrderDetails
 import com.coco.celestia.screens.client.DisplaySpecialReq
 import com.coco.celestia.screens.client.OrderSummary
+import com.coco.celestia.screens.client.ProductCatalog
 import com.coco.celestia.screens.client.ProductDetailScreen
 import com.coco.celestia.screens.coop.AccessControlScreen
 import com.coco.celestia.screens.coop.admin.AdminClients
@@ -996,18 +997,18 @@ fun NavGraph(
                 onProfileUpdateEvent = { event -> onEvent(event) }
             )
         }
-        composable(
-            route = Screen.ClientOrderDetails.route,
-            arguments = listOf(
-                navArgument("orderId") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val orderId = backStackEntry.arguments?.getString("orderId")
-            onNavigate("")
-            orderId?.let {
-                ClientOrderDetails(navController, it)
-            }
-        }
+//        composable(
+//            route = Screen.ClientOrderDetails.route,
+//            arguments = listOf(
+//                navArgument("orderId") { type = NavType.StringType }
+//            )
+//        ) { backStackEntry ->
+//            val orderId = backStackEntry.arguments?.getString("orderId")
+//            onNavigate("")
+//            orderId?.let {
+//                ClientOrderDetails(navController, it)
+//            }
+//        }
 
         composable(
             route = Screen.ProductDetails.route,
@@ -1025,7 +1026,37 @@ fun NavGraph(
                 onEvent = { onEvent(it) }
             )
         }
+        composable(
+            route = Screen.ProductCatalog.route,
+            arguments = listOf(
+                navArgument("searchQuery") {
+                    type = NavType.StringType
+                    defaultValue = "none"
+                },
+                navArgument("role") {
+                    type = NavType.StringType
+                    defaultValue = "Client"
+                },
+                navArgument("showSearch") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
+        ) { backStackEntry ->
+            val searchQuery = backStackEntry.arguments?.getString("searchQuery") ?: "none"
+            val role = backStackEntry.arguments?.getString("role") ?: "Client"
+            val showSearch = backStackEntry.arguments?.getBoolean("showSearch") ?: false
 
+            onNavigate("Product Search")
+            ProductCatalog(
+                productViewModel = productViewModel,
+                facilityViewModel = facilityViewModel,
+                role = role,
+                navController = navController,
+                searchQuery = if (searchQuery == "none") "" else searchQuery,
+                showSearch = showSearch
+            )
+        }
         composable(route = Screen.Basket.route) {
             onNavigate("Basket")
             BasketScreen(
