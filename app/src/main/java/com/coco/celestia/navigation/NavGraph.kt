@@ -6,6 +6,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,6 +38,7 @@ import com.coco.celestia.screens.client.ClientDashboard
 import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.client.ClientOrderDetails
 import com.coco.celestia.screens.client.DisplaySpecialReq
+import com.coco.celestia.screens.client.OrderSummary
 import com.coco.celestia.screens.client.ProductDetailScreen
 import com.coco.celestia.screens.coop.AccessControlScreen
 import com.coco.celestia.screens.coop.admin.AdminClients
@@ -86,9 +88,11 @@ import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.VendorViewModel
+import com.coco.celestia.viewmodel.model.BasketItem
 import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.serialization.json.Json
 
 @Composable
 fun NavGraph(
@@ -1005,21 +1009,13 @@ fun NavGraph(
             }
         }
 
-        composable(route = Screen.Basket.route) {
-            onNavigate("Basket")
-            BasketScreen(
-                productViewModel = productViewModel,
-                userViewModel = userViewModel,
-                onEvent = { onEvent(it) }
-            )
-        }
-
         composable(
             route = Screen.ProductDetails.route,
             arguments = listOf(navArgument("product") { type = NavType.StringType })
         ) { backStackEntry ->
             val productName = backStackEntry.arguments?.getString("product").toString()
             onNavigate(productName)
+
             ProductDetailScreen(
                 navController = navController,
                 userViewModel = userViewModel,
@@ -1027,6 +1023,35 @@ fun NavGraph(
                 productViewModel = productViewModel,
                 productName = productName,
                 onEvent = { onEvent(it) }
+            )
+        }
+
+        composable(route = Screen.Basket.route) {
+            onNavigate("Basket")
+            BasketScreen(
+                navController = navController,
+                productViewModel = productViewModel,
+                userViewModel = userViewModel,
+                onEvent = { onEvent(it) }
+            )
+        }
+
+        composable(
+            route = Screen.OrderSummary.route,
+            arguments = listOf(navArgument("items") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val itemsJson = backStackEntry.arguments?.getString("items") ?: ""
+            val items = try {
+                Json.decodeFromString<List<BasketItem>>(Uri.decode(itemsJson))
+            } catch (e: Exception) {
+                emptyList()
+            }
+            onNavigate("Order Summary")
+            OrderSummary(
+                navController = navController,
+                userViewModel = userViewModel,
+                productViewModel = productViewModel,
+                items = items
             )
         }
 

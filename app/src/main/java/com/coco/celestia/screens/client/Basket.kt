@@ -34,15 +34,17 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.coco.celestia.components.toast.ToastStatus
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.Green1
@@ -55,16 +57,21 @@ import com.coco.celestia.viewmodel.model.BasketItem
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @Composable
 fun BasketScreen(
+    navController: NavController,
     productViewModel: ProductViewModel,
     userViewModel: UserViewModel,
-    onEvent: (Triple<ToastStatus, String, Long>) -> Unit
+    onEvent: (Triple<ToastStatus, String, Long>) -> Unit,
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     val userData by userViewModel.userData.observeAsState(UserData())
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
+    val checkoutItems = remember { mutableStateListOf<BasketItem>() }
 
     LaunchedEffect(Unit) {
         userViewModel.fetchUser(uid)
@@ -85,24 +92,17 @@ fun BasketScreen(
             UserState.REGISTER_SUCCESS,
             is UserState.ERROR -> BasketError(message = (userState as UserState.ERROR).message ?: "Unknown error")
             UserState.LOADING -> BasketLoading()
-            UserState.SUCCESS ->
+            UserState.SUCCESS -> {
                 if (userData.basket.isNotEmpty()) {
                     Basket(
                         productViewModel = productViewModel,
                         items = userData.basket,
+                        checkoutItems = checkoutItems,
                         onCheckout = {
                             if (it.isNotEmpty()) {
-                                /* TODO: Checkout the basket */
-
-                                // Finally, update user basket
-                                userViewModel.clearCheckoutItems(uid, it)
-                                onEvent(
-                                    Triple(
-                                        ToastStatus.SUCCESSFUL,
-                                        "Successfully ordered ${it.size} " + if (it.size > 1) "items!" else "item!",
-                                        System.currentTimeMillis()
-                                    )
-                                )
+                                userViewModel.updateCheckoutItems(uid, it)
+                                val itemsJson = Uri.encode(Json.encodeToString(it.toList()))
+                                navController.navigate(Screen.OrderSummary.createRoute(itemsJson))
                             } else {
                                 onEvent(
                                     Triple(
@@ -117,24 +117,23 @@ fun BasketScreen(
                 } else {
                     BasketEmpty()
                 }
+            }
         }
     }
 }
-
 
 @Composable
 fun Basket(
     productViewModel: ProductViewModel,
     items: List<BasketItem>,
-    onCheckout: (List<BasketItem>) -> Unit
+    checkoutItems: SnapshotStateList<BasketItem>,
+    onCheckout: (SnapshotStateList<BasketItem>) -> Unit
 ) {
-    var checkoutItems = remember { mutableStateListOf<BasketItem>() }
-
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         itemsIndexed(items) { _, item ->
             val productData by productViewModel.productData.observeAsState(emptyList())
 
-            LaunchedEffect(Unit) {
+            LaunchedEffect(item.product) {
                 productViewModel.fetchProduct(item.product)
             }
 
@@ -191,7 +190,7 @@ fun BasketItemCard(
     }
 
     Card(
-        elevation = CardDefaults.elevatedCardElevation(8.dp, 4.dp),
+        elevation = CardDefaults.elevatedCardElevation(8.dp),
         modifier = Modifier
             .fillMaxSize()
             .height(175.dp)

@@ -115,7 +115,10 @@ sealed class Screen(val route: String) {
         fun createRoute(product: String) = "client/$product"
     }
     data object Basket: Screen(route = "client/basket")
-    data object CheckoutEvent: Screen(route = "client/basket/checkout")
+    data object OrderSummary: Screen(route = "client/basket/checkout={items}") {
+        fun createRoute(items: String) = "client/basket/checkout=$items"
+    }
+//    data object CheckoutEvent: Screen(route = "client/basket/checkout")
     //farmer
     data object Farmer: Screen( route = "farmer_dashboard")
     data object FarmerManageOrder: Screen( route = "farmer_manage_order")
