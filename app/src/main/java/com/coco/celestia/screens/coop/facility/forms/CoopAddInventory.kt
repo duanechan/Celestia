@@ -412,6 +412,12 @@ fun AddProductForm(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        Text(
+                            text = "Collection Method",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -427,6 +433,12 @@ fun AddProductForm(
                             )
                         }
 
+                        Text(
+                            text = "Payment Method",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
