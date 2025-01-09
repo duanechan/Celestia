@@ -121,7 +121,7 @@ fun FarmerOrderDetails(
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp),
                             text = "Rejection Reason\n ${orderData.rejectionReason}",
-                            color = Copper,
+                            color = NylonRed,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
@@ -133,7 +133,7 @@ fun FarmerOrderDetails(
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp),
                             text = "${orderData.client} cancelled the order",
-                            color = Copper,
+                            color = NylonRed,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center

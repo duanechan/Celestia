@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import com.coco.celestia.ui.theme.BgColor
 
 //TODO: need backend to connect order requests notifications etc.,
 //boolean = true will show placeholder notification content
@@ -21,102 +22,110 @@ import androidx.compose.ui.text.style.TextOverflow
 @Composable
 fun FarmerNotification(hasNotifications: Boolean = true, onRefresh: () -> Unit = {}) {
     Scaffold { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(BgColor)
                 .padding(paddingValues)
-                .padding(4.dp),
         ) {
-            // Screen Title
-//            Text(
-//                text = "Notifications",
-//                fontSize = 24.sp,
-//                fontWeight = FontWeight.Bold,
-//                color = MaterialTheme.colorScheme.onBackground
-//            )
-//
-//            Spacer(modifier = Modifier.height(16.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp)
+            ) {
+                // Notifications
+                if (hasNotifications) {
+                    NotificationItem(
+                        title = "Pending Order",
+                        message = "There is a pending request for an order from the Cooperative.",
+                        timestamp = "2 hours ago",
+                        onClick = { /* TODO: Navigate to specific screen */ }
+                    )
 
-            // Conditional UI for Notifications
-            if (hasNotifications) {
-                // Display notifications if they exist
-                NotificationItem(
-                    title = "Pending Order",
-                    message = "There is a pending request for an order from the Cooperative",
-                    timestamp = "2 hours ago"
-                )
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                NotificationItem(
-                    title = "Order Cancelled",
-                    message = "The order of 50kg of potatoes has been cancelled.",
-                    timestamp = "1 day ago"
-                )
-            } else {
-                // Display placeholder UI if there are no notifications
-                NoNotificationsPlaceholder(onRefresh = onRefresh)
+                    NotificationItem(
+                        title = "Order Cancelled",
+                        message = "The order of 50kg of potatoes has been cancelled.",
+                        timestamp = "1 day ago",
+                        onClick = { }
+                    )
+                } else {
+                    NoNotifications(onRefresh = onRefresh)
+                }
             }
         }
     }
 }
 
 @Composable
-fun NotificationItem(title: String, message: String, timestamp: String) {
-    Row(
+fun NotificationItem(
+    title: String,
+    message: String,
+    timestamp: String,
+    onClick: () -> Unit
+) {
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(horizontal = 4.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
     ) {
-        // Notification Icon
-        Icon(
-            imageVector = Icons.Default.Notifications,
-            contentDescription = "Notification Icon",
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(48.dp)
-        )
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        // Notification Content
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Notification Icon
+            Icon(
+                imageVector = Icons.Default.Notifications,
+                contentDescription = "Notification Icon",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(48.dp)
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.width(16.dp))
 
+            // Notification Content
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = message,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Notification Timestamp
             Text(
-                text = message,
-                fontSize = 14.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                text = timestamp,
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
         }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        // Notification Timestamp
-        Text(
-            text = timestamp,
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-        )
     }
 }
 
 @Composable
-fun NoNotificationsPlaceholder(onRefresh: () -> Unit) {
+fun NoNotifications(onRefresh: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -124,7 +133,6 @@ fun NoNotificationsPlaceholder(onRefresh: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Placeholder Content
         Icon(
             imageVector = Icons.Default.Notifications,
             contentDescription = "Notification Icon",

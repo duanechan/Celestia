@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -59,6 +60,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -134,60 +136,42 @@ fun FarmerManageOrder(
                         unfocusedIndicatorColor = Color.Transparent,
                         disabledIndicatorColor = Color.Transparent,
                         errorIndicatorColor = Color.Transparent,
+                        focusedTextColor = Cocoa, // Text color when TextField is focused
+                        unfocusedTextColor = DarkGreen // Text color when TextField is not focused
                     )
                 )
             }
 
+            //SHORTCUTTED FILTERS
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(horizontal = 20.dp)
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(
-                    onClick = { selectedSection = "Recent" },
-                    colors = ButtonDefaults.buttonColors(containerColor = if (selectedSection == "Recent") Green2 else Green3),
-                    modifier = Modifier
-                        .weight(1f)
-                        .semantics { testTag = "android:id/recentOrdersButton" }
-                ) {
-                    Text("Recent", color = Color.White, fontSize = 10.sp)
-                }
+                val sections = listOf("Recent", "Pending", "In Progress", "Calamity-Affected", "Rejected","Cancelled")
 
-                Spacer(modifier = Modifier.width(8.dp))
+                sections.forEach { section ->
+                    val buttonWidth = when (section) {
+                        "In Progress", "Calamity-Affected" -> 150.dp
+                        else -> 100.dp
+                    }
 
-                Button(
-                    onClick = { selectedSection = "Pending" },
-                    colors = ButtonDefaults.buttonColors(containerColor = if (selectedSection == "Pending") Green2 else Green3),
-                    modifier = Modifier
-                        .weight(1f)
-                        .semantics { testTag = "android:id/pendingOrdersButton" }
-                ) {
-                    Text("Pending", color = Color.White, fontSize = 10.sp)
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Button(
-                    onClick = { selectedSection = "Ongoing" },
-                    colors = ButtonDefaults.buttonColors(containerColor = if (selectedSection == "Ongoing") Green2 else Green3),
-                    modifier = Modifier
-                        .weight(1f)
-                        .semantics { testTag = "android:id/ongoingOrdersButton" }
-                ) {
-                    Text("Ongoing", color = Color.White, fontSize = 10.sp)
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Button(
-                    onClick = { selectedSection = "CalamityAffected" },
-                    colors = ButtonDefaults.buttonColors(containerColor = if (selectedSection == "CalamityAffected") Green2 else Green3),
-                    modifier = Modifier
-                        .weight(1f)
-                        .semantics { testTag = "android:id/calamityAffectedOrdersButton" }
-                ) {
-                    Text("Calamity Affected", color = Color.White, fontSize = 9.5.sp)
+                    Button(
+                        onClick = { selectedSection = section },
+                        colors = ButtonDefaults.buttonColors(containerColor = if (selectedSection == section) Green2 else Green3),
+                        modifier = Modifier
+                            .width(buttonWidth)
+                            .height(40.dp)
+                    ) {
+                        Text(
+                            text = section,
+                            color = Color.White,
+                            fontSize = 10.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
 
@@ -220,9 +204,12 @@ fun FarmerManageOrder(
                         val matchesSection = when (selectedSection) {
                             "All" -> true
                             "Recent" -> order.status in listOf("RECENTLY_UPDATED")
-                            "Pending" -> order.status in listOf("PENDING", "PARTIALLY_FULFILLED")
-                            "Ongoing" -> order.status in listOf("ACCEPTED", "PLANTING", "HARVESTING", "DELIVERING", "COMPLETED")
+                            "Pending" -> order.status in listOf("PENDING") //removed PARTIALLY FULFILLED
+                            "In Progress" -> order.status in listOf("ACCEPTED", "PLANTING", "PLANTED",
+                                "GROWING","READY FOR HARVEST", "HARVESTING", "HARVESTED", "DELIVERING", "COMPLETED") //removed DELIVERING
                             "CalamityAffected" -> order.status == "CALAMITY_AFFECTED"
+                            "Cancelled" -> order.status == "CANCELLED" //added
+                            "Rejected" -> order.status == "REJECTED" //added
                             else -> false
                         }
                         matchesSearchQuery && matchesSection
@@ -263,6 +250,7 @@ fun FarmerManageOrder(
     }
 }
 
+//DONT REMOVE ATM
 @Composable
 fun FarmerManageRequest(
     navController: NavController,
@@ -344,22 +332,34 @@ fun ManageOrderCards(
     val backgroundColor = when (displayStatus) {
         "ACCEPTED" -> SageGreen
         "PLANTING" -> Tangerine
-        "REJECTED" -> Copper.copy(alpha = 0.4f)
+        "PLANTED" -> DeepTangerine
+        "GROWING" -> BrownTangerine
+        "READY FOR HARVEST" -> Brown2
+        "HARVESTING" -> Brown3
+        "HARVESTED" -> Brown1
         "DELIVERING" -> Green
+//        "PICKUP" -> Blue
         "COMPLETED" -> SageGreen.copy(alpha = 0.7f)
+        "CALAMITY AFFECTED" -> SolidRed
+        "REJECTED" -> NylonRed.copy(alpha = 0.4f)
         "CANCELLED" -> Copper3
-        "HARVESTING" -> Brown1
-        "HARVESTING_MEAT" -> Brown1
+//        "HARVESTING_MEAT" -> Brown1
         else -> Color.Gray
     }
 
     val iconPainter: Painter? = when (displayStatus) {
         "ACCEPTED" -> painterResource(id = R.drawable.preparing)
-        "PLANTING" -> painterResource(id = R.drawable.plant)
+        "PLANTING" -> painterResource(id = R.drawable.plant_hand)
+        "PLANTED" -> painterResource(id = R.drawable.plant)
+        "GROWING" -> painterResource(id = R.drawable.planting)
+        "READY FOR HARVEST" -> painterResource(id = R.drawable.harvest)
         "HARVESTING" -> painterResource(id = R.drawable.harvest_basket)
-        "HARVESTING_MEAT" -> painterResource(id = R.drawable.cow_animal)
+        "HARVESTED" -> painterResource(id = R.drawable.harvested)
+//        "HARVESTING_MEAT" -> painterResource(id = R.drawable.cow_animal)
         "DELIVERING" -> painterResource(id = R.drawable.deliveryicon)
+//        "PICKUP" -> painterResource(id = R.drawable.pickup)
         "CANCELLED" -> painterResource(id = R.drawable.cancelled)
+        "CALAMITY AFFECTED" -> painterResource(id = R.drawable.calamity)
         else -> null
     }
 
