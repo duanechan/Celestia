@@ -297,79 +297,231 @@ fun App() {
                          toastMessage, drawerState, scope, expandedMenus, menuItems, statuses,
                          shouldShowNavigation, currentDestination, onTopBarTitleChange, onToastEvent,
                          onExpandMenu ->
-        ModalNavigationDrawer(
-            drawerContent = {
-                ModalDrawerSheet(
-                    modifier = Modifier
-                        .width(300.dp)
-                        .fillMaxHeight()
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .background(Color(0xFFF5F5F5))
-                            .padding(16.dp)
-                    ) {
-                        // Header
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .padding(bottom = 16.dp)
-                                .clickable {
-                                    scope.launch {
-                                        drawerState.close()
-                                        navController.navigate(Screen.Profile.route)
-                                    }
-                                }
-                        ) {
-                            CircleAvatar(
-                                text = userData.firstname.take(1),
-                                backgroundColor = Green4,
-                                textColor = Green1
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(userData.firstname + " " + userData.lastname, fontWeight = FontWeight.Bold)
-                                Text(userData.email, fontSize = 12.sp, color = Color.Gray)
-                            }
-                        }
-                        Divider(color = Color.Gray, thickness = 1.dp)
-                        Spacer(modifier = Modifier.height(16.dp))
 
-                        // Menu Items
-                        menuItems.forEach { (label, route) ->
-                            when {
-                                label == "NO FACILITY YET" || label.endsWith("FACILITY") -> {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 8.dp)
-                                    ) {
-                                        Text(
-                                            text = label,
-                                            fontSize = 18.sp,
-                                            color = if (label == "NO FACILITY YET") Color.Red else Green1,
-                                            fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.align(Alignment.Center)
-                                        )
+        val shouldShowDrawer = userData.role.startsWith("Coop") || userData.role == "Admin"
+
+        if (shouldShowDrawer) {
+            ModalNavigationDrawer(
+                drawerContent = {
+                    ModalDrawerSheet(
+                        modifier = Modifier
+                            .width(300.dp)
+                            .fillMaxHeight()
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .background(Color(0xFFF5F5F5))
+                                .padding(16.dp)
+                        ) {
+                            // Header
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .padding(bottom = 16.dp)
+                                    .clickable {
+                                        scope.launch {
+                                            drawerState.close()
+                                            navController.navigate(Screen.Profile.route)
+                                        }
                                     }
+                            ) {
+                                CircleAvatar(
+                                    text = userData.firstname.take(1),
+                                    backgroundColor = Green4,
+                                    textColor = Green1
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(userData.firstname + " " + userData.lastname, fontWeight = FontWeight.Bold)
+                                    Text(userData.email, fontSize = 12.sp, color = Color.Gray)
                                 }
-                                label in listOf("Products", "Sales", "Purchases") -> {
-                                    Column {
+                            }
+                            Divider(color = Color.Gray, thickness = 1.dp)
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Menu Items
+                            menuItems.forEach { (label, route) ->
+                                when {
+                                    label == "NO FACILITY YET" || label.endsWith("FACILITY") -> {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 8.dp)
+                                        ) {
+                                            Text(
+                                                text = label,
+                                                fontSize = 18.sp,
+                                                color = if (label == "NO FACILITY YET") Color.Red else Green1,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.align(Alignment.Center)
+                                            )
+                                        }
+                                    }
+                                    label in listOf("Products", "Sales", "Purchases") -> {
+                                        Column {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 8.dp)
+                                                    .clickable { onExpandMenu(label) }
+                                                    .padding(8.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = when (label) {
+                                                        "Products" -> Icons.Default.List
+                                                        "Sales" -> Icons.Default.ShoppingCart
+                                                        "Purchases" -> Icons.Default.ShoppingCart
+                                                        else -> Icons.Default.List
+                                                    },
+                                                    contentDescription = null,
+                                                    tint = if (currentDestination == route) Green1 else Color.Gray
+                                                )
+                                                Spacer(modifier = Modifier.width(12.dp))
+                                                Text(
+                                                    text = label,
+                                                    color = if (currentDestination == route) Green1 else Color.Gray,
+                                                    fontWeight = FontWeight.Bold,
+                                                    modifier = Modifier.weight(1f)
+                                                )
+                                                Icon(
+                                                    painter = painterResource(
+                                                        id = if (expandedMenus.contains(label))
+                                                            R.drawable.expand_less
+                                                        else
+                                                            R.drawable.expand_more
+                                                    ),
+                                                    contentDescription = null,
+                                                    tint = if (currentDestination == route) Green1 else Color.Gray,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                            }
+
+                                            if (expandedMenus.contains(label)) {
+                                                val subItems = when (label) {
+                                                    "Products" -> listOf(
+                                                        "In-Store Products" to Screen.CoopInStoreProducts.route,
+                                                        "Online Products" to Screen.CoopOnlineProducts.route
+                                                    )
+                                                    "Sales" -> listOf(
+                                                        "In-Store Sales" to Screen.CoopInStoreSales.route,
+                                                        "Online Sales" to Screen.CoopOnlineSales.route
+                                                    )
+                                                    "Purchases" -> listOf(
+                                                        "Vendors" to Screen.CoopVendors.route,
+                                                        "Purchase Orders" to Screen.CoopPurchases.route
+                                                    )
+                                                    else -> emptyList()
+                                                }
+
+                                                subItems.forEach { (subLabel, subRoute) ->
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .padding(start = 44.dp, top = 8.dp)
+                                                            .clickable {
+                                                                scope.launch {
+                                                                    drawerState.close()
+                                                                    navController.navigate(subRoute)
+                                                                }
+                                                            }
+                                                            .padding(8.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = subLabel,
+                                                            color = Color.Gray
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    label == "Special Requests" -> {
+                                        Column {
+                                            Row (
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(8.dp)
+                                                    .clickable { isDropdownExpanded = !isDropdownExpanded }
+                                            ) {
+                                                Icon(Icons.Default.Info, contentDescription = null, tint = Green1)
+                                                Spacer(modifier = Modifier.width(16.dp))
+                                                Text(
+                                                    text = label,
+                                                    color = if (currentDestination == route) Green1 else Color.Gray,
+                                                    fontWeight = FontWeight.Bold,
+                                                    modifier = Modifier.weight(1f)
+                                                )
+                                                Icon(
+                                                    painter = painterResource(id = if (isDropdownExpanded) R.drawable.expand_less else R.drawable.expand_more),
+                                                    contentDescription = null,
+                                                    tint = Green1,
+                                                    modifier = Modifier.size(12.dp)
+                                                )
+                                            }
+
+                                            if (isDropdownExpanded) {
+                                                statuses.forEach { status ->
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .padding(8.dp)
+                                                            .padding(start = 48.dp)
+                                                            .clickable {
+                                                                isDropdownExpanded = false
+                                                                scope.launch {
+                                                                    drawerState.close()
+                                                                    navController.navigate(Screen.AdminSpecialRequests.createRoute(status))
+                                                                }
+                                                            }
+                                                    ) {
+                                                        when (status) {
+                                                            "To Review" -> Icon(painterResource(R.drawable.review), null, tint = Green1, modifier = Modifier.size(24.dp))
+                                                            "In Progress" -> Icon(painterResource(R.drawable.progress), null, tint = Green1, modifier = Modifier.size(24.dp))
+                                                            "Completed" -> Icon(painterResource(R.drawable.completed), null, tint = Green1, modifier = Modifier.size(24.dp))
+                                                            "Cancelled" -> Icon(painterResource(R.drawable.cancelled), null, tint = Green1, modifier = Modifier.size(24.dp))
+                                                            "Turned Down" -> Icon(painterResource(R.drawable.turned_down), null, tint = Green1, modifier = Modifier.size(24.dp))
+                                                        }
+                                                        Spacer(modifier = Modifier.width(8.dp))
+                                                        Text(
+                                                            text = status,
+                                                            color = Color.Gray,
+                                                            fontWeight = FontWeight.Bold
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else -> {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .padding(vertical = 8.dp)
-                                                .clickable { onExpandMenu(label) }
+                                                .clickable {
+                                                    scope.launch {
+                                                        drawerState.close()
+                                                        navController.navigate(route) {
+                                                            popUpTo(navController.graph.startDestinationId) {
+                                                                inclusive = true
+                                                            }
+                                                        }
+                                                    }
+                                                }
                                                 .padding(8.dp)
                                         ) {
                                             Icon(
                                                 imageVector = when (label) {
-                                                    "Products" -> Icons.Default.List
-                                                    "Sales" -> Icons.Default.ShoppingCart
-                                                    "Purchases" -> Icons.Default.ShoppingCart
-                                                    else -> Icons.Default.List
+                                                    "Home" -> Icons.Default.Home
+                                                    "Settings" -> Icons.Default.Settings
+                                                    "Reports" -> Icons.Default.Info
+                                                    else -> Icons.Default.Home
                                                 },
                                                 contentDescription = null,
                                                 tint = if (currentDestination == route) Green1 else Color.Gray
@@ -378,200 +530,68 @@ fun App() {
                                             Text(
                                                 text = label,
                                                 color = if (currentDestination == route) Green1 else Color.Gray,
-                                                fontWeight = FontWeight.Bold,
-                                                modifier = Modifier.weight(1f)
-                                            )
-                                            Icon(
-                                                painter = painterResource(
-                                                    id = if (expandedMenus.contains(label))
-                                                        R.drawable.expand_less
-                                                    else
-                                                        R.drawable.expand_more
-                                                ),
-                                                contentDescription = null,
-                                                tint = if (currentDestination == route) Green1 else Color.Gray,
-                                                modifier = Modifier.size(16.dp)
+                                                fontWeight = FontWeight.Bold
                                             )
                                         }
-
-                                        if (expandedMenus.contains(label)) {
-                                            val subItems = when (label) {
-                                                "Products" -> listOf(
-                                                    "In-Store Products" to Screen.CoopInStoreProducts.route,
-                                                    "Online Products" to Screen.CoopOnlineProducts.route
-                                                )
-                                                "Sales" -> listOf(
-                                                    "In-Store Sales" to Screen.CoopInStoreSales.route,
-                                                    "Online Sales" to Screen.CoopOnlineSales.route
-                                                )
-                                                "Purchases" -> listOf(
-                                                    "Vendors" to Screen.CoopVendors.route,
-                                                    "Purchase Orders" to Screen.CoopPurchases.route
-                                                )
-                                                else -> emptyList()
-                                            }
-
-                                            subItems.forEach { (subLabel, subRoute) ->
-                                                Row(
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(start = 44.dp, top = 8.dp)
-                                                        .clickable {
-                                                            scope.launch {
-                                                                drawerState.close()
-                                                                navController.navigate(subRoute)
-                                                            }
-                                                        }
-                                                        .padding(8.dp)
-                                                ) {
-                                                    Text(
-                                                        text = subLabel,
-                                                        color = Color.Gray
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                label == "Special Requests" -> {
-                                    Column {
-                                        Row (
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(8.dp)
-                                                .clickable { isDropdownExpanded = !isDropdownExpanded }
-                                        ) {
-                                            Icon(Icons.Default.Info, contentDescription = null, tint = Green1)
-                                            Spacer(modifier = Modifier.width(16.dp))
-                                            Text(
-                                                text = label,
-                                                color = if (currentDestination == route) Green1 else Color.Gray,
-                                                fontWeight = FontWeight.Bold,
-                                                modifier = Modifier.weight(1f)
-                                            )
-                                            Icon(
-                                                painter = painterResource(id = if (isDropdownExpanded) R.drawable.expand_less else R.drawable.expand_more),
-                                                contentDescription = null,
-                                                tint = Green1,
-                                                modifier = Modifier.size(12.dp)
-                                            )
-                                        }
-
-                                        if (isDropdownExpanded) {
-                                            statuses.forEach { status ->
-                                                Row(
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(8.dp)
-                                                        .padding(start = 48.dp)
-                                                        .clickable {
-                                                            isDropdownExpanded = false
-                                                            scope.launch {
-                                                                drawerState.close()
-                                                                navController.navigate(Screen.AdminSpecialRequests.createRoute(status))
-                                                            }
-                                                        }
-                                                ) {
-                                                    when (status) {
-                                                        "To Review" -> Icon(painterResource(R.drawable.review), null, tint = Green1, modifier = Modifier.size(24.dp))
-                                                        "In Progress" -> Icon(painterResource(R.drawable.progress), null, tint = Green1, modifier = Modifier.size(24.dp))
-                                                        "Completed" -> Icon(painterResource(R.drawable.completed), null, tint = Green1, modifier = Modifier.size(24.dp))
-                                                        "Cancelled" -> Icon(painterResource(R.drawable.cancelled), null, tint = Green1, modifier = Modifier.size(24.dp))
-                                                        "Turned Down" -> Icon(painterResource(R.drawable.turned_down), null, tint = Green1, modifier = Modifier.size(24.dp))
-                                                    }
-                                                    Spacer(modifier = Modifier.width(8.dp))
-                                                    Text(
-                                                        text = status,
-                                                        color = Color.Gray,
-                                                        fontWeight = FontWeight.Bold
-                                                    )
-                                                }
-                                            }
-                                        }
-                                        }
-                                }
-                                else -> {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 8.dp)
-                                            .clickable {
-                                                scope.launch {
-                                                    drawerState.close()
-                                                    navController.navigate(route) {
-                                                        popUpTo(navController.graph.startDestinationId) {
-                                                            inclusive = true
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            .padding(8.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = when (label) {
-                                                "Home" -> Icons.Default.Home
-                                                "Settings" -> Icons.Default.Settings
-                                                "Reports" -> Icons.Default.Info
-                                                else -> Icons.Default.Home
-                                            },
-                                            contentDescription = null,
-                                            tint = if (currentDestination == route) Green1 else Color.Gray
-                                        )
-                                        Spacer(modifier = Modifier.width(12.dp))
-                                        Text(
-                                            text = label,
-                                            color = if (currentDestination == route) Green1 else Color.Gray,
-                                            fontWeight = FontWeight.Bold
-                                        )
                                     }
                                 }
                             }
                         }
                     }
+                },
+                drawerState = drawerState
+            ) {
+                Scaffold(
+                    topBar = {
+                        if (userData != null && shouldShowNavigation) {
+                            NavDrawerTopBar(
+                                navController = navController,
+                                title = topBarTitle,
+                                currentDestination = currentDestination,
+                                onSidebarToggle = {
+                                    scope.launch {
+                                        if (drawerState.isClosed) {
+                                            drawerState.open()
+                                        } else {
+                                            drawerState.close()
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                        Toast(message = toastMessage, status = toastStatus, visibility = showToast)
+                    }
+                ) { paddingValues ->
+                    NavGraph(
+                        navController = navController,
+                        userRole = userData.role.toString(),
+                        onNavigate = onTopBarTitleChange,
+                        onEvent = onToastEvent,
+                        modifier = if (shouldShowNavigation) {
+                            Modifier.padding(paddingValues)
+                        } else {
+                            Modifier
+                        }
+                    )
                 }
-            },
-            drawerState = drawerState
-        ) {
+            }
+        } else {
+            // For client routes - no drawer
             Scaffold(
                 topBar = {
                     if (userData != null && shouldShowNavigation) {
-                        when {
-                            userData.role.startsWith("Coop") || userData.role == "Admin" -> {
-                                NavDrawerTopBar(
-                                    navController = navController,
-                                    title = topBarTitle,
-                                    currentDestination = currentDestination,
-                                    onSidebarToggle = {
-                                        scope.launch {
-                                            if (drawerState.isClosed) {
-                                                drawerState.open()
-                                            } else {
-                                                drawerState.close()
-                                            }
-                                        }
-                                    }
-                                )
-                            }
-                            else -> {
-                                TopBar(
-                                    title = topBarTitle,
-                                    navController = navController,
-                                    containerColor = Green4,
-                                    currentDestination = currentDestination,
-                                    role = userData.role
-                                )
-                            }
-                        }
+                        TopBar(
+                            title = topBarTitle,
+                            navController = navController,
+                            containerColor = Green4,
+                            currentDestination = currentDestination,
+                            role = userData.role
+                        )
+                        Toast(message = toastMessage, status = toastStatus, visibility = showToast)
                     }
-                    Toast(message = toastMessage, status = toastStatus, visibility = showToast)
                 },
                 bottomBar = {
-                    if (shouldShowNavigation && !(userData.role.startsWith("Coop") || userData.role == "Admin")) {
+                    if (shouldShowNavigation) {
                         NavDrawerBottomBar(
                             role = userData.role,
                             navController = navController
