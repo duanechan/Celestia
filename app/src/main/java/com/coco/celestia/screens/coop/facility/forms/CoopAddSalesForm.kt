@@ -210,6 +210,44 @@ fun SalesAddForm(
                     colors = textFieldColors
                 )
 
+                val context = LocalContext.current
+                val calendar = Calendar.getInstance()
+
+                OutlinedTextField(
+                    value = salesData.date,
+                    onValueChange = { },
+                    label = { Text("Date of Sale") },
+                    readOnly = true,
+                    isError = showErrorMessages && salesData.date.isEmpty(),
+                    supportingText = {
+                        if (showErrorMessages && salesData.date.isEmpty()) {
+                            Text("Date is required")
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = textFieldColors,
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.DateRange,
+                            contentDescription = "Select date",
+                            modifier = Modifier.clickable {
+                                DatePickerDialog(
+                                    context,
+                                    { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+                                        calendar.set(year, month, dayOfMonth)
+                                        val formattedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                                        salesData = salesData.copy(date = formattedDate.format(calendar.time))
+                                        hasErrors = !validateForm()
+                                    },
+                                    calendar.get(Calendar.YEAR),
+                                    calendar.get(Calendar.MONTH),
+                                    calendar.get(Calendar.DAY_OF_MONTH)
+                                ).show()
+                            }
+                        )
+                    }
+                )
+
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = if (showProductDropdown) searchQuery else salesData.productName,
@@ -377,7 +415,8 @@ fun SalesAddForm(
                         salesData = salesData.copy(price = price)
                         hasErrors = !validateForm()
                     },
-                    label = { Text("Price") },
+                    readOnly = true,
+                    label = { Text("Price per Unit") },
                     isError = showErrorMessages && salesData.price <= 0.0,
                     supportingText = {
                         if (showErrorMessages && salesData.price <= 0.0) {
@@ -389,43 +428,26 @@ fun SalesAddForm(
                     colors = textFieldColors
                 )
 
-                val context = LocalContext.current
-                val calendar = Calendar.getInstance()
-
-                OutlinedTextField(
-                    value = salesData.date,
-                    onValueChange = { },
-                    label = { Text("Date") },
-                    readOnly = true,
-                    isError = showErrorMessages && salesData.date.isEmpty(),
-                    supportingText = {
-                        if (showErrorMessages && salesData.date.isEmpty()) {
-                            Text("Date is required")
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = textFieldColors,
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.DateRange,
-                            contentDescription = "Select date",
-                            modifier = Modifier.clickable {
-                                DatePickerDialog(
-                                    context,
-                                    { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
-                                        calendar.set(year, month, dayOfMonth)
-                                        val formattedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                                        salesData = salesData.copy(date = formattedDate.format(calendar.time))
-                                        hasErrors = !validateForm()
-                                    },
-                                    calendar.get(Calendar.YEAR),
-                                    calendar.get(Calendar.MONTH),
-                                    calendar.get(Calendar.DAY_OF_MONTH)
-                                ).show()
-                            }
-                        )
-                    }
+                Text(
+                    text = "TOTAL",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ){
+                    Text(
+                        text = "20 X 1.00",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "PHP 20.00",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
 
