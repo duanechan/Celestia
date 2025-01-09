@@ -66,7 +66,7 @@ import com.coco.celestia.R
 import com.coco.celestia.components.dialogs.PendingOrderDialog
 import com.coco.celestia.components.dialogs.UpdateOrderStatusDialog
 import com.coco.celestia.components.toast.ToastStatus
-import com.coco.celestia.screens.client.OrderStatusTracker
+
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.UserIdentifier
 import com.coco.celestia.util.formatDate
@@ -701,7 +701,7 @@ fun DeliveringOrderActions(
         }
         AnimatedVisibility(expanded) {
             Column {
-                OrderStatusTracker(status = "DELIVERING")
+//                OrderStatusTracker(status = "DELIVERING")
                 Button(
                     onClick = { statusDialog = true },
                     shape = RoundedCornerShape(10.dp),

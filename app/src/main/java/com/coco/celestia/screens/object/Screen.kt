@@ -16,9 +16,7 @@ sealed class Screen(val route: String) {
     data object OrderDetails : Screen("add_order/{type}") {
         fun createRoute(type: String) = "add_order/$type"
     }
-    data object ClientOrderDetails : Screen("client_order_details/{orderId}") {
-        fun createRoute(orderId: String) = "client_order_details/$orderId"
-    }
+
     data object OrderConfirmation : Screen("add_order/{type}/{name}/{quantity}") {
         fun createRoute(type: String, name: String, quantity: Int) =
             "add_order/$type/$name/$quantity"
@@ -114,10 +112,17 @@ sealed class Screen(val route: String) {
     data object ProductDetails: Screen(route = "client/{product}") {
         fun createRoute(product: String) = "client/$product"
     }
+
+    data object ClientOrderDetails : Screen("client_order_details/{orderId}") {
+        fun createRoute(orderId: String) = "client_order_details/$orderId"
+    }
+
     data object Basket: Screen(route = "client/basket")
     data object OrderSummary: Screen(route = "client/basket/checkout={items}") {
         fun createRoute(items: String) = "client/basket/checkout=$items"
     }
+
+
 //    data object CheckoutEvent: Screen(route = "client/basket/checkout")
     //farmer
     data object Farmer: Screen( route = "farmer_dashboard")

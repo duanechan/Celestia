@@ -1037,6 +1037,14 @@ fun NavGraph(
         }
 
         composable(
+            route = Screen.ClientOrderDetails.route,
+            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
+            ClientOrderDetails(navController = navController, orderId = orderId)
+        }
+
+        composable(
             route = Screen.OrderSummary.route,
             arguments = listOf(navArgument("items") { type = NavType.StringType })
         ) { backStackEntry ->

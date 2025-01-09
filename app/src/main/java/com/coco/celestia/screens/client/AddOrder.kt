@@ -871,7 +871,7 @@ fun ConfirmOrderRequestPanel(
                 ) {
                     TextButton(
                         onClick = {
-                            navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId))
+//                            navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId))
                         }
                     ) {
                         Text(

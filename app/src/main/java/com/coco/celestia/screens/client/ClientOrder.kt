@@ -59,6 +59,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
@@ -166,7 +167,10 @@ fun ClientOrder(
                 Column {
                     // Column for Orders
                     orderData.forEach { order ->
-                        OrderCard(order = order)
+                        OrderCard(
+                            order = order,
+                            navController = navController
+                        )
                     }
                 }
             }
@@ -175,11 +179,14 @@ fun ClientOrder(
 }
 
 @Composable
-fun OrderCard(order: OrderData) {
+fun OrderCard(order: OrderData, navController: NavController) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(8.dp)
+            .clickable {
+                navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId)) 
+            },
         colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = RoundedCornerShape(12.dp)
     ) {
