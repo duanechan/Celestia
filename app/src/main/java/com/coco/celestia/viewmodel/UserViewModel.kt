@@ -458,14 +458,20 @@ class UserViewModel : ViewModel() {
         }
     }
 
-    fun clearCheckoutItems(uid: String, updatedBasket: List<BasketItem>) {
+    fun updateCheckoutItems(uid: String, updatedBasket: List<BasketItem>) {
         viewModelScope.launch {
             _userState.value = UserState.LOADING
             try {
                 val query = database.child(uid).child("basket")
 
-                val updates = updatedBasket.associate {
-                    "${it.id}" to null
+                val updates = updatedBasket.associate { item ->
+                    item.id to mapOf(
+                        "id" to item.id,
+                        "product" to item.product,
+                        "price" to item.price,
+                        "quantity" to item.quantity,
+                        "isRetail" to item.isRetail
+                    )
                 }
                 query.updateChildren(updates).await()
 

@@ -42,17 +42,6 @@ enum class ToastStatus {
     INFO
 }
 
-@Preview
-@Composable
-fun Toast_Preview() {
-    val offlineMessage = "You're offline. Please check your internet connection."
-    val onlineMessage = "Online!"
-    Column {
-        Toast(message = offlineMessage, status = ToastStatus.FAILED, visibility = true)
-        Toast(message = onlineMessage, status = ToastStatus.SUCCESSFUL, visibility = true)
-    }
-}
-
 @Composable
 fun Toast(message: String, status: ToastStatus, visibility: Boolean) {
     val backgroundColor by animateColorAsState(

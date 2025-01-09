@@ -1,6 +1,7 @@
 package com.coco.celestia.viewmodel.model
 
 import com.coco.celestia.R
+import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.reflect.KProperty1
@@ -40,6 +41,7 @@ data class OrderData(
     val fulfilled: Int = 0
 )
 
+@Serializable
 data class BasketItem(
     val id: String = "",
     val product: String = "",
