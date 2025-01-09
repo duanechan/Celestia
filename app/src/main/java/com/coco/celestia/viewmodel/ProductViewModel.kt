@@ -8,8 +8,12 @@ import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlin.reflect.full.memberProperties
 
 sealed class ProductState {
@@ -27,6 +31,7 @@ class ProductViewModel : ViewModel() {
     private val _productName = MutableLiveData<String>()
     private val _description = MutableLiveData<String>()
     private val _vendor = MutableLiveData<String>()
+    private val _notes = MutableLiveData<String>()
     private val _from = MutableLiveData<String>()
 
     val productData: LiveData<List<ProductData>> = _productData
@@ -38,6 +43,34 @@ class ProductViewModel : ViewModel() {
 
     private val _featuredProducts = MutableLiveData<List<ProductData>>()
     val featuredProducts: LiveData<List<ProductData>> = _featuredProducts
+
+    private var productCount = 0
+
+    init {
+        initializeProductCount()
+    }
+
+    private fun initializeProductCount() {
+        viewModelScope.launch(Dispatchers.Main) {
+            try {
+                val snapshot = database.get().await()
+                if (snapshot.exists()) {
+                    productCount = snapshot.children.maxOfOrNull { child ->
+                        val productId = child.child("productId").getValue(String::class.java) ?: ""
+                        productId.split("-").lastOrNull()?.toIntOrNull() ?: 0
+                    } ?: 0
+                }
+            } catch (e: Exception) {
+                productCount = 0
+            }
+        }
+    }
+
+    fun getProductCount(): Int = productCount
+
+    private fun incrementProductCount() {
+        productCount++
+    }
 
     fun onProductNameChange(newProductName: String) {
         _productName.value = newProductName
@@ -62,6 +95,10 @@ class ProductViewModel : ViewModel() {
         _vendor.value = newVendor
     }
 
+    fun updateNotes(notes: String) {
+        _notes.value = notes
+    }
+
     fun fetchProduct(productName: String) {
         viewModelScope.launch {
             _productState.value = ProductState.LOADING
@@ -78,13 +115,17 @@ class ProductViewModel : ViewModel() {
                         try {
                             val name = child.child("name").getValue(String::class.java) ?: ""
                             if (name == productName) {
+                                val productId = child.child("productId").getValue(String::class.java) ?: ""
+                                val timestamp = child.child("timestamp").getValue(String::class.java) ?: ""
                                 val description = child.child("description").getValue(String::class.java) ?: ""
+                                val notes = child.child("notes").getValue(String::class.java) ?: ""
                                 val quantity = child.child("quantity").getValue(Int::class.java) ?: 0
-                                val productType = child.child("type").getValue(String::class.java) ?: ""
+                                val type = child.child("type").getValue(String::class.java) ?: ""
                                 val price = child.child("price").getValue(Double::class.java) ?: 0.0
                                 val vendor = child.child("vendor").getValue(String::class.java) ?: ""
-                                val purchasingCost = child.child("purchasingCost").getValue(Double::class.java) ?: 0.0
-                                val openingStock = child.child("openingStock").getValue(Double::class.java) ?: 0.0
+                                val totalPurchases = child.child("totalPurchases").getValue(Double::class.java) ?: 0.0
+                                val totalQuantitySold = child.child("totalQuantitySold").getValue(Double::class.java) ?: 0.0
+                                val committedStock = child.child("committedStock").getValue(Double::class.java) ?: 0.0
                                 val reorderPoint = child.child("reorderPoint").getValue(Double::class.java) ?: 0.0
                                 val weightUnit = child.child("weightUnit").getValue(String::class.java) ?: Constants.WEIGHT_GRAMS
 
@@ -101,14 +142,18 @@ class ProductViewModel : ViewModel() {
                                 val paymentMethod = child.child("paymentMethod").getValue(String::class.java) ?: Constants.PAYMENT_CASH
 
                                 ProductData(
+                                    productId = productId,
+                                    timestamp = timestamp,
                                     name = name,
                                     description = description,
+                                    notes = notes,
                                     quantity = quantity,
-                                    type = productType,
+                                    type = type,
                                     price = price,
                                     vendor = vendor,
-                                    purchasingCost = purchasingCost,
-                                    openingStock = openingStock,
+                                    totalPurchases = totalPurchases,
+                                    totalQuantitySold = totalQuantitySold,
+                                    committedStock = committedStock,
                                     reorderPoint = reorderPoint,
                                     weightUnit = weightUnit,
                                     isInStore = isInStore,
@@ -124,11 +169,7 @@ class ProductViewModel : ViewModel() {
                     }
 
                     _productData.value = products
-                    _productState.value = if (products.isEmpty()) {
-                        ProductState.EMPTY
-                    } else {
-                        ProductState.SUCCESS
-                    }
+                    _productState.value = if (products.isEmpty()) ProductState.EMPTY else ProductState.SUCCESS
                 } else {
                     _productData.value = emptyList()
                     _productState.value = ProductState.EMPTY
@@ -154,14 +195,18 @@ class ProductViewModel : ViewModel() {
                 if (snapshot.exists()) {
                     val products = snapshot.children.mapNotNull { child ->
                         try {
+                            val productId = child.child("productId").getValue(String::class.java) ?: ""
+                            val timestamp = child.child("timestamp").getValue(String::class.java) ?: ""
                             val name = child.child("name").getValue(String::class.java) ?: ""
                             val description = child.child("description").getValue(String::class.java) ?: ""
+                            val notes = child.child("notes").getValue(String::class.java) ?: ""
                             val quantity = child.child("quantity").getValue(Int::class.java) ?: 0
-                            val productType = child.child("type").getValue(String::class.java) ?: ""
+                            val type = child.child("type").getValue(String::class.java) ?: ""
                             val price = child.child("price").getValue(Double::class.java) ?: 0.0
                             val vendor = child.child("vendor").getValue(String::class.java) ?: ""
-                            val purchasingCost = child.child("purchasingCost").getValue(Double::class.java) ?: 0.0
-                            val openingStock = child.child("openingStock").getValue(Double::class.java) ?: 0.0
+                            val totalPurchases = child.child("totalPurchases").getValue(Double::class.java) ?: 0.0
+                            val totalQuantitySold = child.child("totalQuantitySold").getValue(Double::class.java) ?: 0.0
+                            val committedStock = child.child("committedStock").getValue(Double::class.java) ?: 0.0
                             val reorderPoint = child.child("reorderPoint").getValue(Double::class.java) ?: 0.0
                             val weightUnit = child.child("weightUnit").getValue(String::class.java) ?: Constants.WEIGHT_GRAMS
                             val isInStore = child.child("inStore").getValue(Boolean::class.java) ?: true
@@ -171,14 +216,18 @@ class ProductViewModel : ViewModel() {
                             val paymentMethod = child.child("paymentMethod").getValue(String::class.java) ?: Constants.PAYMENT_CASH
 
                             ProductData(
+                                productId = productId,
+                                timestamp = timestamp,
                                 name = name,
                                 description = description,
+                                notes = notes,
                                 quantity = quantity,
-                                type = productType,
+                                type = type,
                                 price = price,
                                 vendor = vendor,
-                                purchasingCost = purchasingCost,
-                                openingStock = openingStock,
+                                totalPurchases = totalPurchases,
+                                totalQuantitySold = totalQuantitySold,
+                                committedStock = committedStock,
                                 reorderPoint = reorderPoint,
                                 weightUnit = weightUnit,
                                 isInStore = isInStore,
@@ -186,8 +235,7 @@ class ProductViewModel : ViewModel() {
                                 dateAdded = dateAdded,
                                 collectionMethod = collectionMethod,
                                 paymentMethod = paymentMethod
-                            ).also {
-                            }
+                            )
                         } catch (e: Exception) {
                             null
                         }
@@ -269,37 +317,36 @@ class ProductViewModel : ViewModel() {
     fun addProduct(product: ProductData) {
         viewModelScope.launch {
             _productState.value = ProductState.LOADING
-            val query = database.child(product.name.lowercase())
-            query.setValue(product)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        _productState.value = ProductState.SUCCESS
-                    } else {
-                        _productState.value =
-                            ProductState.ERROR(task.exception?.message ?: "Unknown error")
-                    }
-                }
-                .addOnFailureListener { exception ->
-                    _productState.value = ProductState.ERROR(exception.message ?: "Unknown error")
-                }
+            try {
+                val query = database.child(product.productId)
+                query.setValue(product).await()
+                incrementProductCount()
+                _productState.value = ProductState.SUCCESS
+            } catch (exception: Exception) {
+                _productState.value = ProductState.ERROR(exception.message ?: "Unknown error")
+            }
         }
     }
 
-    fun deleteProduct (product: String) {
-        viewModelScope.launch {
+    fun deleteProduct(productId: String) {
+        viewModelScope.launch(Dispatchers.Main) {
             _productState.value = ProductState.LOADING
-            val query = database.child(product.lowercase())
-            query.removeValue()
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        _productState.value = ProductState.SUCCESS
-                    } else {
-                        _productState.value = ProductState.ERROR(task.exception?.message ?: "Unknown error")
-                    }
+            try {
+                suspendCancellableCoroutine<Unit> { continuation ->
+                    val query = database.child(productId)
+                    query.removeValue()
+                        .addOnSuccessListener {
+                            _productState.value = ProductState.SUCCESS
+                            continuation.resume(Unit)
+                        }
+                        .addOnFailureListener { exception ->
+                            _productState.value = ProductState.ERROR(exception.message ?: "Unknown error")
+                            continuation.resumeWithException(exception)
+                        }
                 }
-                .addOnFailureListener { exception ->
-                    _productState.value = ProductState.ERROR(exception.message ?: "Unknown error")
-                }
+            } catch (e: Exception) {
+                _productState.value = ProductState.ERROR(e.message ?: "Unknown error")
+            }
         }
     }
 
@@ -429,7 +476,7 @@ class ProductViewModel : ViewModel() {
     fun updateProduct(product: ProductData) {
         viewModelScope.launch {
             _productState.value = ProductState.LOADING
-            val query = database.child(product.name.lowercase())
+            val query = database.child(product.productId)
             query.setValue(product)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
@@ -445,10 +492,10 @@ class ProductViewModel : ViewModel() {
         }
     }
 
-    fun updateActiveStatus(productName: String, isActive: Boolean) {
+    fun updateActiveStatus(productId: String, isActive: Boolean) {
         viewModelScope.launch {
             _productState.value = ProductState.LOADING
-            val query = database.child(productName.lowercase()).child("isActive")
+            val query = database.child(productId).child("isActive")
             query.setValue(isActive)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {

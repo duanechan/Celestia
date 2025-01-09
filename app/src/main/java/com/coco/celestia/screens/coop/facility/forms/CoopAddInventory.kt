@@ -27,6 +27,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -59,7 +60,6 @@ import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.isActive
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -69,13 +69,15 @@ import java.util.UUID
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddProductForm(
+    navController: NavController,
     userViewModel: UserViewModel,
     productViewModel: ProductViewModel,
     facilityViewModel: FacilityViewModel,
     vendorViewModel: VendorViewModel,
+    productId: String,
     quantity: Int,
     price: Double,
-    purchasingCost: Double,
+    totalPurchases: Double,
     reorderPoint: Double,
     isInStore: Boolean,
     weightUnit: String,
@@ -83,17 +85,18 @@ fun AddProductForm(
     isGcash: Boolean,
     onProductNameChange: (String) -> Unit,
     onDescriptionChange: (String) -> Unit,
+    notes: String,
+    onNotesChange: (String) -> Unit,
     onQuantityChange: (String) -> Unit,
     onPriceChange: (String) -> Unit,
-    onVendorChange: (String) -> Unit,
-    onPurchasingCostChange: (String) -> Unit,
     onReorderPointChange: (String) -> Unit,
     onIsInStoreChange: (Boolean) -> Unit,
     onWeightUnitChange: (String) -> Unit,
     onCollectionMethodChange: (Boolean) -> Unit,
     onPaymentMethodChange: (Boolean) -> Unit,
     onAddClick: () -> Unit,
-    onEvent: (Triple<ToastStatus, String, Long>) -> Unit
+    onEvent: (Triple<ToastStatus, String, Long>) -> Unit,
+    isEditMode: Boolean = false,
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     val email = FirebaseAuth.getInstance().currentUser?.email.orEmpty()
@@ -107,6 +110,9 @@ fun AddProductForm(
     val facilityData by facilityViewModel.facilitiesData.observeAsState(emptyList())
     var facilityName by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("") }
+
+    val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
+    val isEditMode = currentRoute == Screen.EditProductInventory.route
 
     LaunchedEffect(uid) {
         userViewModel.fetchUser(uid)
@@ -156,12 +162,24 @@ fun AddProductForm(
             ) {
                 // OutlinedTextField
                 OutlinedTextField(
-                    value = "PID-YYYYMMDD-Count",
-                    onValueChange = onProductNameChange,
+                    value = if (productId.isBlank()) {
+                        val currentDateTime = LocalDateTime.now()
+                        val formatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+                        val formattedDate = currentDateTime.format(formatter)
+                        val nextCount = (productViewModel.getProductCount() + 1).toString().padStart(3, '0')
+                        "PID-$formattedDate-$nextCount"
+                    } else productId,
+                    onValueChange = { /* Read only */ },
                     label = { Text("Product ID") },
                     modifier = Modifier
                         .weight(1f)
-                        .padding(end = 8.dp)
+                        .padding(end = 8.dp),
+                    enabled = false, // Make it read-only
+                    colors = OutlinedTextFieldDefaults.colors(
+                        disabledTextColor = MaterialTheme.colorScheme.onSurface, // Keep text visible when disabled
+                        disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    )
                 )
 
                 // Image Card
@@ -297,74 +315,6 @@ fun AddProductForm(
             }
         }
 
-        // Purchasing Information Section
-//        Card(
-//            modifier = Modifier.fillMaxWidth(),
-//            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-//            colors = CardDefaults.cardColors(containerColor = White1)
-//        ) {
-//            Column(
-//                modifier = Modifier.padding(16.dp),
-//                verticalArrangement = Arrangement.spacedBy(12.dp)
-//            ) {
-//                Text(
-//                    text = "Purchasing Information",
-//                    style = MaterialTheme.typography.titleMedium,
-//                    fontWeight = FontWeight.Bold
-//                )
-//
-//                ExposedDropdownMenuBox(
-//                    expanded = vendorExpanded,
-//                    onExpandedChange = { vendorExpanded = !vendorExpanded },
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .semantics { testTag = "android:id/VendorDropdown" }
-//                ) {
-//                    OutlinedTextField(
-//                        readOnly = true,
-//                        value = vendor,
-//                        onValueChange = {},
-//                        label = { Text("Vendor") },
-//                        trailingIcon = {
-//                            ExposedDropdownMenuDefaults.TrailingIcon(vendorExpanded)
-//                        },
-//                        modifier = Modifier
-//                            .menuAnchor()
-//                            .fillMaxWidth()
-//                    )
-//
-//                    ExposedDropdownMenu(
-//                        expanded = vendorExpanded,
-//                        onDismissRequest = { vendorExpanded = false }
-//                    ) {
-//                        vendors.forEach { vendorItem ->
-//                            val fullName = "${vendorItem.firstName} ${vendorItem.lastName}".trim()
-//                            DropdownMenuItem(
-//                                text = { Text(fullName) },
-//                                onClick = {
-//                                    onVendorChange(fullName)
-//                                    vendorExpanded = false
-//                                },
-//                                modifier = Modifier.semantics {
-//                                    testTag = "android:id/Vendor_${fullName}"
-//                                }
-//                            )
-//                        }
-//                    }
-//                }
-//
-//                OutlinedTextField(
-//                    value = if (purchasingCost == 0.0) "" else purchasingCost.toString(),
-//                    onValueChange = onPurchasingCostChange,
-//                    label = { Text("Purchasing Cost") },
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .semantics { testTag = "android:id/PurchasingCostField" },
-//                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal)
-//                )
-//            }
-//        }
-
         // Inventory Tracking Section
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -393,7 +343,6 @@ fun AddProductForm(
             }
         }
 
-        //TODO: Add Data for Notes
         // Product Notes Section
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -411,13 +360,14 @@ fun AddProductForm(
                 )
 
                 OutlinedTextField(
-                    value = if (price == 0.0) "" else price.toString(),
-                    onValueChange = onPriceChange, //TODO
-                    label = { Text("Notes") },
+                    value = notes,
+                    onValueChange = onNotesChange,
+                    label = { Text("Product Notes") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .semantics { testTag = "android:id/ProductNotes" },
-                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Decimal)
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Text),
+                    maxLines = 4
                 )
             }
         }
@@ -500,34 +450,61 @@ fun AddProductForm(
             onClick = {
                 if (productName.isNotEmpty() && quantity > 0 && price > 0.0) {
                     val currentDateTime = LocalDateTime.now()
-                    val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
-                    val formattedDateTime = currentDateTime.format(formatter)
+                    val dateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+                    val pidFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
+                    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+                    val formattedDateTime = currentDateTime.format(dateFormatter)
+                    val formattedPIDDate = currentDateTime.format(pidFormatter)
+                    val formattedTime = currentDateTime.format(timeFormatter)
+
+                    val finalProductId = if (isEditMode) {
+                        productId
+                    } else {
+                        val currentCount = productViewModel.getProductCount() + 1
+                        "PID-$formattedPIDDate-$currentCount"
+                    }
 
                     val product = ProductData(
+                        productId = finalProductId,
+                        timestamp = formattedTime,
                         name = productName,
                         description = description,
+                        notes = notes,
                         quantity = quantity,
                         type = facilityName,
                         price = price,
                         vendor = vendor,
-                        purchasingCost = purchasingCost,
-                        openingStock = quantity.toDouble(),
+                        totalPurchases = totalPurchases,
+                        totalQuantitySold = 0.0,
+                        committedStock = 0.0,
                         reorderPoint = reorderPoint,
                         weightUnit = weightUnit,
                         isInStore = isInStore,
+                        isActive = true,
                         dateAdded = formattedDateTime,
                         collectionMethod = if (isDelivery) Constants.COLLECTION_DELIVERY else Constants.COLLECTION_PICKUP,
                         paymentMethod = if (isGcash) Constants.PAYMENT_GCASH else Constants.PAYMENT_CASH
                     )
-                    productViewModel.addProduct(product)
 
-                    onEvent(
-                        Triple(
-                            ToastStatus.SUCCESSFUL,
-                            "Product added successfully",
-                            System.currentTimeMillis()
+                    if (isEditMode) {
+                        productViewModel.updateProduct(product)
+                        onEvent(
+                            Triple(
+                                ToastStatus.SUCCESSFUL,
+                                "Product updated successfully",
+                                System.currentTimeMillis()
+                            )
                         )
-                    )
+                    } else {
+                        productViewModel.addProduct(product)
+                        onEvent(
+                            Triple(
+                                ToastStatus.SUCCESSFUL,
+                                "Product added successfully",
+                                System.currentTimeMillis()
+                            )
+                        )
+                    }
                     onAddClick()
                 } else {
                     onEvent(
@@ -544,8 +521,13 @@ fun AddProductForm(
                 .padding(vertical = 16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Green1)
         ) {
+            val buttonText = if (isEditMode) {
+                "Update Product"
+            } else {
+                "Add Product"
+            }
             Text(
-                text = "Add Product",
+                text = buttonText,
                 modifier = Modifier.padding(vertical = 4.dp),
                 color = Color.White
             )
@@ -564,8 +546,8 @@ fun CoopAddInventory(
     productType: String,
     price: Double,
     vendor: String,
-    purchasingCost: Double,
-    openingStock: Double,
+    totalPurchases: Double,
+    committedStock: Double,
     reorderPoint: Double,
     isInStore: Boolean,
     weightUnit: String,
@@ -590,8 +572,8 @@ fun CoopAddInventory(
                 type = productType,
                 price = price,
                 vendor = vendor,
-                purchasingCost = purchasingCost,
-                openingStock = openingStock,
+                totalPurchases = totalPurchases,
+                committedStock = committedStock,
                 reorderPoint = reorderPoint,
                 weightUnit = weightUnit,
                 isInStore = isInStore,

@@ -1,10 +1,8 @@
 package com.coco.celestia.screens.coop.facility
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -27,9 +25,6 @@ import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.model.ProductData
 import java.util.Locale
-
-//TODO: Add product ID, Format: PID-Year-Month-Day-Count
-//TODO: Add timestamp para maiwasan natin ung race conditions
 
 @Composable
 fun CoopInventoryDetails(
@@ -163,7 +158,7 @@ private fun ProductHeader(
                         DropdownMenuItem(
                             text = { Text("Edit") },
                             onClick = {
-                                navController.navigate(Screen.EditProductInventory.createRoute(product.name))
+                                navController.navigate(Screen.EditProductInventory.createRoute(product.productId))
                                 showMenu = false
                             },
                             leadingIcon = {
@@ -191,7 +186,7 @@ private fun ProductHeader(
                         DropdownMenuItem(
                             text = { Text(if (product.isActive) "Mark as Inactive" else "Mark as Active") },
                             onClick = {
-                                productViewModel.updateActiveStatus(product.name, !product.isActive)
+                                productViewModel.updateActiveStatus(product.productId, !product.isActive)
                                 onEvent(
                                     Triple(
                                         ToastStatus.SUCCESSFUL,
@@ -218,13 +213,13 @@ private fun ProductHeader(
                 verticalAlignment = Alignment.CenterVertically
             ){
                 Text(
-                    text = "PID-YYYYMMDD-Count", //TODO: Add product ID, Format: Year-Month-Day-Count
+                    text = product.productId,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Text(
-                    text = "(Timestamp) 12:00:", //TODO: Add timestamp para maiwasan natin ung race conditions
+                    text = product.timestamp,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -244,7 +239,7 @@ private fun ProductHeader(
 
                 PriceInfoColumn(
                     title = "Purchase Cost",
-                    price = product.purchasingCost,
+                    price = product.totalPurchases,
                     weightUnit = product.weightUnit
                 )
 
@@ -272,7 +267,7 @@ private fun ProductHeader(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            productViewModel.deleteProduct(product.name)
+                            productViewModel.deleteProduct(product.productId)
                             onEvent(
                                 Triple(
                                     ToastStatus.SUCCESSFUL,
@@ -526,7 +521,7 @@ private fun Details(product: ProductData) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Display Product Description", //TODO
+                            text = product.description,
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -565,7 +560,7 @@ private fun Details(product: ProductData) {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Add Notes: TODO", //TODO
+                            text = product.notes,
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -595,14 +590,14 @@ private fun StockSummaryTable(product: ProductData) {
         // Online product check
         if (!product.isInStore) {
             StockSummaryRow(
-                label = "Committed Stock: TODO", //TODO: Committed stocks are those ordered stocks but not yet completed
-                value = product.quantity.toString(), //TODO: change to committed stock,
+                label = "Committed Stock:",
+                value = product.committedStock.toString(),
                 unit = product.weightUnit.lowercase()
             )
         }
 
         StockSummaryRow("Reorder Point",
-            value = product.openingStock.toString(),
+            value = product.reorderPoint.toString(),
             unit = product.weightUnit.lowercase()
         )
     }
@@ -688,12 +683,11 @@ private fun SalesInfoSection(product: ProductData) {
             color = Color.Gray
         )
         Text(
-            text = "100", //TODO: Change to Total Quantity Sold
-//            text = "PHP${product.price}",
+            text = product.totalQuantitySold.toString(), // already calling the field for total quantity sold
             style = MaterialTheme.typography.titleLarge
         )
         Text(
-            text = "${product.weightUnit.lowercase()}",
+            text = product.weightUnit.lowercase(),
             style = MaterialTheme.typography.bodySmall,
             color = Color.Gray
         )
@@ -706,7 +700,7 @@ private fun SalesInfoSection(product: ProductData) {
             color = Color.Gray
         )
         Text(
-            text = "PHP 1,000.00",
+            text = "PHP 1,000.00", //TODO: dunno kung may computation ba to or something or panibagong field for this
             style = MaterialTheme.typography.bodyLarge
         )
     }
@@ -723,11 +717,11 @@ private fun PurchaseInfoSection(product: ProductData) {
             color = Color.Gray
         )
         Text(
-            text = "50",
+            text = "50", //TODO: also this, idk if panibagong field or cocompute or something yung purchases
             style = MaterialTheme.typography.titleLarge
         )
         Text(
-            text = "${product.weightUnit.lowercase()}",
+            text = product.weightUnit.lowercase(),
             style = MaterialTheme.typography.bodySmall,
             color = Color.Gray
         )
@@ -740,7 +734,7 @@ private fun PurchaseInfoSection(product: ProductData) {
             color = Color.Gray
         )
         Text(
-            text = "PHP${product.purchasingCost}", //TODO: Change to Total Purchases, not purchasing cost
+            text = "PHP${product.totalPurchases}",
             style = MaterialTheme.typography.titleLarge
         )
 

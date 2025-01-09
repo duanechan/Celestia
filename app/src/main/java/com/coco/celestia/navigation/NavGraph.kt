@@ -6,7 +6,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -131,8 +130,8 @@ fun NavGraph(
     var weightUnit by remember { mutableStateOf(Constants.WEIGHT_KILOGRAMS) }
     var description by remember { mutableStateOf("") }
     var vendor by remember { mutableStateOf("") }
-    var purchasingCost by remember { mutableStateOf(0.0) }
-    var openingStock by remember { mutableStateOf(0.0) }
+    var totalPurchases by remember { mutableStateOf(0.0) }
+    var committedStock by remember { mutableStateOf(0.0) }
     var reorderPoint by remember { mutableStateOf(0.0) }
     var isDelivery by remember { mutableStateOf(false) }
     var isGcash by remember { mutableStateOf(false) }
@@ -623,6 +622,8 @@ fun NavGraph(
         composable(route = Screen.AddProductInventory.route) {
             var facilityName by remember { mutableStateOf("") }
             var quantity by remember { mutableStateOf(0) }
+            var notes by remember { mutableStateOf("") }
+            var productId by remember { mutableStateOf("") }
 
             val email = FirebaseAuth.getInstance().currentUser?.email.orEmpty()
 
@@ -630,9 +631,10 @@ fun NavGraph(
                 productViewModel.updateProductName("")
                 productViewModel.updateDescription("")
                 productViewModel.updateVendor("")
+                productViewModel.updateNotes("")
                 price = 0.0
-                purchasingCost = 0.0
-                openingStock = 0.0
+                totalPurchases = 0.0
+                committedStock = 0.0
                 reorderPoint = 0.0
                 isInStore = true
                 isDelivery = false
@@ -649,24 +651,29 @@ fun NavGraph(
             onNavigate("Add Product")
 
             AddProductForm(
+                navController = navController,
                 userViewModel = userViewModel,
                 productViewModel = productViewModel,
                 facilityViewModel = facilityViewModel,
                 vendorViewModel = vendorViewModel,
+                productId = productId,
                 quantity = quantity,
                 price = price,
-                purchasingCost = purchasingCost,
+                totalPurchases = totalPurchases,
                 reorderPoint = reorderPoint,
                 isInStore = isInStore,
                 weightUnit = weightUnit,
                 isDelivery = isDelivery,
                 isGcash = isGcash,
+                notes = notes,
                 onProductNameChange = { productViewModel.onProductNameChange(it) },
                 onDescriptionChange = { productViewModel.updateDescription(it) },
+                onNotesChange = { newValue ->
+                    notes = newValue
+                    productViewModel.updateNotes(newValue)
+                },
                 onQuantityChange = { newValue -> quantity = newValue.toIntOrNull() ?: 0 },
                 onPriceChange = { newValue -> price = newValue.toDoubleOrNull() ?: 0.0 },
-                onVendorChange = { productViewModel.updateVendor(it) },
-                onPurchasingCostChange = { newValue -> purchasingCost = newValue.toDoubleOrNull() ?: 0.0 },
                 onReorderPointChange = { newValue -> reorderPoint = newValue.toDoubleOrNull() ?: 0.0 },
                 onIsInStoreChange = { isInStore = it },
                 onWeightUnitChange = { weightUnit = it },
@@ -684,27 +691,30 @@ fun NavGraph(
         composable(
             route = Screen.EditProductInventory.route,
             arguments = listOf(
-                navArgument("productName") {
+                navArgument("productId") {
                     type = NavType.StringType
                 }
             )
         ) { backStackEntry ->
-            val productName = Uri.decode(backStackEntry.arguments?.getString("productName") ?: "")
+            val productId = Uri.decode(backStackEntry.arguments?.getString("productId") ?: "")
             var facilityName by remember { mutableStateOf("") }
-            var quantity by remember { mutableStateOf(0) }
+            var quantity by remember { mutableIntStateOf(0) }
+            var notes by remember { mutableStateOf("") }
 
             val email = FirebaseAuth.getInstance().currentUser?.email.orEmpty()
 
             LaunchedEffect(Unit) {
-                productViewModel.fetchProduct(productName)
+                productViewModel.fetchProduct(productId)
                 productViewModel.productData.value?.firstOrNull()?.let { product ->
                     productViewModel.updateProductName(product.name)
                     productViewModel.updateDescription(product.description)
                     productViewModel.updateVendor(product.vendor)
+                    productViewModel.updateNotes(product.notes)
                     quantity = product.quantity
                     price = product.price
-                    purchasingCost = product.purchasingCost
+                    totalPurchases = product.totalPurchases
                     reorderPoint = product.reorderPoint
+                    notes = product.notes
                     isInStore = product.isInStore
                     isDelivery = product.collectionMethod == Constants.COLLECTION_DELIVERY
                     isGcash = product.paymentMethod == Constants.PAYMENT_GCASH
@@ -723,24 +733,29 @@ fun NavGraph(
             onNavigate("Edit Product")
 
             AddProductForm(
+                navController = navController,
                 userViewModel = userViewModel,
                 productViewModel = productViewModel,
                 facilityViewModel = facilityViewModel,
                 vendorViewModel = vendorViewModel,
+                productId = productId,
                 quantity = quantity,
                 price = price,
-                purchasingCost = purchasingCost,
+                totalPurchases = totalPurchases,
                 reorderPoint = reorderPoint,
                 isInStore = isInStore,
                 weightUnit = weightUnit,
                 isDelivery = isDelivery,
                 isGcash = isGcash,
+                notes = notes,
                 onProductNameChange = { productViewModel.onProductNameChange(it) },
                 onDescriptionChange = { productViewModel.updateDescription(it) },
+                onNotesChange = { newValue ->
+                    notes = newValue
+                    productViewModel.updateNotes(newValue)
+                },
                 onQuantityChange = { newValue -> quantity = newValue.toIntOrNull() ?: 0 },
                 onPriceChange = { newValue -> price = newValue.toDoubleOrNull() ?: 0.0 },
-                onVendorChange = { productViewModel.updateVendor(it) },
-                onPurchasingCostChange = { newValue -> purchasingCost = newValue.toDoubleOrNull() ?: 0.0 },
                 onReorderPointChange = { newValue -> reorderPoint = newValue.toDoubleOrNull() ?: 0.0 },
                 onIsInStoreChange = { isInStore = it },
                 onWeightUnitChange = { weightUnit = it },
@@ -767,8 +782,8 @@ fun NavGraph(
                 productType = productType,
                 price = price,
                 vendor = vendor,
-                purchasingCost = purchasingCost,
-                openingStock = openingStock,
+                totalPurchases = totalPurchases,
+                committedStock = committedStock,
                 reorderPoint = reorderPoint,
                 isInStore = isInStore,
                 weightUnit = weightUnit,
@@ -784,8 +799,8 @@ fun NavGraph(
                 quantityAmount = 0
                 productType = ""
                 price = 0.0
-                purchasingCost = 0.0
-                openingStock = 0.0
+                totalPurchases = 0.0
+                committedStock = 0.0
                 reorderPoint = 0.0
                 isInStore = true
                 isDelivery = false

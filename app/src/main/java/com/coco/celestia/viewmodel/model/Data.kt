@@ -98,16 +98,18 @@ data class FullFilledBy (
 )
 
 data class ProductData(
+    val productId: String = "",
+    val timestamp: String = "",
     val name: String = "",
     val description: String = "",
+    val notes: String = "",
     val quantity: Int = 0,
     val type: String = "",
     val price: Double = 0.0,
-    val shelfLife: Int = 0,
-    val origin: String = "",
     val vendor: String = "",
-    val purchasingCost: Double = 0.0,
-    val openingStock: Double = 0.0,
+    val totalPurchases: Double = 0.0,
+    val totalQuantitySold: Double = 0.0,
+    val committedStock: Double = 0.0,
     val reorderPoint: Double = 0.0,
     val weightUnit: String = Constants.WEIGHT_GRAMS,
     val isInStore: Boolean = true,
@@ -117,9 +119,10 @@ data class ProductData(
     val paymentMethod: String = Constants.PAYMENT_CASH
 ) {
     constructor() : this(
-        "", "", 0, "", 0.0, 0, "", "", 0.0,
-        0.0, 0.0, Constants.WEIGHT_GRAMS, true, true,
-        Constants.COLLECTION_PICKUP, Constants.PAYMENT_CASH
+        "", "", "", "", "", 0, "", 0.0, "",
+        0.0, 0.0, 0.0, 0.0, Constants.WEIGHT_GRAMS,
+        true, true, "", Constants.COLLECTION_PICKUP,
+        Constants.PAYMENT_CASH
     )
 }
 
