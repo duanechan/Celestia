@@ -149,7 +149,8 @@ fun TopBar(
     title: String,
     navController: NavController,
     containerColor: Color,
-    currentDestination: String?
+    currentDestination: String?,
+    role: String = ""
 ) {
     Box(
         modifier = Modifier
@@ -239,12 +240,14 @@ fun TopBar(
                 }
             },
             actions = {
-                IconButton(onClick = { navController.navigate(Screen.Notifications.route) }) {
-                    Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = "Notifications",
-                        tint = Green1
-                    )
+                if (role == "Client") {
+                    IconButton(onClick = { navController.navigate(Screen.Notifications.route) }) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Notifications",
+                            tint = Green1
+                        )
+                    }
                 }
             },
 //            actions = {
@@ -492,13 +495,13 @@ fun NavDrawerBottomBar(
                     Icon(
                         imageVector = Icons.Default.AccountCircle,
                         contentDescription = "Profile",
-                        tint = Color.White
+                        tint = if (role == "Farmer") Green1 else Color.White
                     )
                 },
                 label = {
                     Text(
                         "Profile",
-                        color = Color.White,
+                        color = if (role == "Farmer") Green1 else Color.White,
                         fontFamily = mintsansFontFamily
                     )
                 },
