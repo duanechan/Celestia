@@ -287,29 +287,13 @@ fun ProductDetails_Header(name: String, image: Uri?) {
             .height(200.dp)
     ) {
         Image(
-            painter = painterResource(R.drawable.product_image),
+            painter = rememberImagePainter(image),
             contentDescription = name,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
     }
 }
-
-//@Composable
-//fun ProductDetails_Header(name: String, image: Uri?) {
-//    Box(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .height(200.dp)
-//    ) {
-//        Image(
-//            painter = if (image != null) rememberImagePainter(image) else painterResource(R.drawable.product_image),
-//            contentDescription = name,
-//            contentScale = ContentScale.Crop,
-//            modifier = Modifier.fillMaxSize()
-//        )
-//    }
-//}
 
 @Composable
 fun ProductDetails_StockAndQuantity(

@@ -38,11 +38,13 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
+import com.coco.celestia.R
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.ImageService
@@ -183,11 +185,16 @@ fun BasketItemCard(
     var checked by remember { mutableStateOf(false) }
     var updatedQuantity by remember { mutableIntStateOf(item.quantity) }
 
-//    LaunchedEffect(Unit) {
-//        ImageService.fetchProductImage(productName = item.product) {
-//            image = it
-//        }
-//    }
+    LaunchedEffect(Unit) {
+        try {
+            ImageService.fetchProductImage(productId = product.productId) {
+                image = it
+            }
+        } catch(e: Exception) {
+            image = null
+        }
+
+    }
 
     Card(
         elevation = CardDefaults.elevatedCardElevation(8.dp),
@@ -229,7 +236,11 @@ fun BasketItemCard(
                 )
                 Box(modifier = Modifier.padding(12.dp)) {
                     Image(
-                        painter = rememberImagePainter(image),
+                        painter = if (image != null) {
+                            rememberImagePainter(image)
+                        } else {
+                            painterResource(R.drawable.product_icon)
+                        },
                         contentDescription = item.product,
                         modifier = Modifier
                             .width(100.dp)

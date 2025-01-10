@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.client
 
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -21,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -30,8 +32,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.rememberImagePainter
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
@@ -474,6 +478,15 @@ fun ProductCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+
+    var productImage by remember { mutableStateOf<Uri?>(null) }
+
+    LaunchedEffect(Unit) {
+        ImageService.fetchProductImage(product.productId) {
+            productImage = it
+        }
+    }
+
     Column(
         modifier = modifier
             .padding(8.dp)
@@ -484,7 +497,7 @@ fun ProductCard(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
-            painter = painterResource(R.drawable.product_image),
+            painter = if (productImage != null) rememberImagePainter(productImage) else painterResource(R.drawable.product_image),
             contentDescription = product.name,
             contentScale = ContentScale.Crop,
             modifier = Modifier
@@ -548,6 +561,15 @@ fun SlideshowCarousel(items: List<CarouselItem>, navController: NavController) {
 
 @Composable
 fun CarouselCard(item: CarouselItem, onClick: () -> Unit) {
+    var productImage by remember { mutableStateOf<Uri?>(null) }
+
+    LaunchedEffect(Unit) {
+        ImageService.fetchProductImage(item.carouselId) {
+            println(item.carouselId)
+            productImage = it
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -556,7 +578,7 @@ fun CarouselCard(item: CarouselItem, onClick: () -> Unit) {
             .clickable(onClick = onClick)
     ) {
         Image(
-            painter = painterResource(item.imageRes),
+            painter = if (productImage != null) rememberImagePainter(productImage) else painterResource(item.imageRes),
             contentDescription = item.title,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
