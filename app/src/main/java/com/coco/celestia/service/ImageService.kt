@@ -35,7 +35,7 @@ object ImageService {
             return
         }
 
-        val query = productReference.child(productId).child("product_image.jpg")
+        val query = productReference.child(productId).child("$productId.jpg")
         query.downloadUrl
             .addOnSuccessListener {
                 imageCache[productId] = it
@@ -47,7 +47,7 @@ object ImageService {
     }
 
     fun uploadProductPicture(productId: String, imageUri: Uri, onSuccess: (Boolean) -> Unit) {
-        val query = productReference.child(productId).child("product_image.jpg")
+        val query = productReference.child(productId).child("$productId.jpg")
         query.putFile(imageUri)
             .addOnSuccessListener {
                 onSuccess(true)

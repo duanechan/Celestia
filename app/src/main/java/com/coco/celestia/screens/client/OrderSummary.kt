@@ -20,6 +20,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
@@ -50,17 +52,23 @@ import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green4
 import com.coco.celestia.ui.theme.White1
+import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.BasketItem
+import com.coco.celestia.viewmodel.model.OrderData
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun OrderSummary(
     navController: NavController,
     userViewModel: UserViewModel,
+    orderViewModel: OrderViewModel,
     productViewModel: ProductViewModel,
     items: List<BasketItem>
 ) {
+    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -70,9 +78,39 @@ fun OrderSummary(
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 item { UserDetailsHeader() }
                 items(items) { ItemSummaryCard(it) }
+                item {
+                    OrderSummaryActions(
+                        onPlaceOrder = {
+                            orderViewModel.placeOrder(
+                                uid = uid,
+                                order = OrderData(
+
+                                )
+                            )
+                        }
+                    )
+                }
             }
         } else {
             EmptyOrders()
+        }
+    }
+}
+
+@Composable
+fun OrderSummaryActions(
+    onPlaceOrder: () -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Button(
+            onClick = { onPlaceOrder() },
+            colors = ButtonDefaults.buttonColors(containerColor = Green4),
+            elevation = ButtonDefaults.elevatedButtonElevation(4.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(text = "Place Order", fontSize = 18.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
