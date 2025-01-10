@@ -219,8 +219,7 @@ fun NavGraph(
             }
         }
         composable(route = Screen.FarmerManageOrder.route) {
-            onNavigate("Order Tabs" +
-                    "")
+            onNavigate("Order Tabs")
             FarmerManageOrder(
                 navController = navController,
                 userViewModel = userViewModel,
@@ -1108,6 +1107,7 @@ fun NavGraph(
             OrderSummary(
                 navController = navController,
                 userViewModel = userViewModel,
+                orderViewModel = orderViewModel,
                 productViewModel = productViewModel,
                 items = items
             )
