@@ -409,6 +409,22 @@ fun PurchaseFormHeader(
             colors = textFieldColors
         )
 
+        OutlinedTextField(
+            value = purchaseOrderData.dateOfPurchase,
+            onValueChange = { },
+            label = { Text("Date of Purchase") },
+            readOnly = true,
+            trailingIcon = {
+                IconButton(onClick = { showDatePicker = true }) {
+                    Icon(Icons.Default.DateRange, "Select expected date")
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { showDatePicker = true },
+            colors = textFieldColors
+        )
+
         Box(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
                 value = purchaseOrderData.vendor,
@@ -478,21 +494,6 @@ fun PurchaseFormHeader(
             }
         }
 
-        OutlinedTextField(
-            value = purchaseOrderData.dateOfPurchase,
-            onValueChange = { },
-            label = { Text("Date of Purchase") },
-            readOnly = true,
-            trailingIcon = {
-                IconButton(onClick = { showDatePicker = true }) {
-                    Icon(Icons.Default.DateRange, "Select expected date")
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { showDatePicker = true },
-            colors = textFieldColors
-        )
     }
 }
 
@@ -800,15 +801,6 @@ fun PurchaseOrderItemForm(
                                 )
                             }
                         }
-                    }
-
-                    //TODO: Add button when clicked should open to the AddInventoryItems.kt, So like if wala pa ung product na yon pwede muna niya i-add
-                    // Add button beside Item Name
-                    Button(
-                        onClick = { /* No functionality added yet */ },
-                        modifier = Modifier.padding(start = 8.dp)
-                    ) {
-                        Text("Add")
                     }
                 }
 
