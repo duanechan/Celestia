@@ -29,25 +29,25 @@ object ImageService {
             }
     }
 
-    fun fetchProductImage (productName: String, onComplete: (Uri?) -> Unit) {
-        imageCache[productName]?.let {
+    fun fetchProductImage(productId: String, onComplete: (Uri?) -> Unit) {
+        imageCache[productId]?.let {
             onComplete(it)
             return
         }
 
-        val query = productReference.child(productName).child("product_image.jpg")
+        val query = productReference.child(productId).child("product_image.jpg")
         query.downloadUrl
             .addOnSuccessListener {
-                imageCache[productName] = it
+                imageCache[productId] = it
                 onComplete(it)
             }.addOnFailureListener {
-                imageCache[productName] = null
+                imageCache[productId] = null
                 onComplete(null)
             }
     }
 
-    fun uploadProductPicture (productName: String, imageUri: Uri, onSuccess: (Boolean) -> Unit) {
-        val query = productReference.child(productName).child("product_image.jpg")
+    fun uploadProductPicture(productId: String, imageUri: Uri, onSuccess: (Boolean) -> Unit) {
+        val query = productReference.child(productId).child("product_image.jpg")
         query.putFile(imageUri)
             .addOnSuccessListener {
                 onSuccess(true)

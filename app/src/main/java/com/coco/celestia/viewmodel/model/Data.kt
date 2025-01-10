@@ -45,9 +45,11 @@ data class OrderData(
 data class BasketItem(
     val id: String = "",
     val product: String = "",
+    val productId: String = "",
     val quantity: Int = 0,
     val price: Double = 0.0,
     val isRetail: Boolean = false,
+    val timestamp: String = ""
 )
 
 inline fun <reified BasketItem> BasketItem.toMap(): Map<String, Any?> =

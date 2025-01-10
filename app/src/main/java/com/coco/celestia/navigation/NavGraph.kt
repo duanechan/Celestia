@@ -1027,19 +1027,23 @@ fun NavGraph(
 
         composable(
             route = Screen.ProductDetails.route,
-            arguments = listOf(navArgument("product") { type = NavType.StringType })
+            arguments = listOf(navArgument("productId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val productName = backStackEntry.arguments?.getString("product").toString()
-            onNavigate(productName)
+            val encodedProductId = backStackEntry.arguments?.getString("productId")
+            if (encodedProductId != null) {
+                val productId = java.net.URLDecoder.decode(encodedProductId, "UTF-8")
+                val product = productViewModel.productData.value?.find { it.productId == productId }
+                onNavigate(product?.name ?: "Product")
 
-            ProductDetailScreen(
-                navController = navController,
-                userViewModel = userViewModel,
-                orderViewModel = orderViewModel,
-                productViewModel = productViewModel,
-                productName = productName,
-                onEvent = { onEvent(it) }
-            )
+                ProductDetailScreen(
+                    navController = navController,
+                    userViewModel = userViewModel,
+                    orderViewModel = orderViewModel,
+                    productViewModel = productViewModel,
+                    productId = productId,
+                    onEvent = { onEvent(it) }
+                )
+            }
         }
         composable(
             route = Screen.ProductCatalog.route,

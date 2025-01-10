@@ -112,11 +112,11 @@ fun UserDetailsHeader() {
 fun ItemSummaryCard(item: BasketItem) {
     var image by remember { mutableStateOf<Uri?>(null) }
 
-    LaunchedEffect(Unit) {
-        ImageService.fetchProductImage(productName = item.product) {
-            image = it
-        }
-    }
+//    LaunchedEffect(Unit) {
+//        ImageService.fetchProductImage(productName = item.product) {
+//            image = it
+//        }
+//    }
 
     Card(
         colors = CardDefaults.cardColors(containerColor = Green4),

@@ -324,7 +324,7 @@ fun CoopProductInventory(
                                                 product = product,
                                                 onClick = {
                                                     navController.navigate(
-                                                        Screen.CoopInventoryDetails.createRoute(product.name)
+                                                        Screen.CoopInventoryDetails.createRoute(product.productId)
                                                     )
                                                 }
                                             )

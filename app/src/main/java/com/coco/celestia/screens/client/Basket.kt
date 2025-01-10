@@ -183,11 +183,11 @@ fun BasketItemCard(
     var checked by remember { mutableStateOf(false) }
     var updatedQuantity by remember { mutableIntStateOf(item.quantity) }
 
-    LaunchedEffect(Unit) {
-        ImageService.fetchProductImage(productName = item.product) {
-            image = it
-        }
-    }
+//    LaunchedEffect(Unit) {
+//        ImageService.fetchProductImage(productName = item.product) {
+//            image = it
+//        }
+//    }
 
     Card(
         elevation = CardDefaults.elevatedCardElevation(8.dp),

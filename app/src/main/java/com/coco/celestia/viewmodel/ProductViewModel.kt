@@ -14,7 +14,6 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.reflect.full.memberProperties
 
 sealed class ProductState {
     data object LOADING : ProductState()
@@ -99,11 +98,11 @@ class ProductViewModel : ViewModel() {
         _notes.value = notes
     }
 
-    fun fetchProduct(productName: String) {
+    fun fetchProduct(productId: String) {
         viewModelScope.launch {
             _productState.value = ProductState.LOADING
             try {
-                if (productName.isBlank()) {
+                if (productId.isBlank()) {
                     _productState.value = ProductState.EMPTY
                     return@launch
                 }
@@ -113,10 +112,10 @@ class ProductViewModel : ViewModel() {
                 if (snapshot.exists()) {
                     val products = snapshot.children.mapNotNull { child ->
                         try {
-                            val name = child.child("name").getValue(String::class.java) ?: ""
-                            if (name == productName) {
-                                val productId = child.child("productId").getValue(String::class.java) ?: ""
+                            val id = child.child("productId").getValue(String::class.java) ?: ""
+                            if (id == productId) {
                                 val timestamp = child.child("timestamp").getValue(String::class.java) ?: ""
+                                val name = child.child("name").getValue(String::class.java) ?: ""
                                 val description = child.child("description").getValue(String::class.java) ?: ""
                                 val notes = child.child("notes").getValue(String::class.java) ?: ""
                                 val quantity = child.child("quantity").getValue(Int::class.java) ?: 0
@@ -138,11 +137,13 @@ class ProductViewModel : ViewModel() {
 
                                 val isActive = child.child("isActive").getValue(Boolean::class.java) ?: true
                                 val dateAdded = child.child("dateAdded").getValue(String::class.java) ?: ""
-                                val collectionMethod = child.child("collectionMethod").getValue(String::class.java) ?: Constants.COLLECTION_PICKUP
-                                val paymentMethod = child.child("paymentMethod").getValue(String::class.java) ?: Constants.PAYMENT_CASH
+                                val collectionMethod = child.child("collectionMethod").getValue(String::class.java)
+                                    ?: Constants.COLLECTION_PICKUP
+                                val paymentMethod = child.child("paymentMethod").getValue(String::class.java)
+                                    ?: Constants.PAYMENT_CASH
 
                                 ProductData(
-                                    productId = productId,
+                                    productId = id,
                                     timestamp = timestamp,
                                     name = name,
                                     description = description,
@@ -268,37 +269,92 @@ class ProductViewModel : ViewModel() {
                 val filterKeywords = filter.split(",").map { it.trim() }
 
                 if (snapshot.exists()) {
-                    val products = snapshot.children.mapNotNull {
-                        it.getValue(ProductData::class.java)
-                    }.filter { product ->
-                        val productType = product.type.lowercase()
+                    val products = snapshot.children.mapNotNull { child ->
+                        try {
+                            val productId = child.child("productId").getValue(String::class.java) ?: ""
+                            val timestamp = child.child("timestamp").getValue(String::class.java) ?: ""
+                            val name = child.child("name").getValue(String::class.java) ?: ""
+                            val description = child.child("description").getValue(String::class.java) ?: ""
+                            val notes = child.child("notes").getValue(String::class.java) ?: ""
+                            val quantity = child.child("quantity").getValue(Long::class.java)?.toInt() ?: 0
+                            val type = child.child("type").getValue(String::class.java) ?: ""
+                            val price = child.child("price").getValue(Double::class.java) ?: 0.0
+                            val vendor = child.child("vendor").getValue(String::class.java) ?: ""
+                            val totalPurchases = child.child("totalPurchases").getValue(Double::class.java) ?: 0.0
+                            val totalQuantitySold = child.child("totalQuantitySold").getValue(Double::class.java) ?: 0.0
+                            val committedStock = child.child("committedStock").getValue(Double::class.java) ?: 0.0
+                            val reorderPoint = child.child("reorderPoint").getValue(Double::class.java) ?: 0.0
+                            val weightUnit = child.child("weightUnit").getValue(String::class.java) ?: Constants.WEIGHT_GRAMS
 
-                        // Apply keyword filtering
-                        val filtered = filterKeywords.any { keyword ->
-                            ProductData::class.memberProperties.any { prop ->
-                                val value = prop.get(product)
-                                value?.toString()?.contains(keyword, ignoreCase = true) == true
+                            // Handle boolean conversion properly
+                            val rawInStore = child.child("inStore").getValue()
+                            val isInStore = when (rawInStore) {
+                                is Boolean -> rawInStore
+                                is String -> rawInStore.toLowerCase() == "true"
+                                else -> true
                             }
-                        }
 
-                        when {
-                            // Admin can see all products
-                            role == "Admin" -> filtered
+                            val rawIsActive = child.child("isActive").getValue()
+                            val isActive = when (rawIsActive) {
+                                is Boolean -> rawIsActive
+                                is String -> rawIsActive.toLowerCase() == "true"
+                                else -> true
+                            }
 
-                            // Coop users can see their specific product types
-                            role.startsWith("Coop") -> {
-                                val specificType = role.removePrefix("Coop")
-                                if (specificType.isBlank()) {
-                                    // General Coop user can see all Coop products
-                                    productType.contains("coop") && filtered
-                                } else {
-                                    // Specific Coop user can only see their product type
-                                    productType.contains(specificType.lowercase()) && filtered
+                            val dateAdded = child.child("dateAdded").getValue(String::class.java) ?: ""
+                            val collectionMethod = child.child("collectionMethod").getValue(String::class.java) ?: Constants.COLLECTION_PICKUP
+                            val paymentMethod = child.child("paymentMethod").getValue(String::class.java) ?: Constants.PAYMENT_CASH
+
+                            val product = ProductData(
+                                productId = productId,
+                                timestamp = timestamp,
+                                name = name,
+                                description = description,
+                                notes = notes,
+                                quantity = quantity,
+                                type = type,
+                                price = price,
+                                vendor = vendor,
+                                totalPurchases = totalPurchases,
+                                totalQuantitySold = totalQuantitySold,
+                                committedStock = committedStock,
+                                reorderPoint = reorderPoint,
+                                weightUnit = weightUnit,
+                                isInStore = isInStore,
+                                isActive = isActive,
+                                dateAdded = dateAdded,
+                                collectionMethod = collectionMethod,
+                                paymentMethod = paymentMethod
+                            )
+
+                            // Apply filtering
+                            val matchesFilter = if (filterKeywords.isEmpty()) {
+                                true
+                            } else {
+                                filterKeywords.any { keyword ->
+                                    product.name.contains(keyword, ignoreCase = true) ||
+                                            product.type.contains(keyword, ignoreCase = true) ||
+                                            product.description.contains(keyword, ignoreCase = true) ||
+                                            product.vendor.contains(keyword, ignoreCase = true)
                                 }
                             }
 
-                            // Default user can see all products
-                            else -> filtered
+                            val matchesRole = when {
+                                role == "Admin" -> true
+                                role.startsWith("Coop") -> {
+                                    val specificType = role.removePrefix("Coop")
+                                    if (specificType.isBlank()) {
+                                        product.type.contains("coop", ignoreCase = true)
+                                    } else {
+                                        product.type.contains(specificType, ignoreCase = true)
+                                    }
+                                }
+                                else -> true
+                            }
+
+                            if (matchesFilter && matchesRole) product else null
+                        } catch (e: Exception) {
+                            null
                         }
                     }
 

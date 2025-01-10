@@ -448,10 +448,26 @@ class UserViewModel : ViewModel() {
         viewModelScope.launch {
             _userState.value = UserState.LOADING
             try {
-                val query = database.child(uid).child("basket").child(item.id)
-                val x = query.setValue(item.toMap())
-                    .addOnSuccessListener { _userState.value = UserState.SUCCESS }
-                    .addOnFailureListener { _userState.value = UserState.ERROR(it.message ?: "Unknown error") }
+                val basketRef = database.child(uid).child("basket").child(item.id)
+                val currentTimestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
+
+                val itemMap = mapOf(
+                    "id" to item.id,
+                    "productId" to item.productId,
+                    "product" to item.product,
+                    "price" to item.price,
+                    "quantity" to item.quantity,
+                    "isRetail" to item.isRetail,
+                    "timestamp" to currentTimestamp
+                )
+
+                basketRef.setValue(itemMap)
+                    .addOnSuccessListener {
+                        _userState.value = UserState.SUCCESS
+                    }
+                    .addOnFailureListener { exception ->
+                        _userState.value = UserState.ERROR(exception.message ?: "Unknown error")
+                    }
             } catch (e: Exception) {
                 _userState.value = UserState.ERROR(e.message ?: "Unknown error")
             }

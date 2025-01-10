@@ -64,7 +64,7 @@ fun ProductDetailScreen(
     userViewModel: UserViewModel,
     orderViewModel: OrderViewModel,
     productViewModel: ProductViewModel,
-    productName: String,
+    productId: String,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val productData by productViewModel.productData.observeAsState(emptyList())
@@ -72,16 +72,17 @@ fun ProductDetailScreen(
     var productImage by remember { mutableStateOf<Uri?>(null) }
 
     LaunchedEffect(Unit) {
-        productViewModel.fetchProduct(productName)
+        productViewModel.fetchProduct(productId)
     }
 
-    LaunchedEffect(productData) {
-        if (productData.isNotEmpty()) {
-            ImageService.fetchProductImage(productData[0].name) {
-                productImage = it
-            }
-        }
-    }
+//    LaunchedEffect(productData) {
+//        if (productData.isNotEmpty()) {
+//            // Still use product name for image fetching since that's how images are stored
+//            ImageService.fetchProductImage(productData[0].name) {
+//                productImage = it
+//            }
+//        }
+//    }
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -113,7 +114,7 @@ fun ProductDetailScreen(
                     )
                 }
             }
-            else -> Text(text = productName)
+            else -> Text(text = "Loading product details...")
         }
     }
 }
@@ -141,7 +142,7 @@ fun ProductDetails(
                 onUpdate = { selectedQuantity = it }
             )
         }
-        item { Divider(thickness = 1.dp, modifier = Modifier.shadow(elevation  = 4.dp)) }
+        item { Divider(thickness = 1.dp, modifier = Modifier.shadow(elevation = 4.dp)) }
         item { ProductDetails_Breakdown(selectedQuantity = selectedQuantity, price = product.price) }
         item { ProductDetails_Description(description = product.description) }
         item {
@@ -161,6 +162,7 @@ fun ProductDetails(
                             uid = uid,
                             item = BasketItem(
                                 id = UUID.randomUUID().toString(),
+                                productId = product.productId,
                                 product = product.name,
                                 price = product.price * selectedQuantity,
                                 quantity = selectedQuantity,
@@ -170,7 +172,7 @@ fun ProductDetails(
                         onEvent(
                             Triple(
                                 ToastStatus.SUCCESSFUL,
-                                "$selectedQuantity kg of ${product.name} added to the basket!",
+                                "${selectedQuantity} ${product.weightUnit.lowercase()} of ${product.name} added to the basket!",
                                 System.currentTimeMillis()
                             )
                         )
@@ -285,13 +287,29 @@ fun ProductDetails_Header(name: String, image: Uri?) {
             .height(200.dp)
     ) {
         Image(
-            painter = if (image != null) rememberImagePainter(image) else painterResource(R.drawable.product_image),
+            painter = painterResource(R.drawable.product_image),
             contentDescription = name,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
     }
 }
+
+//@Composable
+//fun ProductDetails_Header(name: String, image: Uri?) {
+//    Box(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .height(200.dp)
+//    ) {
+//        Image(
+//            painter = if (image != null) rememberImagePainter(image) else painterResource(R.drawable.product_image),
+//            contentDescription = name,
+//            contentScale = ContentScale.Crop,
+//            modifier = Modifier.fillMaxSize()
+//        )
+//    }
+//}
 
 @Composable
 fun ProductDetails_StockAndQuantity(

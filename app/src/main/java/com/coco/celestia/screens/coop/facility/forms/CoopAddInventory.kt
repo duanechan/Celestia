@@ -518,6 +518,16 @@ fun AddProductForm(
                         )
                     }
                     onAddClick()
+
+                    if (isInStore) {
+                        navController.navigate(Screen.CoopInStoreProducts.route) {
+                            popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(Screen.CoopOnlineProducts.route) {
+                            popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                        }
+                    }
                 } else {
                     onEvent(
                         Triple(

@@ -111,8 +111,8 @@ sealed class Screen(val route: String) {
     data object ClientContact: Screen( route = "client_contact")
     data object ClientSpecialReq: Screen( route = "client_special_req")
     data object ClientAddSpecialReq: Screen( route = "client_add_special_req")
-    data object ProductDetails: Screen(route = "client/{product}") {
-        fun createRoute(product: String) = "client/$product"
+    data object ProductDetails : Screen("product_details/{productId}") {
+        fun createRoute(productId: String) = "product_details/$productId"
     }
     data object ProductCatalog : Screen("productCatalog/{searchQuery}/{role}/{showSearch}") {
         fun createRoute(searchQuery: String = "none", role: String, showSearch: Boolean = false) =

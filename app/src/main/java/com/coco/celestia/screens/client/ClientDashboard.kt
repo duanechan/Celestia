@@ -58,6 +58,7 @@ fun ClientDashboard(
 ) {
     val uid = FirebaseAuth.getInstance().uid.toString()
     val userData by userViewModel.userData.observeAsState(UserData())
+    val products by productViewModel.productData.observeAsState(emptyList())
     val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
@@ -121,13 +122,18 @@ fun ClientDashboard(
             )
         }
 
-        // Carousel
-        val sampleItems = listOf(
-            CarouselItem(R.drawable.greenbeansimg, "Green Beans", "In Season", "Php 40/Kg"),
-            CarouselItem(R.drawable.arabicaimg, "Tinapong: Arabica", "Freshly Harvested", "Php 120/Kg"),
-            CarouselItem(R.drawable.sortedimg, "Coffee Beans", "Organic", "Php 200/Kg")
-        )
-        SlideshowCarousel(items = sampleItems, navController = navController)
+        val featuredProducts = products.take(3).map { product ->
+            CarouselItem(
+                carouselId = product.productId,
+                imageRes = R.drawable.product_image,
+                title = product.name,
+                subtitle = product.description ?: "No description",
+                price = "Php ${product.price}/Kg"
+            )
+        }
+        if (featuredProducts.isNotEmpty()) {
+            SlideshowCarousel(items = featuredProducts, navController = navController)
+        }
 
         // Product Catalog for Clients
         ProductCatalog(
@@ -414,7 +420,8 @@ fun ProductGrid(title: String, products: List<ProductData>, navController: NavCo
                                 .weight(1f)
                                 .padding(horizontal = 4.dp),
                             onClick = {
-                                navController.navigate(Screen.ProductDetails.createRoute(product.name))
+                                val encodedName = java.net.URLEncoder.encode(product.productId, "UTF-8")
+                                navController.navigate(Screen.ProductDetails.createRoute(encodedName))
                             }
                         )
                     }
@@ -494,7 +501,7 @@ fun SlideshowCarousel(items: List<CarouselItem>, navController: NavController) {
             animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing)
         ) { index ->
             CarouselCard(item = items[index]) {
-                navController.navigate(Screen.ProductDetails.createRoute(items[index].title))
+                navController.navigate(Screen.ProductDetails.createRoute(items[index].carouselId))
             }
         }
     }
@@ -543,6 +550,7 @@ fun CarouselCard(item: CarouselItem, onClick: () -> Unit) {
 
 // Data classes for the carousel and products
 data class CarouselItem(
+    val carouselId: String,
     val imageRes: Int,
     val title: String,
     val subtitle: String,
