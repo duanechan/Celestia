@@ -278,7 +278,7 @@ fun ProductCatalog(
                             imageRes = R.drawable.product_image,
                             title = product.name,
                             subtitle = product.description,
-                            price = "Php ${product.price}/Kg"
+                            price = "Php ${product.price}/${product.weightUnit}"
                         )
                     } ?: emptyList()
 
