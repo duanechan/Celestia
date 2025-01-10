@@ -260,3 +260,11 @@ data class MostOrdered (
     val type: String,
     val priceKg: Double
 )
+
+data class CarouselItem(
+    val carouselId: String,
+    val imageRes: Int,
+    val title: String,
+    val subtitle: String,
+    val price: String
+)

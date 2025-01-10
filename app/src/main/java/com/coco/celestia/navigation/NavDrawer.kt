@@ -1,9 +1,12 @@
 package com.coco.celestia.navigation
 
+import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -17,6 +20,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,10 +31,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -41,8 +52,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
+import coil.request.ImageRequest
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.DOrangeCircle
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green4
@@ -50,6 +65,7 @@ import com.coco.celestia.ui.theme.White1
 import com.coco.celestia.ui.theme.White2
 import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.util.routeHandler
+import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -125,6 +141,7 @@ fun NavDrawerTopBar(
     )
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun CircleAvatar(
     text: String,
@@ -132,6 +149,15 @@ fun CircleAvatar(
     textColor: Color,
     size: Dp = 48.dp
 ) {
+    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+    var profilePicture by remember { mutableStateOf<Uri?>(null) }
+
+    LaunchedEffect(Unit) {
+        ImageService.fetchProfilePicture(uid) { uri ->
+            profilePicture = uri
+        }
+    }
+
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
@@ -139,7 +165,22 @@ fun CircleAvatar(
             .clip(CircleShape)
             .background(backgroundColor)
     ) {
-        Text(text = text, color = textColor, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        if (profilePicture != null) {
+            Image(
+                painter = rememberImagePainter(
+                    data = profilePicture ?: R.drawable.profile),
+                contentDescription = "profile_pic",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Text(
+                text = text,
+                color = textColor,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+        }
     }
 }
 

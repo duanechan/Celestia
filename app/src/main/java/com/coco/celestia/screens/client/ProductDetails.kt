@@ -75,14 +75,14 @@ fun ProductDetailScreen(
         productViewModel.fetchProduct(productId)
     }
 
-//    LaunchedEffect(productData) {
-//        if (productData.isNotEmpty()) {
-//            // Still use product name for image fetching since that's how images are stored
-//            ImageService.fetchProductImage(productData[0].name) {
-//                productImage = it
-//            }
-//        }
-//    }
+    LaunchedEffect(productData) {
+        if (productData.isNotEmpty()) {
+            // Still use product name for image fetching since that's how images are stored
+            ImageService.fetchProductImage(productData[0].productId) {
+                productImage = it
+            }
+        }
+    }
 
     Column(
         verticalArrangement = Arrangement.Center,

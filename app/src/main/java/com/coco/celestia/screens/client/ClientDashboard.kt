@@ -39,6 +39,7 @@ import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.CarouselItem
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
@@ -200,7 +201,10 @@ fun ProductCatalog(
                                     Row(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .background(Color.White, shape = RoundedCornerShape(12.dp))
+                                            .background(
+                                                Color.White,
+                                                shape = RoundedCornerShape(12.dp)
+                                            )
                                             .padding(horizontal = 8.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
@@ -232,11 +236,13 @@ fun ProductCatalog(
                                     .background(Color.White, shape = RoundedCornerShape(12.dp))
                                     .padding(horizontal = 8.dp)
                                     .clickable {
-                                        navController.navigate(Screen.ProductCatalog.createRoute(
-                                            searchQuery = "",
-                                            role = role,
-                                            showSearch = true
-                                        ))
+                                        navController.navigate(
+                                            Screen.ProductCatalog.createRoute(
+                                                searchQuery = "",
+                                                role = role,
+                                                showSearch = true
+                                            )
+                                        )
                                     },
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -532,7 +538,6 @@ fun SlideshowCarousel(items: List<CarouselItem>, navController: NavController) {
         }
     }
 
-    // Auto-scroll functionality
     LaunchedEffect(currentIndex) {
         delay(3000)
         coroutineScope.launch {
@@ -557,7 +562,9 @@ fun CarouselCard(item: CarouselItem, onClick: () -> Unit) {
             modifier = Modifier.fillMaxSize()
         )
         Column(
-            modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(16.dp)
         ) {
             Text(
                 text = item.title,
@@ -573,12 +580,3 @@ fun CarouselCard(item: CarouselItem, onClick: () -> Unit) {
         }
     }
 }
-
-// Data classes for the carousel and products
-data class CarouselItem(
-    val carouselId: String,
-    val imageRes: Int,
-    val title: String,
-    val subtitle: String,
-    val price: String
-)
