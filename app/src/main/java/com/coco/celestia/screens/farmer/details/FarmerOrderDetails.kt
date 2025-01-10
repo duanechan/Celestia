@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -53,7 +54,6 @@ fun FarmerOrderDetails(
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     val usersData by userViewModel.usersData.observeAsState(emptyList())
     var showFulfillDialog by remember { mutableStateOf(false) }
-
     var farmerName by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
@@ -104,6 +104,7 @@ fun FarmerOrderDetails(
             if (orderData.status == "INCOMPLETE") {
                 showFulfillDialog = true
             }
+
 
             Column(
                 modifier = Modifier
@@ -158,6 +159,18 @@ fun OrderDetailsCard(
     val product = orderData.orderData
     var farmerName by remember { mutableStateOf("") }
     val farmerItemViewModel: FarmerItemViewModel = viewModel()
+    var showCalamityDialog by remember { mutableStateOf(false) }
+
+    // Allowed statuses for displaying the calamity button
+    val allowedStatuses = listOf(
+        "ACCEPTED",
+        "PLANTING",
+        "PLANTED",
+        "GROWING",
+        "READY_FOR_HARVEST",
+        "HARVESTING",
+        "HARVESTED"
+    )
 
     LaunchedEffect(Unit) {
         farmerName = farmerItemViewModel.fetchFarmerName(uid)
@@ -180,7 +193,7 @@ fun OrderDetailsCard(
                 .fillMaxWidth()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(Yellow4, Sand)
+                        colors = listOf(Green4, White1)
                     )
                 )
         ) {
@@ -190,6 +203,36 @@ fun OrderDetailsCard(
                 DisplayOrderDetail("Target Date", orderData.targetDate)
                 DisplayOrderDetail("Client Name", orderData.client)
                 DisplayOrderDetail("Address", "${orderData.street}, ${orderData.barangay}")
+
+                // Display calamity-related UI if status matches allowed statuses
+                if (orderData.status in allowedStatuses) {
+                    CalamityAffectedStatus(
+                        orderStatus = orderData.status,        // Pass the current order status
+                        allowedStatuses = allowedStatuses,     // Pass the allowed statuses list
+                        onNotifyClick = { showCalamityDialog = true }  // Lambda for the notify click action
+                    )
+                }
+
+                if (showCalamityDialog) {
+                    AlertDialog(
+                        onDismissRequest = { showCalamityDialog = false },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                orderViewModel.tagOrderAsCalamityAffected(orderData)
+                                showCalamityDialog = false
+                            }) {
+                                Text("Confirm")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showCalamityDialog = false }) {
+                                Text("Cancel")
+                            }
+                        },
+                        title = { Text("Confirm Action") },
+                        text = { Text("Are you sure you want to tag this order as affected by calamity?") }
+                    )
+                }
 
                 if (orderData.status == "PENDING") {
                     PendingStatusDialog(
@@ -326,7 +369,7 @@ fun DisplayOrderDetail(
     ) {
         Text(
             text = label,
-            fontSize = 20.sp,
+            fontSize = 15.sp,
             color = Cocoa,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
@@ -338,7 +381,7 @@ fun DisplayOrderDetail(
         )
         Text(
             text = value,
-            fontSize = 20.sp,
+            fontSize = 15.sp,
             color = Cocoa,
             modifier = Modifier
                 .weight(1f)
@@ -346,6 +389,54 @@ fun DisplayOrderDetail(
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
+    }
+}
+
+@Composable
+fun CalamityAffectedStatus(
+    orderStatus: String,
+    allowedStatuses: List<String>,
+    onNotifyClick: () -> Unit
+) {
+    if (orderStatus in allowedStatuses) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Button(
+                onClick = onNotifyClick,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFF28C8C),
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .padding(vertical = 8.dp)
+                    .wrapContentWidth()  // Adjust width to content size
+                    .height(50.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.calamity),
+                    contentDescription = "Notify Coop",
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Notify Coop of Unforeseen Events",
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = Color.Black
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+//            Text(
+//                text = "Current Order Status: $orderStatus",
+//                color = Color.Gray
+//            )
+        }
     }
 }
 

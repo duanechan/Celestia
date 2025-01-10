@@ -67,7 +67,8 @@ class OrderViewModel : ViewModel() {
                             }
                         }
                     _orderData.value = orders
-                    _orderState.value = if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS
+                    _orderState.value =
+                        if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -77,33 +78,45 @@ class OrderViewModel : ViewModel() {
         }
     }
 
-    fun fetchMostOrderedItems () {
+    fun fetchMostOrderedItems() {
         viewModelScope.launch {
-            val productCount = mutableMapOf<String, Triple <Int, String, Double>>()
-            database.addListenerForSingleValueEvent(object: ValueEventListener {
+            val productCount = mutableMapOf<String, Triple<Int, String, Double>>()
+            database.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     for (orderSnapshot in snapshot.children) {
 
                         for (productSnapshot in orderSnapshot.children) {
                             val orderList = productSnapshot.child("orderData")
                             val productName = orderList.child("name").getValue(String::class.java)
-                            val quantity = orderList.child("quantity").getValue(Int::class.java) ?: 0
+                            val quantity =
+                                orderList.child("quantity").getValue(Int::class.java) ?: 0
                             val type = orderList.child("type").getValue(String::class.java)
-                            val price = orderList.child("priceKg").getValue(Double::class.java) ?: 0.0
+                            val price =
+                                orderList.child("priceKg").getValue(Double::class.java) ?: 0.0
 
                             productName?.let {
-                                val currentData = productCount[it] ?: Triple(0, type ?: "Unknown Type", 0.0)
-                                productCount[it] = Triple(currentData.first + quantity, currentData.second, price)
+                                val currentData =
+                                    productCount[it] ?: Triple(0, type ?: "Unknown Type", 0.0)
+                                productCount[it] =
+                                    Triple(currentData.first + quantity, currentData.second, price)
                             }
                         }
                     }
                     val topProducts = productCount.entries
                         .sortedByDescending { it.value.first }
                         .take(6)
-                        .map { MostOrdered (name = it.key, quantity = it.value.first, type = it.value.second, priceKg = it.value.third) }
+                        .map {
+                            MostOrdered(
+                                name = it.key,
+                                quantity = it.value.first,
+                                type = it.value.second,
+                                priceKg = it.value.third
+                            )
+                        }
 
                     _mostOrderedData.value = topProducts
-                    _mostOrderedState.value = if (topProducts.isEmpty()) MostOrderedState.EMPTY else MostOrderedState.SUCCESS
+                    _mostOrderedState.value =
+                        if (topProducts.isEmpty()) MostOrderedState.EMPTY else MostOrderedState.SUCCESS
                 }
 
                 override fun onCancelled(error: DatabaseError) {
@@ -112,6 +125,7 @@ class OrderViewModel : ViewModel() {
             })
         }
     }
+
     /**
      * Fetches all orders from the database based on the provided filter criteria.
      *
@@ -136,20 +150,24 @@ class OrderViewModel : ViewModel() {
                             orderSnapshot.getValue(OrderData::class.java)
                         }.filter { order ->
                             // TODO: Update this filter
-                            val isCoffee = order.orderData.type.equals("CoopCoffee", ignoreCase = true)
+                            val isCoffee =
+                                order.orderData.type.equals("CoopCoffee", ignoreCase = true)
                             val isMeat = order.orderData.type.equals("CoopMeat", ignoreCase = true)
-                            val isCoffeeOrMeat = order.orderData.type.equals("CoopCoffee", ignoreCase = true) ||
-                                    order.orderData.type.equals("CoopMeat", ignoreCase = true)
-                            val isVegetable = order.orderData.type.equals("Vegetable", ignoreCase = true) ||
-                                    order.orderData.type.equals("Meat", ignoreCase = true) ||
-                                    order.orderData.type.equals("Coffee", ignoreCase = true)
+                            val isCoffeeOrMeat =
+                                order.orderData.type.equals("CoopCoffee", ignoreCase = true) ||
+                                        order.orderData.type.equals("CoopMeat", ignoreCase = true)
+                            val isVegetable =
+                                order.orderData.type.equals("Vegetable", ignoreCase = true) ||
+                                        order.orderData.type.equals("Meat", ignoreCase = true) ||
+                                        order.orderData.type.equals("Coffee", ignoreCase = true)
                             val matchesFilter = filterKeywords.any { keyword ->
                                 order::class.memberProperties.any { property ->
                                     val value = property.getter.call(order)?.toString() ?: ""
                                     value.contains(keyword, ignoreCase = true)
                                 }
                             }
-                            val removeCancelReject = (order.status != "CANCELLED" && order.status != "REJECTED")
+                            val removeCancelReject =
+                                (order.status != "CANCELLED" && order.status != "REJECTED")
                             when (role) {
                                 "Coop", "Admin" -> isCoffeeOrMeat && matchesFilter
                                 "CoopCoffee" -> isCoffee && matchesFilter && removeCancelReject
@@ -162,8 +180,10 @@ class OrderViewModel : ViewModel() {
                         }
                     }
                     _orderData.value = orders
-                    _orderState.value = if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS
+                    _orderState.value =
+                        if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS
                 }
+
                 override fun onCancelled(error: DatabaseError) {
                     _orderState.value = OrderState.ERROR(error.message)
                 }
@@ -212,24 +232,26 @@ class OrderViewModel : ViewModel() {
             database.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     if (snapshot.exists()) {
-                        for(user in snapshot.children) {
+                        for (user in snapshot.children) {
                             var found = false
                             val orders = user.children
-                            for(order in orders) {
+                            for (order in orders) {
                                 val orderId = order.child("orderId").getValue(String::class.java)
-                                if(orderId == updatedOrderData.orderId) {
+                                if (orderId == updatedOrderData.orderId) {
                                     order.ref.setValue(updatedOrderData)
                                         .addOnSuccessListener {
                                             _orderState.value = OrderState.SUCCESS
                                         }
                                         .addOnFailureListener { exception ->
-                                            _orderState.value = OrderState.ERROR(exception.message ?: "Unknown error")
+                                            _orderState.value = OrderState.ERROR(
+                                                exception.message ?: "Unknown error"
+                                            )
                                         }
                                     found = true
                                     break
                                 }
                             }
-                            if(found) {
+                            if (found) {
                                 break
                             }
                         }
@@ -255,14 +277,17 @@ class OrderViewModel : ViewModel() {
                             var found = false
                             val orders = user.children
                             for (order in orders) {
-                                val currentOrderId = order.child("orderId").getValue(String::class.java)
+                                val currentOrderId =
+                                    order.child("orderId").getValue(String::class.java)
                                 if (currentOrderId == orderId) {
                                     order.ref.child("status").setValue("CANCELLED")
                                         .addOnSuccessListener {
                                             _orderState.value = OrderState.SUCCESS
                                         }
                                         .addOnFailureListener { exception ->
-                                            _orderState.value = OrderState.ERROR(exception.message ?: "Unknown error")
+                                            _orderState.value = OrderState.ERROR(
+                                                exception.message ?: "Unknown error"
+                                            )
                                         }
                                     found = true
                                     break
@@ -276,6 +301,7 @@ class OrderViewModel : ViewModel() {
                         _orderState.value = OrderState.EMPTY
                     }
                 }
+
                 override fun onCancelled(error: DatabaseError) {
                     _orderState.value = OrderState.ERROR(error.message)
                 }
@@ -293,14 +319,61 @@ class OrderViewModel : ViewModel() {
                             var found = false
                             val orders = user.children
                             for (order in orders) {
-                                val currentOrderId = order.child("orderId").getValue(String::class.java)
+                                val currentOrderId =
+                                    order.child("orderId").getValue(String::class.java)
                                 if (currentOrderId == orderId) {
                                     order.ref.child("status").setValue("RECEIVED")
                                         .addOnSuccessListener {
                                             _orderState.value = OrderState.SUCCESS
                                         }
                                         .addOnFailureListener { exception ->
-                                            _orderState.value = OrderState.ERROR(exception.message ?: "Unknown error")
+                                            _orderState.value = OrderState.ERROR(
+                                                exception.message ?: "Unknown error"
+                                            )
+                                        }
+                                    found = true
+                                    break
+                                }
+                            }
+                            if (found) {
+                                break
+                            }
+                        }
+                    } else {
+                        _orderState.value = OrderState.EMPTY
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    _orderState.value = OrderState.ERROR(error.message)
+                }
+            })
+        }
+    }
+
+    fun tagOrderAsCalamityAffected(orderData: OrderData) {
+        viewModelScope.launch {
+            _orderState.value = OrderState.LOADING
+
+            database.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        for (user in snapshot.children) {
+                            var found = false
+                            val orders = user.children
+                            for (order in orders) {
+                                val currentOrderId =
+                                    order.child("orderId").getValue(String::class.java)
+                                if (currentOrderId == orderData.orderId) {
+                                    // Update the status to "CALAMITY_AFFECTED"
+                                    order.ref.child("status").setValue("CALAMITY_AFFECTED")
+                                        .addOnSuccessListener {
+                                            _orderState.value = OrderState.SUCCESS
+                                        }
+                                        .addOnFailureListener { exception ->
+                                            _orderState.value = OrderState.ERROR(
+                                                exception.message ?: "Unknown error"
+                                            )
                                         }
                                     found = true
                                     break
