@@ -8,11 +8,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -23,10 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -58,89 +55,27 @@ fun ClientDashboard(
 ) {
     val uid = FirebaseAuth.getInstance().uid.toString()
     val userData by userViewModel.userData.observeAsState(UserData())
-    val products by productViewModel.productData.observeAsState(emptyList())
-    val context = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         orderViewModel.fetchAllOrders("", "Client")
-        facilityViewModel.fetchFacilities()
-        productViewModel.fetchProducts(searchQuery, "Client")
         delay(1000)
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(White1)
-            .verticalScroll(rememberScrollState())
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .background(Color.White, shape = RoundedCornerShape(12.dp))
-                    .padding(horizontal = 8.dp)
-                    .clickable {
-                        navController.navigate(Screen.ProductCatalog.createRoute(
-                            searchQuery = "",
-                            role = "Client",
-                            showSearch = true
-                        ))
-                    },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-                Text(
-                    text = "Search",
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(16.dp),
-                    color = Color.Gray
-                )
-            }
-
-            Icon(
-                painter = painterResource(R.drawable.filter2),
-                contentDescription = "Filter",
-                modifier = Modifier
-                    .size(48.dp)
-                    .padding(start = 10.dp, end = 10.dp)
-                    .clickable {
-                        showDialog = true
-                    }
-            )
-        }
-
-        val featuredProducts = products.take(3).map { product ->
-            CarouselItem(
-                carouselId = product.productId,
-                imageRes = R.drawable.product_image,
-                title = product.name,
-                subtitle = product.description ?: "No description",
-                price = "Php ${product.price}/Kg"
-            )
-        }
-        if (featuredProducts.isNotEmpty()) {
-            SlideshowCarousel(items = featuredProducts, navController = navController)
-        }
-
-        // Product Catalog for Clients
         ProductCatalog(
             productViewModel = productViewModel,
             facilityViewModel = facilityViewModel,
             role = "Client",
-            navController = navController
+            navController = navController,
+            showSearch = true,
+            showCarousel = true,
+            onFilterClick = { showDialog = true }
         )
     }
 
@@ -209,7 +144,6 @@ fun FilterDialog(
 }
 
 // TODO: Images for each product need to add
-// TODO: Make this scrollable
 
 @Composable
 fun ProductCatalog(
@@ -218,166 +152,258 @@ fun ProductCatalog(
     role: String,
     navController: NavController,
     searchQuery: String = "",
-    showSearch: Boolean = false
+    showSearch: Boolean = false,
+    showCarousel: Boolean = false,
+    onFilterClick: () -> Unit = {}
 ) {
     val productState by productViewModel.productState.observeAsState()
     val products by productViewModel.productData.observeAsState()
     val facilityState by facilityViewModel.facilityState.observeAsState()
     val facilities by facilityViewModel.facilitiesData.observeAsState(emptyList())
     var currentSearchQuery by remember { mutableStateOf(searchQuery) }
+    val scrollState = rememberLazyListState()
+    var isSearchActive by remember { mutableStateOf(showSearch) }
+
+    val currentDestination = navController.currentBackStackEntry?.destination?.route?.substringBefore("?")
+    val isProductCatalogScreen = currentDestination == Screen.ProductCatalog.route
 
     LaunchedEffect(currentSearchQuery) {
         productViewModel.fetchProducts(currentSearchQuery, role)
         facilityViewModel.fetchFacilities()
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
             .background(White2)
     ) {
-        if (showSearch) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    modifier = Modifier
-                        .weight(1f)
-                        .background(Color.White, shape = RoundedCornerShape(12.dp))
-                        .padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                    TextField(
-                        value = currentSearchQuery,
-                        onValueChange = { currentSearchQuery = it },
-                        placeholder = { Text("Search") },
-                        modifier = Modifier.weight(1f),
-                        maxLines = 1,
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                        keyboardActions = KeyboardActions(
-                            onSearch = {
-                                productViewModel.fetchProducts(currentSearchQuery, role)
+        LazyColumn(
+            state = scrollState,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // Search Bar
+            if (showSearch) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (isProductCatalogScreen) {
+                            BasicTextField(
+                                value = currentSearchQuery,
+                                onValueChange = { newValue ->
+                                    currentSearchQuery = newValue
+                                },
+                                decorationBox = { innerTextField ->
+                                    Row(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .background(Color.White, shape = RoundedCornerShape(12.dp))
+                                            .padding(horizontal = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Search,
+                                            contentDescription = "Search",
+                                            modifier = Modifier.padding(start = 8.dp)
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .padding(16.dp)
+                                        ) {
+                                            if (currentSearchQuery.isEmpty()) {
+                                                Text(
+                                                    text = "Search",
+                                                    color = Color.Gray
+                                                )
+                                            }
+                                            innerTextField()
+                                        }
+                                    }
+                                }
+                            )
+                        } else {
+                            Row(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .background(Color.White, shape = RoundedCornerShape(12.dp))
+                                    .padding(horizontal = 8.dp)
+                                    .clickable {
+                                        navController.navigate(Screen.ProductCatalog.createRoute(
+                                            searchQuery = "",
+                                            role = role,
+                                            showSearch = true
+                                        ))
+                                    },
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    modifier = Modifier.padding(start = 8.dp)
+                                )
+                                Text(
+                                    text = "Search",
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(16.dp),
+                                    color = Color.Gray
+                                )
                             }
-                        ),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        )
-                    )
-                }
-            }
-        }
+                        }
 
-        when {
-            productState is ProductState.LOADING || facilityState is FacilityState.LOADING -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-
-            productState is ProductState.ERROR -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = (productState as ProductState.ERROR).message,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-            }
-
-            facilityState is FacilityState.ERROR -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = (facilityState as FacilityState.ERROR).message,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-            }
-
-            productState is ProductState.SUCCESS -> {
-                if (currentSearchQuery.isNotEmpty()) {
-                    val searchResults = products?.filter { product ->
-                        product.name.lowercase().contains(currentSearchQuery.lowercase()) ||
-                                product.type.lowercase().contains(currentSearchQuery.lowercase())
+                        if (onFilterClick != {}) {
+                            Icon(
+                                painter = painterResource(R.drawable.filter2),
+                                contentDescription = "Filter",
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .padding(start = 10.dp, end = 10.dp)
+                                    .clickable(onClick = onFilterClick)
+                            )
+                        }
                     }
+                }
+            }
 
-                    if (searchResults.isNullOrEmpty()) {
+            // Carousel
+            if (showCarousel && products != null) {
+                item {
+                    val featuredProducts = products?.take(3)?.map { product ->
+                        CarouselItem(
+                            carouselId = product.productId,
+                            imageRes = R.drawable.product_image,
+                            title = product.name,
+                            subtitle = product.description,
+                            price = "Php ${product.price}/Kg"
+                        )
+                    } ?: emptyList()
+
+                    if (featuredProducts.isNotEmpty()) {
+                        SlideshowCarousel(
+                            items = featuredProducts,
+                            navController = navController
+                        )
+                    }
+                }
+            }
+
+            // Product Catalog Content
+            when {
+                productState is ProductState.LOADING || facilityState is FacilityState.LOADING -> {
+                    item {
                         Box(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                }
+
+                productState is ProductState.ERROR -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "No products found for '$currentSearchQuery'",
-                                modifier = Modifier.padding(16.dp),
-                                fontFamily = mintsansFontFamily
-                            )
-                        }
-                    } else {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(8.dp)
-                        ) {
-                            ProductGrid(
-                                title = "Search Results",
-                                products = searchResults,
-                                navController = navController
+                                text = (productState as ProductState.ERROR).message,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.padding(16.dp)
                             )
                         }
                     }
-                } else {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(8.dp)
-                    ) {
+                }
+
+                facilityState is FacilityState.ERROR -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = (facilityState as FacilityState.ERROR).message,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    }
+                }
+
+                productState is ProductState.SUCCESS -> {
+                    if (currentSearchQuery.isNotEmpty()) {
+                        val searchResults = products?.filter { product ->
+                            product.name.lowercase().contains(currentSearchQuery.lowercase()) ||
+                                    product.type.lowercase().contains(currentSearchQuery.lowercase())
+                        }
+
+                        if (searchResults.isNullOrEmpty()) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(300.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "No products found for '$currentSearchQuery'",
+                                        modifier = Modifier.padding(16.dp),
+                                        fontFamily = mintsansFontFamily
+                                    )
+                                }
+                            }
+                        } else {
+                            item {
+                                ProductGrid(
+                                    title = "Search Results",
+                                    products = searchResults,
+                                    navController = navController
+                                )
+                            }
+                        }
+                    } else {
                         facilities.forEach { facility ->
                             val facilityProducts = products?.filter { product ->
                                 product.type.lowercase().contains(facility.name.lowercase())
                             }
 
                             if (facilityProducts != null && facilityProducts.isNotEmpty()) {
-                                ProductGrid(
-                                    title = facility.name,
-                                    products = facilityProducts,
-                                    navController = navController
-                                )
-
-                                Spacer(modifier = Modifier.height(16.dp))
+                                item {
+                                    ProductGrid(
+                                        title = facility.name,
+                                        products = facilityProducts,
+                                        navController = navController
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                }
                             }
                         }
 
                         if (facilities.isEmpty() || products?.isEmpty() == true) {
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = if (facilities.isEmpty()) "No facilities available"
-                                    else "No products available",
-                                    modifier = Modifier.padding(16.dp),
-                                    fontFamily = mintsansFontFamily
-                                )
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(300.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = if (facilities.isEmpty()) "No facilities available"
+                                        else "No products available",
+                                        modifier = Modifier.padding(16.dp),
+                                        fontFamily = mintsansFontFamily
+                                    )
+                                }
                             }
                         }
                     }
