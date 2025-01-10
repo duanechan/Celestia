@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.navigation.NavController
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -392,8 +393,19 @@ private fun OnlineSalesContentUI(
     var searchQuery by remember { mutableStateOf("") }
     var showSortDropdown by remember { mutableStateOf(false) }
     var sortOption by remember { mutableStateOf("A-Z") }
+    var selectedOrderStatus by remember { mutableStateOf("Pending") }
 
     val tabs = listOf("Orders", "Sales")
+    val statuses = listOf(
+        "Pending",
+        "Confirmed",
+        "To Deliver",
+        "To Receive",
+        "Completed",
+        "Cancelled",
+        "Return/Refund"
+    )
+
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
     val salesState by viewModel.salesState.observeAsState(SalesState.LOADING)
@@ -482,13 +494,50 @@ private fun OnlineSalesContentUI(
         // Tab Content
         when (selectedTab) {
             "Orders" -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Orders functionality coming soon")
+                Column {
+                    // Scrollable Status Tabs
+                    LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(statuses) { status ->
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Button(
+                                    onClick = { selectedOrderStatus = status },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (selectedOrderStatus == status)
+                                            White1
+                                        else
+                                            MaterialTheme.colorScheme.surface,
+                                        contentColor = if (selectedOrderStatus == status)
+                                            MaterialTheme.colorScheme.onSurface
+                                        else
+                                            MaterialTheme.colorScheme.onSurface
+                                    ),
+                                    modifier = Modifier
+                                        .padding(4.dp)
+                                        .height(40.dp)
+                                ) {
+                                    Text(
+                                        text = status,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Display orders for the selected status
+                    OrdersContent(
+                        filteredOrders = getOrdersByStatus(selectedOrderStatus)
+                    )
                 }
             }
+
             "Sales" -> {
                 // Search Field and Sort Button Row
                 Row(
@@ -700,7 +749,7 @@ fun OrderCard(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = "${order.totalActivities}",
+                    text = "${order.totalActivities} Activities",
                     style = MaterialTheme.typography.titleMedium,
                     color = Green1
                 )
@@ -722,6 +771,20 @@ fun OrderCard(
             )
         }
     }
+}
+
+fun getOrdersByStatus(status: String): List<OrderItem> {
+    // Sample data
+    val sampleOrders = listOf(
+        OrderItem("Pending", 3),
+        OrderItem("Confirmed", 5),
+        OrderItem("To Deliver", 2),
+        OrderItem("To Receive", 1),
+        OrderItem("Completed", 8),
+        OrderItem("Cancelled", 0),
+        OrderItem("Return/Refund", 1)
+    )
+    return sampleOrders.filter { it.status == status }
 }
 
 //@Composable
