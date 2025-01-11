@@ -23,7 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
@@ -295,7 +297,7 @@ private fun InStoreSalesContentUI(
                     }
                 }
                 SalesState.SUCCESS -> {
-                    SalesContent(sales = filteredAndSortedSales, navController = navController)
+                    SalesCard(sales = filteredAndSortedSales, navController = navController)
                 }
             }
         }
@@ -320,7 +322,7 @@ private fun InStoreSalesContentUI(
 }
 
 @Composable
-private fun SalesContent(
+private fun SalesCard(
     sales: List<SalesData>,
     navController: NavController
 ) {
@@ -390,23 +392,21 @@ private fun OnlineSalesContentUI(
     viewModel: SalesViewModel
 ) {
     var selectedTab by remember { mutableStateOf("Orders") }
+    var selectedOrderStatus by remember { mutableStateOf("Pending") }
     var searchQuery by remember { mutableStateOf("") }
     var showSortDropdown by remember { mutableStateOf(false) }
     var sortOption by remember { mutableStateOf("A-Z") }
-    var selectedOrderStatus by remember { mutableStateOf("Pending") }
 
     val tabs = listOf("Orders", "Sales")
     val statuses = listOf(
-        "Pending",
-        "Confirmed",
-        "To Deliver",
-        "To Receive",
-        "Completed",
-        "Cancelled",
-        "Return/Refund"
+        OrderItem("Pending", 3),
+        OrderItem("Confirmed", 5),
+        OrderItem("Delivering", 2),
+        OrderItem("Receiving", 1),
+        OrderItem("Completed", 8),
+        OrderItem("Cancelled", 0),
+        OrderItem("Returned", 1)
     )
-
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
     val salesState by viewModel.salesState.observeAsState(SalesState.LOADING)
     val salesData by viewModel.salesData.observeAsState(emptyList())
@@ -416,6 +416,7 @@ private fun OnlineSalesContentUI(
         viewModel.fetchSales(facility = facilityName)
     }
 
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     val filteredAndSortedSales = salesData
         .filter {
             searchQuery.isBlank() || listOf(
@@ -494,50 +495,51 @@ private fun OnlineSalesContentUI(
         // Tab Content
         when (selectedTab) {
             "Orders" -> {
-                Column {
-                    // Scrollable Status Tabs
-                    LazyRow(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(statuses) { status ->
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
+                // Scrollable Status Tabs
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(statuses) { statusItem ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Button(
+                                onClick = { selectedOrderStatus = statusItem.status },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (selectedOrderStatus == statusItem.status)
+                                        White1
+                                    else
+                                        MaterialTheme.colorScheme.surface,
+                                    contentColor = if (selectedOrderStatus == statusItem.status)
+                                        MaterialTheme.colorScheme.onSurface
+                                    else
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                ),
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .height(40.dp)
                             ) {
-                                Button(
-                                    onClick = { selectedOrderStatus = status },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (selectedOrderStatus == status)
-                                            White1
-                                        else
-                                            MaterialTheme.colorScheme.surface,
-                                        contentColor = if (selectedOrderStatus == status)
-                                            MaterialTheme.colorScheme.onSurface
-                                        else
-                                            MaterialTheme.colorScheme.onSurface
-                                    ),
-                                    modifier = Modifier
-                                        .padding(4.dp)
-                                        .height(40.dp)
-                                ) {
-                                    Text(
-                                        text = status,
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
+                                Text(
+                                    text = "${statusItem.status} (${statusItem.totalActivities})",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
                             }
                         }
                     }
-
-                    // Display orders for the selected status
-                    OrdersContent(
-                        filteredOrders = getOrdersByStatus(selectedOrderStatus)
-                    )
                 }
+
+                // Display orders for the selected status
+                OrdersCard(
+                    filteredOrders = statuses.filter { it.status == selectedOrderStatus }
+                )
+//                SalesContent(sales = filteredAndSortedSales, navController = navController)
             }
 
+
+
+
+            //Sales Tab
             "Sales" -> {
                 // Search Field and Sort Button Row
                 Row(
@@ -554,9 +556,7 @@ private fun OnlineSalesContentUI(
                             .weight(1f)
                             .padding(end = 8.dp)
                             .height(48.dp),
-                        placeholder = {
-                            Text(text = "Search sales...")
-                        },
+                        placeholder = { Text(text = "Search sales...") },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Search,
@@ -678,7 +678,11 @@ private fun OnlineSalesContentUI(
                         }
                     }
                     SalesState.SUCCESS -> {
-                        SalesContent(sales = filteredAndSortedSales, navController = navController)
+//                        // Display orders for the selected status
+                          // TODO: Orders with "Completed" status will also be displayed in the sales tab
+                        OrdersCard(
+                            filteredOrders = statuses.filter { it.status == selectedOrderStatus }
+                        )
                     }
                 }
             }
@@ -687,13 +691,13 @@ private fun OnlineSalesContentUI(
 }
 
 @Composable
-fun OrdersContent(filteredOrders: List<OrderItem>) {
+fun OrdersCard(filteredOrders: List<OrderItem>) {
     if (filteredOrders.isNotEmpty()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
             items(filteredOrders) { order ->
-                OrderCard(order = order, modifier = Modifier.padding(vertical = 8.dp))
+                OrderStatusesCard(order = order, modifier = Modifier.padding(vertical = 8.dp))
             }
         }
     } else {
@@ -701,90 +705,145 @@ fun OrdersContent(filteredOrders: List<OrderItem>) {
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text("No orders found matching your query.")
+            Text("No orders found for the selected status.")
         }
     }
 }
 
 @Composable
-fun OrderCard(
+fun OrderStatusesCard(
     order: OrderItem,
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = White1
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .clickable { },
+        colors = CardDefaults.cardColors(containerColor = White1)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(16.dp)
         ) {
-            // Icon on the left side
-            Icon(
-                imageVector = when (order.status) {
-                    "Pending" -> Icons.Default.Info
-                    "Confirmed" -> Icons.Default.CheckCircle
-                    "To Deliver" -> Icons.Default.LocationOn
-                    "To Receive" -> Icons.Default.KeyboardArrowDown
-                    "Completed" -> Icons.Default.Done
-                    "Cancelled" -> Icons.Default.Close
-                    "Return/Refund" -> Icons.Default.ArrowBack
-                    else -> Icons.Default.Info
-                },
-                contentDescription = order.status,
-                tint = Green1,
-                modifier = Modifier
-                    .size(40.dp)
-                    .padding(end = 16.dp)
-            )
-
-            Column(
-                modifier = Modifier.weight(1f)
+            // First Row: Order ID and Date
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "${order.totalActivities} Activities",
+                    text = "OrderID",
                     style = MaterialTheme.typography.titleMedium,
                     color = Green1
                 )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
                 Text(
-                    text = order.status,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "Jan 11, 2025 13:11",
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
 
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowRight,
-                contentDescription = "Navigate to Details",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(24.dp)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Second Row: Items and Status
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Items: 2",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = order.status,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            Divider(
+                color = MaterialTheme.colorScheme.onSurface,
+                thickness = 1.dp,
+                modifier = Modifier.padding(vertical = 8.dp)
             )
+
+            // Product Details
+            ItemCard()
+            ItemCard()
+
+            Divider(
+                color = MaterialTheme.colorScheme.onSurface,
+                thickness = 1.dp,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ){
+                Text(
+                    text = "Pick Up", //collection method
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ){
+                Text(
+                    text = "COD * Unpaid", //collection method and payment
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "PHP 200", //total
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
         }
     }
 }
 
-fun getOrdersByStatus(status: String): List<OrderItem> {
-    // Sample data
-    val sampleOrders = listOf(
-        OrderItem("Pending", 3),
-        OrderItem("Confirmed", 5),
-        OrderItem("To Deliver", 2),
-        OrderItem("To Receive", 1),
-        OrderItem("Completed", 8),
-        OrderItem("Cancelled", 0),
-        OrderItem("Return/Refund", 1)
-    )
-    return sampleOrders.filter { it.status == status }
+
+@Composable
+fun ItemCard(){
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Add Image Box
+        Card(
+            modifier = Modifier
+                .size(60.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("+ Add\nImage", textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall )
+            }
+        }
+
+        // Product Name and Price
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Potato",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = "10 kg", //quantity ordered
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "PHP 100", //total price of order per item
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
 }
 
 //@Composable
