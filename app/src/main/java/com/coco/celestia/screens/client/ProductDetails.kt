@@ -346,7 +346,7 @@ fun ProductDetails_StockAndQuantity(
                 }
             }
         }
-        // Stock level & minimum order
+        // Stock level
         Column(modifier = Modifier.padding(8.dp)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -357,17 +357,6 @@ fun ProductDetails_StockAndQuantity(
             ) {
                 Text(text = "Available Stocks", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Green1)
                 Text(text = "$maxQuantity Kg", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Green1)
-            }
-            // TODO: Get minimum order (how?)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            ) {
-                Text(text = "Minimum order allowed", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Green1)
-                Text(text = "0 Kg", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Green1)
             }
         }
     }
