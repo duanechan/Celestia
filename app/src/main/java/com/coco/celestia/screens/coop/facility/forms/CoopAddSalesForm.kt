@@ -7,7 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -60,10 +59,8 @@ import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.SalesViewModel
-import com.coco.celestia.viewmodel.model.Constants
+import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.SalesData
-
-//TODO: Only display the products that are in-store
 
 @Composable
 fun SalesAddForm(
@@ -85,39 +82,26 @@ fun SalesAddForm(
             )
         )
     }
+    var selectedProduct by remember { mutableStateOf<ProductData?>(null) }
     var hasErrors by remember { mutableStateOf(false) }
     var showErrorMessages by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isEditMode by remember { mutableStateOf(salesNumber != null) }
-    var showWeightUnitDropdown by remember { mutableStateOf(false) }
-    var showProductDropdown by remember { mutableStateOf(false) }
-    var searchQuery by remember { mutableStateOf("") }
 
     val products by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
-    val filteredProducts = remember(searchQuery, products) {
-        products.filter { product ->
-            product.isInStore &&
-                    (searchQuery.isEmpty() || product.name.contains(searchQuery, ignoreCase = true))
-        }
+
+    // Calculate total based on quantity and selected product's price
+    val total = remember(salesData.quantity, selectedProduct) {
+        if (selectedProduct != null && salesData.quantity > 0) {
+            salesData.quantity * selectedProduct!!.price
+        } else 0.0
     }
 
     LaunchedEffect(Unit) {
-        productViewModel.fetchProducts(searchQuery, userRole)
+        productViewModel.fetchProducts("", userRole)
     }
-
-    LaunchedEffect(searchQuery) {
-        if (searchQuery.isNotEmpty()) {
-            productViewModel.fetchProducts(searchQuery, userRole)
-        }
-    }
-
-    val weightUnits = listOf(
-        Constants.WEIGHT_GRAMS,
-        Constants.WEIGHT_KILOGRAMS,
-        Constants.WEIGHT_POUNDS
-    )
 
     LaunchedEffect(salesNumber) {
         if (salesNumber != null) {
@@ -125,6 +109,7 @@ fun SalesAddForm(
             viewModel.fetchSaleById(salesNumber) { fetchedSale ->
                 fetchedSale?.let {
                     salesData = it.copy(facility = facilityName)
+                    selectedProduct = products.find { product -> product.name == it.productName }
                 }
                 isLoading = false
             }
@@ -134,7 +119,7 @@ fun SalesAddForm(
     fun validateForm(): Boolean {
         return salesData.productName.isNotBlank() &&
                 salesData.quantity > 0 &&
-                salesData.price > 0.0 &&
+                selectedProduct != null &&
                 salesData.date.matches(Regex("^\\d{4}-\\d{2}-\\d{2}$"))
     }
 
@@ -168,14 +153,160 @@ fun SalesAddForm(
         )
     }
 
-    // Define common text field colors
+    SalesFormContent(
+        salesData = salesData,
+        onSalesDataChange = { salesData = it },
+        selectedProduct = selectedProduct,
+        onSelectedProductChange = { selectedProduct = it },
+        products = products,
+        productState = productState,
+        total = total,
+        isEditMode = isEditMode,
+        showErrorMessages = showErrorMessages,
+        isLoading = isLoading,
+        onSubmit = {
+            showErrorMessages = true
+            if (!hasErrors && validateForm()) {
+                isLoading = true
+                if (isEditMode) {
+                    viewModel.updateSale(
+                        salesData,
+                        onSuccess = {
+                            isLoading = false
+                            onSuccess()
+                        },
+                        onError = { error ->
+                            isLoading = false
+                            errorMessage = error
+                        }
+                    )
+                } else {
+                    viewModel.addSale(
+                        salesData,
+                        onSuccess = {
+                            isLoading = false
+                            onSuccess()
+                        },
+                        onError = { error ->
+                            isLoading = false
+                            errorMessage = error
+                        }
+                    )
+                }
+            }
+        },
+        onCancel = onCancel,
+        modifier = modifier
+    )
+}
+
+fun validateSalesForm(
+    salesNumber: String,
+    date: String,
+    productName: String,
+    quantity: Int,
+    price: Double?
+): Map<String, String> {
+    val errors = mutableMapOf<String, String>()
+
+    if (salesNumber.isBlank()) {
+        errors["salesNumber"] = "Sales number is required"
+    }
+
+    if (!date.matches(Regex("^\\d{4}-\\d{2}-\\d{2}$"))) {
+        errors["date"] = "Invalid date format"
+    }
+
+    if (productName.isBlank()) {
+        errors["productName"] = "Product name is required"
+    }
+
+    if (quantity <= 0) {
+        errors["quantity"] = "Quantity must be greater than 0"
+    }
+
+    if (price == null || price <= 0) {
+        errors["price"] = "Invalid price"
+    }
+
+    return errors
+}
+
+@Composable
+fun SalesFormContent(
+    salesData: SalesData,
+    onSalesDataChange: (SalesData) -> Unit,
+    selectedProduct: ProductData?,
+    onSelectedProductChange: (ProductData?) -> Unit,
+    products: List<ProductData>,
+    productState: ProductState,
+    total: Double,
+    isEditMode: Boolean,
+    showErrorMessages: Boolean,
+    isLoading: Boolean,
+    onSubmit: () -> Unit,
+    onCancel: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var showProductDropdown by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    var errors by remember { mutableStateOf(mapOf<String, String>()) }
+    var shouldShowErrors by remember { mutableStateOf(false) }
+
+    LaunchedEffect(salesData, selectedProduct) {
+        if (shouldShowErrors) {
+            errors = validateSalesForm(
+                salesNumber = salesData.salesNumber,
+                date = salesData.date,
+                productName = salesData.productName,
+                quantity = salesData.quantity,
+                price = selectedProduct?.price
+            )
+        }
+    }
+
+    val filteredProducts = remember(searchQuery, products) {
+        products.filter { product ->
+            product.isInStore &&
+                    (searchQuery.isEmpty() || product.name.contains(searchQuery, ignoreCase = true))
+        }
+    }
+
     val textFieldColors = OutlinedTextFieldDefaults.colors(
         cursorColor = Green1,
         focusedBorderColor = Green1,
         unfocusedBorderColor = Green1,
         focusedLabelColor = Green1,
         unfocusedLabelColor = Green1,
+        errorBorderColor = MaterialTheme.colorScheme.error,
+        errorLabelColor = MaterialTheme.colorScheme.error,
+        errorCursorColor = MaterialTheme.colorScheme.error
     )
+
+    val disabledTextFieldColors = OutlinedTextFieldDefaults.colors(
+        cursorColor = Green1,
+        focusedBorderColor = MaterialTheme.colorScheme.secondary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.secondary,
+        focusedLabelColor = MaterialTheme.colorScheme.secondary,
+        unfocusedLabelColor = MaterialTheme.colorScheme.secondary,
+        disabledBorderColor = MaterialTheme.colorScheme.secondary,
+        disabledLabelColor = MaterialTheme.colorScheme.secondary,
+        errorBorderColor = MaterialTheme.colorScheme.error,
+        errorLabelColor = MaterialTheme.colorScheme.error,
+        errorCursorColor = MaterialTheme.colorScheme.error
+    )
+
+    fun validateField(field: String) {
+        if (shouldShowErrors && salesData.productName.isNotEmpty()) {
+            errors = validateSalesForm(
+                salesNumber = salesData.salesNumber,
+                date = salesData.date,
+                productName = salesData.productName,
+                quantity = salesData.quantity,
+                price = selectedProduct?.price
+            )
+        }
+    }
 
     Column(
         modifier = modifier
@@ -206,6 +337,12 @@ fun SalesAddForm(
                     onValueChange = { },
                     label = { Text("Sales Number") },
                     readOnly = true,
+                    isError = shouldShowErrors && errors["salesNumber"] != null,
+                    supportingText = {
+                        if (shouldShowErrors) {
+                            errors["salesNumber"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     colors = textFieldColors
                 )
@@ -218,10 +355,10 @@ fun SalesAddForm(
                     onValueChange = { },
                     label = { Text("Date of Sale") },
                     readOnly = true,
-                    isError = showErrorMessages && salesData.date.isEmpty(),
+                    isError = shouldShowErrors && errors["date"] != null,
                     supportingText = {
-                        if (showErrorMessages && salesData.date.isEmpty()) {
-                            Text("Date is required")
+                        if (shouldShowErrors) {
+                            errors["date"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -236,8 +373,8 @@ fun SalesAddForm(
                                     { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
                                         calendar.set(year, month, dayOfMonth)
                                         val formattedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                                        salesData = salesData.copy(date = formattedDate.format(calendar.time))
-                                        hasErrors = !validateForm()
+                                        onSalesDataChange(salesData.copy(date = formattedDate.format(calendar.time)))
+                                        validateField("date")
                                     },
                                     calendar.get(Calendar.YEAR),
                                     calendar.get(Calendar.MONTH),
@@ -254,29 +391,32 @@ fun SalesAddForm(
                         onValueChange = { newQuery ->
                             searchQuery = newQuery
                             if (!showProductDropdown) {
-                                salesData = salesData.copy(productName = newQuery)
+                                onSalesDataChange(salesData.copy(productName = newQuery))
+                                validateField("productName")
                             }
                             showProductDropdown = true
-                            hasErrors = !validateForm()
                         },
                         label = { Text("Product Name") },
-                        isError = showErrorMessages && salesData.productName.isBlank(),
+                        isError = shouldShowErrors && errors["productName"] != null,
                         supportingText = {
-                            if (showErrorMessages && salesData.productName.isBlank()) {
-                                Text("Product name is required")
+                            if (shouldShowErrors) {
+                                errors["productName"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                            } else if (selectedProduct == null) {
+                                Text(
+                                    "Select a product first",
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors = textFieldColors,
                         trailingIcon = {
-                            IconButton(
-                                onClick = {
-                                    showProductDropdown = !showProductDropdown
-                                    if (showProductDropdown) {
-                                        searchQuery = ""
-                                    }
+                            IconButton(onClick = {
+                                showProductDropdown = !showProductDropdown
+                                if (showProductDropdown) {
+                                    searchQuery = ""
                                 }
-                            ) {
+                            }) {
                                 Icon(
                                     imageVector = Icons.Default.ArrowDropDown,
                                     contentDescription = "Select product"
@@ -330,13 +470,15 @@ fun SalesAddForm(
                                     DropdownMenuItem(
                                         text = { Text(product.name) },
                                         onClick = {
-                                            salesData = salesData.copy(
+                                            onSelectedProductChange(product)
+                                            onSalesDataChange(salesData.copy(
                                                 productName = product.name,
-                                                weightUnit = product.weightUnit
-                                            )
+                                                weightUnit = product.weightUnit,
+                                                price = product.price
+                                            ))
                                             searchQuery = ""
                                             showProductDropdown = false
-                                            hasErrors = !validateForm()
+                                            validateField("productName")
                                         }
                                     )
                                 }
@@ -345,7 +487,6 @@ fun SalesAddForm(
                     }
                 }
 
-                // Quantity and Weight Unit Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -354,78 +495,62 @@ fun SalesAddForm(
                         value = if (salesData.quantity == 0) "" else salesData.quantity.toString(),
                         onValueChange = {
                             val quantity = it.toIntOrNull() ?: 0
-                            salesData = salesData.copy(quantity = quantity)
-                            hasErrors = !validateForm()
+                            onSalesDataChange(salesData.copy(quantity = quantity))
+                            validateField("quantity")
                         },
                         label = { Text("Quantity") },
-                        isError = showErrorMessages && salesData.quantity <= 0,
+                        enabled = selectedProduct != null,
+                        isError = shouldShowErrors && errors["quantity"] != null,
                         supportingText = {
-                            if (showErrorMessages && salesData.quantity <= 0) {
-                                Text("Quantity must be greater than 0")
+                            if (shouldShowErrors) {
+                                errors["quantity"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                            } else if (selectedProduct != null && salesData.quantity == 0) {
+                                Text(
+                                    "Input a quantity",
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                            }
+                        },
+                        placeholder = {
+                            if (selectedProduct == null) {
+                                Text("Select product first")
                             }
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.weight(1f),
-                        colors = textFieldColors
+                        colors = if (selectedProduct == null) disabledTextFieldColors else textFieldColors
                     )
 
-                    Box(
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        OutlinedTextField(
-                            value = salesData.weightUnit,
-                            onValueChange = { },
-                            readOnly = true,
-                            label = { Text("Unit") },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = textFieldColors,
-                            trailingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowDropDown,
-                                    contentDescription = "Select unit",
-                                    modifier = Modifier.clickable {
-                                        showWeightUnitDropdown = true
-                                    }
-                                )
-                            }
-                        )
-
-                        DropdownMenu(
-                            expanded = showWeightUnitDropdown,
-                            onDismissRequest = { showWeightUnitDropdown = false },
-                            modifier = Modifier.width(IntrinsicSize.Min)
-                        ) {
-                            weightUnits.forEach { unit ->
-                                DropdownMenuItem(
-                                    text = { Text(unit) },
-                                    onClick = {
-                                        salesData = salesData.copy(weightUnit = unit)
-                                        showWeightUnitDropdown = false
-                                    }
-                                )
-                            }
-                        }
-                    }
+                    OutlinedTextField(
+                        value = selectedProduct?.weightUnit ?: "",
+                        onValueChange = { },
+                        readOnly = true,
+                        label = { Text("Unit") },
+                        enabled = selectedProduct != null,
+                        modifier = Modifier.weight(1f),
+                        colors = if (selectedProduct == null) disabledTextFieldColors else textFieldColors
+                    )
                 }
 
                 OutlinedTextField(
-                    value = if (salesData.price == 0.0) "" else salesData.price.toString(),
-                    onValueChange = {
-                        val price = it.toDoubleOrNull() ?: 0.0
-                        salesData = salesData.copy(price = price)
-                        hasErrors = !validateForm()
-                    },
+                    value = selectedProduct?.price?.toString() ?: "",
+                    onValueChange = { },
                     readOnly = true,
+                    enabled = selectedProduct != null,
                     label = { Text("Price per Unit") },
-                    isError = showErrorMessages && salesData.price <= 0.0,
+                    isError = shouldShowErrors && errors["price"] != null,
                     supportingText = {
-                        if (showErrorMessages && salesData.price <= 0.0) {
-                            Text("Price must be greater than 0")
+                        if (shouldShowErrors) {
+                            errors["price"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                         }
                     },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    placeholder = {
+                        if (selectedProduct == null) {
+                            Text("Select product first")
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = textFieldColors
+                    colors = if (selectedProduct == null) disabledTextFieldColors else textFieldColors
                 )
 
                 Text(
@@ -436,14 +561,14 @@ fun SalesAddForm(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
-                ){
+                ) {
                     Text(
-                        text = "20 X 1.00",
+                        text = "${salesData.quantity} X ${selectedProduct?.price?.format(2) ?: "0.00"}",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "PHP 20.00",
+                        text = "PHP ${total.format(2)}",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -451,7 +576,6 @@ fun SalesAddForm(
             }
         }
 
-        // Additional Information Card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -472,7 +596,7 @@ fun SalesAddForm(
 
                 OutlinedTextField(
                     value = salesData.notes,
-                    onValueChange = { salesData = salesData.copy(notes = it) },
+                    onValueChange = { onSalesDataChange(salesData.copy(notes = it)) },
                     label = { Text("Notes") },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
@@ -481,7 +605,6 @@ fun SalesAddForm(
             }
         }
 
-        // Buttons Row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -489,7 +612,10 @@ fun SalesAddForm(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedButton(
-                onClick = onCancel,
+                onClick = {
+                    shouldShowErrors = false  // Reset error state
+                    onCancel()
+                },
                 modifier = Modifier.weight(1f),
                 enabled = !isLoading
             ) {
@@ -501,34 +627,21 @@ fun SalesAddForm(
 
             Button(
                 onClick = {
-                    showErrorMessages = true
-                    if (!hasErrors && validateForm()) {
-                        isLoading = true
-                        if (isEditMode) {
-                            viewModel.updateSale(
-                                salesData,
-                                onSuccess = {
-                                    isLoading = false
-                                    onSuccess()
-                                },
-                                onError = { error ->
-                                    isLoading = false
-                                    errorMessage = error
-                                }
-                            )
-                        } else {
-                            viewModel.addSale(
-                                salesData,
-                                onSuccess = {
-                                    isLoading = false
-                                    onSuccess()
-                                },
-                                onError = { error ->
-                                    isLoading = false
-                                    errorMessage = error
-                                }
-                            )
-                        }
+                    shouldShowErrors = true
+
+                    if (salesData.productName.isEmpty()) {
+                        errors = mapOf("productName" to "Please select a product first")
+                    } else {
+                        errors = validateSalesForm(
+                            salesNumber = salesData.salesNumber,
+                            date = salesData.date,
+                            productName = salesData.productName,
+                            quantity = salesData.quantity,
+                            price = selectedProduct?.price
+                        )
+                    }
+                    if (errors.isEmpty()) {
+                        onSubmit()
                     }
                 },
                 modifier = Modifier.weight(1f),
@@ -553,3 +666,5 @@ private fun generateSalesNumber(): String {
 
     return "SO-$currentDate-$salesCount"
 }
+
+fun Double.format(digits: Int) = "%.${digits}f".format(this)
