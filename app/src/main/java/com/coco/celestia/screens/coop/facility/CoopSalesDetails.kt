@@ -1,6 +1,7 @@
 package com.coco.celestia.screens.coop.facility
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,19 +17,29 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -138,6 +149,8 @@ fun CoopSalesDetails(
 //ONLINE
 @Composable
 fun OnlineSalesDetails(){
+    var showDialog by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -220,6 +233,20 @@ fun OnlineSalesDetails(){
         ) {
             Column(
                 modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Items (2)",
+                    style = MaterialTheme.typography.titleMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
+            }
+
+            Column(
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -234,7 +261,7 @@ fun OnlineSalesDetails(){
             }
         }
 
-        //Collection Method
+        //TODO: Update
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -248,6 +275,24 @@ fun OnlineSalesDetails(){
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 CollectionMethod()
+            }
+        }
+
+        //Payment Method - TBC
+        //TODO: Update
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            colors = CardDefaults.cardColors(containerColor = White1)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                PaymentMethod()
             }
         }
 
@@ -268,35 +313,58 @@ fun OnlineSalesDetails(){
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )
+
+                // Update Button
+                Button(
+                    onClick = { showDialog = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = Green1)
+                ) {
+                    Text(text = "Update", color = Color.White)
+                }
             }
 
             //TODO: Recent ones should be on top
-            OrderStatus(
-                status = "Pending",
-                statusDescription = "Your item is to be confirmed.",
-                dateTime = "Jan 12 2025 03:20 PM",
-                isLastItem = false // Not the last item
-            )
+            // SAMPLE
             OrderStatus(
                 status = "Confirmed",
                 statusDescription = "Your item is now confirmed.",
                 dateTime = "Jan 12 2025 03:30 PM",
-                isLastItem = true // Last item
             )
+            OrderStatus(
+                status = "Pending",
+                statusDescription = "Your item is to be confirmed.",
+                dateTime = "Jan 12 2025 03:20 PM",
+            )
+
+            // Dialog for Update Button
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDialog = false },
+                    title = {
+                        Text(text = "Update Order Status")
+                    },
+                    text = {
+                        UpdateStatusCard(
+                            status = "Confirmed",
+                            statusDescription = "Your item is now confirmed.",
+                            dateTime = "Jan 12 2025 03:30 PM",
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showDialog = false }) {
+                            Text(text = "Save")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDialog = false }) {
+                            Text(text = "Cancel")
+                        }
+                    }
+                )
+            }
         }
-
-
-
-//        UpdateCard(){
-//
-//        }
     }
 }
-
-
-
-
-
 
 @Composable
 fun OnlineItemCard(){
@@ -305,10 +373,6 @@ fun OnlineItemCard(){
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text(
-            text = "Items (2)",
-            style = MaterialTheme.typography.titleMedium
-        )
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -414,8 +478,55 @@ fun CollectionMethod(){ //Online
     }
 }
 
+@Composable
+fun PaymentMethod() { //Online
+    Column(
+        modifier = Modifier
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "Payment Method",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            colors = CardDefaults.cardColors(containerColor = White2)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    // Product Name and Price
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "Cash",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable // Online
-fun OrderStatus(status: String, statusDescription: String, dateTime: String, isLastItem: Boolean) {
+fun OrderStatus(status: String, statusDescription: String, dateTime: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -453,7 +564,85 @@ fun OrderStatus(status: String, statusDescription: String, dateTime: String, isL
     }
 }
 
+@Composable
+fun UpdateStatusCard(status: String, statusDescription: String, dateTime: String) {
+    var statusValue by remember { mutableStateOf(status) }
+    var statusDescriptionValue by remember { mutableStateOf(statusDescription) }
+    var dateTimeValue by remember { mutableStateOf(dateTime) }
+    var expanded by remember { mutableStateOf(false) }
 
+    // Sample options with descriptions
+    //TODO: add to db with desc
+    val statusOptions = mapOf(
+        "Pending" to "Your order is pending confirmation.",
+        "Confirmed" to "Your order has been confirmed.",
+        "Shipped" to "Your order is on the way.",
+        "Delivered" to "Your order has been delivered.",
+        "Cancelled" to "Your order has been cancelled."
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Box {
+                OutlinedTextField(
+                    value = statusValue,
+                    onValueChange = {},
+                    label = { Text("Status") },
+                    readOnly = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Default.ArrowDropDown,
+                            contentDescription = "Dropdown",
+                            modifier = Modifier.clickable { expanded = true }
+                        )
+                    }
+                )
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    statusOptions.forEach { (option, description) ->
+                        DropdownMenuItem(
+                            text = { Text(option) },
+                            onClick = {
+                                statusValue = option // Update selected value
+                                statusDescriptionValue = description // Update description
+                                expanded = false // Close dropdown
+                            }
+                        )
+                    }
+                }
+            }
+
+            OutlinedTextField(
+                value = statusDescriptionValue,
+                onValueChange = {},
+                label = { Text("Description") },
+                readOnly = false,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = dateTimeValue,
+                onValueChange = { dateTimeValue = it },
+                readOnly = true,
+                label = { Text("Date and Time") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
 
 
 
