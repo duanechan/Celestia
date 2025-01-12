@@ -686,7 +686,7 @@ private fun VendorDetailsTab(
                 InfoRow(
                     icon = Icons.Default.Info,
                     label = "Company",
-                    value = currentVendor.companyName
+                    value = currentVendor.companyName.ifEmpty { "No Company" }
                 )
 
                 InfoRow(

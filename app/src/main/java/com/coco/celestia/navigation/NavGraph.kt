@@ -909,7 +909,8 @@ fun NavGraph(
                 viewModel = vendorViewModel,
                 facilityName = userFacility?.name ?: "",
                 onSuccess = { navController.navigateUp() },
-                onCancel = { navController.navigateUp() }
+                onCancel = { navController.navigateUp() },
+                locationViewModel = locationViewModel
             )
         }
         composable(
@@ -928,7 +929,8 @@ fun NavGraph(
                 facilityName = userFacility?.name ?: "",
                 email = email,
                 onSuccess = { navController.navigateUp() },
-                onCancel = { navController.navigateUp() }
+                onCancel = { navController.navigateUp() },
+                locationViewModel = locationViewModel
             )
         }
         composable(
