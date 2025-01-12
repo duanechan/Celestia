@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.farmer.details
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -33,6 +34,7 @@ import com.coco.celestia.screens.farmer.dialogs.HarvestingMeatStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.HarvestingStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.PendingStatusDialog
 import com.coco.celestia.screens.farmer.dialogs.PlantingStatusDialog
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.model.OrderData
@@ -46,31 +48,12 @@ fun FarmerOrderDetails(
     navController: NavController,
     orderId: String
 ) {
-    val uid = FirebaseAuth.getInstance().uid.toString()
     val orderViewModel: OrderViewModel = viewModel()
-    val userViewModel: UserViewModel = viewModel()
-    val farmerItemViewModel: FarmerItemViewModel = viewModel()
     val allOrders by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
-    val usersData by userViewModel.usersData.observeAsState(emptyList())
-    var showFulfillDialog by remember { mutableStateOf(false) }
-    var farmerName by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
-        if (allOrders.isEmpty()) {
-            orderViewModel.fetchAllOrders(
-                filter = "",
-                role = "Farmer"
-            )
-        }
-        if (usersData.isEmpty()) {
-            userViewModel.fetchUsers()
-        }
-        if (uid.isNotEmpty()) {
-            farmerName = farmerItemViewModel.fetchFarmerName(uid)
-            farmerItemViewModel.getItems(uid)
-        }
-    }
+    // Log the order data to debug
+    Log.d("FarmerOrderDetails", "orderId: $orderId, allOrders: $allOrders")
 
     val orderData: OrderData? = remember(orderId, allOrders) {
         allOrders.find { it.orderId == orderId }
@@ -101,11 +84,6 @@ fun FarmerOrderDetails(
         }
 
         else -> {
-            if (orderData.status == "INCOMPLETE") {
-                showFulfillDialog = true
-            }
-
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -114,6 +92,23 @@ fun FarmerOrderDetails(
             ) {
                 OrderDetailsCard(orderData = orderData, orderViewModel = orderViewModel, navController = navController)
                 Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    onClick = {
+                        navController.navigate(Screen.FarmerOrderMilestones.createRoute(orderId))
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF4CAF50),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .fillMaxWidth()
+                        .height(50.dp)
+                ) {
+                    Text(text = "Track Progress")
+                }
 
                 when (orderData.status) {
                     "REJECTED" -> {
@@ -141,10 +136,42 @@ fun FarmerOrderDetails(
                         )
                     }
                     else -> {
-                        OrderStatusUpdates(orderData = orderData)
+                        // Removed OrderStatusUpdates from here
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun FarmerOrderMilestones(
+    navController: NavController,
+    orderId: String
+) {
+    val orderViewModel: OrderViewModel = viewModel()
+    val allOrders by orderViewModel.orderData.observeAsState(emptyList())
+    val orderData: OrderData? = remember(orderId, allOrders) {
+        allOrders.find { it.orderId == orderId }
+    }
+
+    Log.d("FarmerOrderMilestones", "orderId: $orderId, orderData: $orderData")
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Milestones for Order $orderId",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        orderData?.let {
+            OrderStatusUpdates(orderData = it)
+        } ?: run {
+            Text(text = "Order data not found")
         }
     }
 }
