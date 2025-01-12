@@ -3,15 +3,18 @@ package com.coco.celestia.screens.client
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -23,6 +26,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -38,6 +43,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -122,6 +128,8 @@ fun BasketScreen(
             }
         }
     }
+
+
 }
 
 @Composable
@@ -138,15 +146,51 @@ fun Basket(
             LaunchedEffect(item.product) {
                 productViewModel.fetchProduct(item.product)
             }
+            //facility card added
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = White1)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    // First Row: Order ID and Date
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Facility Name",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = "Items: 2", //kung ilang product under nung facility
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
 
-            BasketItemCard(
-                product = if (productData.isNotEmpty()) productData[0] else ProductData(),
-                item = item,
-                isChecked = checkoutItems.any { it.id == item.id },
-                onAdd = { checkoutItems.add(it) },
-                onUpdate = { old, new -> checkoutItems[checkoutItems.indexOf(old)] = new },
-                onRemove = { checkoutItems.remove(it) }
-            )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Divider(
+                        color = MaterialTheme.colorScheme.onSurface,
+                        thickness = 1.dp,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+
+                    BasketItemCard(
+                        product = if (productData.isNotEmpty()) productData[0] else ProductData(),
+                        item = item,
+                        isChecked = checkoutItems.any { it.id == item.id },
+                        onAdd = { checkoutItems.add(it) },
+                        onUpdate = { old, new -> checkoutItems[checkoutItems.indexOf(old)] = new },
+                        onRemove = { checkoutItems.remove(it) }
+                    )
+                }
+            }
+
         }
         item {
             BasketActions(onCheckout = { onCheckout(checkoutItems) })
@@ -158,18 +202,43 @@ fun Basket(
 fun BasketActions(
     onCheckout: () -> Unit
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Button(
-            onClick = { onCheckout() },
-            colors = ButtonDefaults.buttonColors(containerColor = Green4),
-            elevation = ButtonDefaults.elevatedButtonElevation(4.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = "Checkout", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+    //Total
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Green4)
+    ){
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ){
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ){
+                Text(
+                    text = "Total: PHP 100 ", //total ng checked items
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Button(
+                    onClick = { onCheckout() },
+                    colors = ButtonDefaults.buttonColors(containerColor = White1),
+                    elevation = ButtonDefaults.elevatedButtonElevation(4.dp),
+                ) {
+                    Text(
+                        text = "Checkout",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.Black
+                    )
+                }
+            }
         }
+
     }
+
 }
 
 @Composable
@@ -234,7 +303,11 @@ fun BasketItemCard(
                     },
                     colors = CheckboxDefaults.colors(checkedColor = Green1)
                 )
-                Box(modifier = Modifier.padding(12.dp)) {
+                Box(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .size(90.dp)
+                ) {
                     Image(
                         painter = if (image != null) {
                             rememberImagePainter(image)
@@ -243,32 +316,34 @@ fun BasketItemCard(
                         },
                         contentDescription = item.product,
                         modifier = Modifier
-                            .width(100.dp)
-                            .fillMaxHeight()
+//                            .width(100.dp)
+//                            .fillMaxHeight()
+                            .fillMaxSize()
                             .clip(RoundedCornerShape(10.dp))
                             .background(White1)
                     )
                 }
                 Column(
-                    verticalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier
-                        .fillMaxSize()
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 12.dp, end = 12.dp)
-                    ) {
-                        Text(text = item.product, fontWeight = FontWeight.Bold, color = Green1)
-                        Text(text = "Php ${product.price * updatedQuantity}", fontWeight = FontWeight.Bold, color = Green1)
-                    }
+                    Text(
+                        text = item.product,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Green1
+                    )
+                    Text(
+                        text = "Php ${product.price * updatedQuantity}", //price is per unit
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Green1
+                    )
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.End,
                         modifier = Modifier
                             .fillMaxWidth()
                     ) {
+
                         TextButton(
                             // TODO: Need to handle minimum order kg
                             onClick = {
