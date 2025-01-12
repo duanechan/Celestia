@@ -76,7 +76,7 @@ fun SalesAddForm(
     var salesData by remember {
         mutableStateOf(
             SalesData(
-                salesNumber = generateSalesNumber(),
+                salesNumber = salesNumber ?: "",
                 date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
                 facility = facilityName
             )
@@ -101,6 +101,14 @@ fun SalesAddForm(
 
     LaunchedEffect(Unit) {
         productViewModel.fetchProducts("", userRole)
+
+        // Generate sales number for new sales
+        if (!isEditMode) {
+            val count = viewModel.getSalesCount() + 1
+            val currentDate = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
+            val newSalesNumber = "SO-$currentDate-${count.toString().padStart(3, '0')}"
+            salesData = salesData.copy(salesNumber = newSalesNumber)
+        }
     }
 
     LaunchedEffect(salesNumber) {
@@ -332,8 +340,25 @@ fun SalesFormContent(
                     color = Green1
                 )
 
+                val formattedSalesNumber = remember(salesData.salesNumber) {
+                    try {
+                        val parts = salesData.salesNumber.split("-")
+                        if (parts.size == 3) {
+                            val prefix = parts[0]
+                            val date = parts[1]
+                            val number = parts[2].toInt()
+                            val formattedDate = "${date.substring(0, 4)}${date.substring(4, 6)}${date.substring(6, 8)}"
+                            "$prefix-$formattedDate-${number.toString().padStart(3, '0')}"
+                        } else {
+                            salesData.salesNumber
+                        }
+                    } catch (e: Exception) {
+                        salesData.salesNumber
+                    }
+                }
+
                 OutlinedTextField(
-                    value = salesData.salesNumber,
+                    value = formattedSalesNumber,
                     onValueChange = { },
                     label = { Text("Sales Number") },
                     readOnly = true,
@@ -655,16 +680,6 @@ fun SalesFormContent(
             }
         }
     }
-}
-
-private var salesCount = 0
-
-private fun generateSalesNumber(): String {
-    salesCount++
-
-    val currentDate = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"))
-
-    return "SO-$currentDate-$salesCount"
 }
 
 fun Double.format(digits: Int) = "%.${digits}f".format(this)

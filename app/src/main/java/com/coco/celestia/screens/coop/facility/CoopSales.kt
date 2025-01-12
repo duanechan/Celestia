@@ -39,11 +39,6 @@ import com.coco.celestia.viewmodel.model.SalesData
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-data class OrderItem(
-    val status: String,
-    val totalActivities: Int
-)
-
 @Composable
 fun CoopSales(
     navController: NavController,
@@ -109,6 +104,7 @@ fun CoopSales(
     }
 }
 
+//IN-STORE SALES
 @Composable
 private fun InStoreSalesContentUI(
     navController: NavController,
@@ -346,7 +342,7 @@ private fun SalesCard(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "${sale.productName} (sales number)",
+                            text = "${sale.productName} (${sale.salesNumber})",
                             style = MaterialTheme.typography.titleMedium,
                             color = Green1
                         )
@@ -361,11 +357,11 @@ private fun SalesCard(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Quantity: ${sale.quantity}",
+                            text = "${sale.quantity} ${sale.weightUnit}",
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            text = "Price: ₱${sale.price}",
+                            text = "₱${sale.price}",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -373,6 +369,11 @@ private fun SalesCard(
                     if (sale.notes.isNotBlank()) {
                         Text(
                             text = "Notes: ${sale.notes}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    } else {
+                        Text(
+                            text = "No note provided",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -383,6 +384,12 @@ private fun SalesCard(
 }
 
 
+// ONLINE SALES
+// TODO: Remove this data class later kapag meron na yung ordering sa retail
+data class OrderItem(
+    val status: String,
+    val totalActivities: Int
+)
 // TODO: I'll modify this kapag naayos na yung ordering sa client side
 // TODO: Pati yung Sales tab modify nalang din since currently nagpapakita yung in-store sales
 @Composable
@@ -845,59 +852,3 @@ fun ItemCard(){
         }
     }
 }
-
-//@Composable
-//fun SaleCard(
-//    sale: SalesData,
-//    modifier: Modifier = Modifier
-//) {
-//    Card(
-//        modifier = modifier.fillMaxWidth(),
-//        colors = CardDefaults.cardColors(
-//            containerColor = White1
-//        ),
-//        elevation = CardDefaults.cardElevation(
-//            defaultElevation = 2.dp
-//        )
-//    ) {
-//        Column(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(16.dp)
-//        ) {
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
-//                horizontalArrangement = Arrangement.SpaceBetween
-//            ) {
-//                Text(
-//                    text = sale.item,
-//                    style = MaterialTheme.typography.titleMedium,
-//                    color = Green1
-//                )
-//                Text(
-//                    text = "PHP ${"%.2f".format(sale.amount)}",
-//                    style = MaterialTheme.typography.titleMedium,
-//                    color = Green1
-//                )
-//            }
-//
-//            Spacer(modifier = Modifier.height(4.dp))
-//
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
-//                horizontalArrangement = Arrangement.SpaceBetween
-//            ) {
-//                Text(
-//                    text = sale.id,
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant
-//                )
-//                Text(
-//                    text = sale.date,
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant
-//                )
-//            }
-//        }
-//    }
-//}

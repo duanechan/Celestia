@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.coop.facility
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -52,6 +53,7 @@ import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.SalesState
 import com.coco.celestia.viewmodel.SalesViewModel
+import com.coco.celestia.viewmodel.model.SalesData
 
 @Composable
 fun CoopSalesDetails(
@@ -135,20 +137,35 @@ fun CoopSalesDetails(
                     }
                     else -> {
                         currentSale?.let { sale ->
-//                            InStoreSalesDetails() //hindi ko mapass ung object
-                            OnlineSalesDetails()
+                            if (!sale.salesNumber.startsWith("SO-")) {
+                                OnlineSalesDetails(
+                                    sale = sale,
+                                    navController = navController
+                                )
+                            } else {
+                                InStoreSalesDetails(
+                                    sale = sale,
+                                    navController = navController
+                                )
+                            }
+                        } ?: run {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("Sale not found")
+                            }
                         }
                     }
                 }
             }
-
         }
     }
 }
 
 //ONLINE
 @Composable
-fun OnlineSalesDetails(){
+fun OnlineSalesDetails(sale: SalesData, navController: NavController){
     var showDialog by remember { mutableStateOf(false) }
 
     Column(
@@ -170,7 +187,7 @@ fun OnlineSalesDetails(){
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Client Name", //sale.productName
+                    text = "Client Name",
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -564,6 +581,7 @@ fun OrderStatus(status: String, statusDescription: String, dateTime: String) {
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
 fun UpdateStatusCard(status: String, statusDescription: String, dateTime: String) {
     var statusValue by remember { mutableStateOf(status) }
@@ -650,7 +668,7 @@ fun UpdateStatusCard(status: String, statusDescription: String, dateTime: String
 
 //INSTORE
 @Composable
-fun InStoreSalesDetails(){
+fun InStoreSalesDetails(sale: SalesData, navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -669,7 +687,7 @@ fun InStoreSalesDetails(){
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Product Name", //sale.productName
+                    text = sale.productName,
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -686,13 +704,13 @@ fun InStoreSalesDetails(){
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "SO-YYYYDDMM-Count",
+                    text = sale.salesNumber,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Text(
-                    text = "Timestamp",
+                    text = sale.date,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -707,13 +725,8 @@ fun InStoreSalesDetails(){
             ) {
                 InStorePriceInfoColumn(
                     title = "Selling Price",
-                    price = 1.00,
-                    weightUnit = "weight unit"
-                )
-                InStorePriceInfoColumn(
-                    title = "Purchase Cost",
-                    price = 1.00,
-                    weightUnit = "weight unit"
+                    price = sale.price,
+                    weightUnit = sale.weightUnit
                 )
                 Card(
                     modifier = Modifier.size(100.dp),
@@ -745,14 +758,13 @@ fun InStoreSalesDetails(){
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        InStoreDetailsCard()
-        NotesCard()
+        InStoreDetailsCard(sale = sale)
+        NotesCard(sale = sale)
     }
 }
 
 @Composable
-private fun InStoreDetailsCard(){
-    // Items Section
+private fun InStoreDetailsCard(sale: SalesData) {
     Column(
         modifier = Modifier
             .fillMaxWidth(),
@@ -773,14 +785,14 @@ private fun InStoreDetailsCard(){
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
-                ){
+                ) {
                     Text(
                         text = "Sale",
                         style = MaterialTheme.typography.titleMedium,
                         color = Green1
                     )
                     Text(
-                        text = "Date and time",
+                        text = sale.date,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -799,7 +811,7 @@ private fun InStoreDetailsCard(){
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            text = "1 x PHP1.00",
+                            text = "${sale.quantity} x PHP${String.format("%.2f", sale.price)}",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -810,7 +822,7 @@ private fun InStoreDetailsCard(){
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            text = "PHP1.00",
+                            text = "PHP${String.format("%.2f", sale.quantity * sale.price)}",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -821,6 +833,7 @@ private fun InStoreDetailsCard(){
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
 private fun InStorePriceInfoColumn(
     title: String,
@@ -834,12 +847,12 @@ private fun InStorePriceInfoColumn(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
-            text = "PHP ",
+            text = "PHP${String.format("%.2f", price)}",
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onBackground
         )
         Text(
-            text = "per ",
+            text = "per $weightUnit",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -847,7 +860,7 @@ private fun InStorePriceInfoColumn(
 }
 
 @Composable
-private fun NotesCard(){
+private fun NotesCard(sale: SalesData){
     Column(
         modifier = Modifier
             .fillMaxWidth(),

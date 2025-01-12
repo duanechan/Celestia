@@ -4,13 +4,16 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.SalesData
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 sealed class SalesState {
     data object LOADING : SalesState()
@@ -27,6 +30,33 @@ class SalesViewModel : ViewModel() {
     val salesState: LiveData<SalesState> = _salesState
 
     private var currentListener: ValueEventListener? = null
+    private var salesCount = 0
+
+    init {
+        initializeSalesCount()
+    }
+
+    private fun initializeSalesCount() {
+        viewModelScope.launch(Dispatchers.Main) {
+            try {
+                val snapshot = database.get().await()
+                if (snapshot.exists()) {
+                    salesCount = snapshot.children.maxOfOrNull { child ->
+                        val salesNumber = child.key ?: ""
+                        salesNumber.split("-").lastOrNull()?.toIntOrNull() ?: 0
+                    } ?: 0
+                }
+            } catch (e: Exception) {
+                salesCount = 0
+            }
+        }
+    }
+
+    fun getSalesCount(): Int = salesCount
+
+    private fun incrementSalesCount() {
+        salesCount++
+    }
 
     fun fetchSales(
         facility: String,
@@ -59,7 +89,8 @@ class SalesViewModel : ViewModel() {
                                         price = (data["price"] as? Number)?.toDouble() ?: 0.0,
                                         date = data["date"] as? String ?: "",
                                         notes = data["notes"] as? String ?: "",
-                                        facility = data["facility"] as? String ?: ""
+                                        facility = data["facility"] as? String ?: "",
+                                        weightUnit = data["weightUnit"] as? String ?: Constants.WEIGHT_GRAMS
                                     )
                                 } else {
                                     childSnapshot.getValue(SalesData::class.java)
@@ -119,7 +150,8 @@ class SalesViewModel : ViewModel() {
                             price = (data["price"] as? Number)?.toDouble() ?: 0.0,
                             date = data["date"] as? String ?: "",
                             notes = data["notes"] as? String ?: "",
-                            facility = data["facility"] as? String ?: ""
+                            facility = data["facility"] as? String ?: "",
+                            weightUnit = data["weightUnit"] as? String ?: Constants.WEIGHT_GRAMS
                         )
                         onComplete(sale)
                     } else {
@@ -136,11 +168,20 @@ class SalesViewModel : ViewModel() {
     }
 
     fun addSale(sale: SalesData, onSuccess: () -> Unit, onError: (String) -> Unit) {
-        val newSaleRef = database.push()
-        val saleWithId = sale.copy(salesNumber = newSaleRef.key ?: "")
+        if (sale.salesNumber.isEmpty()) {
+            onError("Invalid sales number")
+            return
+        }
 
-        newSaleRef.setValue(saleWithId)
-            .addOnSuccessListener { onSuccess() }
+        val newSaleRef = database.child(sale.salesNumber)
+        newSaleRef.setValue(sale)
+            .addOnSuccessListener {
+                val currentCount = sale.salesNumber.split("-").lastOrNull()?.toIntOrNull() ?: 0
+                if (currentCount > salesCount) {
+                    salesCount = currentCount
+                }
+                onSuccess()
+            }
             .addOnFailureListener { e -> onError(e.message ?: "Failed to add sale") }
     }
 

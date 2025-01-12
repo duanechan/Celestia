@@ -859,11 +859,18 @@ fun NavGraph(
                 facility.emails.contains(userEmail)
             }
 
+            LaunchedEffect(Unit) {
+                facilityViewModel.fetchFacilities()
+            }
+
             CoopPurchaseForm(
                 purchaseOrderViewModel = purchaseOrderViewModel,
                 vendorViewModel = vendorViewModel,
+                facilityViewModel = facilityViewModel,
+                productViewModel = productViewModel,
                 facilityName = userFacility?.name ?: "",
                 draftId = draftId,
+                currentEmail = userEmail,
                 purchaseNumber = purchaseNumber,
                 onSuccess = {
                     navController.popBackStack()
