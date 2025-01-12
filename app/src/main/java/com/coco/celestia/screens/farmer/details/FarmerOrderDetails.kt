@@ -48,16 +48,38 @@ fun FarmerOrderDetails(
     navController: NavController,
     orderId: String
 ) {
+    val uid = FirebaseAuth.getInstance().uid.toString()
     val orderViewModel: OrderViewModel = viewModel()
+    val userViewModel: UserViewModel = viewModel()
+    val farmerItemViewModel: FarmerItemViewModel = viewModel()
     val allOrders by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
+    val usersData by userViewModel.usersData.observeAsState(emptyList())
+    var showFulfillDialog by remember { mutableStateOf(false) }
+    var farmerName by remember { mutableStateOf("") }
 
-    // Log the order data to debug
-    Log.d("FarmerOrderDetails", "orderId: $orderId, allOrders: $allOrders")
+    LaunchedEffect(Unit) {
+        if (allOrders.isEmpty()) {
+            orderViewModel.fetchAllOrders(
+                filter = "",
+                role = "Farmer"
+            )
+        }
+        if (usersData.isEmpty()) {
+            userViewModel.fetchUsers()
+        }
+        if (uid.isNotEmpty()) {
+            farmerName = farmerItemViewModel.fetchFarmerName(uid)
+            farmerItemViewModel.getItems(uid)
+        }
+        Log.d("FarmerOrderDetails", "Fetched all orders: $allOrders")
+    }
 
     val orderData: OrderData? = remember(orderId, allOrders) {
         allOrders.find { it.orderId == orderId }
     }
+
+    Log.d("FarmerOrderDetails", "orderId: $orderId, orderData: $orderData")
 
     when {
         orderState == OrderState.LOADING -> {
@@ -84,6 +106,10 @@ fun FarmerOrderDetails(
         }
 
         else -> {
+            if (orderData.status == "INCOMPLETE") {
+                showFulfillDialog = true
+            }
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -92,23 +118,6 @@ fun FarmerOrderDetails(
             ) {
                 OrderDetailsCard(orderData = orderData, orderViewModel = orderViewModel, navController = navController)
                 Spacer(modifier = Modifier.height(20.dp))
-
-                Button(
-                    onClick = {
-                        navController.navigate(Screen.FarmerOrderMilestones.createRoute(orderId))
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50),
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .fillMaxWidth()
-                        .height(50.dp)
-                ) {
-                    Text(text = "Track Progress")
-                }
 
                 when (orderData.status) {
                     "REJECTED" -> {
@@ -136,7 +145,7 @@ fun FarmerOrderDetails(
                         )
                     }
                     else -> {
-                        // Removed OrderStatusUpdates from here
+//                        OrderStatusUpdates(orderData = orderData)
                     }
                 }
             }
@@ -230,6 +239,24 @@ fun OrderDetailsCard(
                 DisplayOrderDetail("Target Date", orderData.targetDate)
                 DisplayOrderDetail("Client Name", orderData.client)
                 DisplayOrderDetail("Address", "${orderData.street}, ${orderData.barangay}")
+
+                // Track Progress button
+                Button(
+                    onClick = {
+                        navController.navigate(Screen.FarmerOrderMilestones.createRoute(orderData.orderId))
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF4CAF50),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .fillMaxWidth()
+                        .height(50.dp)
+                ) {
+                    Text(text = "Track Progress")
+                }
 
                 // Display calamity-related UI if status matches allowed statuses
                 if (orderData.status in allowedStatuses) {
@@ -474,6 +501,15 @@ fun OrderStatusUpdates(orderData: OrderData) {
     var quantity by remember { mutableStateOf("") }
     val farmerItemViewModel: FarmerItemViewModel = viewModel()
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+    val allowedStatuses = listOf(
+        "ACCEPTED",
+        "PLANTING",
+        "PLANTED",
+        "GROWING",
+        "READY_FOR_HARVEST",
+        "HARVESTING",
+        "HARVESTED"
+    )
 
     LaunchedEffect(Unit) {
         farmerName = farmerItemViewModel.fetchFarmerName(uid)
@@ -685,6 +721,36 @@ fun OrderStatusUpdates(orderData: OrderData) {
                         fontSize = 12.sp,
                         color = Color.Gray
                     )
+                    if (displayStatus in allowedStatuses) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Update Cooperative with Progress",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black
+                        )
+                        OutlinedTextField(
+                            value = "",
+                            onValueChange = { /* Handle text change */ },
+                            label = { Text("Description") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
+                        )
+                        Button(
+                            onClick = { /* Handle submit action */ },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF4CAF50),
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                        ) {
+                            Text(text = "Submit Progress Update")
+                        }
+                    }
                 }
             }
         }
