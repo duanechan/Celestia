@@ -24,6 +24,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -73,12 +74,16 @@ fun OrderSummary(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 10.dp, vertical = 5.dp)
+            .padding(horizontal = 10.dp, vertical = 16.dp)
     ) {
         if (items.isNotEmpty()) {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 item { UserDetailsHeader() }
-                items(items) { ItemSummaryCard(it) }
+                item { FacilityCard(items) }
+//                items(items) { ItemSummaryCard(it) }
                 item {
                     OrderSummaryActions(
                         onPlaceOrder = {
@@ -122,9 +127,7 @@ fun UserDetailsHeader() {
         colors = CardDefaults.cardColors(containerColor = Green4),
         elevation = CardDefaults.elevatedCardElevation(8.dp),
         modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp)
-            .padding(vertical = 3.dp)
+            .fillMaxSize()
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -148,6 +151,74 @@ fun UserDetailsHeader() {
 }
 
 @Composable
+fun FacilityCard(items: List<BasketItem>){
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Green4),
+        elevation = CardDefaults.elevatedCardElevation(8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ){
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Facility header information
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Facility Name",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Green1
+                )
+                Text(
+                    text = "Order ID",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Green1
+                )
+            }
+
+            Divider(
+                color = MaterialTheme.colorScheme.onSurface,
+                thickness = 1.dp,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+            // List of ItemSummaryCards
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items.forEach { item ->
+                    ItemSummaryCard(item = item)
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ){
+                Text(
+                    text = "Total: ", //total ng checked items
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = "PHP 100",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.Black
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun ItemSummaryCard(item: BasketItem) {
     var image by remember { mutableStateOf<Uri?>(null) }
 
@@ -158,15 +229,15 @@ fun ItemSummaryCard(item: BasketItem) {
 //    }
 
     Card(
-        colors = CardDefaults.cardColors(containerColor = Green4),
+        colors = CardDefaults.cardColors(containerColor = White1),
         elevation = CardDefaults.elevatedCardElevation(8.dp),
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .fillMaxSize()
+//            .padding(vertical = 8.dp)
     ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(12.dp)
         ){
             Row(
@@ -182,7 +253,7 @@ fun ItemSummaryCard(item: BasketItem) {
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(RoundedCornerShape(10.dp))
-                            .background(White1)
+                            .background(Color.White)
                     )
                 }
                 Column(
