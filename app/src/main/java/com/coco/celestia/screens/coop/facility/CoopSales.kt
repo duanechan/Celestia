@@ -538,7 +538,12 @@ private fun OnlineSalesContentUI(
 
                 // Display orders for the selected status
                 OrdersCard(
-                    filteredOrders = statuses.filter { it.status == selectedOrderStatus }
+                    filteredOrders = salesData.filter { sale ->
+                        // For now showing all sales in the sales tab
+                        // You can add specific filtering logic here when needed
+                        true
+                    },
+                    navController = navController // Pass the navController
                 )
 //                SalesContent(sales = filteredAndSortedSales, navController = navController)
             }
@@ -688,7 +693,12 @@ private fun OnlineSalesContentUI(
 //                        // Display orders for the selected status
                           // TODO: Orders with "Completed" status will also be displayed in the sales tab
                         OrdersCard(
-                            filteredOrders = statuses.filter { it.status == selectedOrderStatus }
+                            filteredOrders = salesData.filter { sale ->
+                                // For now showing all sales in the sales tab
+                                // You can add specific filtering logic here when needed
+                                true
+                            },
+                            navController = navController // Pass the navController
                         )
                     }
                 }
@@ -698,13 +708,20 @@ private fun OnlineSalesContentUI(
 }
 
 @Composable
-fun OrdersCard(filteredOrders: List<OrderItem>) {
+fun OrdersCard(
+    filteredOrders: List<SalesData>,
+    navController: NavController
+) {
     if (filteredOrders.isNotEmpty()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
-            items(filteredOrders) { order ->
-                OrderStatusesCard(order = order, modifier = Modifier.padding(vertical = 8.dp))
+            items(filteredOrders) { sale ->
+                OrderStatusesCard(
+                    sale = sale,
+                    navController = navController,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
             }
         }
     } else {
@@ -719,14 +736,17 @@ fun OrdersCard(filteredOrders: List<OrderItem>) {
 
 @Composable
 fun OrderStatusesCard(
-    order: OrderItem,
+    sale: SalesData,
+    navController: NavController,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-            .clickable { },
+            .clickable {
+                navController.navigate(Screen.CoopSalesDetails.createRoute("TEST-ORDER-123"))
+            },
         colors = CardDefaults.cardColors(containerColor = White1)
     ) {
         Column(
@@ -760,7 +780,7 @@ fun OrderStatusesCard(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = order.status,
+                    text = "Pending",
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -803,11 +823,9 @@ fun OrderStatusesCard(
                     style = MaterialTheme.typography.titleMedium
                 )
             }
-
         }
     }
 }
-
 
 @Composable
 fun ItemCard(){

@@ -181,13 +181,6 @@ class ProductViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Fetches product data from the database based on the provided type.
-     *
-     * This function fetches product data from the database based on the provided type.
-     *
-     * @param type The type of product to fetch.
-     */
     fun fetchProductByType(type: String) {
         viewModelScope.launch {
             _productState.value = ProductState.LOADING
@@ -210,7 +203,14 @@ class ProductViewModel : ViewModel() {
                             val committedStock = child.child("committedStock").getValue(Double::class.java) ?: 0.0
                             val reorderPoint = child.child("reorderPoint").getValue(Double::class.java) ?: 0.0
                             val weightUnit = child.child("weightUnit").getValue(String::class.java) ?: Constants.WEIGHT_GRAMS
-                            val isInStore = child.child("inStore").getValue(Boolean::class.java) ?: true
+
+                            val rawInStore = child.child("inStore").getValue()
+                            val isInStore = when (rawInStore) {
+                                is Boolean -> rawInStore
+                                is String -> rawInStore.toLowerCase() == "true"
+                                else -> false
+                            }
+
                             val isActive = child.child("isActive").getValue(Boolean::class.java) ?: true
                             val dateAdded = child.child("dateAdded").getValue(String::class.java) ?: ""
                             val collectionMethod = child.child("collectionMethod").getValue(String::class.java) ?: Constants.COLLECTION_PICKUP
@@ -253,11 +253,6 @@ class ProductViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Fetches all product data from the database.
-     *
-     * This function fetches all product data from the database.
-     */
     fun fetchProducts(
         filter: String,
         role: String
@@ -286,12 +281,11 @@ class ProductViewModel : ViewModel() {
                             val reorderPoint = child.child("reorderPoint").getValue(Double::class.java) ?: 0.0
                             val weightUnit = child.child("weightUnit").getValue(String::class.java) ?: Constants.WEIGHT_GRAMS
 
-                            // Handle boolean conversion properly
                             val rawInStore = child.child("inStore").getValue()
                             val isInStore = when (rawInStore) {
                                 is Boolean -> rawInStore
                                 is String -> rawInStore.toLowerCase() == "true"
-                                else -> true
+                                else -> false
                             }
 
                             val rawIsActive = child.child("isActive").getValue()
@@ -327,7 +321,6 @@ class ProductViewModel : ViewModel() {
                                 paymentMethod = paymentMethod
                             )
 
-                            // Apply filtering
                             val matchesFilter = if (filterKeywords.isEmpty()) {
                                 true
                             } else {

@@ -1,6 +1,7 @@
 package com.coco.celestia.screens.coop.facility.forms
 
 import android.app.DatePickerDialog
+import android.util.Log
 import android.widget.DatePicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -68,8 +69,11 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
@@ -91,7 +95,6 @@ import java.time.format.TextStyle
 import java.util.Calendar
 import java.util.Locale
 
-// TODO: Add checks for every field
 // TODO: Dropdown for accounts (idk what categories to put there)
 //  - Removed Fields: Accounts, Shipment Preference, Reference Number, Terms and Conditions, Statuses
 //  - Renamed: Expected Date -> dateOfPurchase
@@ -246,7 +249,6 @@ fun CoopPurchaseForm(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Only show form content if user has a facility
                 if (userFacility != null) {
                     PurchaseFormHeader(
                         purchaseOrderData = purchaseOrderData,
@@ -260,11 +262,13 @@ fun CoopPurchaseForm(
                     // Items Section
                     PurchaseFormItemsSection(
                         items = items,
+                        productViewModel = productViewModel,
                         onShowAddItem = { showAddItemDialog = true },
                         onRemoveItem = { index ->
                             items = items.filterIndexed { i, _ -> i != index }
                             hasErrors = !validateForm()
-                        }
+                        },
+                        showErrorMessages = showErrorMessages
                     )
 
                     // Notes Section
@@ -497,7 +501,7 @@ fun PurchaseFormHeader(
             modifier = Modifier.fillMaxWidth()
         ) {
             OutlinedTextField(
-                value = purchaseOrderData.vendor,
+                value = purchaseOrderData.vendor.ifBlank { "None" },
                 onValueChange = { },
                 readOnly = true,
                 label = { Text("Select Vendor") },
@@ -562,9 +566,13 @@ fun PurchaseFormHeader(
 @Composable
 fun PurchaseFormItemsSection(
     items: List<PurchaseOrderItem>,
+    productViewModel: ProductViewModel,
     onShowAddItem: () -> Unit,
-    onRemoveItem: (Int) -> Unit
+    onRemoveItem: (Int) -> Unit,
+    showErrorMessages: Boolean = false
 ) {
+    val products by productViewModel.productData.observeAsState(initial = emptyList())
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -580,11 +588,39 @@ fun PurchaseFormItemsSection(
             colors = ButtonDefaults.buttonColors(
                 containerColor = Green1,
                 contentColor = Color.White
-            )
+            ),
+            modifier = Modifier.fillMaxWidth()
         ) {
             Icon(Icons.Default.Add, contentDescription = null)
             Spacer(modifier = Modifier.width(4.dp))
             Text("Add Item")
+        }
+
+        if (showErrorMessages && items.isEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Warning,
+                        contentDescription = "Warning",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                    Text(
+                        "You must add at least one item to the purchase order",
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
         }
 
         LazyColumn(
@@ -594,6 +630,8 @@ fun PurchaseFormItemsSection(
         ) {
             items(items.size) { index ->
                 val item = items[index]
+                val product = products.find { it.productId == item.productId }
+
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -612,11 +650,31 @@ fun PurchaseFormItemsSection(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = item.itemName,
-                                style = MaterialTheme.typography.titleSmall,
-                                modifier = Modifier.weight(1f)
-                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                if (product != null) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = if (product.isInStore) Icons.Default.Home else Icons.Default.ShoppingCart,
+                                            contentDescription = if (product.isInStore) "In Store" else "Online",
+                                            modifier = Modifier.size(16.dp),
+                                            tint = MaterialTheme.colorScheme.secondary
+                                        )
+                                        Text(
+                                            text = if (product.isInStore) "In Store" else "Online",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.secondary
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = item.itemName,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    modifier = Modifier.padding(top = 4.dp)
+                                )
+                            }
                             IconButton(
                                 onClick = { onRemoveItem(index) },
                                 modifier = Modifier.size(24.dp)
@@ -631,7 +689,8 @@ fun PurchaseFormItemsSection(
 
                         Text(
                             text = item.description,
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = 4.dp)
                         )
 
                         Row(
@@ -691,6 +750,7 @@ fun PurchaseOrderItemForm(
     currentEmail: String,
     currentStockMap: Map<String, Int>
 ) {
+    var selectedProductId by remember { mutableStateOf("") }
     var itemName by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("") }
@@ -699,6 +759,8 @@ fun PurchaseOrderItemForm(
     var showErrorMessages by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
     var hasInitialFetch by remember { mutableStateOf(false) }
+    var isInStore by remember { mutableStateOf<Boolean?>(null) }
+    var productTypeExpanded by remember { mutableStateOf(false) }
 
     val products by productViewModel.productData.observeAsState(initial = emptyList())
     val productState by productViewModel.productState.observeAsState(initial = ProductState.LOADING)
@@ -710,11 +772,11 @@ fun PurchaseOrderItemForm(
 
     val currentStock = currentStockMap[itemName] ?: 0
 
-    val selectedProduct = products.find { it.name == itemName }
+    val selectedProduct = products.find { it.productId == selectedProductId }
 
     val availableProducts = products.filter { product ->
         product.isActive &&
-                product.isInStore &&
+                (isInStore == null || product.isInStore == isInStore) &&
                 product.type == userFacility?.name
     }.sortedBy { it.name }
 
@@ -723,14 +785,15 @@ fun PurchaseOrderItemForm(
                 quantity.isNotBlank() &&
                 rate.isNotBlank() &&
                 quantity.toIntOrNull() != null &&
-                rate.toDoubleOrNull() != null
+                rate.toDoubleOrNull() != null &&
+                isInStore != null
     }
 
     LaunchedEffect(Unit) {
         facilityViewModel.fetchFacilities()
     }
 
-    LaunchedEffect(userFacility?.name) {
+    LaunchedEffect(userFacility?.name, isInStore) {
         if (userFacility != null && (!hasInitialFetch || products.isEmpty())) {
             productViewModel.fetchProducts("", "Admin")
             hasInitialFetch = true
@@ -763,144 +826,206 @@ fun PurchaseOrderItemForm(
                             color = MaterialTheme.colorScheme.error
                         )
                     }
-                    productState == ProductState.LOADING -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.CenterHorizontally),
-                            color = Green1
-                        )
-                    }
-                    productState == ProductState.EMPTY -> {
-                        Text(
-                            text = "No products available",
-                            modifier = Modifier.align(Alignment.CenterHorizontally),
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                    productState == ProductState.SUCCESS -> {
-                        // Product Dropdown
+                    else -> {
+                        // Product Type Dropdown
                         ExposedDropdownMenuBox(
-                            expanded = expanded,
-                            onExpandedChange = { expanded = it },
+                            expanded = productTypeExpanded,
+                            onExpandedChange = { productTypeExpanded = it },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             OutlinedTextField(
-                                value = itemName,
+                                value = when (isInStore) {
+                                    true -> "In Store"
+                                    false -> "Online"
+                                    null -> ""
+                                },
                                 onValueChange = {},
                                 readOnly = true,
-                                label = { Text("Select Product") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                label = { Text("Select Product Type") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = productTypeExpanded) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .menuAnchor(),
                                 colors = textFieldColors,
-                                isError = showErrorMessages && itemName.isBlank(),
-                                supportingText = if (showErrorMessages && itemName.isBlank()) {
-                                    { Text("Please select a product") }
+                                isError = showErrorMessages && isInStore == null,
+                                supportingText = if (showErrorMessages && isInStore == null) {
+                                    { Text("Please select product type") }
                                 } else null
                             )
 
                             ExposedDropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }
+                                expanded = productTypeExpanded,
+                                onDismissRequest = { productTypeExpanded = false }
                             ) {
-                                availableProducts.forEach { product ->
+                                listOf(
+                                    "In Store" to true,
+                                    "Online" to false
+                                ).forEach { (label, value) ->
                                     DropdownMenuItem(
-                                        text = {
-                                            Column {
-                                                Text(product.name)
-                                                Row(
-                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                                ) {
-                                                    Text(
-                                                        "Price: ₱${product.price}",
-                                                        style = MaterialTheme.typography.bodySmall,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                    )
-                                                    Text(
-                                                        "Unit: ${product.weightUnit}",
-                                                        style = MaterialTheme.typography.bodySmall,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                    )
-                                                }
-                                            }
-                                        },
+                                        text = { Text(label) },
                                         onClick = {
-                                            itemName = product.name
-                                            rate = product.price.toString()
-                                            weightUnit = product.weightUnit
-                                            expanded = false
+                                            isInStore = value
+                                            itemName = "" // Reset product selection
+                                            selectedProductId = "" // Reset selected product ID
+                                            productTypeExpanded = false
                                         }
                                     )
                                 }
                             }
                         }
 
-                        // Display current stock and weight unit
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Current Stock: $currentStock",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = "Unit: $weightUnit",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                        when (productState) {
+                            ProductState.LOADING -> {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                                    color = Green1
+                                )
+                            }
+                            ProductState.EMPTY -> {
+                                Text(
+                                    text = "No products available",
+                                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                            ProductState.SUCCESS -> {
+                                if (availableProducts.isEmpty()) {
+                                    Text(
+                                        text = "No products available for selected product type",
+                                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                } else {
+                                    // Product Dropdown
+                                    ExposedDropdownMenuBox(
+                                        expanded = expanded,
+                                        onExpandedChange = { expanded = it },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        OutlinedTextField(
+                                            value = itemName,
+                                            onValueChange = {},
+                                            readOnly = true,
+                                            label = { Text("Select Product") },
+                                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .menuAnchor(),
+                                            colors = textFieldColors,
+                                            isError = showErrorMessages && itemName.isBlank(),
+                                            supportingText = if (showErrorMessages && itemName.isBlank()) {
+                                                { Text("Please select a product") }
+                                            } else null
+                                        )
+
+                                        ExposedDropdownMenu(
+                                            expanded = expanded,
+                                            onDismissRequest = { expanded = false }
+                                        ) {
+                                            availableProducts.forEach { product ->
+                                                DropdownMenuItem(
+                                                    text = {
+                                                        Column {
+                                                            Text("${product.name} (${if (product.isInStore) "In Store" else "Online"})")
+                                                            Row(
+                                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                            ) {
+                                                                Text(
+                                                                    "Price: ₱${product.price}",
+                                                                    style = MaterialTheme.typography.bodySmall,
+                                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                                )
+                                                                Text(
+                                                                    "Unit: ${product.weightUnit}",
+                                                                    style = MaterialTheme.typography.bodySmall,
+                                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                                )
+                                                            }
+                                                        }
+                                                    },
+                                                    onClick = {
+                                                        itemName = product.name
+                                                        selectedProductId = product.productId
+                                                        rate = product.price.toString()
+                                                        weightUnit = product.weightUnit
+                                                        expanded = false
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    if (itemName.isNotBlank()) {
+                                        // Display current stock and weight unit
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "Current Stock: $currentStock",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                            Text(
+                                                text = "Unit: $weightUnit",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+
+                                        OutlinedTextField(
+                                            value = description,
+                                            onValueChange = { description = it },
+                                            label = { Text("Description (Optional)") },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            colors = textFieldColors
+                                        )
+
+                                        OutlinedTextField(
+                                            value = quantity,
+                                            onValueChange = { if (it.all { char -> char.isDigit() }) quantity = it },
+                                            label = { Text("Quantity") },
+                                            isError = showErrorMessages && (quantity.isBlank() || quantity.toIntOrNull() == null),
+                                            supportingText = {
+                                                if (showErrorMessages && quantity.isBlank()) {
+                                                    Text("Quantity is required")
+                                                } else if (showErrorMessages && quantity.toIntOrNull() == null) {
+                                                    Text("Please enter a valid number")
+                                                }
+                                            },
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                            modifier = Modifier.fillMaxWidth(),
+                                            colors = textFieldColors
+                                        )
+
+                                        OutlinedTextField(
+                                            value = rate,
+                                            onValueChange = {},
+                                            readOnly = true,
+                                            label = { Text("Price per Unit") },
+                                            isError = showErrorMessages && (rate.isBlank() || rate.toDoubleOrNull() == null),
+                                            supportingText = {
+                                                if (showErrorMessages && rate.isBlank()) {
+                                                    Text("Rate is required")
+                                                } else if (showErrorMessages && rate.toDoubleOrNull() == null) {
+                                                    Text("Please enter a valid number")
+                                                }
+                                            },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            colors = textFieldColors
+                                        )
+                                    }
+                                }
+                            }
+                            is ProductState.ERROR -> {
+                                Text(
+                                    text = (productState as ProductState.ERROR).message,
+                                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
                         }
-
-                        OutlinedTextField(
-                            value = description,
-                            onValueChange = { description = it },
-                            label = { Text("Description (Optional)") },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = textFieldColors
-                        )
-
-                        OutlinedTextField(
-                            value = quantity,
-                            onValueChange = { if (it.all { char -> char.isDigit() }) quantity = it },
-                            label = { Text("Quantity") },
-                            isError = showErrorMessages && (quantity.isBlank() || quantity.toIntOrNull() == null),
-                            supportingText = {
-                                if (showErrorMessages && quantity.isBlank()) {
-                                    Text("Quantity is required")
-                                } else if (showErrorMessages && quantity.toIntOrNull() == null) {
-                                    Text("Please enter a valid number")
-                                }
-                            },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = textFieldColors
-                        )
-
-                        OutlinedTextField(
-                            value = rate,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Price per Unit") },
-                            isError = showErrorMessages && (rate.isBlank() || rate.toDoubleOrNull() == null),
-                            supportingText = {
-                                if (showErrorMessages && rate.isBlank()) {
-                                    Text("Rate is required")
-                                } else if (showErrorMessages && rate.toDoubleOrNull() == null) {
-                                    Text("Please enter a valid number")
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = textFieldColors
-                        )
-                    }
-                    productState is ProductState.ERROR -> {
-                        Text(
-                            text = (productState as ProductState.ERROR).message,
-                            modifier = Modifier.align(Alignment.CenterHorizontally),
-                            color = MaterialTheme.colorScheme.error
-                        )
                     }
                 }
             }
@@ -927,6 +1052,7 @@ fun PurchaseOrderItemForm(
                             onAddItem(
                                 PurchaseOrderItem(
                                     itemName = itemName,
+                                    productId = selectedProductId,
                                     description = description,
                                     quantity = quantity.toInt(),
                                     rate = rate.toDouble()

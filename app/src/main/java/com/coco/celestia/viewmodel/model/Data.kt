@@ -207,6 +207,7 @@ data class PurchaseOrder(
 
 data class PurchaseOrderItem(
     val itemName: String = "",
+    val productId: String = "",
     val description: String = "",
     val account: String = "",
     val quantity: Int = 0,
