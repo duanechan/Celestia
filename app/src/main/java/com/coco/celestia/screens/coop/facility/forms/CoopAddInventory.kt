@@ -83,6 +83,7 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 // TODO: Add checks for every field
+// TODO: Paayos Collection Method and Payment Method!
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalCoilApi::class)
 @Composable
@@ -451,6 +452,7 @@ fun AddProductForm(
             }
         }
 
+        //TODO: Paayos to thank you!
         // Availability Settings Section
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -482,8 +484,11 @@ fun AddProductForm(
                     )
                 }
 
+                var isPickupChecked by remember { mutableStateOf(false) } // State for Pickup switch
+                var isDeliveredChecked by remember { mutableStateOf(false) }
+
                 AnimatedVisibility(
-                    visible = !isInStore,
+                    visible = true,
                     enter = fadeIn() + expandVertically(),
                     exit = fadeOut() + shrinkVertically()
                 ) {
@@ -491,9 +496,10 @@ fun AddProductForm(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        // Collection Method
                         Text(
                             text = "Collection Method",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.padding(top = 8.dp)
                         )
@@ -504,17 +510,59 @@ fun AddProductForm(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(if (isDelivery) "Delivery" else "Pickup")
+                            Text("Pickup")
                             Switch(
-                                checked = isDelivery,
-                                onCheckedChange = onCollectionMethodChange,
-                                modifier = Modifier.semantics { testTag = "android:id/CollectionMethodSwitch" }
+                                checked = isPickupChecked,
+                                onCheckedChange = { isPickupChecked = it },
+                                modifier = Modifier.semantics { testTag = "android:id/PickupSwitch" }
+                            )
+                        }
+                        // Display the text field only if the switch is toggled on
+                        if (isPickupChecked) {
+                            OutlinedTextField(
+                                value = "", // Initial value
+                                onValueChange = {}, // No action for now
+                                label = { Text("Pick Up Location (Enter pick up location here)") },
+                                placeholder = { Text("Enter pick up location here") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics { testTag = "android:id/PickUpLocation" }
                             )
                         }
 
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Delivery")
+                            Switch(
+                                checked = isDeliveredChecked, // Default unchecked
+                                onCheckedChange = { isDeliveredChecked = it }, // No action
+                                modifier = Modifier.semantics { testTag = "android:id/DeliverySwitch" }
+                            )
+                        }
+                        // Display the text field only if the switch is toggled on
+                        if (isDeliveredChecked) {
+                            OutlinedTextField(
+                                value = "", // Initial value
+                                onValueChange = {}, // No action for now
+                                label = { Text("Delivery Details (Enter delivery/courier used)") },
+                                placeholder = { Text("Enter delivery/courier used") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics { testTag = "android:id/PickUpLocation" }
+                            )
+                        }
+
+                        var isCashChecked by remember { mutableStateOf(false) }
+                        var isGCashChecked by remember { mutableStateOf(false) }
+                        // Payment Method
                         Text(
                             text = "Payment Method",
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Medium,
                             modifier = Modifier.padding(top = 8.dp)
                         )
@@ -525,11 +573,50 @@ fun AddProductForm(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(if (isGcash) "GCash" else "Cash")
+                            Text("Cash")
                             Switch(
-                                checked = isGcash,
-                                onCheckedChange = onPaymentMethodChange,
-                                modifier = Modifier.semantics { testTag = "android:id/PaymentMethodSwitch" }
+                                checked = isCashChecked, // Default unchecked
+                                onCheckedChange = { isCashChecked = it }, // No action
+                                modifier = Modifier.semantics { testTag = "android:id/CashSwitch" }
+                            )
+                        }
+                        // Display the text field only if the switch is toggled on
+                        if (isCashChecked) {
+                            OutlinedTextField(
+                                value = "", // Initial value
+                                onValueChange = {}, // No action for now
+                                label = { Text("Cash Details (Enter instructions or something)") },
+                                placeholder = { Text("Enter instructions or something") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics { testTag = "android:id/PickUpLocation" }
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("GCash")
+                            Switch(
+                                checked = isGCashChecked, // Default unchecked
+                                onCheckedChange = { isGCashChecked = it }, // No action
+                                modifier = Modifier.semantics { testTag = "android:id/GCashSwitch" }
+                            )
+                        }
+                        // Display the text field only if the switch is toggled on
+                        if (isGCashChecked) {
+                            OutlinedTextField(
+                                value = "", // Initial value
+                                onValueChange = {}, // No action for now
+                                label = { Text("GCash number (Enter GCash Number or Numbers)") },
+                                placeholder = { Text("Enter GCash Number or Numbers") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics { testTag = "android:id/PickUpLocation" }
                             )
                         }
                     }
