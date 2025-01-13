@@ -24,6 +24,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -160,40 +161,54 @@ fun ItemSummaryCard(item: BasketItem) {
         colors = CardDefaults.cardColors(containerColor = Green4),
         elevation = CardDefaults.elevatedCardElevation(8.dp),
         modifier = Modifier
-            .height(300.dp)
-            .padding(vertical = 3.dp)
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        ){
             Row(
-                modifier = Modifier
-            ) {
-                Box(modifier = Modifier.padding(12.dp)) {
+                modifier = Modifier.align(Alignment.TopStart)
+            ){
+                Box(
+                    modifier = Modifier
+                        .size(90.dp)
+                ){
                     Image(
                         painter = rememberImagePainter(image),
                         contentDescription = item.product,
                         modifier = Modifier
-                            .width(100.dp)
+                            .fillMaxSize()
                             .clip(RoundedCornerShape(10.dp))
                             .background(White1)
                     )
                 }
-                Column(verticalArrangement = Arrangement.SpaceBetween) {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 12.dp, end = 12.dp)
-                    ) {
-                        Text(text = item.product, fontWeight = FontWeight.Bold, color = Green1)
-                        Text(text = "Php ${item.price}", fontWeight = FontWeight.Bold, color = Green1)
-                    }
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp)
+                ){
+                    Text(
+                        text = item.product,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Green1
+                    )
+                    Text(
+                        text = "5kg x Php 10", // price per item
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Green1
+                    )
+                    Text(
+                        text = "PHP 50", // total price
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Green1
+                    )
                 }
             }
-            Row(modifier = Modifier.padding()) {
-                Text(text = item.product, fontWeight = FontWeight.Bold, color = Green1)
-            }
         }
+
     }
 }
