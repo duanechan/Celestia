@@ -3,6 +3,7 @@ package com.coco.celestia.screens.client
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,12 +21,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -109,16 +114,33 @@ fun OrderSummary(
 fun OrderSummaryActions(
     onPlaceOrder: () -> Unit
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize()
+    Card(
+        modifier = Modifier.fillMaxSize(),
+        colors = CardDefaults.cardColors(containerColor = Green4),
+        elevation = CardDefaults.elevatedCardElevation(8.dp)
     ) {
-        Button(
-            onClick = { onPlaceOrder() },
-            colors = ButtonDefaults.buttonColors(containerColor = Green4),
-            elevation = ButtonDefaults.elevatedButtonElevation(4.dp),
-            modifier = Modifier.fillMaxWidth()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "Place Order", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Text(
+                text = "Total: PHP 100",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Button(
+                onClick = { onPlaceOrder() },
+                colors = ButtonDefaults.buttonColors(containerColor = White1),
+                elevation = ButtonDefaults.elevatedButtonElevation(4.dp),
+            ) {
+                Text(
+                    text = "Place Order",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.Black
+                )
+            }
         }
     }
 }
@@ -287,54 +309,90 @@ fun ItemSummaryCard(item: BasketItem) {
 }
 
 @Composable
-fun ClientCollectionMethod(){
+fun ClientCollectionMethod() {
+    var selectedMethod by remember { mutableStateOf("Pick Up") } // State to track selected method
+
     Card(
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Green4),
         elevation = CardDefaults.elevatedCardElevation(8.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-    ){
+    ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(10.dp)
         ) {
-            Text(
-                text = "Collection Method",
-                style = MaterialTheme.typography.titleMedium
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f) // Allocates space for this group
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = Green1
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Collection Method",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                Text(
+                    text = "Available In",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            // Card containing collection method options
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp),
-                colors = CardDefaults.cardColors(containerColor = White1)
+                colors = CardDefaults.cardColors(containerColor = White1),
+                elevation = CardDefaults.elevatedCardElevation(4.dp),
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.padding(16.dp)
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-
-                        // Product Name and Price
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                    listOf(
+                        "Pick Up" to "Pick up location here",
+                        "Delivery" to "Couriers here or etc"
+                    ).forEach { (method, description) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { selectedMethod = method }
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "Pick Up",
-                                style = MaterialTheme.typography.titleMedium
+                            RadioButton(
+                                selected = selectedMethod == method,
+                                onClick = { selectedMethod = method },
+                                colors = RadioButtonDefaults.colors(selectedColor = Green1)
                             )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = method,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    text = description,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray // Optional for better visual distinction
+                                )
+                            }
                         }
+                        Divider(
+                            color = Color.LightGray,
+                            thickness = 1.dp,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
                     }
                 }
             }
@@ -343,54 +401,90 @@ fun ClientCollectionMethod(){
 }
 
 @Composable
-fun ClientPaymentMethod(){
+fun ClientPaymentMethod() {
+    var selectedMethod by remember { mutableStateOf("Cash") } // State to track selected method
+
     Card(
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Green4),
         elevation = CardDefaults.elevatedCardElevation(8.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-    ){
+    ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.padding(10.dp)
         ) {
-            Text(
-                text = "Payment Method",
-                style = MaterialTheme.typography.titleMedium
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f) // Allocates space for this group
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = Green1
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Payment Method",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                Text(
+                    text = "Available In",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            // Card containing payment options
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp),
-                colors = CardDefaults.cardColors(containerColor = White1)
+                colors = CardDefaults.cardColors(containerColor = White1),
+                elevation = CardDefaults.elevatedCardElevation(4.dp),
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier.padding(16.dp)
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-
-                        // Product Name and Price
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                    listOf(
+                        "Cash" to "Pay using cash upon delivery.",
+                        "G-Cash" to "G-Cash number here."
+                    ).forEach { (method, description) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { selectedMethod = method }
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "Cash",
-                                style = MaterialTheme.typography.titleMedium
+                            RadioButton(
+                                selected = selectedMethod == method,
+                                onClick = { selectedMethod = method },
+                                colors = RadioButtonDefaults.colors(selectedColor = Green1)
                             )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = method,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    text = description,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray // Optional for better visual distinction
+                                )
+                            }
                         }
+                        Divider(
+                            color = Color.LightGray,
+                            thickness = 1.dp,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
                     }
                 }
             }
