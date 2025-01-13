@@ -107,9 +107,11 @@ fun ClientOrder(
                 val filters = listOf(
                     "Pending",
                     "Confirmed",
-                    "For Pick Up",
                     "To Deliver",
-                    "Delivered"
+                    "To Recieve",
+                    "Completed",
+                    "Cancelled",
+                    "Return/Refund"
                 )
                 var selectedTabIndex by remember { mutableStateOf(0) }
 

@@ -139,11 +139,13 @@ fun CoopSalesDetails(
                         currentSale?.let { sale ->
                             if (!sale.salesNumber.startsWith("SO-")) {
                                 OnlineSalesDetails(
+//                                InStoreSalesDetails(
                                     sale = sale,
                                     navController = navController
                                 )
                             } else {
                                 InStoreSalesDetails(
+//                                OnlineSalesDetails(
                                     sale = sale,
                                     navController = navController
                                 )
@@ -594,9 +596,11 @@ fun UpdateStatusCard(status: String, statusDescription: String, dateTime: String
     val statusOptions = mapOf(
         "Pending" to "Your order is pending confirmation.",
         "Confirmed" to "Your order has been confirmed.",
-        "Shipped" to "Your order is on the way.",
-        "Delivered" to "Your order has been delivered.",
-        "Cancelled" to "Your order has been cancelled."
+        "To Deliver" to "Your order is to be handed to courier.",
+        "To Receive" to "Your order is ready to be picked up/ has been shipped by courier.",
+        "Completed" to "Your order has been completed.",
+        "Cancelled" to "Your order has been cancelled.",
+//        "Return/Refund" to "Client has requested for Return/Refund of items.",
     )
 
     Row(

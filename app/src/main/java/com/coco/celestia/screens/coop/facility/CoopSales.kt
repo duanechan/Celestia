@@ -408,11 +408,11 @@ private fun OnlineSalesContentUI(
     val statuses = listOf(
         OrderItem("Pending", 3),
         OrderItem("Confirmed", 5),
-        OrderItem("Delivering", 2),
-        OrderItem("Receiving", 1),
+        OrderItem("To Deliver", 2),
+        OrderItem("To Recieve", 1),
         OrderItem("Completed", 8),
         OrderItem("Cancelled", 0),
-        OrderItem("Returned", 1)
+        OrderItem("Return/Refund", 1)
     )
 
     val salesState by viewModel.salesState.observeAsState(SalesState.LOADING)
