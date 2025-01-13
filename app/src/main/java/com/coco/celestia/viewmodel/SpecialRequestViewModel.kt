@@ -63,7 +63,7 @@ class SpecialRequestViewModel : ViewModel() {
                     }
                 }.let { unsortedRequests ->
                     if (orderBy.isNotEmpty()) {
-                        val sortedRequests = unsortedRequests.sortedBy { request ->
+                        val sortedRequests = unsortedRequests.sortedByDescending { request ->
                             try {
                                 when (orderBy) {
                                     "Requested" -> request.dateRequested.let { LocalDateTime.parse(it, formatter) }

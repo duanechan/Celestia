@@ -72,7 +72,8 @@ data class SpecialRequest(
     val dateAccepted: String = "",
     val dateCompleted: String = "",
     val specialRequestUID: String = "",
-    val assignedMember: List<AssignedMember> = emptyList()
+    val assignedMember: List<AssignedMember> = emptyList(),
+    val trackRecord: List<TrackRecord> = emptyList()
 )
 
 data class ProductReq(
@@ -86,6 +87,11 @@ data class AssignedMember(
     val product: String = "",
     val quantity: Int = 0,
     val status: String = ""
+)
+
+data class TrackRecord(
+    val description: String = "",
+    val dateTime: String = ""
 )
 
 data class ProductReqValidation(

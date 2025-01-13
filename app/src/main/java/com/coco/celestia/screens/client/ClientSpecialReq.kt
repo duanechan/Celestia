@@ -56,10 +56,12 @@ import com.coco.celestia.ui.theme.Green4
 import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.AssignedMember
 import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.ProductReq
 import com.coco.celestia.viewmodel.model.ProductReqValidation
 import com.coco.celestia.viewmodel.model.SpecialRequest
+import com.coco.celestia.viewmodel.model.TrackRecord
 import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
@@ -178,12 +180,17 @@ fun AddSpecialReq(
     var additional by remember { mutableStateOf("") }
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     val userData by userViewModel.userData.observeAsState()
+    val trackRecord = remember { mutableStateListOf<TrackRecord>() }
 
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
     val currentDateTime = LocalDateTime.now()
     val formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
     val formattedDateTime = currentDateTime.format(formatter)
+
+    val parsedDateTme = LocalDateTime.parse(formattedDateTime, formatter)
+    val updatedDateTime = parsedDateTme.plusSeconds(1)
+    val plusOneDateTime = updatedDateTime.format(formatter)
 
     var subjectEmpty by remember { mutableStateOf(false) }
     var targetDateEmpty by remember { mutableStateOf(false) }
@@ -442,6 +449,18 @@ fun AddSpecialReq(
 
                 if (!subjectEmpty && !targetDateEmpty && !collectionMethodEmpty &&
                     productEmpty.all { !it.name && !it.quantity }) {
+                    val orderPlaced = TrackRecord (
+                        description = "Order Request is placed.",
+                        dateTime = formattedDateTime
+                    )
+
+                    val orderReview = TrackRecord(
+                        description = "Order Request is being reviewed.",
+                        dateTime = plusOneDateTime
+                    )
+                    trackRecord.add(orderPlaced)
+                    trackRecord.add(orderReview)
+
                     val specialReq = SpecialRequest (
                         subject = subject,
                         description = description,
@@ -454,7 +473,8 @@ fun AddSpecialReq(
                         status = "To Review",
                         name = "${userData?.firstname} ${userData?.lastname}",
                         dateRequested = formattedDateTime,
-                        specialRequestUID = "SR-${UUID.randomUUID()}"
+                        specialRequestUID = "SR-${UUID.randomUUID()}",
+                        trackRecord = trackRecord
                     )
 
                     specialRequestViewModel.addSpecialRequest(
