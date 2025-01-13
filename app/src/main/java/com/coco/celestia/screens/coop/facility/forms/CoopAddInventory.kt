@@ -1,10 +1,17 @@
 package com.coco.celestia.screens.coop.facility.forms
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,8 +22,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -25,6 +35,8 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -40,15 +52,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
+import com.coco.celestia.R
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.White1
 import com.coco.celestia.viewmodel.FacilityViewModel
@@ -66,7 +84,7 @@ import java.util.UUID
 
 // TODO: Add checks for every field
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalCoilApi::class)
 @Composable
 fun AddProductForm(
     navController: NavController,
@@ -102,6 +120,46 @@ fun AddProductForm(
     val email = FirebaseAuth.getInstance().currentUser?.email.orEmpty()
     var weightUnitExpanded by remember { mutableStateOf(false) }
     var vendorExpanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    var productImage by remember { mutableStateOf<Uri?>(null) }
+    var updatedProductImage by remember { mutableStateOf<Uri?>(null) }
+
+    val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
+        updatedProductImage = it
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                galleryLauncher.launch("image/*")
+            } else {
+                onEvent(Triple(
+                    ToastStatus.WARNING,
+                    "Grant app access to add product image.",
+                    System.currentTimeMillis()
+                ))
+            }
+        }
+    )
+
+    fun openGallery() {
+        val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+
+        when (ContextCompat.checkSelfPermission(context, permission)) {
+            PackageManager.PERMISSION_GRANTED -> {
+                galleryLauncher.launch("image/*")
+            }
+            else -> {
+                permissionLauncher.launch(permission)
+            }
+        }
+    }
+
     val userData by userViewModel.userData.observeAsState()
     val productName by productViewModel.productName.observeAsState("")
     val description by productViewModel.description.observeAsState("")
@@ -110,9 +168,6 @@ fun AddProductForm(
     val facilityData by facilityViewModel.facilitiesData.observeAsState(emptyList())
     var facilityName by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("") }
-
-    val currentRoute = navController.currentBackStackEntry?.destination?.route ?: ""
-    val isEditMode = currentRoute == Screen.EditProductInventory.route
 
     LaunchedEffect(uid) {
         userViewModel.fetchUser(uid)
@@ -139,6 +194,14 @@ fun AddProductForm(
         vendorViewModel.fetchVendors()
     }
 
+    LaunchedEffect(productId) {
+        if (isEditMode && productId.isNotBlank()) {
+            ImageService.fetchProductImage(productId) { uri ->
+                productImage = uri
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -147,12 +210,12 @@ fun AddProductForm(
             .semantics { testTag = "android:id/AddProductFormColumn" },
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        //Product ID (PID) and Product Image
+        // Product ID and Image Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
             colors = CardDefaults.cardColors(containerColor = White1)
-        ){
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -160,7 +223,6 @@ fun AddProductForm(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Start
             ) {
-                // OutlinedTextField
                 OutlinedTextField(
                     value = if (productId.isBlank()) {
                         val currentDateTime = LocalDateTime.now()
@@ -174,24 +236,42 @@ fun AddProductForm(
                     modifier = Modifier
                         .weight(1f)
                         .padding(end = 8.dp),
-                    enabled = false, // Make it read-only
+                    enabled = false,
                     colors = OutlinedTextFieldDefaults.colors(
-                        disabledTextColor = MaterialTheme.colorScheme.onSurface, // Keep text visible when disabled
+                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
                         disabledBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
                         disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     )
                 )
 
-                // Image Card
-                Card(
-                    modifier = Modifier.size(100.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                Box(
+                    modifier = Modifier.size(150.dp)
                 ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                    Image(
+                        painter = rememberImagePainter(
+                            data = updatedProductImage ?: productImage ?: R.drawable.product_icon,
+                        ),
+                        contentDescription = "Product Image",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .align(Alignment.Center),
+                        colorFilter = if (updatedProductImage == null && productImage == null)
+                            ColorFilter.tint(Green1) else null
+                    )
+
+                    FloatingActionButton(
+                        onClick = { openGallery() },
+                        shape = CircleShape,
+                        modifier = Modifier
+                            .size(35.dp)
+                            .align(Alignment.BottomEnd),
+                        containerColor = MaterialTheme.colorScheme.surface
                     ) {
-                        Text("+ Add\nImage", textAlign = TextAlign.Center)
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Change Image",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }
@@ -258,7 +338,6 @@ fun AddProductForm(
                             value = weightUnit.lowercase(),
                             onValueChange = {},
                             label = { Text("Unit") },
-                            singleLine = true,
                             trailingIcon = {
                                 ExposedDropdownMenuDefaults.TrailingIcon(weightUnitExpanded)
                             },
@@ -498,44 +577,53 @@ fun AddProductForm(
                         paymentMethod = if (isGcash) Constants.PAYMENT_GCASH else Constants.PAYMENT_CASH
                     )
 
-                    if (isEditMode) {
-                        productViewModel.updateProduct(product)
-                        onEvent(
-                            Triple(
-                                ToastStatus.SUCCESSFUL,
-                                "Product updated successfully",
-                                System.currentTimeMillis()
-                            )
-                        )
-                    } else {
-                        productViewModel.addProduct(product)
-                        onEvent(
-                            Triple(
-                                ToastStatus.SUCCESSFUL,
-                                "Product added successfully",
-                                System.currentTimeMillis()
-                            )
-                        )
-                    }
-                    onAddClick()
+                    updatedProductImage?.let { uri ->
+                        ImageService.uploadProductPicture(finalProductId, uri) { success ->
+                            if (success) {
+                                if (isEditMode) {
+                                    productViewModel.updateProduct(product)
+                                    onEvent(Triple(ToastStatus.SUCCESSFUL, "Product updated successfully", System.currentTimeMillis()))
+                                } else {
+                                    productViewModel.addProduct(product)
+                                    onEvent(Triple(ToastStatus.SUCCESSFUL, "Product added successfully", System.currentTimeMillis()))
+                                }
+                                onAddClick()
 
-                    if (isInStore) {
-                        navController.navigate(Screen.CoopInStoreProducts.route) {
-                            popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                                if (isInStore) {
+                                    navController.navigate(Screen.CoopInStoreProducts.route) {
+                                        popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                                    }
+                                } else {
+                                    navController.navigate(Screen.CoopOnlineProducts.route) {
+                                        popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                                    }
+                                }
+                            } else {
+                                onEvent(Triple(ToastStatus.FAILED, "Failed to upload image", System.currentTimeMillis()))
+                            }
                         }
-                    } else {
-                        navController.navigate(Screen.CoopOnlineProducts.route) {
-                            popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                    } ?: run {
+                        if (isEditMode) {
+                            productViewModel.updateProduct(product)
+                            onEvent(Triple(ToastStatus.SUCCESSFUL, "Product updated successfully", System.currentTimeMillis()))
+                        } else {
+                            productViewModel.addProduct(product)
+                            onEvent(Triple(ToastStatus.SUCCESSFUL, "Product added successfully", System.currentTimeMillis()))
+                        }
+                        onAddClick()
+
+                        if (isInStore) {
+                            navController.navigate(Screen.CoopInStoreProducts.route) {
+                                popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate(Screen.CoopOnlineProducts.route) {
+                                popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                            }
                         }
                     }
                 } else {
-                    onEvent(
-                        Triple(
-                            ToastStatus.WARNING,
-                            "Please fill in all required fields",
-                            System.currentTimeMillis()
-                        )
-                    )
+                    onEvent(Triple(ToastStatus.WARNING, "Please fill in all required fields", System.currentTimeMillis()))
                 }
             },
             modifier = Modifier
@@ -543,11 +631,7 @@ fun AddProductForm(
                 .padding(vertical = 16.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Green1)
         ) {
-            val buttonText = if (isEditMode) {
-                "Update Product"
-            } else {
-                "Add Product"
-            }
+            val buttonText = if (isEditMode) "Update Product" else "Add Product"
             Text(
                 text = buttonText,
                 modifier = Modifier.padding(vertical = 4.dp),

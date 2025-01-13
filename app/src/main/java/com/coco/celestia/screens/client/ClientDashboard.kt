@@ -148,8 +148,6 @@ fun FilterDialog(
     )
 }
 
-// TODO: Images for each product need to add
-
 @Composable
 fun ProductCatalog(
     productViewModel: ProductViewModel = viewModel(),
@@ -171,6 +169,9 @@ fun ProductCatalog(
 
     val currentDestination = navController.currentBackStackEntry?.destination?.route?.substringBefore("?")
     val isProductCatalogScreen = currentDestination == Screen.ProductCatalog.route
+
+    // Filter for online-only products
+    val onlineProducts = products?.filter { !it.isInStore }
 
     LaunchedEffect(currentSearchQuery) {
         productViewModel.fetchProducts(currentSearchQuery, role)
@@ -279,10 +280,10 @@ fun ProductCatalog(
                 }
             }
 
-            // Carousel
-            if (showCarousel && products != null) {
+            // Carousel - Updated to use onlineProducts
+            if (showCarousel && onlineProducts != null) {
                 item {
-                    val featuredProducts = products?.take(3)?.map { product ->
+                    val featuredProducts = onlineProducts.take(3).map { product ->
                         CarouselItem(
                             carouselId = product.productId,
                             imageRes = R.drawable.product_image,
@@ -290,7 +291,7 @@ fun ProductCatalog(
                             subtitle = product.description,
                             price = "Php ${product.price}/${product.weightUnit}"
                         )
-                    } ?: emptyList()
+                    }
 
                     if (featuredProducts.isNotEmpty()) {
                         SlideshowCarousel(
@@ -352,7 +353,7 @@ fun ProductCatalog(
 
                 productState is ProductState.SUCCESS -> {
                     if (currentSearchQuery.isNotEmpty()) {
-                        val searchResults = products?.filter { product ->
+                        val searchResults = onlineProducts?.filter { product ->
                             product.name.lowercase().contains(currentSearchQuery.lowercase()) ||
                                     product.type.lowercase().contains(currentSearchQuery.lowercase())
                         }
@@ -366,7 +367,7 @@ fun ProductCatalog(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = "No products found for '$currentSearchQuery'",
+                                        text = "No online products found for '$currentSearchQuery'",
                                         modifier = Modifier.padding(16.dp),
                                         fontFamily = mintsansFontFamily
                                     )
@@ -383,7 +384,7 @@ fun ProductCatalog(
                         }
                     } else {
                         facilities.forEach { facility ->
-                            val facilityProducts = products?.filter { product ->
+                            val facilityProducts = onlineProducts?.filter { product ->
                                 product.type.lowercase().contains(facility.name.lowercase())
                             }
 
@@ -399,7 +400,7 @@ fun ProductCatalog(
                             }
                         }
 
-                        if (facilities.isEmpty() || products?.isEmpty() == true) {
+                        if (facilities.isEmpty() || onlineProducts?.isEmpty() == true) {
                             item {
                                 Box(
                                     modifier = Modifier
@@ -409,7 +410,7 @@ fun ProductCatalog(
                                 ) {
                                     Text(
                                         text = if (facilities.isEmpty()) "No facilities available"
-                                        else "No products available",
+                                        else "No online products available",
                                         modifier = Modifier.padding(16.dp),
                                         fontFamily = mintsansFontFamily
                                     )
