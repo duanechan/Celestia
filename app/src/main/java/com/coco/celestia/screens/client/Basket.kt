@@ -151,7 +151,7 @@ fun Basket(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = White1)
+                colors = CardDefaults.cardColors(containerColor = Green4)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp)
@@ -167,7 +167,7 @@ fun Basket(
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            text = "Items: 2", //kung ilang product under nung facility
+                            text = "Order ID", //Format: OID-YYYYDDMM-Count
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -204,39 +204,32 @@ fun BasketActions(
 ) {
     //Total
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
+        modifier = Modifier.fillMaxSize(),
         colors = CardDefaults.cardColors(containerColor = Green4)
     ){
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ){
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ){
+            Text(
+                text = "Total: PHP 100 ", //total ng checked items
+                style = MaterialTheme.typography.titleMedium
+            )
+            Button(
+                onClick = { onCheckout() },
+                colors = ButtonDefaults.buttonColors(containerColor = White1),
+                elevation = ButtonDefaults.elevatedButtonElevation(4.dp),
+            ) {
                 Text(
-                    text = "Total: PHP 100 ", //total ng checked items
-                    style = MaterialTheme.typography.titleMedium
+                    text = "Checkout",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.Black
                 )
-                Button(
-                    onClick = { onCheckout() },
-                    colors = ButtonDefaults.buttonColors(containerColor = White1),
-                    elevation = ButtonDefaults.elevatedButtonElevation(4.dp),
-                ) {
-                    Text(
-                        text = "Checkout",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.Black
-                    )
-                }
             }
         }
-
     }
 
 }
@@ -266,6 +259,7 @@ fun BasketItemCard(
     }
 
     Card(
+        colors = CardDefaults.cardColors(containerColor = White1),
         elevation = CardDefaults.elevatedCardElevation(8.dp),
         modifier = Modifier
             .fillMaxSize()
@@ -275,7 +269,6 @@ fun BasketItemCard(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Green4)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -320,7 +313,7 @@ fun BasketItemCard(
 //                            .fillMaxHeight()
                             .fillMaxSize()
                             .clip(RoundedCornerShape(10.dp))
-                            .background(White1)
+                            .background(Color.White)
                     )
                 }
                 Column(
