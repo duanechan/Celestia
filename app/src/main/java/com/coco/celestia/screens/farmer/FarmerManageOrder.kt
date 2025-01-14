@@ -1,7 +1,10 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.coco.celestia.screens.farmer
 
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -41,6 +44,8 @@ import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
@@ -57,6 +62,8 @@ import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.UserData
 import com.coco.celestia.viewmodel.ProductViewModel
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -66,6 +73,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FarmerItemViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun FarmerManageOrder(
@@ -96,156 +104,101 @@ fun FarmerManageOrder(
 
     Spacer(modifier = Modifier.width(30.dp))
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .background(color = BgColor)
-                .verticalScroll(rememberScrollState())
-                .semantics { testTag = "android:id/farmerManageOrderColumn" }
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .semantics { testTag = "android:id/farmerManageOrderSearchRow" },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search orders...", color = DarkGreen) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search Icon",
-                            tint = Cocoa
-                        )
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .background(color = White2, shape = RoundedCornerShape(16.dp))
-                        .border(BorderStroke(1.dp, color = DarkGreen), shape = RoundedCornerShape(16.dp))
-                        .semantics { testTag = "android:id/searchBar" },
-                    singleLine = true,
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        disabledIndicatorColor = Color.Transparent,
-                        errorIndicatorColor = Color.Transparent,
-                        focusedTextColor = Cocoa, // Text color when TextField is focused
-                        unfocusedTextColor = DarkGreen // Text color when TextField is not focused
-                    )
+    Column (
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        val pagerState = rememberPagerState (
+            pageCount = { 2 }
+        )
+        val coroutineScope = rememberCoroutineScope()
+
+        TabRow(
+            selectedTabIndex = pagerState.pageCount,
+            containerColor = Green4,
+            contentColor = Green1,
+            divider = {},
+            indicator = { tabPositions ->
+                TabRowDefaults.Indicator(
+                    modifier = Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
+                    height = 2.dp,
+                    color = Green1
                 )
             }
+        ) {
+            Tab(
+                selected = pagerState.currentPage == 0,
+                text = {
+                    Text(text = "In Progress")
+                },
+                onClick = {
+                    coroutineScope.launch {
+                        pagerState.animateScrollToPage(0)
+                    }
+                }
+            )
 
-            //SHORTCUTTED FILTERS
-            Row(
+            Tab(
+                selected = pagerState.currentPage == 1,
+                text = {
+                    Text(text = "Completed")
+                },
+                onClick = {
+                    coroutineScope.launch {
+                        pagerState.animateScrollToPage(1)
+                    }
+                }
+            )
+        }
+
+        HorizontalPager(
+            state = pagerState,
+            userScrollEnabled = false
+        ) { page ->
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .fillMaxHeight()
+                    .background(color = BgColor)
+                    .verticalScroll(rememberScrollState())
+                    .semantics { testTag = "android:id/farmerManageOrderColumn" }
             ) {
-                val sections = listOf("Recent", "Pending", "In Progress", "Calamity-Affected", "Rejected","Cancelled")
-
-                sections.forEach { section ->
-                    val buttonWidth = when (section) {
-                        "In Progress", "Calamity-Affected" -> 150.dp
-                        else -> 100.dp
-                    }
-
-                    Button(
-                        onClick = { selectedSection = section },
-                        colors = ButtonDefaults.buttonColors(containerColor = if (selectedSection == section) Green2 else Green3),
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .semantics { testTag = "android:id/farmerManageOrderSearchRow" },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text("Search orders...", color = DarkGreen) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search Icon",
+                                tint = Cocoa
+                            )
+                        },
                         modifier = Modifier
-                            .width(buttonWidth)
-                            .height(40.dp)
-                    ) {
-                        Text(
-                            text = section,
-                            color = Color.White,
-                            fontSize = 10.sp,
-                            textAlign = TextAlign.Center
+                            .weight(1f)
+                            .background(color = White2, shape = RoundedCornerShape(16.dp))
+                            .border(BorderStroke(1.dp, color = DarkGreen), shape = RoundedCornerShape(16.dp))
+                            .semantics { testTag = "android:id/searchBar" },
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            errorIndicatorColor = Color.Transparent,
+                            focusedTextColor = Cocoa, // Text color when TextField is focused
+                            unfocusedTextColor = DarkGreen // Text color when TextField is not focused
                         )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(15.dp))
-
-            when (orderState) {
-                is OrderState.LOADING -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-                is OrderState.ERROR -> {
-                    Text(
-                        "Failed to load orders: ${(orderState as OrderState.ERROR).message}",
-                        color = Color.Red,
-                        modifier = Modifier.padding(16.dp)
                     )
                 }
-                is OrderState.EMPTY -> {
-                    Text("No orders available.", modifier = Modifier.padding(16.dp))
-                }
-                is OrderState.SUCCESS -> {
-                    val filteredOrders = orderData.filter { order ->
-                        val matchesSearchQuery = order.orderId.contains(searchQuery, ignoreCase = true)
-                        val matchesSection = when (selectedSection) {
-                            "All" -> true
-                            "Recent" -> order.status in listOf("RECENTLY_UPDATED")
-                            "Pending" -> order.status in listOf("PENDING") //removed PARTIALLY FULFILLED
-                            "In Progress" -> order.status in listOf("ACCEPTED", "PLANTING", "PLANTED",
-                                "GROWING","READY FOR HARVEST", "HARVESTING", "HARVESTED", "DELIVERING", "COMPLETED") //removed DELIVERING
-                            "CalamityAffected" -> order.status == "CALAMITY_AFFECTED"
-                            "Cancelled" -> order.status == "CANCELLED" //added
-                            "Rejected" -> order.status == "REJECTED" //added
-                            else -> false
-                        }
-                        matchesSearchQuery && matchesSection
-                    }
-                    if (filteredOrders.isEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("No matching orders available.", color = DarkGreen)
-                        }
-                    } else {
-                        filteredOrders.forEach { order ->
-                            if (userData == null) {
-                                CircularProgressIndicator()
-                            } else {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(8.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        ManageOrderCards(navController, order, farmerName)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
             }
-            Spacer(modifier = Modifier.height(90.dp))
         }
     }
 }
@@ -317,7 +270,7 @@ fun ManageOrderCards(
     showStatus: Boolean = true
 ) {
     val clientName = order.client
-    val orderId = order.orderId.substring(6, 10).uppercase()
+    val orderId = order.orderId
     var displayStatus by remember { mutableStateOf("") }
     val fulfilledByFarmer = order.fulfilledBy.find { it.farmerName == farmerName }
 
