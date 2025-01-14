@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -26,8 +27,11 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -154,16 +158,16 @@ fun FarmerDashboard(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "Orders Overview",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = DarkGreen
-                            )
-                            TextButton(
-                                onClick = { showInSeasonDialog = true },
-                                modifier = Modifier.padding(start = 8.dp)
-                            ){}
+//                            Text(
+//                                text = "Orders Overview",
+//                                fontSize = 16.sp,
+//                                fontWeight = FontWeight.Bold,
+//                                color = DarkGreen
+//                            )
+//                            TextButton(
+//                                onClick = { showInSeasonDialog = true },
+//                                modifier = Modifier.padding(start = 8.dp)
+//                            ){}
                         }
                         FarmerOrderOverview(orders = orderData)
                     }
@@ -231,18 +235,18 @@ fun FarmerDashboard(
 fun FarmerOrderOverview(orders: List<OrderData>) {
     val currentMonth = LocalDate.now().month
 
-    val statusCounts = mapOf(
-        "In Progress" to 5,
-        "Pending" to 3,
-        "Accepted" to 7,
-        "Rejected" to 2
-    )
+    val statuses = listOf("Pending", "In Progress", "Accepted", "Rejected", "Calamity Affected", "Cancelled")
+    val statusCounts = statuses.associateWith { status ->
+        orders.count { it.status == status }
+    }
 
-    val statusIcons: Map<String, Any> = mapOf(
-        "In Progress" to R.drawable.hourglass,
+    val statusIcons = mapOf(
         "Pending" to Icons.Default.Refresh,
+        "In Progress" to R.drawable.hourglass,
         "Accepted" to Icons.Default.CheckCircle,
-        "Rejected" to Icons.Default.Close
+        "Rejected" to R.drawable.reject,
+        "Calamity Affected" to R.drawable.calamity,
+        "Cancelled" to R.drawable.cancelled
     )
 
     Column(
@@ -251,78 +255,112 @@ fun FarmerOrderOverview(orders: List<OrderData>) {
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
+        Text(
+            text = "Orders Overview",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
-            statusCounts.forEach { (status, count) ->
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    when (val icon = statusIcons[status]) {
-                        is Int -> {
-                            Icon(
-                                painter = painterResource(id = icon),
-                                contentDescription = "$status Icon",
-                                tint = Color.Unspecified,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                        is ImageVector -> {
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = "$status Icon",
-                                tint = when (status) {
-                                    "Accepted" -> Color(0xFF4CAF50) // Green
-                                    "Rejected" -> Color(0xFFF44336) // Red
-                                    "In Progress" -> Color(0xFF000000)
-                                    "Pending" -> Color(0xFF3F51B4) // Orange
-                                    else -> Color.Gray
-                                },
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                        else -> {
-                            Icon(
-                                imageVector = Icons.Default.Info,
-                                contentDescription = "Default Icon",
-                                tint = Color.Gray,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
+            statuses.chunked(3).forEach { rowStatuses ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    rowStatuses.forEach { status ->
+                        val count = statusCounts[status] ?: 0
+                        val icon = statusIcons[status] ?: Icons.Default.Info
+                        StatusBox(
+                            status = status,
+                            count = count,
+                            icon = icon,
+                            modifier = Modifier.weight(1f)
+                        )
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Status count
-                    Text(
-                        text = count.toString(),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
-
-                    // Status label
-                    Text(
-                        text = status,
-                        fontSize = 10.sp,
-                        color = Color.Gray
-                    )
+                    repeat(3 - rowStatuses.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
             }
         }
-        Spacer(modifier = Modifier.height(20.dp))
 
-        // Current month label
         Text(
             text = currentMonth.name.lowercase().replaceFirstChar { it.uppercase() },
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
             color = DarkGreen,
-            modifier = Modifier.padding(top = 15.dp)
+            modifier = Modifier.padding(top = 16.dp)
         )
     }
 }
 
-//adjust color of order box
+@Composable
+fun StatusBox(status: String, count: Int, icon: Any, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .height(120.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(White2)
+            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            when (icon) {
+                is Int -> {
+                    Icon(
+                        painter = painterResource(id = icon),
+                        contentDescription = "$status Icon",
+                        modifier = Modifier
+                            .size(30.dp),
+                        tint = DarkGreen
+                    )
+                }
+                is ImageVector -> {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = "$status Icon",
+                        modifier = Modifier
+                            .size(30.dp),
+                        tint = DarkGreen
+                    )
+                }
+                else -> {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "Default Icon",
+                        modifier = Modifier
+                            .size(30.dp),
+                        tint = DarkGreen
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "$count",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = status,
+                fontSize = 12.sp,
+                color = Color.Gray,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
 @Composable
 fun OrderStatusSection(
     navController: NavController,
