@@ -51,13 +51,13 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.ui.theme.Green1
-import com.coco.celestia.ui.theme.Green4
-import com.coco.celestia.ui.theme.mintsansFontFamily
+import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.AssignedMember
 import com.coco.celestia.viewmodel.model.Constants
+import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.ProductReq
 import com.coco.celestia.viewmodel.model.ProductReqValidation
 import com.coco.celestia.viewmodel.model.SpecialRequest
@@ -74,8 +74,10 @@ import java.util.UUID
 fun DisplaySpecialReq(
     navController: NavController
 ) {
-    Box (
-        modifier = Modifier.fillMaxSize()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Green4)
     ) {
         Column(
             modifier = Modifier
@@ -85,7 +87,6 @@ fun DisplaySpecialReq(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Green4)
             ) {
                 val filters = listOf(
                     "To Review",
@@ -109,8 +110,8 @@ fun DisplaySpecialReq(
                     )
 
                     TextField(
-                        value = "", //text
-                        onValueChange = {}, //newText -> text = newText
+                        value = "", // text
+                        onValueChange = {}, // newText -> text = newText
                         placeholder = { Text("Search") },
                         modifier = Modifier
                             .weight(1f),
@@ -124,6 +125,7 @@ fun DisplaySpecialReq(
                         )
                     )
                 }
+
                 ScrollableTabRow(
                     selectedTabIndex = selectedTabIndex,
                     edgePadding = 0.dp
@@ -147,13 +149,27 @@ fun DisplaySpecialReq(
                 }
 
                 Column {
-                    // Column for Orders
+                    // Placeholder OrderCard
+                    val placeholderOrder = OrderData(
+                        orderData = listOf(
+                            ProductData(name = "Product A", quantity = 2, price = 100.0),
+                            ProductData(name = "Product B", quantity = 1, price = 150.0)
+                        ),
+                        status = "To Review",
+                        collectionMethod = "Pickup",
+                        paymentMethod = "Cash"
+                    )
 
+                    OrderCard(
+                        order = placeholderOrder,
+                        index = "12345",
+                        navController = navController
+                    )
                 }
             }
         }
 
-        Icon (
+        Icon(
             painter = painterResource(R.drawable.add),
             contentDescription = "Add",
             modifier = Modifier
@@ -166,6 +182,7 @@ fun DisplaySpecialReq(
         )
     }
 }
+
 
 @Composable
 fun AddSpecialReq(

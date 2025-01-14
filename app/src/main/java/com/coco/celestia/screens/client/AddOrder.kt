@@ -779,7 +779,7 @@ fun ConfirmOrderRequestPanel(
                 transactionId = "Transaction-${UUID.randomUUID()}",
                 type = "OrderPlaced",
                 date = order.orderDate,
-                description = "Ordered ${order.orderData.quantity}kg of ${order.orderData.name} due in ${order.targetDate}"
+                description = "Order placed due in ${order.targetDate}"
             )
             orderViewModel.placeOrder(uid, order)
             transactionViewModel.recordTransaction(uid, transaction)
