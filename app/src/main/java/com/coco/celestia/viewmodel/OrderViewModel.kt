@@ -145,10 +145,9 @@ class OrderViewModel : ViewModel() {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val filterKeywords = filter.split(",").map { it.trim() }
 
-                    val orders = snapshot.children.flatMap { userSnapshot ->
-                        userSnapshot.children.mapNotNull { orderSnapshot ->
-                            orderSnapshot.getValue(OrderData::class.java)
-                        }.filter { order ->
+                    val orders = snapshot.children
+                        .mapNotNull { it.getValue(OrderData::class.java) }
+                        .filter { order ->
                             // TODO: Update this filter
                             val isCoffee =
                                 order.orderData.type.equals("CoopCoffee", ignoreCase = true)
@@ -178,7 +177,7 @@ class OrderViewModel : ViewModel() {
                                 else -> false
                             }
                         }
-                    }
+
                     _orderData.value = orders
                     _orderState.value =
                         if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS
