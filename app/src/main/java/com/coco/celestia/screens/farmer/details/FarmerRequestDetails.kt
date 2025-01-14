@@ -305,14 +305,14 @@ fun OrderDetailsCard(orderData: OrderData, navController: NavController) {
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = orderData.orderData.name,
+                                        text = orderData.orderData[0].name,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 25.sp,
                                         color = Cocoa,
                                         modifier = Modifier.semantics { testTag = "android:id/productNameText" }
                                     )
                                     Text(
-                                        text = "${orderData.orderData.quantity} kg",
+                                        text = "${orderData.orderData[0].quantity} kg",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 25.sp,
                                         color = Cocoa,

@@ -31,14 +31,16 @@ data class OrderData(
     val orderDate: String = "",
     val targetDate: String = "",
     val status: String = "",
-    var orderData: ProductData = ProductData(),
+    var orderData: List<ProductData> = emptyList(),
     val client: String = "",
     val barangay: String = "",
     val street: String = "",
     val rejectionReason: String? = null,
     val fulfilledBy: List<FullFilledBy> = emptyList(),
     val partialQuantity: Int = 0,
-    val fulfilled: Int = 0
+    val fulfilled: Int = 0,
+    val collectionMethod: String = "",
+    val paymentMethod: String = ""
 )
 
 @Serializable
@@ -123,14 +125,11 @@ data class ProductData(
     val isInStore: Boolean = true,
     val isActive: Boolean = true,
     val dateAdded: String = "",
-    val collectionMethod: String = Constants.COLLECTION_PICKUP,
-    val paymentMethod: String = Constants.PAYMENT_CASH
 ) {
     constructor() : this(
         "", "", "", "", "", 0, "", 0.0, "",
         0.0, 0.0, 0.0, 0.0, Constants.WEIGHT_GRAMS,
-        true, true, "", Constants.COLLECTION_PICKUP,
-        Constants.PAYMENT_CASH
+        true, true, ""
     )
 }
 

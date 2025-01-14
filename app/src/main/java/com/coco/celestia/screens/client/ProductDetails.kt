@@ -172,7 +172,7 @@ fun ProductDetails(
                         onEvent(
                             Triple(
                                 ToastStatus.SUCCESSFUL,
-                                "${selectedQuantity} ${product.weightUnit.lowercase()} of ${product.name} added to the basket!",
+                                "$selectedQuantity ${product.weightUnit.lowercase()} of ${product.name} added to the basket!",
                                 System.currentTimeMillis()
                             )
                         )

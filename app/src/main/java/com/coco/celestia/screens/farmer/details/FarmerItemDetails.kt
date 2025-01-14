@@ -153,7 +153,7 @@ fun FarmerItemDetails(
                             }
                             OrderState.SUCCESS -> {
                                 val filteredOrders = allOrders.filter {
-                                    it.orderData.name.equals(productName, ignoreCase = true)
+                                    it.orderData[0].name.equals(productName, ignoreCase = true)
                                 }
 
                                 if (filteredOrders.isEmpty()) {
@@ -594,7 +594,7 @@ fun OrderTable(
                                 color = Cocoa
                             )
                             Text(
-                                text = order.orderData.quantity.toString(),
+                                text = order.orderData[0].quantity.toString(),
                                 modifier = Modifier.weight(1f),
                                 fontFamily = mintsansFontFamily,
                                 textAlign = TextAlign.Right,

@@ -279,11 +279,11 @@ fun FarmerManageRequest(
                     .filter { order ->
                         order.status.equals("PENDING", ignoreCase = true) ||
                                 (order.status == "PARTIALLY_FULFILLED" &&
-                                        order.orderData.quantity - order.partialQuantity != 0)
+                                        order.orderData[0].quantity - order.partialQuantity != 0)
                     }
                     .filter { order ->
                         order.orderId.contains(searchQuery, ignoreCase = true) &&
-                                (selectedCategory.isEmpty() || order.orderData.name.equals(selectedCategory, ignoreCase = true))
+                                (selectedCategory.isEmpty() || order.orderData[0].name.equals(selectedCategory, ignoreCase = true))
                     }
                 Log.d("orders", filteredOrders.toString())
                 if (filteredOrders.isEmpty()) {

@@ -723,8 +723,8 @@ fun NavGraph(
                     reorderPoint = product.reorderPoint
                     notes = product.notes
                     isInStore = product.isInStore
-                    isDelivery = product.collectionMethod == Constants.COLLECTION_DELIVERY
-                    isGcash = product.paymentMethod == Constants.PAYMENT_GCASH
+//                    isDelivery = product.collectionMethod == Constants.COLLECTION_DELIVERY
+//                    isGcash = product.paymentMethod == Constants.PAYMENT_GCASH
                     weightUnit = product.weightUnit
                 }
             }
@@ -794,8 +794,8 @@ fun NavGraph(
                 reorderPoint = reorderPoint,
                 isInStore = isInStore,
                 weightUnit = weightUnit,
-                isDelivery = isDelivery,
-                isGcash = isGcash,
+//                isDelivery = isDelivery,
+//                isGcash = isGcash,
                 onEvent = { onEvent(it) }
             )
 
@@ -1126,7 +1126,8 @@ fun NavGraph(
                 userViewModel = userViewModel,
                 orderViewModel = orderViewModel,
                 productViewModel = productViewModel,
-                items = items
+                items = items,
+                onEvent = { onEvent(it) }
             )
         }
 

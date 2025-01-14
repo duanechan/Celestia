@@ -235,7 +235,7 @@ fun OrderDetailsCard(
         ) {
             Column {
                 DisplayOrderDetail("Order ID", orderData.orderId.substring(6, 10).uppercase())
-                DisplayOrderDetail("Item", product.name)
+                DisplayOrderDetail("Item", product[0].name)
                 DisplayOrderDetail("Target Date", orderData.targetDate)
                 DisplayOrderDetail("Client Name", orderData.client)
                 DisplayOrderDetail("Address", "${orderData.street}, ${orderData.barangay}")
@@ -304,7 +304,7 @@ fun OrderDetailsCard(
                                     orderData,
                                     orderViewModel,
                                     "partial",
-                                    orderData.orderData.type,
+                                    orderData.orderData[0].type,
                                     fulfilledByFarmer
                                 )
                             }
@@ -358,7 +358,7 @@ fun OrderDetailsCard(
                                 orderData,
                                 orderViewModel,
                                 "full",
-                                orderData.orderData.type,
+                                orderData.orderData[0].type,
                                 fulfilledByFarmer
                             )
                         }
@@ -554,13 +554,13 @@ fun OrderStatusUpdates(orderData: OrderData) {
                     quantity = fulfilledByFarmer.quantityFulfilled.toString()
                 }
                 Text(
-                    text = "Accepted order of ${quantity}kg of ${orderData.orderData.name}",
+                    text = "Accepted order of ${quantity}kg of ${orderData.orderData[0].name}",
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
             }
 
-            if (orderData.orderData.type == "Meat") {
+            if (orderData.orderData[0].type == "Meat") {
                 if (displayStatus in listOf("HARVESTING_MEAT", "DELIVERING", "COMPLETED")) {
                     Row(
                         verticalAlignment = Alignment.Top

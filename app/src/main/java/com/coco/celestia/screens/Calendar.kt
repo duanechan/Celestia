@@ -215,7 +215,7 @@ fun Calendar(
                     }
                     if (sameDate.isNotEmpty()) {
                         itemsIndexed(sameDate) { index, order ->
-                            val orderPrice = priceMap[order.orderData.name] ?: 0.0
+                            val orderPrice = priceMap[order.orderData[0].name] ?: 0.0
                             OrderItem(
                                 order = order,
                                 price = orderPrice,
@@ -354,7 +354,7 @@ fun OrderItem(
                 modifier = Modifier.weight(1f)
             )
             Text(
-                text = order.orderData.name,
+                text = order.orderData[0].name,
                 fontSize = 14.sp,
                 color = textColor,
                 fontWeight = FontWeight.Bold,
@@ -364,7 +364,7 @@ fun OrderItem(
                     .offset(15.dp)
             )
             Text(
-                text = "${order.orderData.quantity}",
+                text = "${order.orderData[0].quantity}",
                 fontSize = 14.sp,
                 color = textColor,
                 fontWeight = FontWeight.Bold,
@@ -374,7 +374,7 @@ fun OrderItem(
                     .offset((-8).dp)
             )
             Text(
-                text = "₱${price * order.orderData.quantity}",
+                text = "₱${price * order.orderData[0].quantity}",
                 fontSize = 14.sp,
                 color = textColor,
                 fontWeight = FontWeight.Bold,

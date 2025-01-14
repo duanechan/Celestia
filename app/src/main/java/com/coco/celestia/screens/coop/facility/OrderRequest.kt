@@ -379,7 +379,7 @@ fun OrderItem(
                         Text(text = "Order ID: $orderId",
                             modifier = Modifier.semantics { testTag = "android:id/OrderIdText_$orderCount" }) //testing
                         Text(
-                            text = "${order.orderData.name}, ${order.orderData.quantity}kg",
+                            text = "${order.orderData[0].name}, ${order.orderData[0].quantity}kg",
                             fontSize = 25.sp, fontWeight = FontWeight.Bold,
                             modifier = Modifier.semantics { testTag = "android:id/OrderDetailsText_$orderCount" } //testing
                         )
@@ -423,7 +423,7 @@ fun OrderItem(
                         "ACCEPTED" -> AcceptedOrderActions (
                             order = order,
                             orderViewModel = orderViewModel,
-                            type = order.orderData.type,
+                            type = order.orderData[0].type,
                             onUpdateOrder = { onUpdateOrder(it) }
                         )
 
@@ -567,7 +567,7 @@ fun ProcessingMeatAndCoffeeOrderActions(
 ) {
     var statusDialog by remember { mutableStateOf(false) }
 
-    val textColor = when (order.orderData.type) {
+    val textColor = when (order.orderData[0].type) {
         "CoopCoffee" -> ProcessingCoffee
         "CoopMeat" -> ProcessingMeat
         else -> Color.Transparent

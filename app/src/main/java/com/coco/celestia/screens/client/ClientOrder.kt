@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.client
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -62,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import coil.compose.rememberImagePainter
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
@@ -69,8 +71,10 @@ import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
+import org.apache.commons.math3.geometry.partitioning.BSPTreeVisitor.Order
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,7 +91,7 @@ fun ClientOrder(
     LaunchedEffect(Unit) {
         orderViewModel.fetchOrders(
             uid = uid,
-            filter = "Coffee, Meat, Vegetable"
+            filter = ""
         )
         userViewModel.fetchUser (uid)
     }
@@ -166,18 +170,11 @@ fun ClientOrder(
                             }
                         )
                     }
-                }
+    0            }
 
                 Column {
-                    // Column for Orders
-//                    orderData.forEach { order ->
-//                        OrderCard(
-//                            order = order,
-//                            navController = navController
-//                        )
-
-                    repeat(5) { index -> // Simulate multiple orders
-                        OrderCard(order = "ORDER-$index", navController = navController)
+                    orderData.forEachIndexed { index, order ->
+                        OrderCard(order = order, index = "ORDER-$index", navController = navController)
                     }
                 }
             }
@@ -186,13 +183,17 @@ fun ClientOrder(
 }
 
 @Composable
-fun OrderCard(order: String, navController: NavController) { // Accepting `order` as a parameter
+fun OrderCard(
+    order: OrderData,
+    index: String,
+    navController: NavController
+) { // Accepting `order` as a parameter
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
             .clickable {
-                navController.navigate(Screen.ClientOrderDetails.createRoute(order)) // Use the order parameter
+                navController.navigate(Screen.ClientOrderDetails.createRoute(index)) // Use the order parameter
             },
         colors = CardDefaults.cardColors(containerColor = White1),
         shape = RoundedCornerShape(12.dp),
@@ -207,7 +208,7 @@ fun OrderCard(order: String, navController: NavController) { // Accepting `order
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Order ID: $order", // Use the order parameter for the ID
+                    text = "Order ID: $index", // Use the order parameter for the ID
                     style = MaterialTheme.typography.titleMedium,
                     color = Green1
                 )
@@ -225,11 +226,11 @@ fun OrderCard(order: String, navController: NavController) { // Accepting `order
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Items: 2", // Placeholder for item count
+                    text = "Items: ${order.orderData.size}", // Placeholder for item count
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "Pending", // Placeholder status
+                    text = order.status, // Placeholder status
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -241,8 +242,8 @@ fun OrderCard(order: String, navController: NavController) { // Accepting `order
             )
 
             // Placeholder Items
-            repeat(2) {
-                ItemCard()
+            order.orderData.forEach { product ->
+                ItemCard(product)
             }
 
             Divider(
@@ -256,7 +257,7 @@ fun OrderCard(order: String, navController: NavController) { // Accepting `order
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Pick Up", // Placeholder for collection method
+                    text = order.collectionMethod,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -266,11 +267,11 @@ fun OrderCard(order: String, navController: NavController) { // Accepting `order
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Cash * Unpaid", // Placeholder for payment status
+                    text = order.paymentMethod, // Placeholder for payment status
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "Total: PHP 200", // Placeholder total
+                    text = "Total: PHP ${order.orderData.sumOf { it.price }}", // Placeholder total
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -279,7 +280,7 @@ fun OrderCard(order: String, navController: NavController) { // Accepting `order
 }
 
 @Composable
-fun ItemCard() {
+fun ItemCard(item: ProductData) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -311,15 +312,15 @@ fun ItemCard() {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Potato", // Placeholder for product name
+                text = item.name, // Placeholder for product name
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
-                text = "10 kg", // Placeholder for quantity
+                text = "${item.quantity} kg", // Placeholder for quantity
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "PHP 100", // Placeholder for price
+                text = "PHP ${item.price}", // Placeholder for price
                 style = MaterialTheme.typography.bodyMedium
             )
         }

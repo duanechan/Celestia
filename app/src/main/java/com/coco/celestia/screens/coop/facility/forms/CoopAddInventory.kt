@@ -660,8 +660,8 @@ fun AddProductForm(
                         isInStore = isInStore,
                         isActive = true,
                         dateAdded = formattedDateTime,
-                        collectionMethod = if (isDelivery) Constants.COLLECTION_DELIVERY else Constants.COLLECTION_PICKUP,
-                        paymentMethod = if (isGcash) Constants.PAYMENT_GCASH else Constants.PAYMENT_CASH
+//                        collectionMethod = if (isDelivery) Constants.COLLECTION_DELIVERY else Constants.COLLECTION_PICKUP,
+//                        paymentMethod = if (isGcash) Constants.PAYMENT_GCASH else Constants.PAYMENT_CASH
                     )
 
                     updatedProductImage?.let { uri ->
@@ -744,8 +744,8 @@ fun CoopAddInventory(
     reorderPoint: Double,
     isInStore: Boolean,
     weightUnit: String,
-    isDelivery: Boolean,
-    isGcash: Boolean,
+//    isDelivery: Boolean,
+//    isGcash: Boolean,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().uid.toString()
@@ -771,8 +771,8 @@ fun CoopAddInventory(
                 weightUnit = weightUnit,
                 isInStore = isInStore,
                 dateAdded = formattedDateTime,
-                collectionMethod = if (isDelivery) Constants.COLLECTION_DELIVERY else Constants.COLLECTION_PICKUP,
-                paymentMethod = if (isGcash) Constants.PAYMENT_GCASH else Constants.PAYMENT_CASH
+//                collectionMethod = if (isDelivery) Constants.COLLECTION_DELIVERY else Constants.COLLECTION_PICKUP,
+//                paymentMethod = if (isGcash) Constants.PAYMENT_GCASH else Constants.PAYMENT_CASH
             )
 
             if ((productData?.get(0)?.quantity ?: 0) - product.quantity >= 0 ||

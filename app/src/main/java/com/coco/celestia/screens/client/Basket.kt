@@ -68,6 +68,8 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun BasketScreen(
@@ -139,12 +141,15 @@ fun Basket(
     checkoutItems: SnapshotStateList<BasketItem>,
     onCheckout: (SnapshotStateList<BasketItem>) -> Unit
 ) {
+    val formatter = DateTimeFormatter.ofPattern("YYYYddMM")
+    val formattedDateTime = LocalDateTime.now().format(formatter).toString()
+
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         itemsIndexed(items) { _, item ->
             val productData by productViewModel.productData.observeAsState(emptyList())
 
-            LaunchedEffect(item.product) {
-                productViewModel.fetchProduct(item.product)
+            LaunchedEffect(item) {
+                productViewModel.fetchProduct(item.productId)
             }
             //facility card added
             Card(
@@ -165,10 +170,6 @@ fun Basket(
                         Text(
                             text = "Facility Name",
                             style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = "Order ID", //Format: OID-YYYYDDMM-Count
-                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
 
@@ -193,13 +194,14 @@ fun Basket(
 
         }
         item {
-            BasketActions(onCheckout = { onCheckout(checkoutItems) })
+            BasketActions(totalPrice = checkoutItems.sumOf { it.price }, onCheckout = { onCheckout(checkoutItems) })
         }
     }
 }
 
 @Composable
 fun BasketActions(
+    totalPrice: Double,
     onCheckout: () -> Unit
 ) {
     //Total
@@ -215,7 +217,7 @@ fun BasketActions(
             verticalAlignment = Alignment.CenterVertically
         ){
             Text(
-                text = "Total: PHP 100 ", //total ng checked items
+                text = "Total: PHP $totalPrice",
                 style = MaterialTheme.typography.titleMedium
             )
             Button(
@@ -255,7 +257,6 @@ fun BasketItemCard(
         } catch(e: Exception) {
             image = null
         }
-
     }
 
     Card(
@@ -338,7 +339,6 @@ fun BasketItemCard(
                     ) {
 
                         TextButton(
-                            // TODO: Need to handle minimum order kg
                             onClick = {
                                 if (updatedQuantity > 1) {
                                     val old = item.copy(

@@ -137,10 +137,10 @@ class ProductViewModel : ViewModel() {
 
                                 val isActive = child.child("isActive").getValue(Boolean::class.java) ?: true
                                 val dateAdded = child.child("dateAdded").getValue(String::class.java) ?: ""
-                                val collectionMethod = child.child("collectionMethod").getValue(String::class.java)
-                                    ?: Constants.COLLECTION_PICKUP
-                                val paymentMethod = child.child("paymentMethod").getValue(String::class.java)
-                                    ?: Constants.PAYMENT_CASH
+//                                val collectionMethod = child.child("collectionMethod").getValue(String::class.java)
+//                                    ?: Constants.COLLECTION_PICKUP
+//                                val paymentMethod = child.child("paymentMethod").getValue(String::class.java)
+//                                    ?: Constants.PAYMENT_CASH
 
                                 ProductData(
                                     productId = id,
@@ -160,8 +160,6 @@ class ProductViewModel : ViewModel() {
                                     isInStore = isInStore,
                                     isActive = isActive,
                                     dateAdded = dateAdded,
-                                    collectionMethod = collectionMethod,
-                                    paymentMethod = paymentMethod
                                 )
                             } else null
                         } catch (e: Exception) {
@@ -234,8 +232,8 @@ class ProductViewModel : ViewModel() {
                                 isInStore = isInStore,
                                 isActive = isActive,
                                 dateAdded = dateAdded,
-                                collectionMethod = collectionMethod,
-                                paymentMethod = paymentMethod
+//                                collectionMethod = collectionMethod,
+//                                paymentMethod = paymentMethod
                             )
                         } catch (e: Exception) {
                             null
@@ -296,8 +294,8 @@ class ProductViewModel : ViewModel() {
                             }
 
                             val dateAdded = child.child("dateAdded").getValue(String::class.java) ?: ""
-                            val collectionMethod = child.child("collectionMethod").getValue(String::class.java) ?: Constants.COLLECTION_PICKUP
-                            val paymentMethod = child.child("paymentMethod").getValue(String::class.java) ?: Constants.PAYMENT_CASH
+//                            val collectionMethod = child.child("collectionMethod").getValue(String::class.java) ?: Constants.COLLECTION_PICKUP
+//                            val paymentMethod = child.child("paymentMethod").getValue(String::class.java) ?: Constants.PAYMENT_CASH
 
                             val product = ProductData(
                                 productId = productId,
@@ -317,8 +315,8 @@ class ProductViewModel : ViewModel() {
                                 isInStore = isInStore,
                                 isActive = isActive,
                                 dateAdded = dateAdded,
-                                collectionMethod = collectionMethod,
-                                paymentMethod = paymentMethod
+//                                collectionMethod = collectionMethod,
+//                                paymentMethod = paymentMethod
                             )
 
                             val matchesFilter = if (filterKeywords.isEmpty()) {

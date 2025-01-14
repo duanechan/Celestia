@@ -481,13 +481,7 @@ class UserViewModel : ViewModel() {
                 val query = database.child(uid).child("basket")
 
                 val updates = updatedBasket.associate { item ->
-                    item.id to mapOf(
-                        "id" to item.id,
-                        "product" to item.product,
-                        "price" to item.price,
-                        "quantity" to item.quantity,
-                        "isRetail" to item.isRetail
-                    )
+                    item.id to item.toMap()
                 }
                 query.updateChildren(updates).await()
 
@@ -497,6 +491,24 @@ class UserViewModel : ViewModel() {
                     } ?: emptyList()
                 )
                 _userState.value = UserState.SUCCESS
+            } catch (e: Exception) {
+                _userState.value = UserState.ERROR(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    fun clearCheckoutItems(items: List<BasketItem>) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+        viewModelScope.launch {
+            _userState.value = UserState.LOADING
+            try {
+                val removedItems = items.associate { item -> item.id to null }
+                database.child(uid).child("basket").updateChildren(removedItems).await()
+                _userData.value = _userData.value?.copy(
+                    basket = _userData.value?.basket?.filter { basketItem ->
+                        !items.any { it.id == basketItem.id }
+                    } ?: emptyList()
+                )
             } catch (e: Exception) {
                 _userState.value = UserState.ERROR(e.message ?: "Unknown error")
             }

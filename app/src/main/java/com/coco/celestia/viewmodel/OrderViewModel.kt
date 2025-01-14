@@ -4,8 +4,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.coco.celestia.viewmodel.model.Constants
+import com.coco.celestia.viewmodel.model.FullFilledBy
 import com.coco.celestia.viewmodel.model.MostOrdered
 import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -146,19 +149,10 @@ class OrderViewModel : ViewModel() {
                     val filterKeywords = filter.split(",").map { it.trim() }
 
                     val orders = snapshot.children
-                        .mapNotNull { it.getValue(OrderData::class.java) }
+                        .mapNotNull { snapshot -> parseOrderData(snapshot) }
                         .filter { order ->
-                            // TODO: Update this filter
-                            val isCoffee =
-                                order.orderData.type.equals("CoopCoffee", ignoreCase = true)
-                            val isMeat = order.orderData.type.equals("CoopMeat", ignoreCase = true)
-                            val isCoffeeOrMeat =
-                                order.orderData.type.equals("CoopCoffee", ignoreCase = true) ||
-                                        order.orderData.type.equals("CoopMeat", ignoreCase = true)
-                            val isVegetable =
-                                order.orderData.type.equals("Vegetable", ignoreCase = true) ||
-                                        order.orderData.type.equals("Meat", ignoreCase = true) ||
-                                        order.orderData.type.equals("Coffee", ignoreCase = true)
+                            // This should filter orders based on the facility? ☠️
+                            val coopOrder = order.orderData.any { it.type == "${role.replace("Coop", "")}" }
                             val matchesFilter = filterKeywords.any { keyword ->
                                 order::class.memberProperties.any { property ->
                                     val value = property.getter.call(order)?.toString() ?: ""
@@ -167,15 +161,14 @@ class OrderViewModel : ViewModel() {
                             }
                             val removeCancelReject =
                                 (order.status != "CANCELLED" && order.status != "REJECTED")
-                            when (role) {
-                                "Coop", "Admin" -> isCoffeeOrMeat && matchesFilter
-                                "CoopCoffee" -> isCoffee && matchesFilter && removeCancelReject
-                                "CoopMeat" -> isMeat && matchesFilter && removeCancelReject
-                                "Farmer" -> isVegetable && matchesFilter
-                                "Client" -> matchesFilter
-                                // "Client" -> order.status.equals("completed", ignoreCase = true) && matchesFilter
-                                else -> false
+                            when {
+                                role.contains("Coop") -> coopOrder && matchesFilter && removeCancelReject
+                                role == "Admin" -> coopOrder && matchesFilter
+                                role == "Farmer" -> matchesFilter
+                                role == "Client" -> matchesFilter
+                                else -> matchesFilter
                             }
+
                         }
 
                     _orderData.value = orders
@@ -188,6 +181,27 @@ class OrderViewModel : ViewModel() {
                 }
             })
         }
+    }
+
+    private fun parseOrderData(snapshot: DataSnapshot): OrderData {
+        return OrderData(
+            orderId = snapshot.child("orderId").getValue(String::class.java) ?: "",
+            orderDate = snapshot.child("orderDate").getValue(String::class.java) ?: "",
+            targetDate = snapshot.child("targetDate").getValue(String::class.java) ?: "",
+            status = snapshot.child("status").getValue(String::class.java) ?: "",
+            orderData = snapshot.child("orderData").children
+                .mapNotNull { it.getValue(ProductData::class.java) },
+            client = snapshot.child("client").getValue(String::class.java) ?: "",
+            barangay = snapshot.child("barangay").getValue(String::class.java) ?: "",
+            street = snapshot.child("street").getValue(String::class.java) ?: "",
+            rejectionReason = snapshot.child("rejectionReason").getValue(String::class.java) ?: "",
+            fulfilledBy = snapshot.child("fulfilledBy").children
+                .mapNotNull { it.getValue(FullFilledBy::class.java) },
+            partialQuantity = snapshot.child("partialQuantity").getValue(Int::class.java) ?: 0,
+            fulfilled = snapshot.child("fulfilled").getValue(Int::class.java) ?: 0,
+            collectionMethod = snapshot.child("collectionMethod").getValue(String::class.java) ?: Constants.COLLECTION_PICKUP,
+            paymentMethod = snapshot.child("paymentMethod").getValue(String::class.java) ?: Constants.PAYMENT_CASH
+        )
     }
 
 

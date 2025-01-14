@@ -36,6 +36,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -54,7 +55,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.coco.celestia.R
+import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.coop.admin.EmptyOrders
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green4
@@ -63,8 +66,14 @@ import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.BasketItem
+import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.ProductData
+import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 @Composable
 fun OrderSummary(
@@ -72,9 +81,19 @@ fun OrderSummary(
     userViewModel: UserViewModel,
     orderViewModel: OrderViewModel,
     productViewModel: ProductViewModel,
-    items: List<BasketItem>
+    items: List<BasketItem>,
+    onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+    val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    val formattedDateTime = LocalDateTime.now().format(formatter).toString()
+    val userData by userViewModel.userData.observeAsState(UserData())
+    var collection by remember { mutableStateOf("") }
+    var payment by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        userViewModel.fetchUser(uid)
+    }
 
     Box(
         modifier = Modifier
@@ -88,19 +107,50 @@ fun OrderSummary(
             ) {
                 item { UserDetailsHeader() }
                 item { FacilityCard(items) }
-                item { ClientCollectionMethod() }
-                item { ClientPaymentMethod() }
+                item { ClientCollectionMethod(onUpdate = { collection = it }) }
+                item { ClientPaymentMethod(onUpdate = { payment = it }) }
 //                items(items) { ItemSummaryCard(it) }
                 item {
                     OrderSummaryActions(
+                        enabled = Pair(
+                            first = collection != "" && payment != "",
+                            second = if (collection == "" && payment == "") {
+                                "Please select a collection and payment method."
+                            } else if (collection == "") {
+                                "Please select a collection method."
+                            } else {
+                                "Please select a payment method."
+                            }
+                        ),
+                        totalPrice = items.sumOf { it.price },
                         onPlaceOrder = {
+                            // Place the order
                             orderViewModel.placeOrder(
                                 uid = uid,
                                 order = OrderData(
-
+                                    orderId = "Order-${UUID.randomUUID()}",
+                                    orderDate = formattedDateTime,
+                                    status = "Pending",
+                                    orderData = items.mapNotNull {
+                                        ProductData(
+                                            productId = it.productId,
+                                            name = it.product,
+                                            quantity = it.quantity,
+                                            price = it.price,
+                                            timestamp = it.timestamp
+                                        )
+                                    },
+                                    client = userData.firstname + " " + userData.lastname,
+                                    collectionMethod = collection,
+                                    paymentMethod = payment
                                 )
                             )
-                        }
+                            // Navigate the orders screen
+                            navController.navigate(Screen.ClientOrder.route)
+                            // Clear checkout items from basket
+                            userViewModel.clearCheckoutItems(items)
+                        },
+                        onEvent = { onEvent(it) }
                     )
                 }
             }
@@ -112,7 +162,10 @@ fun OrderSummary(
 
 @Composable
 fun OrderSummaryActions(
-    onPlaceOrder: () -> Unit
+    enabled: Pair<Boolean, String>,
+    totalPrice: Double,
+    onPlaceOrder: () -> Unit,
+    onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxSize(),
@@ -127,11 +180,30 @@ fun OrderSummaryActions(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Total: PHP 100",
+                text = "Total: PHP $totalPrice",
                 style = MaterialTheme.typography.titleMedium
             )
             Button(
-                onClick = { onPlaceOrder() },
+                onClick = {
+                    if (enabled.first) {
+                        onPlaceOrder()
+                        onEvent(
+                            Triple(
+                                ToastStatus.SUCCESSFUL,
+                                "Order placed successfully!",
+                                System.currentTimeMillis()
+                            )
+                        )
+                    } else {
+                        onEvent(
+                            Triple(
+                                ToastStatus.WARNING,
+                                enabled.second,
+                                System.currentTimeMillis()
+                            )
+                        )
+                    }
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = White1),
                 elevation = ButtonDefaults.elevatedButtonElevation(4.dp),
             ) {
@@ -233,7 +305,7 @@ fun FacilityCard(items: List<BasketItem>){
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = "PHP 100",
+                    text = "PHP ${items.sumOf { it.price }}",
                     style = MaterialTheme.typography.titleMedium,
                     color = Color.Black
                 )
@@ -246,11 +318,15 @@ fun FacilityCard(items: List<BasketItem>){
 fun ItemSummaryCard(item: BasketItem) {
     var image by remember { mutableStateOf<Uri?>(null) }
 
-//    LaunchedEffect(Unit) {
-//        ImageService.fetchProductImage(productName = item.product) {
-//            image = it
-//        }
-//    }
+    LaunchedEffect(item) {
+        try {
+            ImageService.fetchProductImage(productId = item.productId) {
+                image = it
+            }
+        } catch(_: Exception) {
+            image = null
+        }
+    }
 
     Card(
         colors = CardDefaults.cardColors(containerColor = White1),
@@ -272,7 +348,11 @@ fun ItemSummaryCard(item: BasketItem) {
                         .size(90.dp)
                 ){
                     Image(
-                        painter = rememberImagePainter(image),
+                        painter = if (image != null) {
+                            rememberImagePainter(image)
+                        } else {
+                            painterResource(R.drawable.product_icon)
+                        },
                         contentDescription = item.product,
                         modifier = Modifier
                             .fillMaxSize()
@@ -292,12 +372,12 @@ fun ItemSummaryCard(item: BasketItem) {
                         color = Green1
                     )
                     Text(
-                        text = "5kg x Php 10", // price per item
+                        text = "${item.quantity}kg x Php ${item.price / item.quantity}", // price per item
                         style = MaterialTheme.typography.bodyMedium,
                         color = Green1
                     )
                     Text(
-                        text = "PHP 50", // total price
+                        text = "Php ${item.price}", // total price
                         style = MaterialTheme.typography.titleMedium,
                         color = Green1
                     )
@@ -309,8 +389,8 @@ fun ItemSummaryCard(item: BasketItem) {
 }
 
 @Composable
-fun ClientCollectionMethod() {
-    var selectedMethod by remember { mutableStateOf("Pick Up") } // State to track selected method
+fun ClientCollectionMethod(onUpdate: (String) -> Unit) {
+    var selectedMethod by remember { mutableStateOf("") } // State to track selected method
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -360,19 +440,25 @@ fun ClientCollectionMethod() {
                     modifier = Modifier.padding(16.dp)
                 ) {
                     listOf(
-                        "Pick Up" to "Pick up location here",
-                        "Delivery" to "Couriers here or etc"
+                        Constants.COLLECTION_PICKUP to "Pick up location here",
+                        Constants.COLLECTION_DELIVERY to "Couriers here or etc"
                     ).forEach { (method, description) ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { selectedMethod = method }
+                                .clickable {
+                                    selectedMethod = method
+                                    onUpdate(selectedMethod)
+                                }
                                 .padding(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
                                 selected = selectedMethod == method,
-                                onClick = { selectedMethod = method },
+                                onClick = {
+                                    selectedMethod = method
+                                    onUpdate(selectedMethod)
+                                },
                                 colors = RadioButtonDefaults.colors(selectedColor = Green1)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -401,8 +487,8 @@ fun ClientCollectionMethod() {
 }
 
 @Composable
-fun ClientPaymentMethod() {
-    var selectedMethod by remember { mutableStateOf("Cash") } // State to track selected method
+fun ClientPaymentMethod(onUpdate: (String) -> Unit) {
+    var selectedMethod by remember { mutableStateOf("") } // State to track selected method
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -452,19 +538,25 @@ fun ClientPaymentMethod() {
                     modifier = Modifier.padding(16.dp)
                 ) {
                     listOf(
-                        "Cash" to "Pay using cash upon delivery.",
-                        "G-Cash" to "G-Cash number here."
+                        Constants.PAYMENT_CASH to "Pay using cash upon delivery.",
+                        Constants.PAYMENT_GCASH to "G-Cash number here."
                     ).forEach { (method, description) ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { selectedMethod = method }
+                                .clickable {
+                                    selectedMethod = method
+                                    onUpdate(selectedMethod)
+                                }
                                 .padding(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
                                 selected = selectedMethod == method,
-                                onClick = { selectedMethod = method },
+                                onClick = {
+                                    selectedMethod = method
+                                    onUpdate(selectedMethod)
+                                },
                                 colors = RadioButtonDefaults.colors(selectedColor = Green1)
                             )
                             Spacer(modifier = Modifier.width(8.dp))

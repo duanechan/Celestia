@@ -42,7 +42,7 @@ fun FarmerDecisionDialog(
     var showFulfillmentDialog by remember { mutableStateOf(false) }
     var isPartialFulfillment by remember { mutableStateOf<Boolean?>(null) }
     var partialQuantity by remember { mutableStateOf("0") }
-    val maxPartial = (orderData.orderData.quantity - orderData.partialQuantity) * 0.8f
+    val maxPartial = (orderData.orderData[0].quantity - orderData.partialQuantity) * 0.8f
 
     val rejectionReasons = listOf("Not in season", "Too Far", "Not Available")
 
@@ -304,35 +304,35 @@ fun FarmerDecisionDialog(
                                     partialQuantity = fulfilled
                                 )
                                 orderViewModel.updateOrder(updatedOrder)
-                                farmerItemViewModel.reduceItemQuantity(updatedOrder.orderData.name, partialToInt)
+                                farmerItemViewModel.reduceItemQuantity(updatedOrder.orderData[0].name, partialToInt)
                             } else {
                                 if (orderData.status == "PARTIALLY_FULFILLED") {
                                     val fulFiller = FullFilledBy (
                                         farmerName = farmerName,
-                                        quantityFulfilled = orderData.orderData.quantity - orderData.partialQuantity,
+                                        quantityFulfilled = orderData.orderData[0].quantity - orderData.partialQuantity,
                                         status = "ACCEPTED"
                                     )
                                     val updatedOrder = orderData.copy(
                                         fulfilledBy = orderData.fulfilledBy.plus(fulFiller),
-                                        partialQuantity = orderData.orderData.quantity
+                                        partialQuantity = orderData.orderData[0].quantity
                                     )
                                     orderViewModel.updateOrder(updatedOrder)
                                     farmerItemViewModel.reduceItemQuantity(
-                                        updatedOrder.orderData.name,
-                                        updatedOrder.orderData.quantity - updatedOrder.fulfilled
+                                        updatedOrder.orderData[0].name,
+                                        updatedOrder.orderData[0].quantity - updatedOrder.fulfilled
                                     )
                                 } else {
                                     val fulFiller = FullFilledBy (
                                         farmerName = farmerName,
-                                        quantityFulfilled = orderData.orderData.quantity - orderData.partialQuantity
+                                        quantityFulfilled = orderData.orderData[0].quantity - orderData.partialQuantity
                                     )
                                     val updatedOrder = orderData.copy(
                                         status = "ACCEPTED",
                                         fulfilledBy = orderData.fulfilledBy.plus(fulFiller),
-                                        partialQuantity = orderData.orderData.quantity
+                                        partialQuantity = orderData.orderData[0].quantity
                                     )
                                     orderViewModel.updateOrder(updatedOrder)
-                                    farmerItemViewModel.reduceItemQuantity(updatedOrder.orderData.name, updatedOrder.orderData.quantity)
+                                    farmerItemViewModel.reduceItemQuantity(updatedOrder.orderData[0].name, updatedOrder.orderData[0].quantity)
                                 }
                             }
                             showFulfillmentDialog = false

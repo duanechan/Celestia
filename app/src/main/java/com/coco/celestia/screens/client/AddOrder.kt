@@ -849,7 +849,7 @@ fun ConfirmOrderRequestPanel(
                                 modifier = Modifier.padding(vertical = 5.dp)
                             )
                             Text(
-                                text = "We’ve received your order for ${order.orderData.name} and are preparing it for you. We hope you enjoy your purchase!",
+                                text = "We’ve received your order and are preparing it for you. We hope you enjoy your purchase!",
                                 modifier = Modifier.padding(vertical = 10.dp)
                             )
                             Text(

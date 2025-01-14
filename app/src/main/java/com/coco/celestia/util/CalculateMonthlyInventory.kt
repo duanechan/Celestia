@@ -25,9 +25,9 @@ fun calculateMonthlyInventory(orderData: List<OrderData>, productData: List<Prod
     }
 
     val orderedQuantities = thisMonthOrders
-        .groupBy { it.orderData.name }
+        .groupBy { it.orderData[0].name }
         .mapValues { entry ->
-            entry.value.sumOf { it.orderData.quantity }
+            entry.value.sumOf { it.orderData[0].quantity }
         }
 
     return productData.map { product: ProductData ->
