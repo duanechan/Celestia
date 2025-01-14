@@ -137,7 +137,8 @@ fun OrderSummary(
                                             name = it.product,
                                             quantity = it.quantity,
                                             price = it.price,
-                                            timestamp = it.timestamp
+                                            timestamp = it.timestamp,
+                                            type = it.productType
                                         )
                                     },
                                     client = userData.firstname + " " + userData.lastname,

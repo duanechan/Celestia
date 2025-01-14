@@ -13,7 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.sp
-import com.coco.celestia.screens.client.ClientNotification
 import com.coco.celestia.screens.farmer.FarmerNotification
 import com.coco.celestia.viewmodel.model.Notification
 
@@ -38,13 +37,13 @@ fun Notifications(
             FarmerNotification()
         }
         role == "Client" && showDialog -> {
-            ClientNotification(
-                notifications = notifications,
-                onDismiss = {
-                    showDialog = false
-                    onDismiss()
-                }
-            )
+//            ClientNotification(
+//                notifications = notifications,
+//                onDismiss = {
+//                    showDialog = false
+//                    onDismiss()
+//                }
+//            )
         }
         else -> {
             DefaultNotification()

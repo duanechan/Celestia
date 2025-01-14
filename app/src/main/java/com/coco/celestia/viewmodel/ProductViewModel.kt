@@ -324,6 +324,7 @@ class ProductViewModel : ViewModel() {
                             } else {
                                 filterKeywords.any { keyword ->
                                     product.name.contains(keyword, ignoreCase = true) ||
+                                            product.productId.contains(keyword) ||
                                             product.type.contains(keyword, ignoreCase = true) ||
                                             product.description.contains(keyword, ignoreCase = true) ||
                                             product.vendor.contains(keyword, ignoreCase = true)

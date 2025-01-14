@@ -18,7 +18,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -36,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -48,6 +51,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.coco.celestia.R
@@ -58,6 +62,7 @@ import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green4
 import com.coco.celestia.ui.theme.White1
+import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
@@ -70,6 +75,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Collections
 
 @Composable
 fun BasketScreen(
@@ -105,7 +111,7 @@ fun BasketScreen(
             UserState.SUCCESS -> {
                 if (userData.basket.isNotEmpty()) {
                     Basket(
-                        productViewModel = productViewModel,
+//                        productViewModel = productViewModel,
                         items = userData.basket,
                         checkoutItems = checkoutItems,
                         onCheckout = {
@@ -136,21 +142,27 @@ fun BasketScreen(
 
 @Composable
 fun Basket(
-    productViewModel: ProductViewModel,
+//    productViewModel: ProductViewModel,
     items: List<BasketItem>,
     checkoutItems: SnapshotStateList<BasketItem>,
     onCheckout: (SnapshotStateList<BasketItem>) -> Unit
 ) {
-    val formatter = DateTimeFormatter.ofPattern("YYYYddMM")
-    val formattedDateTime = LocalDateTime.now().format(formatter).toString()
+    val productViewModel: ProductViewModel = viewModel()
+    val productData by productViewModel.productData.observeAsState(emptyList())
 
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
-        itemsIndexed(items) { _, item ->
-            val productData by productViewModel.productData.observeAsState(emptyList())
+    LaunchedEffect(Unit) {
+        productViewModel.fetchProducts(
+            filter = items.joinToString(", ") { it.productId },
+            role = "Client"
+        )
+    }
 
-            LaunchedEffect(item) {
-                productViewModel.fetchProduct(item.productId)
-            }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+    ) {
+        for (item in items) {
             //facility card added
             Card(
                 modifier = Modifier
@@ -182,59 +194,21 @@ fun Basket(
                     )
 
                     BasketItemCard(
-                        product = if (productData.isNotEmpty()) productData[0] else ProductData(),
+                        product = productData.find { it.productId == item.productId } ?: ProductData(),
                         item = item,
                         isChecked = checkoutItems.any { it.id == item.id },
                         onAdd = { checkoutItems.add(it) },
                         onUpdate = { old, new -> checkoutItems[checkoutItems.indexOf(old)] = new },
                         onRemove = { checkoutItems.remove(it) }
                     )
+
                 }
             }
-
         }
-        item {
-            BasketActions(totalPrice = checkoutItems.sumOf { it.price }, onCheckout = { onCheckout(checkoutItems) })
-        }
+        BasketActions(totalPrice = checkoutItems.sumOf { it.price }, onCheckout = { onCheckout(checkoutItems) })
     }
 }
 
-@Composable
-fun BasketActions(
-    totalPrice: Double,
-    onCheckout: () -> Unit
-) {
-    //Total
-    Card(
-        modifier = Modifier.fillMaxSize(),
-        colors = CardDefaults.cardColors(containerColor = Green4)
-    ){
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ){
-            Text(
-                text = "Total: PHP $totalPrice",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Button(
-                onClick = { onCheckout() },
-                colors = ButtonDefaults.buttonColors(containerColor = White1),
-                elevation = ButtonDefaults.elevatedButtonElevation(4.dp),
-            ) {
-                Text(
-                    text = "Checkout",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.Black
-                )
-            }
-        }
-    }
-
-}
 
 @Composable
 fun BasketItemCard(
@@ -251,7 +225,7 @@ fun BasketItemCard(
 
     LaunchedEffect(Unit) {
         try {
-            ImageService.fetchProductImage(productId = product.productId) {
+            ImageService.fetchProductImage(productId = item.productId) {
                 image = it
             }
         } catch(e: Exception) {
@@ -381,6 +355,42 @@ fun BasketItemCard(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun BasketActions(
+    totalPrice: Double,
+    onCheckout: () -> Unit
+) {
+    //Total
+    Card(
+        modifier = Modifier.fillMaxSize(),
+        colors = CardDefaults.cardColors(containerColor = Green4)
+    ){
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ){
+            Text(
+                text = "Total: PHP $totalPrice",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Button(
+                onClick = { onCheckout() },
+                colors = ButtonDefaults.buttonColors(containerColor = White1),
+                elevation = ButtonDefaults.elevatedButtonElevation(4.dp),
+            ) {
+                Text(
+                    text = "Checkout",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Color.Black
+                )
             }
         }
     }

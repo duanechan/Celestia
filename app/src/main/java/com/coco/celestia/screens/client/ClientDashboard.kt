@@ -388,7 +388,7 @@ fun ProductCatalog(
                                 product.type.lowercase().contains(facility.name.lowercase())
                             }
 
-                            if (facilityProducts != null && facilityProducts.isNotEmpty()) {
+                            if (!facilityProducts.isNullOrEmpty()) {
                                 item {
                                     ProductGrid(
                                         title = facility.name,

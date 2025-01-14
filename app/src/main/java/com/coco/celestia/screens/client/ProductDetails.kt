@@ -56,6 +56,8 @@ import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.selects.select
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.util.UUID
 
 @Composable
@@ -148,13 +150,29 @@ fun ProductDetails(
         item {
             ProductDetails_Action(
                 onCheckout = {
-                    onEvent(
-                        Triple(
-                            ToastStatus.SUCCESSFUL,
-                            "Order placed.",
-                            System.currentTimeMillis()
+                    if (selectedQuantity > 0) {
+                        val item = listOf(
+                            BasketItem(
+                                id = UUID.randomUUID().toString(),
+                                productId = product.productId,
+                                productType = product.type,
+                                product = product.name,
+                                price = product.price * selectedQuantity,
+                                quantity = selectedQuantity,
+                                isRetail = true
+                            )
                         )
-                    )
+                        val itemsJson = Uri.encode(Json.encodeToString(item))
+                        navController.navigate(Screen.OrderSummary.createRoute(itemsJson))
+                    } else {
+                        onEvent(
+                            Triple(
+                                ToastStatus.WARNING,
+                                "Insufficient quantity.",
+                                System.currentTimeMillis()
+                            )
+                        )
+                    }
                 },
                 onAddItem = {
                     if (selectedQuantity > 0) {

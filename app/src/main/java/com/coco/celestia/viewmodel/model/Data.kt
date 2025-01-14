@@ -17,7 +17,8 @@ data class UserData(
     val barangay: String = "",
     val online: Boolean = false,
     var isChecked: Boolean = false,
-    val registrationDate: String = ""
+    val registrationDate: String = "",
+    val notifications: List<Notification> = emptyList()
 )
 
 data class FacilityData(
@@ -48,6 +49,7 @@ data class BasketItem(
     val id: String = "",
     val product: String = "",
     val productId: String = "",
+    val productType: String = "",
     val quantity: Int = 0,
     val price: Double = 0.0,
     val isRetail: Boolean = false,
@@ -225,10 +227,16 @@ data class SalesData(
 )
 
 data class Notification(
+    val sender: String = "",
+    val recipient: String = "",
     val timestamp: String = "",
     val message: String = "",
-    val status: String = "UNKNOWN"
+    val status: NotificationStatus = NotificationStatus.New
 )
+
+enum class NotificationStatus {
+    New, Read
+}
 
 data class CalendarUIState(
     val yearMonth: YearMonth,
