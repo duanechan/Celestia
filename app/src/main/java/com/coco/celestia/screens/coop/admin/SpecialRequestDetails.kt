@@ -48,6 +48,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -119,11 +120,9 @@ fun SpecialRequestDetails(
     var productEmpty by remember { mutableStateOf(false) }
     var quantityEmpty by remember { mutableStateOf(false) }
     var quantityExceeded by remember { mutableStateOf(false) }
-    var unfulfilled by remember { mutableStateOf(false) }
 
     var productPairs by remember { mutableStateOf(request.products.associate { it.name to it.quantity }.toMutableMap()) }
     val quantityPair = productPairs[product] ?: 0
-    val unfulfilledRequests = productPairs.filter { it.value != 0 }
 
     LaunchedEffect(Unit) {
         userViewModel.fetchUsers()
@@ -227,201 +226,36 @@ fun SpecialRequestDetails(
 
         if (request.status != "To Review") {
             if (request.assignedMember.isEmpty()) {
-                Column (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White)
-                        .border(
-                            width = 2.dp,
-                            color = Green4,
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                ){
-                    Row (
-                        modifier = Modifier
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Assign a Member",
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(end = 16.dp)
-                        )
-
-                        Image(
-                            painter = painterResource(R.drawable.add),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clickable { showAddMemberDialog = true }
-                        )
-                    }
-
-                    if (assignedMember.isNotEmpty()) {
+                AssignAMember(
+                    assignedMember,
+                    productPairs,
+                    onDismiss = {
+                        assignedMember.clear()
+                        productPairs = request.products.associate { it.name to it.quantity }.toMutableMap()
+                    },
+                    onSave = {
                         assignedMember.forEach { member ->
-                            Column (
-                                modifier = Modifier
-                                    .padding(horizontal = 16.dp)
-                                    .padding(bottom = 8.dp)
-                                    .fillMaxWidth()
-                            ){
-                                Text(
-                                    text = "Name: ${member.name}",
-                                )
+                            val assignMember = TrackRecord (
+                                description = "Assigned to ${member.name}: ${member.product} ${member.quantity}kg.",
+                                dateTime = formattedDateTime
+                            )
 
-                                Text(
-                                    text = "Product: ${member.product}"
-                                )
-
-                                Text(
-                                    text = "Quantity: ${member.quantity}"
-                                )
-                            }
+                            trackRecord.add(assignMember)
                         }
 
-                        if (unfulfilled) {
-                            Column (
-                                modifier = Modifier
-                                    .padding(horizontal = 16.dp)
-                                    .padding(bottom = 8.dp)
-                                    .fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = "Some products remain unfulfilled:",
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Red
-                                )
-
-                                unfulfilledRequests.forEach { request ->
-                                    Text(
-                                        text = request.key,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Red,
-                                        modifier = Modifier
-                                            .padding(start = 6.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Box (
-                            modifier = Modifier.fillMaxWidth()
-                        ){
-                            Row (
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
-                            ) {
-                                Button(
-                                    onClick = {
-                                        assignedMember.clear()
-                                        productPairs = request.products.associate { it.name to it.quantity }.toMutableMap()
-                                    }
-                                ) {
-                                    Text("Cancel")
-                                }
-
-                                Button(
-                                    onClick = {
-                                        unfulfilled = unfulfilledRequests.isNotEmpty()
-
-                                        if (!unfulfilled) {
-                                            assignedMember.forEach { member ->
-                                                val assignMember = TrackRecord (
-                                                    description = "Assigned to ${member.name}: ${member.product} ${member.quantity}kg.",
-                                                    dateTime = formattedDateTime
-                                                )
-
-                                                trackRecord.add(assignMember)
-                                            }
-
-                                            specialRequestViewModel.updateSpecialRequest(
-                                                request.copy(
-                                                    assignedMember = assignedMember,
-                                                    trackRecord = trackRecord
-                                                )
-                                            )
-                                        }
-                                    },
-                                    colors = ButtonDefaults.buttonColors(Green4)
-                                ) {
-                                    Text("Save")
-                                }
-                            }
-                        }
-                    }
-                }
+                        specialRequestViewModel.updateSpecialRequest(
+                            request.copy(
+                                assignedMember = assignedMember,
+                                trackRecord = trackRecord
+                            )
+                        )
+                    },
+                    onShowAddMember = { showAddMemberDialog = true }
+                )
             } else {
-                Column (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White)
-                        .border(
-                            width = 2.dp,
-                            color = Green4,
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                ) {
-                    Column (
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ){
-                        Text(
-                            text = "Assigned Member/s:",
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-
-                        Row {
-                            Text(
-                                text = "Member Name",
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.weight(2f)
-                            )
-
-                            Text(
-                                text = "Product",
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            Text(
-                                text = "Quantity",
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-
-                        request.assignedMember.forEach { member ->
-                            Row (
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 2.dp)
-                            ){
-                                Text(
-                                    text = member.name,
-                                    modifier = Modifier.weight(2f)
-                                )
-
-                                Text(
-                                    text = member.product,
-                                    modifier = Modifier.weight(1f)
-                                )
-
-                                Text(
-                                    text = member.quantity.toString(),
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                        }
-                    }
-                }
+                DisplayAssignedMembers(
+                    request
+                )
             }
         }
         // Accept/ Decline
@@ -507,7 +341,17 @@ fun SpecialRequestDetails(
                 updateEmail = updateStatusEmail
                 updateStatus = status
 
-                // TODO: Update in Database
+                specialRequestViewModel.updateSpecialRequest(
+                    request.copy(
+                            assignedMember = request.assignedMember.map { member ->
+                                if (member.email == updateEmail) {
+                                    member.copy(status = updateStatus)
+                                } else {
+                                    member
+                                }
+                            }
+                        )
+                )
                 updateStatusDialog = false
             }
         )
@@ -856,6 +700,203 @@ fun SpecialRequestDetails(
     }
 }
 
+@SuppressLint("MutableCollectionMutableState")
+@Composable
+fun AssignAMember (
+    assignedMember: SnapshotStateList<AssignedMember>,
+    productPairs: MutableMap<String, Int>,
+    onDismiss: () -> Unit,
+    onSave: () -> Unit,
+    onShowAddMember: () -> Unit
+) {
+    var unfulfilled by remember { mutableStateOf(false) }
+    val unfulfilledRequests = productPairs.filter { it.value != 0 }
+
+    Column (
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White)
+            .border(
+                width = 2.dp,
+                color = Green4,
+                shape = RoundedCornerShape(12.dp)
+            )
+    ){
+        Row (
+            modifier = Modifier
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Assign a Member",
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(end = 16.dp)
+            )
+
+            Image(
+                painter = painterResource(R.drawable.add),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable { onShowAddMember() }
+            )
+        }
+
+        if (assignedMember.isNotEmpty()) {
+            assignedMember.forEach { member ->
+                Column (
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 8.dp)
+                        .fillMaxWidth()
+                ){
+                    Text(
+                        text = "Name: ${member.name}",
+                    )
+
+                    Text(
+                        text = "Product: ${member.product}"
+                    )
+
+                    Text(
+                        text = "Quantity: ${member.quantity}"
+                    )
+                }
+            }
+
+            if (unfulfilled) {
+                Column (
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 8.dp)
+                        .fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Some products remain unfulfilled:",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Red
+                    )
+
+                    unfulfilledRequests.forEach { request ->
+                        Text(
+                            text = request.key,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Red,
+                            modifier = Modifier
+                                .padding(start = 6.dp)
+                        )
+                    }
+                }
+            }
+
+            Box (
+                modifier = Modifier.fillMaxWidth()
+            ){
+                Row (
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                ) {
+                    Button(
+                        onClick = onDismiss
+                    ) {
+                        Text("Cancel")
+                    }
+
+                    Button(
+                        onClick = {
+                            unfulfilled = unfulfilledRequests.isNotEmpty()
+
+                            if (!unfulfilled) {
+                                onSave()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(Green4)
+                    ) {
+                        Text("Save")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DisplayAssignedMembers (
+    request: SpecialRequest
+) {
+    Column (
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White)
+            .border(
+                width = 2.dp,
+                color = Green4,
+                shape = RoundedCornerShape(12.dp)
+            )
+    ) {
+        Column (
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ){
+            Text(
+                text = "Assigned Member/s:",
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+
+            Row {
+                Text(
+                    text = "Member Name",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(2f)
+                )
+
+                Text(
+                    text = "Product",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Text(
+                    text = "Quantity",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            request.assignedMember.forEach { member ->
+                Row (
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 2.dp)
+                ){
+                    Text(
+                        text = member.name,
+                        modifier = Modifier.weight(2f)
+                    )
+
+                    Text(
+                        text = member.product,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Text(
+                        text = member.quantity.toString(),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun DisplayTrackOrder (
     record: TrackRecord,
@@ -925,8 +966,8 @@ fun UpdateStatusDialog (
     onConfirm: (String, String) -> Unit
 ) {
     var text by remember { mutableStateOf("") }
-    val email = text.substringAfter(" - ").trim()
-    var status by remember { mutableStateOf(request.assignedMember.find { it.email == email}.toString()) }
+    var email by remember { mutableStateOf("") }
+    var status by remember { mutableStateOf("") }
     var farmerExpanded by remember { mutableStateOf(false) }
     var statusExpanded by remember { mutableStateOf(false) }
     val formattedUser = request.assignedMember.map { "${it.name} - ${it.email}" }
@@ -950,6 +991,7 @@ fun UpdateStatusDialog (
                     value = text,
                     onValueChange = {
                         text = it
+                        email = text.substringAfter(" - ").trim()
                         farmerExpanded = true
                     },
                     singleLine = true,
@@ -978,6 +1020,7 @@ fun UpdateStatusDialog (
                         DropdownMenuItem(
                             onClick = {
                                 text = it
+                                email = text.substringAfter(" - ").trim()
                                 farmerExpanded = false
                             },
                             text = {
@@ -988,6 +1031,7 @@ fun UpdateStatusDialog (
                 }
 
                 if (text.isNotEmpty()) {
+                    status = request.assignedMember.find { it.email == email}?.status ?: ""
                     TextField(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -999,7 +1043,7 @@ fun UpdateStatusDialog (
                             )
                             .clickable { statusExpanded = !statusExpanded },
                         label = { Text("Select Status") },
-                        value = if (status == "null") "" else status,
+                        value = status,
                         onValueChange = {
                             status = it
                             statusExpanded = true
