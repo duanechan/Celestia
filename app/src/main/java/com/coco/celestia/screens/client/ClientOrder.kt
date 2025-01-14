@@ -29,10 +29,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Tab
@@ -168,11 +170,14 @@ fun ClientOrder(
 
                 Column {
                     // Column for Orders
-                    orderData.forEach { order ->
-                        OrderCard(
-                            order = order,
-                            navController = navController
-                        )
+//                    orderData.forEach { order ->
+//                        OrderCard(
+//                            order = order,
+//                            navController = navController
+//                        )
+
+                    repeat(5) { index -> // Simulate multiple orders
+                        OrderCard(order = "ORDER-$index", navController = navController)
                     }
                 }
             }
@@ -181,51 +186,142 @@ fun ClientOrder(
 }
 
 @Composable
-fun OrderCard(order: OrderData, navController: NavController) {
+fun OrderCard(order: String, navController: NavController) { // Accepting `order` as a parameter
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(16.dp)
             .clickable {
-                navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId)) 
+                navController.navigate(Screen.ClientOrderDetails.createRoute(order)) // Use the order parameter
             },
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(12.dp)
+        colors = CardDefaults.cardColors(containerColor = White1),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.elevatedCardElevation(8.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(16.dp)
         ) {
-            // Placeholders for the order details
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .background(Color.Gray) // change to image
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            // Column for order details
-            Column(
-                modifier = Modifier.weight(1f)
+            // First Row: Order ID and Date
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = "Status: ",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp)
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = "Quantity: ", fontWeight = FontWeight.Bold)
-                    Text(text = "Product: ")
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "Price: PHP ", fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "Date: ")
+                Text(
+                    text = "Order ID: $order", // Use the order parameter for the ID
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Green1
+                )
+                Text(
+                    text = "Jan 11, 2025 13:11", // Placeholder date
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Second Row: Items and Status
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Items: 2", // Placeholder for item count
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "Pending", // Placeholder status
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            Divider(
+                color = MaterialTheme.colorScheme.onSurface,
+                thickness = 1.dp,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+            // Placeholder Items
+            repeat(2) {
+                ItemCard()
+            }
+
+            Divider(
+                color = MaterialTheme.colorScheme.onSurface,
+                thickness = 1.dp,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Pick Up", // Placeholder for collection method
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Cash * Unpaid", // Placeholder for payment status
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = "Total: PHP 200", // Placeholder total
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ItemCard() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Image Placeholder
+        Card(
+            modifier = Modifier
+                .size(60.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "+ Add\nImage",
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+
+        // Product Name, Quantity, and Price Placeholders
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Potato", // Placeholder for product name
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = "10 kg", // Placeholder for quantity
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "PHP 100", // Placeholder for price
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
