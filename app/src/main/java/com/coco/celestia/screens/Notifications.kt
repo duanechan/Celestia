@@ -1,5 +1,6 @@
 package com.coco.celestia.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,10 +29,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.farmer.FarmerNotification
 import com.coco.celestia.service.NotificationService
-import com.coco.celestia.ui.theme.Cinnabar
+import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.Notification
@@ -105,9 +108,8 @@ fun FacilityNotification() {
 
     Column(
         modifier = Modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .fillMaxSize()
+            .padding(top = 16.dp)
     ) {
         if (notifications.isNotEmpty()) {
             for (notification in sortNotificationsByTimestamp(notifications)) {
@@ -115,6 +117,10 @@ fun FacilityNotification() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp)
+                        .clickable {
+                            // Create an action when a notification card is clicked
+                        },
+                    shape = RoundedCornerShape(8.dp)
                 ) {
                     Box(
                         modifier = Modifier
@@ -130,6 +136,7 @@ fun FacilityNotification() {
                                 Text(
                                     text = notification.timestamp,
                                     fontSize = 15.sp,
+                                    fontFamily = mintsansFontFamily,
                                     color = MaterialTheme.colorScheme.onBackground
                                 )
                                 if (!notification.hasRead) {
@@ -139,17 +146,18 @@ fun FacilityNotification() {
                                         color = Cinnabar
                                     )
                                 }
-
                             }
                             Text(
                                 text = notification.message,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
+                                fontFamily = mintsansFontFamily,
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                             Text(
                                 text = (notification.details as OrderData).orderData[0].name,
                                 fontSize = 16.sp,
+                                fontFamily = mintsansFontFamily,
                                 color = MaterialTheme.colorScheme.onBackground
                             )
                         }
@@ -157,14 +165,20 @@ fun FacilityNotification() {
                 }
             }
         } else {
-            Text(
-                text = "No notifications",
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onBackground
-            )
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No notifications",
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
         }
     }
 }
+
 
 fun sortNotificationsByTimestamp(notifications: List<Notification>): List<Notification> {
     val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
