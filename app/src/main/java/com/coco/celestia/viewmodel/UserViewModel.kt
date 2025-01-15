@@ -7,6 +7,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.viewmodel.model.BasketItem
+import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.UserData
 import com.coco.celestia.viewmodel.model.toMap
 import com.google.firebase.FirebaseNetworkException
@@ -449,17 +450,8 @@ class UserViewModel : ViewModel() {
             _userState.value = UserState.LOADING
             try {
                 val basketRef = database.child(uid).child("basket").child(item.id)
-                val currentTimestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
 
-                val itemMap = mapOf(
-                    "id" to item.id,
-                    "productId" to item.productId,
-                    "product" to item.product,
-                    "price" to item.price,
-                    "quantity" to item.quantity,
-                    "isRetail" to item.isRetail,
-                    "timestamp" to currentTimestamp
-                )
+                val itemMap = item.toMap()
 
                 basketRef.setValue(itemMap)
                     .addOnSuccessListener {

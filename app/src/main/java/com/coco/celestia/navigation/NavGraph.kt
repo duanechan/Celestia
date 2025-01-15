@@ -6,6 +6,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -77,6 +78,7 @@ import com.coco.celestia.screens.farmer.details.FarmerOrderMilestones
 import com.coco.celestia.screens.farmer.details.FarmerRequestDetails
 import com.coco.celestia.screens.farmer.details.LoadingIndicator
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.service.NotificationService
 import com.coco.celestia.viewmodel.ContactViewModel
 import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.FarmerItemViewModel
@@ -92,9 +94,12 @@ import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.VendorViewModel
 import com.coco.celestia.viewmodel.model.BasketItem
 import com.coco.celestia.viewmodel.model.Constants
+import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.serialization.json.Json
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun NavGraph(
@@ -137,6 +142,40 @@ fun NavGraph(
     var reorderPoint by remember { mutableStateOf(0.0) }
     var isDelivery by remember { mutableStateOf(false) }
     var isGcash by remember { mutableStateOf(false) }
+    val notifications = remember { mutableStateListOf<Notification>() }
+    var newNotification by remember { mutableIntStateOf(0) }
+    var notificationFirstLaunch by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
+        NotificationService.observeUserNotifications(
+            uid = uid,
+            onNotificationsChanged = {
+                if (notificationFirstLaunch) {
+                    notifications.clear()
+                    notifications.addAll(it)
+                    notificationFirstLaunch = false
+                    newNotification = it.size
+                } else {
+                    if (it.size > newNotification) {
+                        onEvent(
+                            Triple(
+                                ToastStatus.SUCCESSFUL,
+                                it.maxByOrNull { notification ->
+                                    LocalDateTime.parse(notification.timestamp, formatter)
+                                }?.message.toString(),
+                                System.currentTimeMillis()
+                            )
+                        )
+                    }
+                    notifications.clear()
+                    notifications.addAll(it)
+                    newNotification = it.size
+                }
+            },
+            onError = {}
+        )
+    }
 
     NavHost(
         navController = navController,
@@ -180,9 +219,7 @@ fun NavGraph(
         }
         composable(route = Screen.Notifications.route) {
             onNavigate("Notifications")
-            Notifications(
-                role = userRole
-            )
+            Notifications(role = userRole)
         }
         composable(route = Screen.Farmer.route) {
             onNavigate("Dashboard")

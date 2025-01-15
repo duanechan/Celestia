@@ -4,9 +4,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.coco.celestia.service.NotificationService
 import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.FullFilledBy
 import com.coco.celestia.viewmodel.model.MostOrdered
+import com.coco.celestia.viewmodel.model.Notification
+import com.coco.celestia.viewmodel.model.NotificationType
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.database.DataSnapshot
@@ -14,7 +17,10 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.reflect.full.memberProperties
 
 sealed class OrderState {
@@ -152,7 +158,7 @@ class OrderViewModel : ViewModel() {
                         .mapNotNull { snapshot -> parseOrderData(snapshot) }
                         .filter { order ->
                             // This should filter orders based on the facility? ☠️
-                            val coopOrder = order.orderData.any { it.type == "${role.replace("Coop", "")}" }
+                            val coopOrder = order.orderData.any { it.type == role.replace("Coop", "") }
                             val matchesFilter = filterKeywords.any { keyword ->
                                 order::class.memberProperties.any { property ->
                                     val value = property.getter.call(order)?.toString() ?: ""
@@ -223,6 +229,25 @@ class OrderViewModel : ViewModel() {
             val query = database.child(uid).push()
             query.setValue(order)
                 .addOnCompleteListener {
+                    viewModelScope.launch {
+                        val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
+                        val formattedDateTime = LocalDateTime.now().format(formatter)
+
+                        val notification = Notification(
+                            timestamp = formattedDateTime,
+                            sender = order.client,
+                            details = order,
+                            message = "New order request from ${order.client}!",
+                            type = NotificationType.OrderPlaced
+                        )
+
+                        NotificationService.pushNotifications(
+                            notification = notification,
+                            onComplete = { println("Success!") },
+                            onError = { println("Error.") }
+                        )
+                    }
+
                     _orderState.value = OrderState.SUCCESS
                 }
                 .addOnFailureListener { exception ->

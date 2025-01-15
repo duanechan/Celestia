@@ -125,6 +125,7 @@ fun OrderSummary(
                         totalPrice = items.sumOf { it.price },
                         onPlaceOrder = {
                             // Place the order
+                            println(items)
                             orderViewModel.placeOrder(
                                 uid = uid,
                                 order = OrderData(
@@ -146,6 +147,7 @@ fun OrderSummary(
                                     paymentMethod = payment
                                 )
                             )
+                            println(items)
                             // Navigate the orders screen
                             navController.navigate(Screen.ClientOrder.route)
                             // Clear checkout items from basket

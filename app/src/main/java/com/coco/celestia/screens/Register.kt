@@ -288,6 +288,7 @@ fun RegisterScreen(
                     } else if (password != confirmPassword) {
                         onRegisterEvent(Triple(ToastStatus.WARNING, "Password does not match.", System.currentTimeMillis()))
                     } else if (!privacyPolicyRead) {
+                        println("Test")
                         onRegisterEvent(Triple(ToastStatus.WARNING, "Please read and check the privacy policy first.", System.currentTimeMillis()))
                     } else {
                         userViewModel.register(email, firstName, lastName, password, selectedRole)

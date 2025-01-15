@@ -38,6 +38,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -67,6 +68,7 @@ import com.coco.celestia.navigation.NavDrawerTopBar
 import com.coco.celestia.navigation.NavGraph
 import com.coco.celestia.navigation.TopBar
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.service.NotificationService
 import com.coco.celestia.ui.theme.CelestiaTheme
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green4
@@ -75,6 +77,7 @@ import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.FacilityData
+import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.firebase.auth.FirebaseAuth
@@ -82,6 +85,7 @@ import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
 
 @OptIn(ExperimentalComposeUiApi::class)
 class MainActivity : ComponentActivity() {
@@ -587,8 +591,8 @@ fun App() {
                             currentDestination = currentDestination,
                             role = userData.role
                         )
-                        Toast(message = toastMessage, status = toastStatus, visibility = showToast)
                     }
+                    Toast(message = toastMessage, status = toastStatus, visibility = showToast)
                 },
                 bottomBar = {
                     if (shouldShowNavigation) {

@@ -116,8 +116,9 @@ fun BasketScreen(
                         checkoutItems = checkoutItems,
                         onCheckout = {
                             if (it.isNotEmpty()) {
-                                userViewModel.updateCheckoutItems(uid, it)
-                                val itemsJson = Uri.encode(Json.encodeToString(it.toList()))
+                                val items = it.toList()
+                                userViewModel.updateCheckoutItems(uid, items)
+                                val itemsJson = Uri.encode(Json.encodeToString(items))
                                 navController.navigate(Screen.OrderSummary.createRoute(itemsJson))
                             } else {
                                 onEvent(

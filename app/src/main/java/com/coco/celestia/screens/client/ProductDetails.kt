@@ -58,6 +58,9 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.selects.select
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.UUID
 
 @Composable
@@ -132,6 +135,7 @@ fun ProductDetails(
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var selectedQuantity by remember { mutableIntStateOf(0) }
+    val currentTimestamp = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item { ProductDetails_Header(name = product.name, productImage) }
@@ -159,7 +163,8 @@ fun ProductDetails(
                                 product = product.name,
                                 price = product.price * selectedQuantity,
                                 quantity = selectedQuantity,
-                                isRetail = true
+                                isRetail = true,
+                                timestamp = currentTimestamp
                             )
                         )
                         val itemsJson = Uri.encode(Json.encodeToString(item))
@@ -176,17 +181,17 @@ fun ProductDetails(
                 },
                 onAddItem = {
                     if (selectedQuantity > 0) {
-                        userViewModel.addItem(
-                            uid = uid,
-                            item = BasketItem(
-                                id = UUID.randomUUID().toString(),
-                                productId = product.productId,
-                                product = product.name,
-                                price = product.price * selectedQuantity,
-                                quantity = selectedQuantity,
-                                isRetail = true
-                            )
+                        val item = BasketItem(
+                            id = UUID.randomUUID().toString(),
+                            productId = product.productId,
+                            productType = product.type,
+                            product = product.name,
+                            price = product.price * selectedQuantity,
+                            quantity = selectedQuantity,
+                            isRetail = true,
+                            timestamp = currentTimestamp
                         )
+                        userViewModel.addItem(uid, item)
                         onEvent(
                             Triple(
                                 ToastStatus.SUCCESSFUL,
