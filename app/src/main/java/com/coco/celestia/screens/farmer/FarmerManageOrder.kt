@@ -288,6 +288,7 @@ fun DisplayRequestDetails (
 
     var checked by remember { mutableStateOf(true) }
     var updateStatusDialog by remember { mutableStateOf(false) }
+    var description by remember { mutableStateOf("") }
 
     Column (
         modifier = Modifier
@@ -409,6 +410,16 @@ fun DisplayRequestDetails (
                 }
             }
         }
+
+        OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("Description") },
+            placeholder = { Text("Update the cooperative with your progress...") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
 
         Button(
             onClick = {
