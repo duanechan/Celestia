@@ -54,7 +54,6 @@ import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.UserViewModel
-import com.coco.celestia.viewmodel.model.AssignedMember
 import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
@@ -198,6 +197,7 @@ fun AddSpecialReq(
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     val userData by userViewModel.userData.observeAsState()
     val trackRecord = remember { mutableStateListOf<TrackRecord>() }
+    var deliveryAddress by remember { mutableStateOf("") }
 
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
@@ -413,7 +413,10 @@ fun AddSpecialReq(
         ) {
             RadioButton(
                 selected = collectionMethod == Constants.COLLECTION_PICKUP,
-                onClick = { collectionMethod = Constants.COLLECTION_PICKUP}
+                onClick = {
+                    collectionMethod = Constants.COLLECTION_PICKUP
+                    deliveryAddress = "City Vet Office, Baguio City"
+                }
             )
             Text(Constants.COLLECTION_PICKUP)
         }
@@ -423,7 +426,10 @@ fun AddSpecialReq(
         ) {
             RadioButton(
                 selected = collectionMethod == Constants.COLLECTION_DELIVERY,
-                onClick = { collectionMethod = Constants.COLLECTION_DELIVERY}
+                onClick = {
+                    collectionMethod = Constants.COLLECTION_DELIVERY
+                    deliveryAddress = "${userData?.streetNumber}, ${userData?.barangay}"
+                }
             )
             Text(Constants.COLLECTION_DELIVERY)
         }
@@ -491,7 +497,7 @@ fun AddSpecialReq(
                         name = "${userData?.firstname} ${userData?.lastname}",
                         dateRequested = formattedDateTime,
                         specialRequestUID = "SR-${UUID.randomUUID()}",
-                        trackRecord = trackRecord
+                        trackRecord = trackRecord,
                     )
 
                     specialRequestViewModel.addSpecialRequest(

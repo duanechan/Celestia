@@ -127,6 +127,9 @@ sealed class Screen(val route: String) {
     data object Farmer: Screen( route = "farmer_dashboard")
     data object FarmerManageOrder: Screen( route = "farmer_manage_order")
     data object FarmerItems: Screen( route = "farmer_items")
+    data object FarmerRequestCardDetails: Screen ( route = "farmer_request_details/{specialReqUID}/{farmerEmail}/{product}") {
+        fun createRoute(specialReqUID: String, farmerEmail: String, product: String) = "farmer_request_details/${Uri.encode(specialReqUID)}/$farmerEmail/$product"
+    }
 //    data object FarmerNotification : Screen("farmer_notification")
     data object FarmerTransactions: Screen( route = "farmer_transactions")
     data object FarmerAddProduct: Screen(route = "farmer_add_product")

@@ -75,7 +75,6 @@ import com.coco.celestia.viewmodel.model.AssignedMember
 import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.SpecialRequest
 import com.coco.celestia.viewmodel.model.TrackRecord
-import com.coco.celestia.viewmodel.model.UserData
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -126,10 +125,6 @@ fun SpecialRequestDetails(
 
     LaunchedEffect(Unit) {
         userViewModel.fetchUsers()
-    }
-
-    val user = usersData.let { user ->
-        user?.find { it.email == request.email }
     }
 
     val filteredUsers = usersData?.filter {
@@ -219,7 +214,6 @@ fun SpecialRequestDetails(
 
         if (checked) {
             DisplayRequestDetails(
-                user,
                 request
             )
         }
@@ -665,13 +659,21 @@ fun SpecialRequestDetails(
                         if (!memberEmpty && !productEmpty && !quantityEmpty && !quantityExceeded) {
                             email = text.substringAfter(" - ").trim()
                             val name = text.substringBefore(" - ").trim()
-                            val member = AssignedMember(
-                                email = email,
-                                name = name,
-                                product = product,
-                                quantity = quantity
-                            )
-                            assignedMember.add(member)
+
+                            val existingMember = assignedMember.find { it.email == email && it.product == product }
+
+                            if (existingMember != null) {
+                                existingMember.quantity += quantity
+                            } else {
+                                val member = AssignedMember(
+                                    email = email,
+                                    specialRequestUID = request.specialRequestUID,
+                                    name = name,
+                                    product = product,
+                                    quantity = quantity
+                                )
+                                assignedMember.add(member)
+                            }
 
                             text = ""
                             product = ""
@@ -1031,7 +1033,6 @@ fun UpdateStatusDialog (
                 }
 
                 if (text.isNotEmpty()) {
-                    status = request.assignedMember.find { it.email == email}?.status ?: ""
                     TextField(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -1122,7 +1123,6 @@ fun MemberItems (
 
 @Composable
 fun DisplayRequestDetails(
-    user: UserData?,
     request: SpecialRequest
 ) {
     Column (
@@ -1241,12 +1241,6 @@ fun DisplayRequestDetails(
                         .padding(top = 12.dp, bottom = 4.dp)
                 )
 
-                Text(
-                    text = "${user?.streetNumber}, ${user?.barangay}",
-                    modifier = Modifier
-                        .padding(horizontal = 14.dp)
-                        .padding(2.dp)
-                )
             } else {
                 Text(
                     text = "Pick Up Location:",
@@ -1254,14 +1248,14 @@ fun DisplayRequestDetails(
                         .padding(horizontal = 12.dp)
                         .padding(top = 12.dp, bottom = 4.dp)
                 )
-
-                Text(
-                    text = "City Vet Office, Baguio City",
-                    modifier = Modifier
-                        .padding(horizontal = 14.dp)
-                        .padding(2.dp)
-                )
             }
+
+            Text(
+                text = request.deliveryAddress,
+                modifier = Modifier
+                    .padding(horizontal = 14.dp)
+                    .padding(2.dp)
+            )
 
             Text(
                 text = "Additional Request/s:",

@@ -58,12 +58,18 @@ class SpecialRequestViewModel : ViewModel() {
                 val requests = snapshot.children.flatMap { userSnapshot ->
                     userSnapshot.children.mapNotNull { requestSnapshot ->
                         requestSnapshot.getValue(SpecialRequest::class.java)
-                    }.filter { request ->
-                        request.status.equals(filter, ignoreCase = true)
                     }
                 }.let { unsortedRequests ->
+                    if (filter.isNotEmpty()) {
+                        unsortedRequests.filter { request ->
+                            request.status.equals(filter, ignoreCase = true)
+                        }
+                    } else {
+                        unsortedRequests
+                    }
+                }.let { filteredRequests ->
                     if (orderBy.isNotEmpty()) {
-                        val sortedRequests = unsortedRequests.sortedByDescending { request ->
+                        val sortedRequests = filteredRequests.sortedByDescending { request ->
                             try {
                                 when (orderBy) {
                                     "Requested" -> request.dateRequested.let { LocalDateTime.parse(it, formatter) }
@@ -76,7 +82,7 @@ class SpecialRequestViewModel : ViewModel() {
                         }
                         if (!ascending) sortedRequests.reversed() else sortedRequests
                     } else {
-                        unsortedRequests
+                        filteredRequests
                     }
                 }
 
@@ -122,6 +128,45 @@ class SpecialRequestViewModel : ViewModel() {
                     } else {
                         _specialReqState.value = SpecialReqState.EMPTY
                     }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    _specialReqState.value = SpecialReqState.ERROR(error.message)
+                }
+            })
+        }
+    }
+
+    fun fetchAssignedProducts(
+        farmerEmail: String,
+        statusFilter: String
+    ) {
+        viewModelScope.launch {
+            database.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val assignedProduct = mutableListOf<SpecialRequest>()
+                    for (userSnapshot in snapshot.children) {
+                        for (requestedSnapshot in userSnapshot.children) {
+                            val assignedMemberSnapshot = requestedSnapshot.child("assignedMember")
+
+                            val status = requestedSnapshot.child("status").getValue(String::class.java)
+                            if (status != statusFilter) continue
+
+                            for (memberSnapshot in assignedMemberSnapshot.children) {
+                                val email = memberSnapshot.child("email").getValue(String::class.java)
+
+                                if (email == farmerEmail) {
+                                    val assignedMember = requestedSnapshot.getValue(SpecialRequest::class.java)
+                                    if (assignedMember != null) {
+                                        assignedProduct.add(assignedMember)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    _specialReqData.value = assignedProduct
+                    _specialReqState.value = if (assignedProduct.isEmpty()) SpecialReqState.EMPTY else SpecialReqState.SUCCESS
                 }
 
                 override fun onCancelled(error: DatabaseError) {

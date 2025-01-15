@@ -65,6 +65,7 @@ import com.coco.celestia.screens.coop.facility.VendorDetailsScreen
 import com.coco.celestia.screens.coop.facility.Vendors
 import com.coco.celestia.screens.coop.facility.forms.CoopPurchaseForm
 import com.coco.celestia.screens.coop.facility.forms.SalesAddForm
+import com.coco.celestia.screens.farmer.DisplayRequestDetails
 import com.coco.celestia.screens.farmer.FarmerDashboard
 import com.coco.celestia.screens.farmer.FarmerItems
 import com.coco.celestia.screens.farmer.FarmerManageOrder
@@ -224,8 +225,7 @@ fun NavGraph(
             FarmerManageOrder(
                 navController = navController,
                 userViewModel = userViewModel,
-                orderViewModel = orderViewModel,
-                productViewModel = productViewModel
+                specialRequestViewModel = specialRequestViewModel
             )
         }
         composable(route = Screen.FarmerItems.route) {
@@ -246,6 +246,24 @@ fun NavGraph(
         ) { backStackEntry ->
             val orderId = backStackEntry.arguments?.getString("orderId") ?: return@composable
             FarmerOrderMilestones(navController = navController, orderId = orderId)
+        }
+        composable(
+            route = Screen.FarmerRequestCardDetails.route,
+            arguments = listOf(
+                navArgument("specialReqUID") { type = NavType.StringType },
+                navArgument("farmerEmail") { type = NavType.StringType },
+                navArgument("product") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val specialReqUID = backStackEntry.arguments?.getString("specialReqUID") ?: ""
+            val farmerEmail = backStackEntry.arguments?.getString("farmerEmail") ?: ""
+            val product = backStackEntry.arguments?.getString("product") ?: ""
+            DisplayRequestDetails(
+                specialRequestViewModel,
+                specialReqUID,
+                farmerEmail,
+                product
+            )
         }
 
         composable(route = Screen.Client.route) {

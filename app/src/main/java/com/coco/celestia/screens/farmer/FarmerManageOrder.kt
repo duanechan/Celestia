@@ -1,14 +1,13 @@
-@file:OptIn(ExperimentalFoundationApi::class)
+@file:OptIn(ExperimentalFoundationApi::class, ExperimentalFoundationApi::class)
 
 package com.coco.celestia.screens.farmer
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,7 +39,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.viewmodel.OrderState
-import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.foundation.layout.*
@@ -60,46 +58,45 @@ import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.UserData
-import com.coco.celestia.viewmodel.ProductViewModel
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.rounded.ArrowDropDown
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.ui.theme.*
-import com.coco.celestia.viewmodel.FarmerItemViewModel
+import com.coco.celestia.viewmodel.SpecialRequestViewModel
+import com.coco.celestia.viewmodel.model.Constants
+import com.coco.celestia.viewmodel.model.SpecialRequest
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun FarmerManageOrder(
     navController: NavController,
     userViewModel: UserViewModel,
-    orderViewModel: OrderViewModel,
-    productViewModel: ProductViewModel,
+    specialRequestViewModel: SpecialRequestViewModel
 ) {
     val userData by userViewModel.userData.observeAsState()
-    val orderData by orderViewModel.orderData.observeAsState(emptyList())
-    val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
-    val productData by productViewModel.productData.observeAsState()
+    val assignedProducts by specialRequestViewModel.specialReqData.observeAsState()
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-    val farmerItemViewModel: FarmerItemViewModel = viewModel()
 
-    var selectedSection by remember { mutableStateOf("All") }
     var searchQuery by remember { mutableStateOf("") }
-    var farmerName by remember { mutableStateOf("") }
+    var tabName by remember { mutableStateOf("In Progress") }
 
-    LaunchedEffect(Unit) {
-        orderViewModel.fetchAllOrders(filter = "", role = "Farmer")
-        productViewModel.fetchProducts(filter = "", role = "Farmer")
+    LaunchedEffect(tabName) {
         userViewModel.fetchUser(uid)
-        if (uid.isNotEmpty()) {
-            farmerName = farmerItemViewModel.fetchFarmerName(uid)
-        }
+        specialRequestViewModel.fetchAssignedProducts(
+            userData?.email ?: "",
+            tabName
+        )
     }
 
     Spacer(modifier = Modifier.width(30.dp))
@@ -159,13 +156,11 @@ fun FarmerManageOrder(
                     .fillMaxHeight()
                     .background(color = BgColor)
                     .verticalScroll(rememberScrollState())
-                    .semantics { testTag = "android:id/farmerManageOrderColumn" }
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
-                        .semantics { testTag = "android:id/farmerManageOrderSearchRow" },
+                        .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextField(
@@ -182,8 +177,7 @@ fun FarmerManageOrder(
                         modifier = Modifier
                             .weight(1f)
                             .background(color = White2, shape = RoundedCornerShape(16.dp))
-                            .border(BorderStroke(1.dp, color = DarkGreen), shape = RoundedCornerShape(16.dp))
-                            .semantics { testTag = "android:id/searchBar" },
+                            .border(BorderStroke(1.dp, color = DarkGreen), shape = RoundedCornerShape(16.dp)),
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.Transparent,
@@ -193,17 +187,531 @@ fun FarmerManageOrder(
                             unfocusedIndicatorColor = Color.Transparent,
                             disabledIndicatorColor = Color.Transparent,
                             errorIndicatorColor = Color.Transparent,
-                            focusedTextColor = Cocoa, // Text color when TextField is focused
-                            unfocusedTextColor = DarkGreen // Text color when TextField is not focused
+                            focusedTextColor = Cocoa,
+                            unfocusedTextColor = DarkGreen
                         )
                     )
+                }
+
+                tabName = if (page == 0) {
+                    "In Progress"
+                } else {
+                    "Completed"
+                }
+
+                assignedProducts?.forEach { assigned ->
+                    if (searchQuery.isEmpty() ||
+                        assigned.subject.contains(searchQuery, ignoreCase = true) ||
+                        assigned.name.contains(searchQuery, ignoreCase = true) ||
+                        assigned.assignedMember.any { it.status.contains(searchQuery,ignoreCase = true) }
+                        ) {
+                        DisplayRequestCard(
+                            navController,
+                            assigned,
+                            userData?.email ?: ""
+                        )
+                    }
+
                 }
             }
         }
     }
 }
 
-//DONT REMOVE ATM
+@Composable
+fun DisplayRequestCard (
+    navController: NavController,
+    specialRequest: SpecialRequest,
+    farmerEmail: String,
+) {
+    val assignedMember = specialRequest.assignedMember.find { it.email == farmerEmail }
+
+    Card (
+        colors = CardDefaults.cardColors(
+            containerColor = White1
+        ),
+        border = BorderStroke(1.dp, Green2),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(bottom = 16.dp)
+            .clickable (
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(bounded = true)
+            ) {
+                navController.navigate(Screen.FarmerRequestCardDetails.createRoute(specialRequest.specialRequestUID, farmerEmail,
+                    assignedMember?.product ?: ""
+                ))
+            },
+    ) {
+        Column (
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ){
+            Text(
+                text = assignedMember?.status ?: "",
+                color = Green2
+            )
+            Text(
+                text = specialRequest.subject,
+                fontSize = 24.sp,
+                color = Green1
+            )
+            Text(
+                text = specialRequest.name,
+                color = Green2
+            )
+        }
+    }
+}
+
+@Composable
+fun DisplayRequestDetails (
+    specialRequestViewModel: SpecialRequestViewModel,
+    specialRequestUID: String,
+    farmerEmail: String,
+    product: String
+) {
+    LaunchedEffect(Unit) {
+        specialRequestViewModel.fetchSpecialRequests("", "", true)
+    }
+
+    val specialRequests by specialRequestViewModel.specialReqData.observeAsState()
+    val specialRequest = specialRequests?.find { it.specialRequestUID == specialRequestUID }
+
+    val inputFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
+    val dateTime = LocalDateTime.parse(specialRequest?.dateRequested ?: "", inputFormatter)
+    val dateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy")
+    val date = dateTime.format(dateFormatter)
+
+    var checked by remember { mutableStateOf(true) }
+    var updateStatusDialog by remember { mutableStateOf(false) }
+
+    Column (
+        modifier = Modifier
+            .fillMaxSize()
+            .background(White2)
+            .verticalScroll(rememberScrollState())
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Green4)
+                .padding(horizontal = 8.dp)
+                .padding(bottom = 8.dp)
+        ) {
+            Text(
+                text = "Date of Request: $date"
+            )
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp)
+                .padding(top = 8.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.White)
+                .border(
+                    width = 2.dp,
+                    color = Green4,
+                    shape = RoundedCornerShape(12.dp)
+                )
+        ) {
+            Text(
+                text = "Request ID",
+                modifier = Modifier
+                    .padding(16.dp)
+                    .weight(1f)
+            )
+
+            Text(
+                text = specialRequest?.specialRequestUID?.split("-")?.take(4)?.joinToString("-") ?: "",
+                modifier = Modifier
+                    .padding(16.dp)
+                    .weight(2f)
+            )
+        }
+
+        Row (
+            modifier = Modifier
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ){
+            Text(
+                text = "Details",
+                fontWeight = FontWeight.Bold
+            )
+
+            Switch(
+                checked = checked,
+                onCheckedChange = { checked = it},
+                modifier = Modifier
+                    .graphicsLayer (
+                        scaleX = 0.6f,
+                        scaleY = 0.6f
+                    ),
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Green4,
+                    checkedTrackColor = Green1,
+                    uncheckedThumbColor = Green2,
+                    uncheckedTrackColor = Green4
+                )
+            )
+        }
+
+        if (checked) {
+            if (specialRequest != null) {
+                DisplayDetails(
+                    specialRequest = specialRequest
+                )
+            }
+        }
+
+        Text(
+            text = "Assigned to you",
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+        )
+
+        specialRequest?.assignedMember?.forEach { member ->
+            if (member.email == farmerEmail && member.product == product) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                        .padding(top = 8.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White)
+                        .border(
+                            width = 2.dp,
+                            color = Green4,
+                            shape = RoundedCornerShape(12.dp)
+                        ),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = member.product,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .padding(16.dp)
+                    )
+
+                    Text(
+                        text = "${member.quantity}kg",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .padding(16.dp)
+                    )
+                }
+            }
+        }
+
+        Button(
+            onClick = {
+                updateStatusDialog = true
+            },
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                contentColor = Color.White,
+                containerColor = Green1
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            Text("Update Status")
+        }
+    }
+
+    if (updateStatusDialog) {
+        if (specialRequest != null) {
+            DisplayUpdateStatus(
+                product = product,
+                onConfirm = { status ->
+                    specialRequestViewModel.updateSpecialRequest(
+                        specialRequest.copy(
+                            assignedMember = specialRequest.assignedMember.map { member ->
+                                if (member.email == farmerEmail && member.product == product) {
+                                    member.copy(status = status)
+                                } else {
+                                    member
+                                }
+                            }
+                        )
+                    )
+
+                    updateStatusDialog = false
+                },
+                onDismiss = { updateStatusDialog = false}
+            )
+        }
+    }
+}
+
+@Composable
+fun DisplayUpdateStatus (
+    product: String,
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var status by remember { mutableStateOf("") }
+    var statusExpanded by remember { mutableStateOf(false) }
+    val statusList = listOf("Test", " Test", "Test")
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Update Status For:") },
+        text = {
+            Column {
+                TextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            width = 2.dp,
+                            color = Green2,
+                            shape = RoundedCornerShape(12.dp)
+                        ),
+                    label = { Text("Product") },
+                    value = product,
+                    onValueChange = { },
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        disabledTextColor = Color.Black,
+                        disabledContainerColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent
+                    ),
+                    enabled = false,
+                )
+
+                if (product.isNotEmpty()) {
+                    TextField(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                            .border(
+                                width = 2.dp,
+                                color = Green2,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .clickable { statusExpanded = !statusExpanded },
+                        label = { Text("Select Status") },
+                        value = status,
+                        onValueChange = {
+                            status = it
+                            statusExpanded = true
+                        },
+                        singleLine = true,
+                        trailingIcon = {
+                            IconButton(onClick = { statusExpanded = !statusExpanded }) {
+                                Icon(
+                                    imageVector = Icons.Rounded.ArrowDropDown,
+                                    contentDescription = null,
+                                    tint = Color.Black
+                                )
+                            }
+                        },
+                        colors = TextFieldDefaults.colors(
+                            disabledTextColor = Color.Black,
+                            disabledContainerColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent
+                        ),
+                        enabled = false,
+                    )
+
+                    DropdownMenu(
+                        expanded = statusExpanded,
+                        onDismissRequest = { statusExpanded = false}
+                    ) {
+                        statusList.forEach {
+                            DropdownMenuItem(
+                                onClick = {
+                                    status = it
+                                    statusExpanded = false
+                                },
+                                text = {
+                                    Text(text = it)
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(status) }
+            ) {
+                Text("Confirm")
+            }
+        },
+        dismissButton = {
+            Button(
+                onClick = onDismiss
+            ) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+fun DisplayDetails (
+    specialRequest: SpecialRequest
+) {
+    Column (
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
+        Row (
+            modifier = Modifier
+                .padding(8.dp)
+        ) {
+            Text(
+                text = "Subject",
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .weight(1f)
+            )
+
+            Text(
+                text = specialRequest.subject,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .weight(2f)
+            )
+        }
+
+        Divider(
+            color = Color.Gray,
+            thickness = 1.dp,
+            modifier = Modifier.padding(8.dp)
+        )
+
+        Row (
+            modifier = Modifier
+                .padding(8.dp)
+        ) {
+            Text(
+                text = "Description",
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .weight(1f)
+            )
+
+            Text(
+                text = specialRequest.description,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .weight(2f)
+            )
+        }
+
+        Divider(
+            color = Color.Gray,
+            thickness = 1.dp,
+            modifier = Modifier.padding(8.dp)
+        )
+
+        Text(
+            text = "Request Details",
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .padding(8.dp)
+        )
+
+        Column (
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+                .clip(shape = RoundedCornerShape(12.dp))
+                .background(Color.White)
+                .border(
+                    width = 2.dp,
+                    color = Green4,
+                    shape = RoundedCornerShape(12.dp)
+                )
+        ) {
+            Text(
+                text = "Product/s and Quantity",
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .padding(top = 12.dp, bottom = 4.dp)
+            )
+
+            specialRequest.products.forEachIndexed { index, product ->
+                Row (
+                    modifier = Modifier
+                        .padding(horizontal = 14.dp)
+                        .padding(2.dp)
+                ){
+                    Text(
+                        text = "${index + 1}. ${product.name}: ${product.quantity} kg"
+                    )
+                }
+            }
+
+            Text(
+                text = "Target Delivery Date: ${specialRequest.targetDate}",
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .padding(top = 12.dp, bottom = 4.dp)
+            )
+
+            Text(
+                text = "Collection Method: ${specialRequest.collectionMethod}",
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .padding(top = 12.dp, bottom = 4.dp)
+            )
+
+            if (specialRequest.collectionMethod == Constants.COLLECTION_DELIVERY) {
+                Text(
+                    text = "Delivery Location:",
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                        .padding(top = 12.dp, bottom = 4.dp)
+                )
+            } else {
+                Text(
+                    text = "Pick Up Location:",
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                        .padding(top = 12.dp, bottom = 4.dp)
+                )
+            }
+
+            Text(
+                text = specialRequest.deliveryAddress,
+                modifier = Modifier
+                    .padding(horizontal = 14.dp)
+                    .padding(2.dp)
+            )
+
+            Text(
+                text = "Additional Request/s:",
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .padding(top = 12.dp, bottom = 4.dp)
+            )
+
+            Text(
+                text = specialRequest.additionalRequest.ifEmpty { "N/A" },
+                modifier = Modifier
+                    .padding(horizontal = 14.dp)
+                    .padding(2.dp)
+                    .padding(bottom = 6.dp)
+            )
+        }
+    }
+}
+//DON'T REMOVE ATM
 @Composable
 fun FarmerManageRequest(
     navController: NavController,
@@ -238,7 +746,7 @@ fun FarmerManageRequest(
                         order.orderId.contains(searchQuery, ignoreCase = true) &&
                                 (selectedCategory.isEmpty() || order.orderData[0].name.equals(selectedCategory, ignoreCase = true))
                     }
-                Log.d("orders", filteredOrders.toString())
+
                 if (filteredOrders.isEmpty()) {
                     Text("No pending orders available.")
                 } else {
