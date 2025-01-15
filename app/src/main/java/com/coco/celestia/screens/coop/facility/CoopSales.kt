@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.navigation.NavController
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -33,10 +34,16 @@ import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.White1
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
+import com.coco.celestia.viewmodel.OrderState
+import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.SalesState
 import com.coco.celestia.viewmodel.SalesViewModel
+import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.SalesData
+import kotlinx.coroutines.delay
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -49,6 +56,7 @@ fun CoopSales(
 ) {
     val facilityViewModel: FacilityViewModel = viewModel()
     val salesViewModel: SalesViewModel = viewModel()
+    val orderViewModel: OrderViewModel = viewModel()
 
     val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
     val facilityState by facilityViewModel.facilityState.observeAsState(FacilityState.LOADING)
@@ -95,7 +103,8 @@ fun CoopSales(
                         OnlineSalesContentUI(
                             navController = navController,
                             facilityName = facilityName,
-                            viewModel = salesViewModel
+                            viewModel = salesViewModel,
+                            orderViewModel = orderViewModel
                         )
                     }
                 }
@@ -388,7 +397,7 @@ private fun SalesCard(
 // TODO: Remove this data class later kapag meron na yung ordering sa retail
 data class OrderItem(
     val status: String,
-    val totalActivities: Int
+    var totalActivities: Int
 )
 // TODO: I'll modify this kapag naayos na yung ordering sa client side
 // TODO: Pati yung Sales tab modify nalang din since currently nagpapakita yung in-store sales
@@ -396,7 +405,8 @@ data class OrderItem(
 private fun OnlineSalesContentUI(
     navController: NavController,
     facilityName: String,
-    viewModel: SalesViewModel
+    viewModel: SalesViewModel,
+    orderViewModel: OrderViewModel,
 ) {
     var selectedTab by remember { mutableStateOf("Orders") }
     var selectedOrderStatus by remember { mutableStateOf("Pending") }
@@ -406,13 +416,13 @@ private fun OnlineSalesContentUI(
 
     val tabs = listOf("Orders", "Sales")
     val statuses = listOf(
-        OrderItem("Pending", 3),
-        OrderItem("Confirmed", 5),
-        OrderItem("To Deliver", 2),
-        OrderItem("To Recieve", 1),
-        OrderItem("Completed", 8),
+        OrderItem("Pending", 0),
+        OrderItem("Confirmed", 0),
+        OrderItem("To Deliver", 0),
+        OrderItem("To Recieve", 0),
+        OrderItem("Completed", 0),
         OrderItem("Cancelled", 0),
-        OrderItem("Return/Refund", 1)
+        OrderItem("Return/Refund", 0)
     )
 
     val salesState by viewModel.salesState.observeAsState(SalesState.LOADING)
@@ -421,6 +431,14 @@ private fun OnlineSalesContentUI(
     // Fetch sales for the facility when the component loads
     LaunchedEffect(facilityName) {
         viewModel.fetchSales(facility = facilityName)
+    }
+
+    val orderData by orderViewModel.orderData.observeAsState(emptyList())
+    val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
+
+    LaunchedEffect(Unit) {
+        println(facilityName)
+        orderViewModel.fetchAllOrders(filter = "", role = facilityName)
     }
 
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -502,6 +520,9 @@ private fun OnlineSalesContentUI(
         // Tab Content
         when (selectedTab) {
             "Orders" -> {
+                statuses.forEach { order ->
+                    order.totalActivities = orderData.count { it.status == order.status }
+                }
                 // Scrollable Status Tabs
                 LazyRow(
                     modifier = Modifier
@@ -538,11 +559,9 @@ private fun OnlineSalesContentUI(
 
                 // Display orders for the selected status
                 OrdersCard(
-                    filteredOrders = salesData.filter { sale ->
-                        // For now showing all sales in the sales tab
-                        // You can add specific filtering logic here when needed
-                        true
-                    },
+                    filteredOrders = orderData
+                        .filter { it.status == selectedOrderStatus }
+                        .sortedByDescending { LocalDate.parse(it.orderDate, DateTimeFormatter.ofPattern("MM/dd/yyyy")) },
                     navController = navController // Pass the navController
                 )
 //                SalesContent(sales = filteredAndSortedSales, navController = navController)
@@ -693,7 +712,7 @@ private fun OnlineSalesContentUI(
 //                        // Display orders for the selected status
                           // TODO: Orders with "Completed" status will also be displayed in the sales tab
                         OrdersCard(
-                            filteredOrders = salesData.filter { sale ->
+                            filteredOrders = orderData.filter { order ->
                                 // For now showing all sales in the sales tab
                                 // You can add specific filtering logic here when needed
                                 true
@@ -709,16 +728,16 @@ private fun OnlineSalesContentUI(
 
 @Composable
 fun OrdersCard(
-    filteredOrders: List<SalesData>,
+    filteredOrders: List<OrderData>,
     navController: NavController
 ) {
     if (filteredOrders.isNotEmpty()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
-            items(filteredOrders) { sale ->
+            items(filteredOrders) { order ->
                 OrderStatusesCard(
-                    sale = sale,
+                    order = order,
                     navController = navController,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
@@ -736,7 +755,7 @@ fun OrdersCard(
 
 @Composable
 fun OrderStatusesCard(
-    sale: SalesData,
+    order: OrderData,
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
@@ -763,7 +782,7 @@ fun OrderStatusesCard(
                     color = Green1
                 )
                 Text(
-                    text = "Jan 11, 2025 13:11",
+                    text = order.orderDate,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -776,11 +795,11 @@ fun OrderStatusesCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Items: 2",
+                    text = "Items: ${order.orderData.size}",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "Pending",
+                    text = order.status,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -792,8 +811,9 @@ fun OrderStatusesCard(
             )
 
             // Product Details
-            ItemCard()
-            ItemCard()
+            for (item in order.orderData) {
+                ItemCard(item)
+            }
 
             Divider(
                 color = MaterialTheme.colorScheme.onSurface,
@@ -806,7 +826,7 @@ fun OrderStatusesCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ){
                 Text(
-                    text = "Pick Up", //collection method
+                    text = order.collectionMethod, //collection method
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -815,11 +835,11 @@ fun OrderStatusesCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ){
                 Text(
-                    text = "COD * Unpaid", //collection method and payment
+                    text = "${ order.paymentMethod } * Unpaid", //collection method and payment
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "PHP 200", //total
+                    text = "PHP ${order.orderData.sumOf { it.price } }", //total
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -828,7 +848,7 @@ fun OrderStatusesCard(
 }
 
 @Composable
-fun ItemCard(){
+fun ItemCard(item: ProductData){
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -856,15 +876,15 @@ fun ItemCard(){
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "Potato",
+                text = item.name,
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
-                text = "10 kg", //quantity ordered
+                text = item.quantity.toString(), //quantity ordered
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "PHP 100", //total price of order per item
+                text = "PHP ${item.price}", //total price of order per item
                 style = MaterialTheme.typography.bodyMedium
             )
         }

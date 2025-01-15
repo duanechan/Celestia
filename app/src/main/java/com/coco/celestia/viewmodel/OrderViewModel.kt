@@ -155,26 +155,27 @@ class OrderViewModel : ViewModel() {
                     val filterKeywords = filter.split(",").map { it.trim() }
 
                     val orders = snapshot.children
-                        .mapNotNull { snapshot -> parseOrderData(snapshot) }
-                        .filter { order ->
-                            // This should filter orders based on the facility? ☠️
-                            val coopOrder = order.orderData.any { it.type == role.replace("Coop", "") }
-                            val matchesFilter = filterKeywords.any { keyword ->
-                                order::class.memberProperties.any { property ->
-                                    val value = property.getter.call(order)?.toString() ?: ""
-                                    value.contains(keyword, ignoreCase = true)
+                        .flatMap { userSnapshot -> userSnapshot.children
+                            .mapNotNull { snapshot -> parseOrderData(snapshot) }
+                            .filter { order ->
+                                // This should filter orders based on the facility? ☠️
+                                val coopOrder = order.orderData.any { it.type == role.replace("Coop", "") }
+                                val matchesFilter = filterKeywords.any { keyword ->
+                                    order::class.memberProperties.any { property ->
+                                        val value = property.getter.call(order)?.toString() ?: ""
+                                        value.contains(keyword, ignoreCase = true)
+                                    }
+                                }
+                                val removeCancelReject =
+                                    (order.status != "CANCELLED" && order.status != "REJECTED")
+                                when {
+                                    role.startsWith("Coop") -> coopOrder && matchesFilter && removeCancelReject
+                                    role == "Admin" -> coopOrder && matchesFilter
+                                    role == "Farmer" -> matchesFilter
+                                    role == "Client" -> matchesFilter
+                                    else -> matchesFilter
                                 }
                             }
-                            val removeCancelReject =
-                                (order.status != "CANCELLED" && order.status != "REJECTED")
-                            when {
-                                role.contains("Coop") -> coopOrder && matchesFilter && removeCancelReject
-                                role == "Admin" -> coopOrder && matchesFilter
-                                role == "Farmer" -> matchesFilter
-                                role == "Client" -> matchesFilter
-                                else -> matchesFilter
-                            }
-
                         }
 
                     _orderData.value = orders
