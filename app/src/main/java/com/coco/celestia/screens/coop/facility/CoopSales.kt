@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.coop.facility
 
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -25,12 +26,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.White1
 import com.coco.celestia.ui.theme.mintsansFontFamily
@@ -974,8 +979,22 @@ fun OrderStatusesCard(
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
-fun ItemCard(item: ProductData){
+fun ItemCard(item: ProductData) {
+    var productImage by remember { mutableStateOf<Uri?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    DisposableEffect(item.productId) {
+        isLoading = true
+        ImageService.fetchProductImage(item.productId) { uri ->
+            productImage = uri
+            isLoading = false
+        }
+
+        onDispose { }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -984,15 +1003,27 @@ fun ItemCard(item: ProductData){
         verticalAlignment = Alignment.CenterVertically
     ) {
         Card(
-            modifier = Modifier
-                .size(60.dp),
+            modifier = Modifier.size(60.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("+ Add\nImage", textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall )
+                if (isLoading || productImage == null) {
+                    Text(
+                        text = "+ Add\nImage",
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                } else {
+                    Image(
+                        painter = rememberImagePainter(productImage),
+                        contentDescription = item.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
         }
 

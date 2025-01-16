@@ -6,8 +6,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -60,6 +63,9 @@ import com.coco.celestia.viewmodel.SalesState
 import com.coco.celestia.viewmodel.SalesViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.SalesData
+import com.coco.celestia.viewmodel.model.StatusUpdate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun CoopSalesDetails(
@@ -248,18 +254,18 @@ fun OnlineSalesDetails(
             if (showDialog) {
                 AlertDialog(
                     onDismissRequest = { showDialog = false },
-                    title = {
-                        Text(text = "Update Order Status")
-                    },
+                    title = { Text(text = "Update Order Status") },
                     text = {
                         UpdateStatusCard(
                             status = currentOrder.status,
                             statusDescription = currentOrder.statusDescription,
                             dateTime = currentOrder.orderDate,
-                            onStatusUpdate = { newStatus, newDescription ->
+                            statusHistory = currentOrder.statusHistory,
+                            onStatusUpdate = { newStatus, newDescription, newHistory ->
                                 currentOrder = currentOrder.copy(
                                     status = newStatus,
-                                    statusDescription = newDescription
+                                    statusDescription = newDescription,
+                                    statusHistory = newHistory
                                 )
                             }
                         )
@@ -277,7 +283,7 @@ fun OnlineSalesDetails(
                     dismissButton = {
                         TextButton(
                             onClick = {
-                                currentOrder = order // Reset to original order
+                                currentOrder = order
                                 showDialog = false
                             }
                         ) {
@@ -339,7 +345,6 @@ fun OnlineSalesDetails(
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Header: Always visible
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -431,218 +436,161 @@ fun OnlineSalesDetails(
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )
-
-                Button(
-                    onClick = { showDialog = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = Green1)
-                ) {
-                    Text(text = "Update", color = Color.White)
-                }
             }
 
             OrderStatus(
                 status = currentOrder.status,
-                statusDescription = "Your order is ${currentOrder.status.lowercase()}.",
+                statusDescription = currentOrder.statusDescription,
                 dateTime = currentOrder.orderDate,
+                statusHistory = currentOrder.statusHistory
             )
         }
     }
 }
 
 @Composable
-fun OnlineItemCard(){
+fun OrderStatus(
+    status: String,
+    statusDescription: String,
+    dateTime: String,
+    statusHistory: List<StatusUpdate> = emptyList()
+) {
+    val allStatuses = listOf(
+        "Pending",
+        "Confirmed",
+        "To Deliver",
+        "To Receive",
+        "Completed"
+    )
+
+    val currentIndex = allStatuses.indexOf(status)
+
     Column(
         modifier = Modifier
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .fillMaxWidth()
+            .padding(16.dp)
     ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            colors = CardDefaults.cardColors(containerColor = White2)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Add Image Box
-                    Card(
-                        modifier = Modifier
-                            .size(60.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("+ Add\nImage", textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall )
-                        }
-                    }
 
-                    // Product Name and Price
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "Potato",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Text(
-                            text = "10 kg x PHP 10",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        Text(
-                            text = "PHP 100",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
+        allStatuses.forEachIndexed { index, currentStatus ->
+            val isCurrent = index == currentIndex
+            val isPast = index < currentIndex
+            val showInfo = isCurrent || isPast
+
+            if (isCurrent || isPast) {
+                val statusUpdate = if (isCurrent) {
+                    StatusUpdate(status, statusDescription, dateTime)
+                } else {
+                    statusHistory.find { it.status == currentStatus }
                 }
-            }
-        }
-    }
-}
 
-
-@Composable
-fun CollectionMethod(){ //Online
-    Column(
-        modifier = Modifier
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = "Collection Method",
-            style = MaterialTheme.typography.titleMedium
-        )
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            colors = CardDefaults.cardColors(containerColor = White2)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
-                    // Product Name and Price
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "Pick Up",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                }
+                TimelineStep(
+                    status = currentStatus,
+                    statusDescription = statusUpdate?.statusDescription ?: "",
+                    dateTime = statusUpdate?.dateTime ?: "",
+                    showInfo = showInfo,
+                    isCurrent = isCurrent,
+                    isCompleted = isPast,
+                    showLine = index < allStatuses.lastIndex
+                )
             }
         }
     }
 }
 
 @Composable
-fun PaymentMethod() { //Online
-    Column(
-        modifier = Modifier
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = "Payment Method",
-            style = MaterialTheme.typography.titleMedium
-        )
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            colors = CardDefaults.cardColors(containerColor = White2)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
-                    // Product Name and Price
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "Cash",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable // Online
-fun OrderStatus(status: String, statusDescription: String, dateTime: String) {
+private fun TimelineStep(
+    status: String,
+    statusDescription: String,
+    dateTime: String,
+    showInfo: Boolean,
+    isCurrent: Boolean,
+    isCompleted: Boolean,
+    showLine: Boolean
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 4.dp),
         verticalAlignment = Alignment.Top
     ) {
-        // Circle indicator only
-        Box(
-            modifier = Modifier
-                .size(12.dp)
-                .background(Color.Black, CircleShape)
-        )
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        // Action details
         Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .wrapContentHeight()
+                .width(24.dp)
+        ) {
+            // Status dot
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .background(
+                        color = when {
+                            isCurrent || isCompleted -> Color(0xFF28403D)
+                            else -> Color.Gray.copy(alpha = 0.3f)
+                        },
+                        shape = CircleShape
+                    )
+            ) {
+                if (isCurrent) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .background(Color.White, CircleShape)
+                            .align(Alignment.Center)
+                    )
+                }
+            }
+
+            // Connecting line
+            if (showLine) {
+                Spacer(
+                    modifier = Modifier
+                        .height(4.dp)
+                )
+                Box(
+                    modifier = Modifier
+                        .width(2.dp)
+                        .height(40.dp)
+                        .background(
+                            color = if (isCompleted) Color(0xFF28403D)
+                            else Color.Gray.copy(alpha = 0.3f)
+                        )
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        // Status details
+        Column(
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
                 text = status,
                 style = MaterialTheme.typography.bodyMedium,
+                color = when {
+                    isCurrent -> Color(0xFF28403D)
+                    isCompleted -> Color(0xFF28403D)
+                    else -> Color.Gray
+                }
             )
-            Text(
-                text = statusDescription,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
-            )
-            Text(
-                text = dateTime,
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
+
+            if (showInfo && statusDescription.isNotEmpty()) {
+                Text(
+                    text = statusDescription,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+            }
+
+            if (showInfo && dateTime.isNotEmpty()) {
+                Text(
+                    text = dateTime,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
         }
     }
 }
@@ -653,15 +601,17 @@ fun UpdateStatusCard(
     status: String,
     statusDescription: String,
     dateTime: String,
-    onStatusUpdate: (String, String) -> Unit = { _, _ -> }
+    statusHistory: List<StatusUpdate> = emptyList(),
+    onStatusUpdate: (String, String, List<StatusUpdate>) -> Unit = { _, _, _ -> }
 ) {
     var statusValue by remember { mutableStateOf(status) }
     var statusDescriptionValue by remember { mutableStateOf(statusDescription) }
-    var dateTimeValue by remember { mutableStateOf(dateTime) }
     var expanded by remember { mutableStateOf(false) }
     var isEditingDescription by remember { mutableStateOf(false) }
 
-    // Sample options with default descriptions
+    val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
+    val currentDateTime = remember { LocalDateTime.now().format(formatter) }
+
     val statusOptions = mapOf(
         "Pending" to "Your order is pending confirmation.",
         "Confirmed" to "Your order has been confirmed.",
@@ -669,6 +619,15 @@ fun UpdateStatusCard(
         "To Receive" to "Your order is ready to be picked up/ has been shipped by courier.",
         "Completed" to "Your order has been completed.",
         "Cancelled" to "Your order has been cancelled.",
+    )
+
+    val statusOrder = listOf(
+        "Pending",
+        "Confirmed",
+        "To Deliver",
+        "To Receive",
+        "Completed",
+        "Cancelled"
     )
 
     Row(
@@ -701,17 +660,35 @@ fun UpdateStatusCard(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
-                    statusOptions.forEach { (option, description) ->
+                    val currentIndex = statusOrder.indexOf(status)
+                    val availableStatuses = if (currentIndex >= 0) {
+                        statusOrder.filter { statusOrder.indexOf(it) >= currentIndex }
+                    } else {
+                        statusOrder
+                    }
+
+                    availableStatuses.forEach { option ->
                         DropdownMenuItem(
                             text = { Text(option) },
                             onClick = {
                                 statusValue = option
                                 // Only update description if it hasn't been manually edited
                                 if (!isEditingDescription) {
-                                    statusDescriptionValue = description
+                                    statusDescriptionValue = statusOptions[option] ?: ""
                                 }
                                 expanded = false
-                                onStatusUpdate(option, statusDescriptionValue)
+
+                                // Create new status update
+                                val newUpdate = StatusUpdate(
+                                    status = option,
+                                    statusDescription = statusDescriptionValue,
+                                    dateTime = currentDateTime
+                                )
+
+                                // Create updated history
+                                val updatedHistory = statusHistory + newUpdate
+
+                                onStatusUpdate(option, statusDescriptionValue, updatedHistory)
                             }
                         )
                     }
@@ -723,7 +700,16 @@ fun UpdateStatusCard(
                 onValueChange = { newValue ->
                     isEditingDescription = true
                     statusDescriptionValue = newValue
-                    onStatusUpdate(statusValue, newValue)
+
+                    val newUpdate = StatusUpdate(
+                        status = statusValue,
+                        statusDescription = newValue,
+                        dateTime = currentDateTime
+                    )
+
+                    val updatedHistory = statusHistory + newUpdate
+
+                    onStatusUpdate(statusValue, newValue, updatedHistory)
                 },
                 label = { Text("Description") },
                 readOnly = false,
@@ -734,7 +720,16 @@ fun UpdateStatusCard(
                             onClick = {
                                 isEditingDescription = false
                                 statusDescriptionValue = statusOptions[statusValue] ?: ""
-                                onStatusUpdate(statusValue, statusDescriptionValue)
+
+                                val newUpdate = StatusUpdate(
+                                    status = statusValue,
+                                    statusDescription = statusDescriptionValue,
+                                    dateTime = currentDateTime
+                                )
+
+                                val updatedHistory = statusHistory + newUpdate
+
+                                onStatusUpdate(statusValue, statusDescriptionValue, updatedHistory)
                             }
                         ) {
                             Icon(
@@ -747,8 +742,8 @@ fun UpdateStatusCard(
             )
 
             OutlinedTextField(
-                value = dateTimeValue,
-                onValueChange = { dateTimeValue = it },
+                value = currentDateTime,
+                onValueChange = { },
                 readOnly = true,
                 label = { Text("Date and Time") },
                 modifier = Modifier.fillMaxWidth()

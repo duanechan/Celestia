@@ -38,6 +38,14 @@ data class FacilityData(
     var gcashNumbers: String = ""
 )
 
+data class StatusUpdate(
+    val status: String = "",
+    val statusDescription: String = "",
+    val dateTime: String = "",
+    val updatedBy: String = "" // Optional: track who made the update
+)
+
+// Modify OrderData to include status history
 data class OrderData(
     val orderId: String = "",
     val orderDate: String = "",
@@ -53,7 +61,8 @@ data class OrderData(
     val partialQuantity: Int = 0,
     val fulfilled: Int = 0,
     val collectionMethod: String = "",
-    val paymentMethod: String = ""
+    val paymentMethod: String = "",
+    val statusHistory: List<StatusUpdate> = emptyList() // Add this field
 )
 
 @Serializable

@@ -140,7 +140,7 @@ fun FacilityNotification() {
                     ) {
                         // Notification Icon
                         Icon(
-                            painter = painterResource(R.drawable.notifcon),
+                            painter = painterResource(R.drawable.notificon),
                             contentDescription = "Notification Icon",
                             modifier = Modifier
                                 .size(40.dp)

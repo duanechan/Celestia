@@ -13,6 +13,7 @@ import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.NotificationType
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
+import com.coco.celestia.viewmodel.model.StatusUpdate
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -40,7 +41,6 @@ sealed class MostOrderedState {
 
 class OrderViewModel : ViewModel() {
     private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("orders")
-    private val facilitiesDatabase: DatabaseReference = FirebaseDatabase.getInstance().getReference("facilities")
     private val _orderData = MutableLiveData<List<OrderData>>()
     private val _mostOrderedData = MutableLiveData<List<MostOrdered>>()
     private val _orderState = MutableLiveData<OrderState>()
@@ -48,10 +48,6 @@ class OrderViewModel : ViewModel() {
     val orderData: LiveData<List<OrderData>> = _orderData
     val mostOrderedData: LiveData<List<MostOrdered>> = _mostOrderedData
     val orderState: LiveData<OrderState> = _orderState
-
-    fun setError(message: String) {
-        _orderState.value = OrderState.ERROR(message)
-    }
 
     /**
      * Fetches orders from the database based on the provided UID.
@@ -202,7 +198,7 @@ class OrderViewModel : ViewModel() {
             orderDate = snapshot.child("orderDate").getValue(String::class.java) ?: "",
             targetDate = snapshot.child("targetDate").getValue(String::class.java) ?: "",
             status = snapshot.child("status").getValue(String::class.java) ?: "",
-            statusDescription = snapshot.child("statusDescription").getValue(String::class.java) ?: "", // Added this line
+            statusDescription = snapshot.child("statusDescription").getValue(String::class.java) ?: "",
             orderData = snapshot.child("orderData").children
                 .mapNotNull { it.getValue(ProductData::class.java) },
             client = snapshot.child("client").getValue(String::class.java) ?: "",
@@ -214,7 +210,15 @@ class OrderViewModel : ViewModel() {
             partialQuantity = snapshot.child("partialQuantity").getValue(Int::class.java) ?: 0,
             fulfilled = snapshot.child("fulfilled").getValue(Int::class.java) ?: 0,
             collectionMethod = snapshot.child("collectionMethod").getValue(String::class.java) ?: Constants.COLLECTION_PICKUP,
-            paymentMethod = snapshot.child("paymentMethod").getValue(String::class.java) ?: Constants.PAYMENT_CASH
+            paymentMethod = snapshot.child("paymentMethod").getValue(String::class.java) ?: Constants.PAYMENT_CASH,
+            statusHistory = snapshot.child("statusHistory").children.mapNotNull { historySnapshot ->
+                StatusUpdate(
+                    status = historySnapshot.child("status").getValue(String::class.java) ?: "",
+                    statusDescription = historySnapshot.child("statusDescription").getValue(String::class.java) ?: "",
+                    dateTime = historySnapshot.child("dateTime").getValue(String::class.java) ?: "",
+                    updatedBy = historySnapshot.child("updatedBy").getValue(String::class.java) ?: ""
+                )
+            }
         )
     }
 
@@ -232,32 +236,41 @@ class OrderViewModel : ViewModel() {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
 
-            // Create order with initial status description
-            val orderWithDescription = order.copy(
-                statusDescription = when(order.status) {
-                    "Pending" -> "Your order is being reviewed"
-                    "Confirmed" -> "Your order has been confirmed"
-                    "To Deliver" -> "Your order is ready for delivery"
-                    "To Receive" -> "Your order is out for delivery"
-                    "Completed" -> "Your order has been completed"
-                    "Cancelled" -> "Your order has been cancelled"
-                    "Return/Refund" -> "Your order is being processed for return/refund"
-                    else -> ""
-                }
+            val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
+            val formattedDateTime = LocalDateTime.now().format(formatter)
+
+            val statusDescription = when(order.status) {
+                "Pending" -> "Your order is being reviewed"
+                "Confirmed" -> "Your order has been confirmed"
+                "To Deliver" -> "Your order is ready for delivery"
+                "To Receive" -> "Your order is out for delivery"
+                "Completed" -> "Your order has been completed"
+                "Cancelled" -> "Your order has been cancelled"
+                "Return/Refund" -> "Your order is being processed for return/refund"
+                else -> ""
+            }
+
+            val initialStatus = StatusUpdate(
+                status = order.status,
+                statusDescription = statusDescription,
+                dateTime = formattedDateTime,
+                updatedBy = ""
+            )
+
+            val orderWithHistory = order.copy(
+                statusDescription = statusDescription,
+                statusHistory = listOf(initialStatus)
             )
 
             val query = database.child(uid).push()
-            query.setValue(orderWithDescription)
+            query.setValue(orderWithHistory)
                 .addOnSuccessListener {
                     viewModelScope.launch {
-                        val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
-                        val formattedDateTime = LocalDateTime.now().format(formatter)
-
                         val notification = Notification(
                             timestamp = formattedDateTime,
-                            sender = orderWithDescription.client,
-                            details = orderWithDescription,
-                            message = "New order request from ${orderWithDescription.client}!",
+                            sender = orderWithHistory.client,
+                            details = orderWithHistory,
+                            message = "New order request from ${orderWithHistory.client}!",
                             type = NotificationType.OrderPlaced
                         )
 
@@ -288,48 +301,45 @@ class OrderViewModel : ViewModel() {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
 
-            // Preserve the custom description if provided; otherwise, use a fallback
-            val orderWithUpdatedDescription = updatedOrderData.copy(
-                statusDescription = if (updatedOrderData.statusDescription.isNullOrBlank()) {
-                    when (updatedOrderData.status) {
-                        "Pending" -> "Your order is being reviewed"
-                        "Confirmed" -> "Your order has been confirmed"
-                        "To Deliver" -> "Your order is ready for delivery"
-                        "To Receive" -> "Your order is out for delivery"
-                        "Completed" -> "Your order has been completed"
-                        "Cancelled" -> "Your order has been cancelled"
-                        "Return/Refund" -> "Your order is being processed for return/refund"
-                        else -> ""
-                    }
-                } else {
-                    updatedOrderData.statusDescription
-                }
-            )
-
             database.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     if (snapshot.exists()) {
                         for (user in snapshot.children) {
-                            var found = false
-                            val orders = user.children
-                            for (order in orders) {
+                            for (order in user.children) {
                                 val orderId = order.child("orderId").getValue(String::class.java)
-                                if (orderId == orderWithUpdatedDescription.orderId) {
-                                    order.ref.setValue(orderWithUpdatedDescription)
+                                if (orderId == updatedOrderData.orderId) {
+                                    val existingHistory = order.child("statusHistory").children.mapNotNull {
+                                        it.getValue(StatusUpdate::class.java)
+                                    }
+
+                                    val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
+                                    val currentDateTime = LocalDateTime.now().format(formatter)
+
+                                    val newStatusUpdate = StatusUpdate(
+                                        status = updatedOrderData.status,
+                                        statusDescription = if (updatedOrderData.statusDescription.isNullOrBlank()) {
+                                            getDefaultStatusDescription(updatedOrderData.status)
+                                        } else {
+                                            updatedOrderData.statusDescription
+                                        },
+                                        dateTime = currentDateTime
+                                    )
+
+                                    val updatedHistory = existingHistory + newStatusUpdate
+
+                                    val orderWithHistory = updatedOrderData.copy(
+                                        statusHistory = updatedHistory
+                                    )
+
+                                    order.ref.setValue(orderWithHistory)
                                         .addOnSuccessListener {
                                             _orderState.value = OrderState.SUCCESS
                                         }
                                         .addOnFailureListener { exception ->
-                                            _orderState.value = OrderState.ERROR(
-                                                exception.message ?: "Unknown error"
-                                            )
+                                            _orderState.value = OrderState.ERROR(exception.message ?: "Unknown error")
                                         }
-                                    found = true
                                     break
                                 }
-                            }
-                            if (found) {
-                                break
                             }
                         }
                     } else {
@@ -344,6 +354,18 @@ class OrderViewModel : ViewModel() {
         }
     }
 
+    private fun getDefaultStatusDescription(status: String): String {
+        return when(status) {
+            "Pending" -> "Your order is being reviewed."
+            "Confirmed" -> "Your order has been confirmed."
+            "To Deliver" -> "Your order is to be handed to courier."
+            "To Receive" -> "Your order is ready to be picked up/ has been shipped by courier."
+            "Completed" -> "Your order has been completed."
+            "Cancelled" -> "Your order has been cancelled."
+            "Return/Refund" -> "Your order is being processed for return/refund."
+            else -> "Status updated to $status"
+        }
+    }
 
     fun cancelOrder(orderId: String) {
         viewModelScope.launch {

@@ -56,7 +56,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.coco.celestia.R
-import com.coco.celestia.screens.coop.facility.OnlineItemCard
 import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.OrderState
