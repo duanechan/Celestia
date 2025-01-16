@@ -154,24 +154,24 @@ fun DisplaySpecialReq(
                     }
                 }
 
-                Column {
-                    // Placeholder OrderCard
-                    val placeholderOrder = OrderData(
-                        orderData = listOf(
-                            ProductData(name = "Product A", quantity = 2, price = 100.0),
-                            ProductData(name = "Product B", quantity = 1, price = 150.0)
-                        ),
-                        status = "To Review",
-                        collectionMethod = "Pickup",
-                        paymentMethod = "Cash"
-                    )
-
-                    OrderCard(
-                        order = placeholderOrder,
-                        index = "12345",
-                        navController = navController
-                    )
-                }
+//                Column {
+//                    // Placeholder OrderCard
+//                    val placeholderOrder = OrderData(
+//                        orderData = listOf(
+//                            ProductData(name = "Product A", quantity = 2, price = 100.0),
+//                            ProductData(name = "Product B", quantity = 1, price = 150.0)
+//                        ),
+//                        status = "To Review",
+//                        collectionMethod = "Pickup",
+//                        paymentMethod = "Cash"
+//                    )
+//
+//                    OrderCard(
+//                        order = placeholderOrder,
+//                        index = "12345",
+//                        navController = navController
+//                    )
+//                }
             }
         }
 
