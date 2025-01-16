@@ -566,11 +566,134 @@ private fun OnlineSalesContentUI(
                     }
                 }
 
+                // Search and Sort Row
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // Search Field
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { newQuery -> searchQuery = newQuery },
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 8.dp)
+                            .height(48.dp),
+                        placeholder = { Text(text = "Search orders...") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        },
+                        trailingIcon = if (searchQuery.isNotEmpty()) {
+                            {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(
+                                        Icons.Default.Clear,
+                                        contentDescription = "Clear search",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        } else null,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            cursorColor = Green1,
+                            focusedBorderColor = Green1,
+                            unfocusedBorderColor = Green1
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        singleLine = true
+                    )
+
+                    // Sort Dropdown
+                    Box {
+                        IconButton(
+                            onClick = { showSortDropdown = !showSortDropdown },
+                            modifier = Modifier
+                                .background(White1, CircleShape)
+                                .size(48.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.sort),
+                                contentDescription = "Sort",
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .padding(4.dp)
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = showSortDropdown,
+                            onDismissRequest = { showSortDropdown = false },
+                            modifier = Modifier.background(White1)
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("A-Z") },
+                                onClick = {
+                                    sortOption = "A-Z"
+                                    showSortDropdown = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Z-A") },
+                                onClick = {
+                                    sortOption = "Z-A"
+                                    showSortDropdown = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Newest First") },
+                                onClick = {
+                                    sortOption = "Newest First"
+                                    showSortDropdown = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Oldest First") },
+                                onClick = {
+                                    sortOption = "Oldest First"
+                                    showSortDropdown = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                // Filtered and Sorted Orders
+                val filteredAndSortedOrders = facilityOrders
+                    .filter { order ->
+                        searchQuery.isBlank() || listOf(
+                            order.orderId, // Order ID
+                            order.status, // Order status
+                            order.collectionMethod, // Collection method
+                            order.paymentMethod // Payment method
+                        ).any { field -> field.contains(searchQuery, ignoreCase = true) }
+                                || order.orderData.any { product ->
+                            // Include product details in the search
+                            listOf(
+                                product.name, // Product name
+                                product.price.toString(), // Product price
+                                product.quantity.toString() // Product quantity
+                            ).any { field -> field.contains(searchQuery, ignoreCase = true) }
+                        }
+                    }
+                    .sortedWith(
+                        when (sortOption) {
+                            "A-Z" -> compareBy { it.orderId }
+                            "Z-A" -> compareByDescending { it.orderId }
+                            "Newest First" -> compareByDescending { LocalDate.parse(it.orderDate, DateTimeFormatter.ofPattern("MM/dd/yyyy")) }
+                            "Oldest First" -> compareBy { LocalDate.parse(it.orderDate, DateTimeFormatter.ofPattern("MM/dd/yyyy")) }
+                            else -> compareBy { it.orderId }
+                        }
+                    )
+
                 // Display orders for the selected status, filtered by facility
                 OrdersCard(
-                    filteredOrders = facilityOrders
-                        .filter { it.status == selectedOrderStatus }
-                        .sortedByDescending { LocalDate.parse(it.orderDate, DateTimeFormatter.ofPattern("MM/dd/yyyy")) },
+                    filteredOrders = filteredAndSortedOrders,
                     navController = navController
                 )
             }
