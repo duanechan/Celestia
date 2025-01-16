@@ -1,5 +1,7 @@
 package com.coco.celestia.screens.client
 
+import android.annotation.SuppressLint
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,7 +33,10 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -44,70 +50,169 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.rememberImagePainter
 import com.coco.celestia.R
 import com.coco.celestia.screens.coop.facility.OnlineItemCard
+import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.viewmodel.OrderState
+import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.model.Constants
+import com.coco.celestia.viewmodel.model.FacilityData
+import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.ProductData
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun ClientOrderDetails(
     navController: NavController,
-    orderId: String
+    orderId: String,
+    viewModel: OrderViewModel
 ) {
-    val productName = "Roasted Beans"
-    val productImage = R.drawable.greenbeansimg
-    val pricePer100Grams = 100
-    val totalQuantity = 10
-    val totalCost = pricePer100Grams * totalQuantity
+    val orderState by viewModel.orderState.observeAsState()
+    val orderData by viewModel.orderData.observeAsState(emptyList())
+    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        OrderSummaryBox(
-            productName = productName,
-            productImage = productImage,
-            pricePer100Grams = pricePer100Grams,
-            totalQuantity = totalQuantity,
-            totalCost = totalCost
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        OrderDetailsSection()
-        ClientDetailsCollectionMethod()
-        ClientDetailsPaymentMethod()
-        TrackOrderSection()
+    LaunchedEffect(orderId) {
+        viewModel.fetchOrders(uid, "")
+    }
+
+    when (orderState) {
+        is OrderState.LOADING -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+
+        is OrderState.ERROR -> {
+            val errorMessage = (orderState as OrderState.ERROR).message
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = errorMessage,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+
+        is OrderState.EMPTY -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No order found",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
+        }
+
+        is OrderState.SUCCESS -> {
+            val currentOrder = orderData.find { it.orderId == orderId }
+
+            if (currentOrder == null) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Order not found",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+                return
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Order details with product list
+                OrderDetailsSection(
+                    orderData = currentOrder,
+                    facilityData = FacilityData()
+                )
+
+                // Collection method section
+                ClientDetailsCollectionMethod(
+                    orderData = currentOrder,
+                    facilityData = FacilityData()
+                )
+
+                // Payment method section
+                ClientDetailsPaymentMethod(
+                    orderData = currentOrder,
+                    facilityData = FacilityData()
+                )
+
+                // Order status tracking
+                TrackOrderSection(
+                    orderData = currentOrder
+                )
+            }
+        }
+
+        null -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        }
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
-fun OrderSummaryBox(
-    productName: String,
-    productImage: Int,
-    pricePer100Grams: Int,
-    totalQuantity: Int,
-    totalCost: Int
+fun OrderDetailsSection(
+    orderData: OrderData,
+    facilityData: FacilityData
 ) {
-    Box(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .background(White1)
-            .padding(16.dp)
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(containerColor = White1)
     ) {
-        Column {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OrderHeader(orderData)
+
+            Text(
+                text = "Items (${orderData.orderData.size})",
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 16.dp)
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    "Order ID",
-                    style = MaterialTheme.typography.titleMedium,
-                )
+                orderData.orderData.forEach { product ->
+                    ClientItemCard(product)
+                }
 
-                Spacer(modifier = Modifier.weight(1f))
-
+                // Total Amount
+                val totalAmount = orderData.orderData.sumOf { it.price * it.quantity }
                 Text(
-                    "Time stamp",
+                    text = "Total: PHP ${String.format("%.2f", totalAmount)}",
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -116,49 +221,49 @@ fun OrderSummaryBox(
 }
 
 @Composable
-fun OrderDetailsSection() {
-    Card(
+private fun OrderHeader(orderData: OrderData) {
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        colors = CardDefaults.cardColors(containerColor = White1)
+            .padding(16.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "Items (2)",
+                "Order ID: ${orderData.orderId}",
                 style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 16.dp)
             )
-        }
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            ClientItemCard()
-            ClientItemCard()
+            Spacer(modifier = Modifier.weight(1f))
 
             Text(
-                text = "Total: PHP 200",
+                orderData.orderDate,
                 style = MaterialTheme.typography.titleMedium,
             )
         }
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
-fun ClientItemCard(){
+fun ClientItemCard(product: ProductData) {
+    var productImage by remember { mutableStateOf<Uri?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    DisposableEffect(product.productId) {
+        isLoading = true
+        ImageService.fetchProductImage(product.productId) { uri ->
+            productImage = uri
+            isLoading = false
+        }
+
+        onDispose { }
+    }
+
     Column(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Card(
@@ -180,35 +285,46 @@ fun ClientItemCard(){
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Add Image Box
                     Card(
-                        modifier = Modifier
-                            .size(60.dp),
+                        modifier = Modifier.size(60.dp),
                         colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("+ Add\nImage", textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall )
+                            if (isLoading || productImage == null) {
+                                Image(
+                                    painter = painterResource(R.drawable.product_image),
+                                    contentDescription = "Loading",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Image(
+                                    painter = rememberImagePainter(productImage),
+                                    contentDescription = product.name,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
                         }
                     }
 
-                    // Product Name and Price
                     Column(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "Potato",
+                            text = product.name,
                             style = MaterialTheme.typography.titleMedium
                         )
                         Text(
-                            text = "10 kg x PHP 10",
+                            text = "${product.quantity} ${product.weightUnit.lowercase()} x PHP ${String.format("%.2f", product.price)}",
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Text(
-                            text = "PHP 100",
+                            text = "PHP ${String.format("%.2f", product.price * product.quantity)}",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -218,9 +334,76 @@ fun ClientItemCard(){
     }
 }
 
-//Collection Method Card
 @Composable
-fun ClientDetailsCollectionMethod() {
+fun ClientDetailsCollectionMethod(
+    orderData: OrderData,
+    facilityData: FacilityData
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(containerColor = White1)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "Collection Method",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                colors = CardDefaults.cardColors(containerColor = White2)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = orderData.collectionMethod,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            Text(
+                                text = when(orderData.collectionMethod) {
+                                    Constants.COLLECTION_PICKUP -> facilityData.pickupLocation
+                                    Constants.COLLECTION_DELIVERY -> facilityData.deliveryDetails
+                                    else -> ""
+                                },
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ClientDetailsPaymentMethod(
+    orderData: OrderData,
+    facilityData: FacilityData
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -234,12 +417,11 @@ fun ClientDetailsCollectionMethod() {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "Collection Method",
+                    text = "Payment Method",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Card(
@@ -261,18 +443,20 @@ fun ClientDetailsCollectionMethod() {
                             horizontalArrangement = Arrangement.spacedBy(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-
-                            // Product Name and Price
                             Column(
                                 modifier = Modifier.weight(1f),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text(
-                                    text = "Pick Up",
+                                    text = orderData.paymentMethod,
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 Text(
-                                    text = "Pick up location here",
+                                    text = when(orderData.paymentMethod) {
+                                        Constants.PAYMENT_CASH -> facilityData.cashInstructions
+                                        Constants.PAYMENT_GCASH -> facilityData.gcashNumbers
+                                        else -> ""
+                                    },
                                     style = MaterialTheme.typography.titleMedium
                                 )
                             }
@@ -284,76 +468,8 @@ fun ClientDetailsCollectionMethod() {
     }
 }
 
-//Payment Methods Card
 @Composable
-fun ClientDetailsPaymentMethod(){
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        colors = CardDefaults.cardColors(containerColor = White1)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = "Collection Method",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = White2)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-
-                            // Product Name and Price
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = "G-Cash",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                                Text(
-                                    text = "G-Cash num here",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-//Track Order Status
-@Composable
-fun TrackOrderSection() {
-    //Order Status
+fun TrackOrderSection(orderData: OrderData) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -372,39 +488,34 @@ fun TrackOrderSection() {
             )
         }
 
-        //TODO: Recent ones should be on top
-        // SAMPLE
         ClientOrderStatus(
-            status = "Confirmed",
-            statusDescription = "Your item is now confirmed.",
-            dateTime = "Jan 12 2025 03:30 PM",
-        )
-        ClientOrderStatus(
-            status = "Pending",
-            statusDescription = "Your item is to be confirmed.",
-            dateTime = "Jan 12 2025 03:20 PM",
+            status = orderData.status,
+            statusDescription = orderData.statusDescription,
+            dateTime = orderData.orderDate
         )
     }
 }
 
-@Composable // Online
-fun ClientOrderStatus(status: String, statusDescription: String, dateTime: String) {
+@Composable
+fun ClientOrderStatus(
+    status: String,
+    statusDescription: String,
+    dateTime: String
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.Top
     ) {
-        // Circle indicator only
         Box(
             modifier = Modifier
                 .size(12.dp)
-                .background(Color.Black, CircleShape)
+                .background(MaterialTheme.colorScheme.primary, CircleShape)
         )
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // Action details
         Column(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
@@ -415,12 +526,12 @@ fun ClientOrderStatus(status: String, statusDescription: String, dateTime: Strin
             Text(
                 text = statusDescription,
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = dateTime,
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

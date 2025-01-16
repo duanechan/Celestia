@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -59,7 +60,6 @@ import com.coco.celestia.viewmodel.SalesState
 import com.coco.celestia.viewmodel.SalesViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.SalesData
-import kotlin.math.max
 
 @Composable
 fun CoopSalesDetails(
@@ -164,7 +164,8 @@ fun CoopSalesDetails(
                         if (currentOrder != null) {
                             OnlineSalesDetails(
                                 order = currentOrder,
-                                navController = navController
+                                navController = navController,
+                                viewModel = orderViewModel
                             )
                         } else if (currentSale != null) {
                             InStoreSalesDetails(
@@ -188,9 +189,14 @@ fun CoopSalesDetails(
 
 //ONLINE
 @Composable
-fun OnlineSalesDetails(order: OrderData, navController: NavController){
+fun OnlineSalesDetails(
+    order: OrderData,
+    navController: NavController,
+    viewModel: OrderViewModel
+) {
     var showDialog by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
+    var currentOrder by remember { mutableStateOf(order) }
 
     Column(
         modifier = Modifier
@@ -211,7 +217,7 @@ fun OnlineSalesDetails(order: OrderData, navController: NavController){
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = order.client,
+                    text = currentOrder.client,
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -247,18 +253,34 @@ fun OnlineSalesDetails(order: OrderData, navController: NavController){
                     },
                     text = {
                         UpdateStatusCard(
-                            status = order.status,
-                            statusDescription = "Your item is ${order.status.lowercase()}.",
-                            dateTime = order.orderDate
+                            status = currentOrder.status,
+                            statusDescription = currentOrder.statusDescription,
+                            dateTime = currentOrder.orderDate,
+                            onStatusUpdate = { newStatus, newDescription ->
+                                currentOrder = currentOrder.copy(
+                                    status = newStatus,
+                                    statusDescription = newDescription
+                                )
+                            }
                         )
                     },
                     confirmButton = {
-                        TextButton(onClick = { showDialog = false }) {
+                        TextButton(
+                            onClick = {
+                                viewModel.updateOrder(currentOrder)
+                                showDialog = false
+                            }
+                        ) {
                             Text(text = "Save")
                         }
                     },
                     dismissButton = {
-                        TextButton(onClick = { showDialog = false }) {
+                        TextButton(
+                            onClick = {
+                                currentOrder = order // Reset to original order
+                                showDialog = false
+                            }
+                        ) {
                             Text(text = "Cancel")
                         }
                     }
@@ -271,13 +293,13 @@ fun OnlineSalesDetails(order: OrderData, navController: NavController){
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = order.orderId,
+                    text = currentOrder.orderId,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Text(
-                    text = order.orderDate,
+                    text = currentOrder.orderDate,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -325,28 +347,25 @@ fun OnlineSalesDetails(order: OrderData, navController: NavController){
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Items (${order.orderData.size})",
+                        text = "Items (${currentOrder.orderData.size})",
                         style = MaterialTheme.typography.titleMedium,
                         textAlign = TextAlign.Center
                     )
                 }
 
-                // Scrollable Content: Items
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 250.dp) // Limit the height for the scrollable area
+                        .heightIn(max = 250.dp)
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // List of Items
-                    order.orderData.forEach { item ->
+                    currentOrder.orderData.forEach { item ->
                         ItemCard(item)
                     }
                 }
 
-                // Footer: Always visible
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -354,7 +373,7 @@ fun OnlineSalesDetails(order: OrderData, navController: NavController){
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Total: PHP ${order.orderData.sumOf { it.price }}",
+                        text = "Total: PHP ${currentOrder.orderData.sumOf { it.price }}",
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -374,7 +393,7 @@ fun OnlineSalesDetails(order: OrderData, navController: NavController){
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(text = order.collectionMethod)
+                Text(text = currentOrder.collectionMethod)
             }
         }
 
@@ -391,7 +410,7 @@ fun OnlineSalesDetails(order: OrderData, navController: NavController){
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(text = order.paymentMethod)
+                Text(text = currentOrder.paymentMethod)
             }
         }
 
@@ -422,37 +441,10 @@ fun OnlineSalesDetails(order: OrderData, navController: NavController){
             }
 
             OrderStatus(
-                status = order.status,
-                statusDescription = "Your item is ${order.status.lowercase()}.",
-                dateTime = order.orderDate,
+                status = currentOrder.status,
+                statusDescription = "Your order is ${currentOrder.status.lowercase()}.",
+                dateTime = currentOrder.orderDate,
             )
-
-            // Dialog for Update Button
-            if (showDialog) {
-                AlertDialog(
-                    onDismissRequest = { showDialog = false },
-                    title = {
-                        Text(text = "Update Order Status")
-                    },
-                    text = {
-                        UpdateStatusCard(
-                            status = order.status,
-                            statusDescription = "Your item is ${order.status.lowercase()}.",
-                            dateTime = order.orderDate,
-                        )
-                    },
-                    confirmButton = {
-                        TextButton(onClick = { showDialog = false }) {
-                            Text(text = "Save")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showDialog = false }) {
-                            Text(text = "Cancel")
-                        }
-                    }
-                )
-            }
         }
     }
 }
@@ -657,14 +649,19 @@ fun OrderStatus(status: String, statusDescription: String, dateTime: String) {
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun UpdateStatusCard(status: String, statusDescription: String, dateTime: String) {
+fun UpdateStatusCard(
+    status: String,
+    statusDescription: String,
+    dateTime: String,
+    onStatusUpdate: (String, String) -> Unit = { _, _ -> }
+) {
     var statusValue by remember { mutableStateOf(status) }
     var statusDescriptionValue by remember { mutableStateOf(statusDescription) }
     var dateTimeValue by remember { mutableStateOf(dateTime) }
     var expanded by remember { mutableStateOf(false) }
+    var isEditingDescription by remember { mutableStateOf(false) }
 
-    // Sample options with descriptions
-    //TODO: add to db with desc
+    // Sample options with default descriptions
     val statusOptions = mapOf(
         "Pending" to "Your order is pending confirmation.",
         "Confirmed" to "Your order has been confirmed.",
@@ -672,7 +669,6 @@ fun UpdateStatusCard(status: String, statusDescription: String, dateTime: String
         "To Receive" to "Your order is ready to be picked up/ has been shipped by courier.",
         "Completed" to "Your order has been completed.",
         "Cancelled" to "Your order has been cancelled.",
-//        "Return/Refund" to "Client has requested for Return/Refund of items.",
     )
 
     Row(
@@ -681,7 +677,6 @@ fun UpdateStatusCard(status: String, statusDescription: String, dateTime: String
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.Top
     ) {
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -696,7 +691,7 @@ fun UpdateStatusCard(status: String, statusDescription: String, dateTime: String
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
                         Icon(
-                            imageVector = androidx.compose.material.icons.Icons.Default.ArrowDropDown,
+                            imageVector = Icons.Default.ArrowDropDown,
                             contentDescription = "Dropdown",
                             modifier = Modifier.clickable { expanded = true }
                         )
@@ -710,9 +705,13 @@ fun UpdateStatusCard(status: String, statusDescription: String, dateTime: String
                         DropdownMenuItem(
                             text = { Text(option) },
                             onClick = {
-                                statusValue = option // Update selected value
-                                statusDescriptionValue = description // Update description
-                                expanded = false // Close dropdown
+                                statusValue = option
+                                // Only update description if it hasn't been manually edited
+                                if (!isEditingDescription) {
+                                    statusDescriptionValue = description
+                                }
+                                expanded = false
+                                onStatusUpdate(option, statusDescriptionValue)
                             }
                         )
                     }
@@ -721,10 +720,30 @@ fun UpdateStatusCard(status: String, statusDescription: String, dateTime: String
 
             OutlinedTextField(
                 value = statusDescriptionValue,
-                onValueChange = {},
+                onValueChange = { newValue ->
+                    isEditingDescription = true
+                    statusDescriptionValue = newValue
+                    onStatusUpdate(statusValue, newValue)
+                },
                 label = { Text("Description") },
                 readOnly = false,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                trailingIcon = {
+                    if (isEditingDescription) {
+                        IconButton(
+                            onClick = {
+                                isEditingDescription = false
+                                statusDescriptionValue = statusOptions[statusValue] ?: ""
+                                onStatusUpdate(statusValue, statusDescriptionValue)
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Reset to default"
+                            )
+                        }
+                    }
+                }
             )
 
             OutlinedTextField(
@@ -737,8 +756,6 @@ fun UpdateStatusCard(status: String, statusDescription: String, dateTime: String
         }
     }
 }
-
-
 
 
 

@@ -70,11 +70,15 @@ class OrderViewModel : ViewModel() {
             _orderState.value = OrderState.LOADING
             database.child(uid).addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
+                    val filterKeywords = filter.split(",").map { it.trim() }
                     val orders = snapshot.children
                         .mapNotNull { it.getValue(OrderData::class.java) }
                         .filter { order ->
-                            order.orderData.any { product ->
-                                product.type.equals(uid, ignoreCase = true)
+                            filterKeywords.any { keyword ->
+                                order::class.memberProperties.any { property ->
+                                    val value = property.getter.call(order)?.toString() ?: ""
+                                    value.contains(keyword, ignoreCase = true)
+                                }
                             }
                         }
                     _orderData.value = orders
@@ -198,6 +202,7 @@ class OrderViewModel : ViewModel() {
             orderDate = snapshot.child("orderDate").getValue(String::class.java) ?: "",
             targetDate = snapshot.child("targetDate").getValue(String::class.java) ?: "",
             status = snapshot.child("status").getValue(String::class.java) ?: "",
+            statusDescription = snapshot.child("statusDescription").getValue(String::class.java) ?: "", // Added this line
             orderData = snapshot.child("orderData").children
                 .mapNotNull { it.getValue(ProductData::class.java) },
             client = snapshot.child("client").getValue(String::class.java) ?: "",
@@ -226,37 +231,46 @@ class OrderViewModel : ViewModel() {
     fun placeOrder(uid: String, order: OrderData) {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
-            println("Debug - Order Data before saving:")
-            order.orderData.forEach { product ->
-                println("Product: ${product.name}, Type: ${product.type}")
-            }
+
+            // Create order with initial status description
+            val orderWithDescription = order.copy(
+                statusDescription = when(order.status) {
+                    "Pending" -> "Your order is being reviewed"
+                    "Confirmed" -> "Your order has been confirmed"
+                    "To Deliver" -> "Your order is ready for delivery"
+                    "To Receive" -> "Your order is out for delivery"
+                    "Completed" -> "Your order has been completed"
+                    "Cancelled" -> "Your order has been cancelled"
+                    "Return/Refund" -> "Your order is being processed for return/refund"
+                    else -> ""
+                }
+            )
+
             val query = database.child(uid).push()
-            query.setValue(order)
+            query.setValue(orderWithDescription)
                 .addOnSuccessListener {
-                    println("Debug - Order saved successfully")
                     viewModelScope.launch {
                         val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
                         val formattedDateTime = LocalDateTime.now().format(formatter)
 
                         val notification = Notification(
                             timestamp = formattedDateTime,
-                            sender = order.client,
-                            details = order,
-                            message = "New order request from ${order.client}!",
+                            sender = orderWithDescription.client,
+                            details = orderWithDescription,
+                            message = "New order request from ${orderWithDescription.client}!",
                             type = NotificationType.OrderPlaced
                         )
 
                         NotificationService.pushNotifications(
                             notification = notification,
-                            onComplete = { println("Success!") },
-                            onError = { println("Error.") }
+                            onComplete = { },
+                            onError = { }
                         )
                     }
 
                     _orderState.value = OrderState.SUCCESS
                 }
                 .addOnFailureListener { exception ->
-                    println("Debug - Order save failed: ${exception.message}")
                     _orderState.value = OrderState.ERROR(exception.message ?: "Unknown error")
                 }
         }
@@ -273,6 +287,25 @@ class OrderViewModel : ViewModel() {
     fun updateOrder(updatedOrderData: OrderData) {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
+
+            // Preserve the custom description if provided; otherwise, use a fallback
+            val orderWithUpdatedDescription = updatedOrderData.copy(
+                statusDescription = if (updatedOrderData.statusDescription.isNullOrBlank()) {
+                    when (updatedOrderData.status) {
+                        "Pending" -> "Your order is being reviewed"
+                        "Confirmed" -> "Your order has been confirmed"
+                        "To Deliver" -> "Your order is ready for delivery"
+                        "To Receive" -> "Your order is out for delivery"
+                        "Completed" -> "Your order has been completed"
+                        "Cancelled" -> "Your order has been cancelled"
+                        "Return/Refund" -> "Your order is being processed for return/refund"
+                        else -> ""
+                    }
+                } else {
+                    updatedOrderData.statusDescription
+                }
+            )
+
             database.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     if (snapshot.exists()) {
@@ -281,8 +314,8 @@ class OrderViewModel : ViewModel() {
                             val orders = user.children
                             for (order in orders) {
                                 val orderId = order.child("orderId").getValue(String::class.java)
-                                if (orderId == updatedOrderData.orderId) {
-                                    order.ref.setValue(updatedOrderData)
+                                if (orderId == orderWithUpdatedDescription.orderId) {
+                                    order.ref.setValue(orderWithUpdatedDescription)
                                         .addOnSuccessListener {
                                             _orderState.value = OrderState.SUCCESS
                                         }
@@ -310,6 +343,7 @@ class OrderViewModel : ViewModel() {
             })
         }
     }
+
 
     fun cancelOrder(orderId: String) {
         viewModelScope.launch {

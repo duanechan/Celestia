@@ -26,12 +26,14 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.White1
+import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.OrderState
@@ -163,14 +165,12 @@ private fun InStoreSalesContentUI(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Search Field and Sort Button Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Search Field
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { newQuery -> searchQuery = newQuery },
@@ -419,7 +419,7 @@ private fun OnlineSalesContentUI(
         OrderItem("Pending", 0),
         OrderItem("Confirmed", 0),
         OrderItem("To Deliver", 0),
-        OrderItem("To Recieve", 0),
+        OrderItem("To Receive", 0),
         OrderItem("Completed", 0),
         OrderItem("Cancelled", 0),
         OrderItem("Return/Refund", 0)
@@ -427,57 +427,23 @@ private fun OnlineSalesContentUI(
 
     val salesState by viewModel.salesState.observeAsState(SalesState.LOADING)
     val salesData by viewModel.salesData.observeAsState(emptyList())
-
-    // Fetch sales for the facility when the component loads
-    LaunchedEffect(facilityName) {
-        println("Fetching sales for facility: $facilityName")
-        viewModel.fetchSales(facility = facilityName)
-    }
-
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
 
-    // Fetch orders for the specific facility
     LaunchedEffect(facilityName) {
-        println("Fetching orders with role: $facilityName")
+        viewModel.fetchSales(facility = facilityName)
         orderViewModel.fetchAllOrders(filter = "", role = facilityName)
     }
 
-    // Filter orders to only show those containing products from the current facility
     val facilityOrders = orderData.filter { order ->
         order.orderData.any { product -> product.type == facilityName }
     }
-
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    val filteredAndSortedSales = salesData
-        .filter {
-            searchQuery.isBlank() || listOf(
-                it.salesNumber,
-                it.productName,
-                it.price.toString(),
-                it.quantity.toString(),
-                it.date,
-                it.notes
-            ).any { field -> field.contains(searchQuery, ignoreCase = true) }
-        }
-        .sortedWith(
-            when (sortOption) {
-                "A-Z" -> compareBy { it.productName }
-                "Z-A" -> compareByDescending { it.productName }
-                "By Year" -> compareBy { LocalDate.parse(it.date, formatter).year }
-                "By Month" -> compareBy { LocalDate.parse(it.date, formatter).withDayOfMonth(1) }
-                "By Week" -> compareBy { LocalDate.parse(it.date, formatter).dayOfYear / 7 }
-                "By Day" -> compareBy { LocalDate.parse(it.date, formatter) }
-                else -> compareBy { it.productName }
-            }
-        )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
-        // Tabs for Orders and Sales
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -492,10 +458,8 @@ private fun OnlineSalesContentUI(
                     TextButton(
                         onClick = { selectedTab = tab },
                         colors = ButtonDefaults.textButtonColors(
-                            contentColor = if (selectedTab == tab)
-                                Green1
-                            else
-                                MaterialTheme.colorScheme.onSurfaceVariant
+                            contentColor = if (selectedTab == tab) Green1
+                            else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     ) {
                         Text(
@@ -527,12 +491,10 @@ private fun OnlineSalesContentUI(
         // Tab Content
         when (selectedTab) {
             "Orders" -> {
-                // Update status counts based on facility-filtered orders
                 statuses.forEach { order ->
                     order.totalActivities = facilityOrders.count { it.status == order.status }
                 }
 
-                // Scrollable Status Tabs
                 LazyRow(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -566,22 +528,21 @@ private fun OnlineSalesContentUI(
                     }
                 }
 
-                // Search and Sort Row
+                // Search and Sort
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Search Field
                     OutlinedTextField(
                         value = searchQuery,
-                        onValueChange = { newQuery -> searchQuery = newQuery },
+                        onValueChange = { searchQuery = it },
                         modifier = Modifier
                             .weight(1f)
                             .padding(end = 8.dp)
                             .height(48.dp),
-                        placeholder = { Text(text = "Search orders...") },
+                        placeholder = { Text("Search orders...") },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Search,
@@ -609,7 +570,6 @@ private fun OnlineSalesContentUI(
                         singleLine = true
                     )
 
-                    // Sort Dropdown
                     Box {
                         IconButton(
                             onClick = { showSortDropdown = !showSortDropdown },
@@ -663,43 +623,72 @@ private fun OnlineSalesContentUI(
                     }
                 }
 
-                // Filtered and Sorted Orders
                 val filteredAndSortedOrders = facilityOrders
                     .filter { order ->
-                        searchQuery.isBlank() || listOf(
-                            order.orderId, // Order ID
-                            order.status, // Order status
-                            order.collectionMethod, // Collection method
-                            order.paymentMethod // Payment method
-                        ).any { field -> field.contains(searchQuery, ignoreCase = true) }
-                                || order.orderData.any { product ->
-                            // Include product details in the search
-                            listOf(
-                                product.name, // Product name
-                                product.price.toString(), // Product price
-                                product.quantity.toString() // Product quantity
-                            ).any { field -> field.contains(searchQuery, ignoreCase = true) }
-                        }
+                        order.status == selectedOrderStatus &&
+                                (searchQuery.isBlank() || listOf(
+                                    order.orderId,
+                                    order.status,
+                                    order.collectionMethod,
+                                    order.paymentMethod
+                                ).any { field -> field.contains(searchQuery, ignoreCase = true) }
+                                        || order.orderData.any { product ->
+                                    listOf(
+                                        product.name,
+                                        product.price.toString(),
+                                        product.quantity.toString()
+                                    ).any { field -> field.contains(searchQuery, ignoreCase = true) }
+                                })
                     }
                     .sortedWith(
                         when (sortOption) {
                             "A-Z" -> compareBy { it.orderId }
                             "Z-A" -> compareByDescending { it.orderId }
-                            "Newest First" -> compareByDescending { LocalDate.parse(it.orderDate, DateTimeFormatter.ofPattern("MM/dd/yyyy")) }
-                            "Oldest First" -> compareBy { LocalDate.parse(it.orderDate, DateTimeFormatter.ofPattern("MM/dd/yyyy")) }
+                            "Newest First" -> compareByDescending {
+                                LocalDate.parse(it.orderDate, DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+                            }
+                            "Oldest First" -> compareBy {
+                                LocalDate.parse(it.orderDate, DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+                            }
                             else -> compareBy { it.orderId }
                         }
                     )
 
-                // Display orders for the selected status, filtered by facility
-                OrdersCard(
-                    filteredOrders = filteredAndSortedOrders,
-                    navController = navController
-                )
+                if (filteredAndSortedOrders.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ShoppingCart,
+                                contentDescription = "No Orders",
+                                modifier = Modifier.size(48.dp),
+                                tint = Green1
+                            )
+                            Text(
+                                text = "No orders found",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontFamily = mintsansFontFamily,
+                                color = Green1,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                } else {
+                    OrdersCard(
+                        filteredOrders = filteredAndSortedOrders,
+                        navController = navController
+                    )
+                }
             }
 
             "Sales" -> {
-                // Search Field and Sort Button Row
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -912,7 +901,6 @@ fun OrderStatusesCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // First Row: Order ID and Date
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -930,7 +918,6 @@ fun OrderStatusesCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Second Row: Items and Status
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -951,7 +938,6 @@ fun OrderStatusesCard(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            // Product Details
             for (item in order.orderData) {
                 ItemCard(item)
             }
@@ -976,11 +962,11 @@ fun OrderStatusesCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ){
                 Text(
-                    text = "${ order.paymentMethod } * Unpaid", //collection method and payment
+                    text = "${ order.paymentMethod } * Unpaid",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "PHP ${order.orderData.sumOf { it.price } }", //total
+                    text = "PHP ${order.orderData.sumOf { it.price } }",
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -997,7 +983,6 @@ fun ItemCard(item: ProductData){
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Add Image Box
         Card(
             modifier = Modifier
                 .size(60.dp),
@@ -1011,7 +996,6 @@ fun ItemCard(item: ProductData){
             }
         }
 
-        // Product Name and Price
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -1021,11 +1005,11 @@ fun ItemCard(item: ProductData){
                 style = MaterialTheme.typography.titleMedium
             )
             Text(
-                text = item.quantity.toString(), //quantity ordered
+                text = "${item.quantity} ${item.weightUnit}",
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                text = "PHP ${item.price}", //total price of order per item
+                text = "PHP ${item.price}",
                 style = MaterialTheme.typography.bodyMedium
             )
         }

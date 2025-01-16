@@ -43,6 +43,7 @@ data class OrderData(
     val orderDate: String = "",
     val targetDate: String = "",
     val status: String = "",
+    val statusDescription: String = "",
     var orderData: List<ProductData> = emptyList(),
     val client: String = "",
     val barangay: String = "",
