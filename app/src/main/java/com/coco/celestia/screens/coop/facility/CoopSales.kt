@@ -430,15 +430,22 @@ private fun OnlineSalesContentUI(
 
     // Fetch sales for the facility when the component loads
     LaunchedEffect(facilityName) {
+        println("Fetching sales for facility: $facilityName")
         viewModel.fetchSales(facility = facilityName)
     }
 
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
 
-    LaunchedEffect(Unit) {
-        println(facilityName)
+    // Fetch orders for the specific facility
+    LaunchedEffect(facilityName) {
+        println("Fetching orders with role: $facilityName")
         orderViewModel.fetchAllOrders(filter = "", role = facilityName)
+    }
+
+    // Filter orders to only show those containing products from the current facility
+    val facilityOrders = orderData.filter { order ->
+        order.orderData.any { product -> product.type == facilityName }
     }
 
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -520,9 +527,11 @@ private fun OnlineSalesContentUI(
         // Tab Content
         when (selectedTab) {
             "Orders" -> {
+                // Update status counts based on facility-filtered orders
                 statuses.forEach { order ->
-                    order.totalActivities = orderData.count { it.status == order.status }
+                    order.totalActivities = facilityOrders.count { it.status == order.status }
                 }
+
                 // Scrollable Status Tabs
                 LazyRow(
                     modifier = Modifier
@@ -557,20 +566,15 @@ private fun OnlineSalesContentUI(
                     }
                 }
 
-                // Display orders for the selected status
+                // Display orders for the selected status, filtered by facility
                 OrdersCard(
-                    filteredOrders = orderData
+                    filteredOrders = facilityOrders
                         .filter { it.status == selectedOrderStatus }
                         .sortedByDescending { LocalDate.parse(it.orderDate, DateTimeFormatter.ofPattern("MM/dd/yyyy")) },
-                    navController = navController // Pass the navController
+                    navController = navController
                 )
-//                SalesContent(sales = filteredAndSortedSales, navController = navController)
             }
 
-
-
-
-            //Sales Tab
             "Sales" -> {
                 // Search Field and Sort Button Row
                 Row(
@@ -709,16 +713,30 @@ private fun OnlineSalesContentUI(
                         }
                     }
                     SalesState.SUCCESS -> {
-//                        // Display orders for the selected status
-                          // TODO: Orders with "Completed" status will also be displayed in the sales tab
-                        OrdersCard(
-                            filteredOrders = orderData.filter { order ->
-                                // For now showing all sales in the sales tab
-                                // You can add specific filtering logic here when needed
-                                true
-                            },
-                            navController = navController // Pass the navController
-                        )
+                        // Filter completed orders
+                        val completedOrders = facilityOrders.filter { order ->
+                            order.status == "Completed"
+                        }
+
+                        if (completedOrders.isEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No completed orders found",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        } else {
+                            OrdersCard(
+                                filteredOrders = completedOrders.sortedByDescending {
+                                    LocalDate.parse(it.orderDate, DateTimeFormatter.ofPattern("MM/dd/yyyy"))
+                                },
+                                navController = navController
+                            )
+                        }
                     }
                 }
             }
@@ -748,7 +766,7 @@ fun OrdersCard(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text("No orders found for the selected status.")
+            Text("No orders found.")
         }
     }
 }
@@ -777,7 +795,7 @@ fun OrderStatusesCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "OrderID",
+                    text = order.orderId.take(14),
                     style = MaterialTheme.typography.titleMedium,
                     color = Green1
                 )
