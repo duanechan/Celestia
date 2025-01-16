@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.coco.celestia.ui.theme.BgColor
+import com.coco.celestia.ui.theme.DarkGreen
 
 //TODO: need backend to connect order requests notifications etc.,
 //boolean = true will show placeholder notification content
@@ -84,7 +85,7 @@ fun NotificationItem(
             Icon(
                 imageVector = Icons.Default.Notifications,
                 contentDescription = "Notification Icon",
-                tint = MaterialTheme.colorScheme.primary,
+                tint = DarkGreen,
                 modifier = Modifier.size(48.dp)
             )
 

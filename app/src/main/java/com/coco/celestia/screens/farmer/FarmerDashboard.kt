@@ -27,6 +27,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -230,10 +231,9 @@ fun FarmerDashboard(
     }
 }
 
-//TODO: to connect order status numbers to the actual orders. atm it is only a placeholder
 @Composable
 fun FarmerOrderOverview(orders: List<OrderData>) {
-    val currentMonth = LocalDate.now().month
+//    val currentMonth = LocalDate.now().month
 
     val statuses = listOf("Pending", "In Progress", "Accepted", "Rejected", "Calamity Affected", "Cancelled")
     val statusCounts = statuses.associateWith { status ->
@@ -241,8 +241,8 @@ fun FarmerOrderOverview(orders: List<OrderData>) {
     }
 
     val statusIcons = mapOf(
-        "Pending" to Icons.Default.Refresh,
-        "In Progress" to R.drawable.hourglass,
+        "Pending" to R.drawable.pending,
+        "In Progress" to R.drawable.hour_glass,
         "Accepted" to Icons.Default.CheckCircle,
         "Rejected" to R.drawable.reject,
         "Calamity Affected" to R.drawable.calamity,
@@ -289,13 +289,13 @@ fun FarmerOrderOverview(orders: List<OrderData>) {
             }
         }
 
-        Text(
-            text = currentMonth.name.lowercase().replaceFirstChar { it.uppercase() },
-            fontSize = 18.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = DarkGreen,
-            modifier = Modifier.padding(top = 16.dp)
-        )
+//        Text(
+//            text = currentMonth.name.lowercase().replaceFirstChar { it.uppercase() },
+//            fontSize = 18.sp,
+//            fontWeight = FontWeight.SemiBold,
+//            color = DarkGreen,
+//            modifier = Modifier.padding(top = 16.dp)
+//        )
     }
 }
 
@@ -303,24 +303,24 @@ fun FarmerOrderOverview(orders: List<OrderData>) {
 fun StatusBox(status: String, count: Int, icon: Any, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .height(120.dp)
-            .fillMaxWidth()
+            .size(110.dp)  // Set both width and height to the same value to make it square
             .clip(RoundedCornerShape(8.dp))
             .background(White2)
             .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Box(
+            contentAlignment = Alignment.Center
         ) {
+            // Icon with 50% transparency
             when (icon) {
                 is Int -> {
                     Icon(
                         painter = painterResource(id = icon),
                         contentDescription = "$status Icon",
                         modifier = Modifier
-                            .size(30.dp),
+                            .size(50.dp)
+                            .alpha(0.4f),
                         tint = DarkGreen
                     )
                 }
@@ -329,7 +329,8 @@ fun StatusBox(status: String, count: Int, icon: Any, modifier: Modifier = Modifi
                         imageVector = icon,
                         contentDescription = "$status Icon",
                         modifier = Modifier
-                            .size(30.dp),
+                            .size(50.dp)
+                            .alpha(0.4f),
                         tint = DarkGreen
                     )
                 }
@@ -338,22 +339,31 @@ fun StatusBox(status: String, count: Int, icon: Any, modifier: Modifier = Modifi
                         imageVector = Icons.Default.Info,
                         contentDescription = "Default Icon",
                         modifier = Modifier
-                            .size(30.dp),
+                            .size(50.dp)
+                            .alpha(0.4f),
                         tint = DarkGreen
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            // Status count overlayed on the icon
             Text(
                 text = "$count",
-                fontSize = 20.sp,
+                fontSize = 24.sp, // Larger font size for the number
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = Color.Black,
+                modifier = Modifier.padding(8.dp)
             )
-            Spacer(modifier = Modifier.height(4.dp))
+        }
+        // Status label below the icon and count
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(top = 60.dp) // Ensure the label doesn't overlap the icon/count
+        ) {
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = status,
-                fontSize = 12.sp,
+                fontSize = 12.sp, // Optional: Slightly larger font for better readability
                 color = Color.Gray,
                 textAlign = TextAlign.Center
             )
