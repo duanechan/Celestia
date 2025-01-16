@@ -421,7 +421,7 @@ fun DisplayRequestDetails (
         OutlinedTextField(
             value = description,
             onValueChange = { description = it },
-            label = { Text("Description") },
+            label = { Text("Update Progress") },
             placeholder = { Text("Update the cooperative with your progress...") },
             modifier = Modifier
                 .fillMaxWidth()
@@ -429,62 +429,69 @@ fun DisplayRequestDetails (
         )
 
         //Update Status
-        Button(
-            onClick = {
-                updateStatusDialog = true
-            },
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                contentColor = Color.White,
-                containerColor = Green1
-            ),
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
+            Button(
+                onClick = {
+                    updateStatusDialog = true
+                },
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    contentColor = Color.White,
+                    containerColor = Green1
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp)
             ) {
-                Text("Update Status")
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    painter = painterResource(id = R.drawable.update),
-                    contentDescription = "Update Status Icon",
-                    modifier = Modifier.size(24.dp),
-                    tint = Color.White
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Update Status")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        painter = painterResource(id = R.drawable.update),
+                        contentDescription = "Update Status Icon",
+                        modifier = Modifier.size(24.dp),
+                        tint = Color.White
+                    )
+                }
             }
-        }
 
-// Track Order
-        Button(
-            onClick = {
-                // Track order action
-            },
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(
-                contentColor = Color.White,
-                containerColor = Green1
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
+            // Track Order
+            Button(
+                onClick = {
+                    // Track order action
+                },
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    contentColor = Color.White,
+                    containerColor = Green1
+                ),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(56.dp)
             ) {
-                Text("Track Order")
-                Spacer(modifier = Modifier.width(8.dp))
-                Icon(
-                    painter = painterResource(id = R.drawable.deliveryicon),
-                    contentDescription = "Track Order Icon",
-                    modifier = Modifier.size(24.dp),
-                    tint = Color.White
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Track Order")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        painter = painterResource(id = R.drawable.deliveryicon),
+                        contentDescription = "Track Order Icon",
+                        modifier = Modifier.size(15.dp),
+                        tint = Color.White
+                    )
+                }
             }
         }
     }
