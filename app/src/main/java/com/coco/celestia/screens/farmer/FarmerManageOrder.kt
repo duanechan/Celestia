@@ -335,18 +335,19 @@ fun DisplayRequestDetails (
             )
 
             Text(
-                text = specialRequest?.specialRequestUID?.split("-")?.take(4)?.joinToString("-") ?: "",
+                text = specialRequest?.specialRequestUID?.split("-")?.take(4)?.joinToString("-")
+                    ?: "",
                 modifier = Modifier
                     .padding(16.dp)
                     .weight(2f)
             )
         }
 
-        Row (
+        Row(
             modifier = Modifier
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
-        ){
+        ) {
             Text(
                 text = "Details",
                 fontWeight = FontWeight.Bold
@@ -354,9 +355,9 @@ fun DisplayRequestDetails (
 
             Switch(
                 checked = checked,
-                onCheckedChange = { checked = it},
+                onCheckedChange = { checked = it },
                 modifier = Modifier
-                    .graphicsLayer (
+                    .graphicsLayer(
                         scaleX = 0.6f,
                         scaleY = 0.6f
                     ),
@@ -427,6 +428,7 @@ fun DisplayRequestDetails (
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         )
 
+        //Update Status
         Button(
             onClick = {
                 updateStatusDialog = true
@@ -440,7 +442,50 @@ fun DisplayRequestDetails (
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            Text("Update Status")
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Update Status")
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    painter = painterResource(id = R.drawable.update),
+                    contentDescription = "Update Status Icon",
+                    modifier = Modifier.size(24.dp),
+                    tint = Color.White
+                )
+            }
+        }
+
+// Track Order
+        Button(
+            onClick = {
+                // Track order action
+            },
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                contentColor = Color.White,
+                containerColor = Green1
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Track Order")
+                Spacer(modifier = Modifier.width(8.dp))
+                Icon(
+                    painter = painterResource(id = R.drawable.deliveryicon),
+                    contentDescription = "Track Order Icon",
+                    modifier = Modifier.size(24.dp),
+                    tint = Color.White
+                )
+            }
         }
     }
 
