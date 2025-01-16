@@ -6,6 +6,7 @@ import android.app.DatePickerDialog
 import android.widget.DatePicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -48,6 +49,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
@@ -185,6 +187,7 @@ fun DisplaySpecialReq(
 
 @Composable
 fun AddSpecialReq(
+    navController: NavController,
     specialRequestViewModel: SpecialRequestViewModel,
     userViewModel: UserViewModel
 ) {
@@ -223,11 +226,26 @@ fun AddSpecialReq(
             .padding(8.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Text(
-            text = "Subject",
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(vertical = 4.dp)
-        )
+        Row (
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Subject",
+                fontWeight = FontWeight.Bold
+            )
+
+            if (subjectEmpty) {
+                Text(
+                    text = "Subject is Empty!",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Red,
+                )
+            }
+        }
 
         OutlinedTextField(
             value = subject,
@@ -237,14 +255,6 @@ fun AddSpecialReq(
                 .fillMaxWidth()
                 .padding(vertical = 4.dp)
         )
-
-        if (subjectEmpty) {
-            Text(
-                text = "Subject is Empty!",
-                color = Color.Red,
-                modifier = Modifier.padding(vertical = 4.dp)
-            )
-        }
 
         Text(
             text = "Description",
@@ -333,6 +343,8 @@ fun AddSpecialReq(
             if (productEmpty[index].name) {
                 Text(
                     text = "Product name cannot be empty!",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
                     color = Color.Red,
                     modifier = Modifier.padding(vertical = 4.dp)
                 )
@@ -341,6 +353,8 @@ fun AddSpecialReq(
             if (productEmpty[index].quantity) {
                 Text(
                     text = "Quantity must be greater than 0!",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
                     color = Color.Red,
                     modifier = Modifier.padding(vertical = 4.dp)
                 )
@@ -359,12 +373,26 @@ fun AddSpecialReq(
             Text(text = "Add Product")
         }
 
-        Text(
-            text = "Target Date",
-            fontWeight = FontWeight.Bold,
+        Row (
             modifier = Modifier
-                .padding(vertical = 4.dp)
-        )
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Target Date",
+                fontWeight = FontWeight.Bold
+            )
+
+            if (targetDateEmpty) {
+                Text(
+                    text = "Target Date is Empty!",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Red,
+                )
+            }
+        }
 
         OutlinedTextField(
             value = targetDate,
@@ -392,14 +420,6 @@ fun AddSpecialReq(
                 )
             }
         )
-
-        if (targetDateEmpty) {
-            Text(
-                text = "Target Date is Empty!",
-                color = Color.Red,
-                modifier = Modifier.padding(vertical = 4.dp)
-            )
-        }
 
         Text(
             text = "Collection Method",
@@ -437,6 +457,8 @@ fun AddSpecialReq(
         if (collectionMethodEmpty) {
             Text(
                 text = "Please Choose a Collection Method!",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
                 color = Color.Red,
                 modifier = Modifier.padding(vertical = 4.dp)
             )
@@ -504,6 +526,7 @@ fun AddSpecialReq(
                         uid,
                         specialReq
                     )
+                    navController.navigate(Screen.ClientSpecialReq.route)
                 }
             },
             modifier = Modifier

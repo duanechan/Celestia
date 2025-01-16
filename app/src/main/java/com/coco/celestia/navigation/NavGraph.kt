@@ -336,6 +336,7 @@ fun NavGraph(
         composable(route = Screen.ClientAddSpecialReq.route) {
             onNavigate("Request an Order")
             AddSpecialReq(
+                navController,
                 specialRequestViewModel,
                 userViewModel
             )

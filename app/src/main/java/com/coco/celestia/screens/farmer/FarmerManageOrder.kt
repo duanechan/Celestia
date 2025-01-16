@@ -199,7 +199,14 @@ fun FarmerManageOrder(
                     "Completed"
                 }
 
-                assignedProducts?.forEach { assigned ->
+                assignedProducts
+                    ?.sortedByDescending { assigned ->
+                        assigned.trackRecord
+                            .filter { it.description.contains("assigned", ignoreCase = true) }
+                            .maxByOrNull { it.dateTime }
+                            ?.dateTime
+                    }
+                    ?.forEach { assigned ->
                     if (searchQuery.isEmpty() ||
                         assigned.subject.contains(searchQuery, ignoreCase = true) ||
                         assigned.name.contains(searchQuery, ignoreCase = true) ||
@@ -211,7 +218,6 @@ fun FarmerManageOrder(
                             userData?.email ?: ""
                         )
                     }
-
                 }
             }
         }
