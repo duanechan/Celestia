@@ -681,6 +681,18 @@ fun NavGraph(
             )
         }
 
+        composable(
+            route = Screen.CoopOrderDetails.route,
+            arguments = listOf(
+                navArgument("orderId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            CoopSalesDetails(
+                navController = navController,
+                userEmail = userEmail
+            )
+        }
+
         composable(route = Screen.AddProductInventory.route) {
             var facilityName by remember { mutableStateOf("") }
             var quantity by remember { mutableStateOf(0) }

@@ -687,8 +687,8 @@ private fun OnlineSalesContentUI(
                     }
                 }
 
-                when (salesState) {
-                    SalesState.LOADING -> {
+                when (orderState) {
+                    OrderState.LOADING -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
@@ -696,23 +696,23 @@ private fun OnlineSalesContentUI(
                             CircularProgressIndicator(color = Green1)
                         }
                     }
-                    SalesState.EMPTY -> {
+                    OrderState.EMPTY -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("No sales found")
+                            Text("No orders found")
                         }
                     }
-                    is SalesState.ERROR -> {
+                    is OrderState.ERROR -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text((salesState as SalesState.ERROR).message)
+                            Text((orderState as OrderState.ERROR).message)
                         }
                     }
-                    SalesState.SUCCESS -> {
+                    OrderState.SUCCESS -> {
                         // Filter completed orders
                         val completedOrders = facilityOrders.filter { order ->
                             order.status == "Completed"
@@ -782,7 +782,7 @@ fun OrderStatusesCard(
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .clickable {
-                navController.navigate(Screen.CoopSalesDetails.createRoute("TEST-ORDER-123"))
+                navController.navigate(Screen.CoopOrderDetails.createRoute(order.orderId))
             },
         colors = CardDefaults.cardColors(containerColor = White1)
     ) {

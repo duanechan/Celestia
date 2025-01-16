@@ -51,8 +51,11 @@ import androidx.navigation.NavController
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
+import com.coco.celestia.viewmodel.OrderState
+import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.SalesState
 import com.coco.celestia.viewmodel.SalesViewModel
+import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.SalesData
 
 @Composable
@@ -60,10 +63,15 @@ fun CoopSalesDetails(
     navController: NavController,
     userEmail: String,
     salesViewModel: SalesViewModel = viewModel(),
+    orderViewModel: OrderViewModel = viewModel(),
     facilityViewModel: FacilityViewModel = viewModel()
 ) {
     val salesNumber = remember {
         navController.currentBackStackEntry?.arguments?.getString("salesNumber") ?: ""
+    }
+
+    val orderId = remember {
+        navController.currentBackStackEntry?.arguments?.getString("orderId") ?: ""
     }
 
     val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
@@ -71,6 +79,10 @@ fun CoopSalesDetails(
 
     val salesState by salesViewModel.salesState.observeAsState(SalesState.LOADING)
     val salesData by salesViewModel.salesData.observeAsState(emptyList())
+
+    val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
+    val orderData by orderViewModel.orderData.observeAsState(emptyList())
+
     val userFacility = facilitiesData.find { facility ->
         facility.emails.contains(userEmail)
     }
@@ -82,10 +94,12 @@ fun CoopSalesDetails(
     LaunchedEffect(userFacility) {
         userFacility?.let { facility ->
             salesViewModel.fetchSales(facility = facility.name)
+            orderViewModel.fetchAllOrders(filter = "", role = facility.name)
         }
     }
 
     val currentSale = salesData.find { it.salesNumber == salesNumber }
+    val currentOrder = orderData.find { it.orderId == orderId}
 
     Box(
         modifier = Modifier
@@ -118,8 +132,8 @@ fun CoopSalesDetails(
                 }
             }
             else -> {
-                when (salesState) {
-                    SalesState.LOADING -> {
+                when {
+                    orderState == OrderState.LOADING || salesState == SalesState.LOADING -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
@@ -127,7 +141,15 @@ fun CoopSalesDetails(
                             CircularProgressIndicator(color = Green1)
                         }
                     }
-                    is SalesState.ERROR -> {
+                    orderState is OrderState.ERROR -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text((orderState as OrderState.ERROR).message)
+                        }
+                    }
+                    salesState is SalesState.ERROR -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
@@ -136,26 +158,22 @@ fun CoopSalesDetails(
                         }
                     }
                     else -> {
-                        currentSale?.let { sale ->
-                            if (!sale.salesNumber.startsWith("SO-")) {
-                                OnlineSalesDetails(
-//                                InStoreSalesDetails(
-                                    sale = sale,
-                                    navController = navController
-                                )
-                            } else {
-                                InStoreSalesDetails(
-//                                OnlineSalesDetails(
-                                    sale = sale,
-                                    navController = navController
-                                )
-                            }
-                        } ?: run {
+                        if (currentOrder != null) {
+                            OnlineSalesDetails(
+                                order = currentOrder,
+                                navController = navController
+                            )
+                        } else if (currentSale != null) {
+                            InStoreSalesDetails(
+                                sale = currentSale,
+                                navController = navController
+                            )
+                        } else {
                             Box(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("Sale not found")
+                                Text("Order/Sale not found")
                             }
                         }
                     }
@@ -167,7 +185,7 @@ fun CoopSalesDetails(
 
 //ONLINE
 @Composable
-fun OnlineSalesDetails(sale: SalesData, navController: NavController){
+fun OnlineSalesDetails(order: OrderData, navController: NavController){
     var showDialog by remember { mutableStateOf(false) }
 
     Column(
@@ -189,7 +207,7 @@ fun OnlineSalesDetails(sale: SalesData, navController: NavController){
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Client Name",
+                    text = order.client,
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -206,13 +224,13 @@ fun OnlineSalesDetails(sale: SalesData, navController: NavController){
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "OID-YYYYDDMM-Count",
+                    text = order.orderId,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Text(
-                    text = "Timestamp",
+                    text = order.orderDate,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -242,7 +260,6 @@ fun OnlineSalesDetails(sale: SalesData, navController: NavController){
             }
         }
 
-
         //Product Order Details
         Card(
             modifier = Modifier
@@ -257,7 +274,7 @@ fun OnlineSalesDetails(sale: SalesData, navController: NavController){
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "Items (2)",
+                    text = "Items (${order.orderData.size})",
                     style = MaterialTheme.typography.titleMedium,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(top = 16.dp)
@@ -270,17 +287,18 @@ fun OnlineSalesDetails(sale: SalesData, navController: NavController){
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OnlineItemCard()
-                OnlineItemCard()
+                order.orderData.forEach { item ->
+                    ItemCard(item)
+                }
 
                 Text(
-                    text = "Total: PHP 200",
+                    text = "Total: PHP ${order.orderData.sumOf { it.price }}",
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
         }
 
-        //TODO: Update
+        //Collection Method
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -293,12 +311,11 @@ fun OnlineSalesDetails(sale: SalesData, navController: NavController){
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                CollectionMethod()
+                Text(text = order.collectionMethod)
             }
         }
 
-        //Payment Method - TBC
-        //TODO: Update
+        //Payment Method
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -311,7 +328,7 @@ fun OnlineSalesDetails(sale: SalesData, navController: NavController){
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                PaymentMethod()
+                Text(text = order.paymentMethod)
             }
         }
 
@@ -333,7 +350,6 @@ fun OnlineSalesDetails(sale: SalesData, navController: NavController){
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
-                // Update Button
                 Button(
                     onClick = { showDialog = true },
                     colors = ButtonDefaults.buttonColors(containerColor = Green1)
@@ -342,17 +358,10 @@ fun OnlineSalesDetails(sale: SalesData, navController: NavController){
                 }
             }
 
-            //TODO: Recent ones should be on top
-            // SAMPLE
             OrderStatus(
-                status = "Confirmed",
-                statusDescription = "Your item is now confirmed.",
-                dateTime = "Jan 12 2025 03:30 PM",
-            )
-            OrderStatus(
-                status = "Pending",
-                statusDescription = "Your item is to be confirmed.",
-                dateTime = "Jan 12 2025 03:20 PM",
+                status = order.status,
+                statusDescription = "Your item is ${order.status.lowercase()}.",
+                dateTime = order.orderDate,
             )
 
             // Dialog for Update Button
@@ -364,9 +373,9 @@ fun OnlineSalesDetails(sale: SalesData, navController: NavController){
                     },
                     text = {
                         UpdateStatusCard(
-                            status = "Confirmed",
-                            statusDescription = "Your item is now confirmed.",
-                            dateTime = "Jan 12 2025 03:30 PM",
+                            status = order.status,
+                            statusDescription = "Your item is ${order.status.lowercase()}.",
+                            dateTime = order.orderDate,
                         )
                     },
                     confirmButton = {
