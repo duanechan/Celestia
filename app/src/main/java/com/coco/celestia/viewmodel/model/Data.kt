@@ -122,6 +122,11 @@ data class FullFilledBy (
     val status: String = ""
 )
 
+data class VegetableData(
+    val name: String = "",
+    val productId: String = ""
+)
+
 data class ProductData(
     val productId: String = "",
     val timestamp: String = "",

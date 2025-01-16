@@ -91,6 +91,7 @@ import com.coco.celestia.viewmodel.SalesViewModel
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.VegetableViewModel
 import com.coco.celestia.viewmodel.VendorViewModel
 import com.coco.celestia.viewmodel.model.BasketItem
 import com.coco.celestia.viewmodel.model.Constants
@@ -117,6 +118,7 @@ fun NavGraph(
     vendorViewModel: VendorViewModel = viewModel(),
     salesViewModel: SalesViewModel = viewModel(),
     purchaseOrderViewModel: PurchaseOrderViewModel = viewModel(),
+    vegetableViewModel: VegetableViewModel = viewModel(),
     onNavigate: (String) -> Unit,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit,
     modifier: Modifier
@@ -338,7 +340,8 @@ fun NavGraph(
             AddSpecialReq(
                 navController,
                 specialRequestViewModel,
-                userViewModel
+                userViewModel,
+                vegetableViewModel
             )
         }
 

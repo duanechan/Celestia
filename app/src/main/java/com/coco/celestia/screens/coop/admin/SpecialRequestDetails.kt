@@ -1,7 +1,6 @@
 package com.coco.celestia.screens.coop.admin
 
 import android.annotation.SuppressLint
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,10 +14,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -28,12 +26,14 @@ import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -446,80 +446,12 @@ fun SpecialRequestDetails(
                         }
                     }
 
-                    Column (
-                        modifier = Modifier
-                            .fillMaxWidth()
-                    ) {
-                        TextField(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(
-                                    width = 2.dp,
-                                    color = Green2,
-                                    shape = RoundedCornerShape(12.dp)
-                                ),
-                            value = text,
-                            onValueChange = {
-                                text = it
-                                expanded = true
-                            },
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Text,
-                                imeAction = ImeAction.Done
-                            ),
-                            singleLine = true,
-                            trailingIcon = {
-                                IconButton(onClick = { expanded = !expanded }) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.ArrowDropDown,
-                                        contentDescription = null
-                                    )
-                                }
-                            },
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent
-                            )
-                        )
-
-                        AnimatedVisibility(visible = expanded) {
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(Color.White)
-                            ) {
-                                LazyColumn (
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                ) {
-                                    if (text.isNotEmpty()) {
-                                        items(
-                                            filteredUsers.filter {
-                                                it.lowercase().contains(text.lowercase())
-                                            }
-                                                .sorted()
-                                        ) {
-                                            MemberItems(title = it) { title ->
-                                                text = title
-                                                expanded = false
-                                            }
-                                        }
-                                    } else {
-                                        items(
-                                            filteredUsers.sorted()
-                                        ) {
-                                            MemberItems(title = it) { title ->
-                                                text = title
-                                                expanded = false
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                    AutocompleteTextField(
+                        suggestions = filteredUsers,
+                        onSuggestionClick = { selectedUser ->
+                            text = selectedUser
                         }
-                    }
+                    )
 
                     Row (
                         modifier = Modifier.fillMaxWidth(),
@@ -826,6 +758,62 @@ fun AssignAMember (
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AutocompleteTextField(
+    suggestions: List<String>,
+    onSuggestionClick: (String) -> Unit
+) {
+    var query by remember { mutableStateOf("") }
+    var isDropdownExpanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = isDropdownExpanded,
+        onExpandedChange = { isDropdownExpanded = it }
+    ) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = { newQuery ->
+                query = newQuery
+                isDropdownExpanded = newQuery.isNotEmpty()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(),
+            label = { Text("Enter Member") },
+            singleLine = true
+        )
+
+        ExposedDropdownMenu(
+            expanded = isDropdownExpanded,
+            onDismissRequest = { isDropdownExpanded = false },
+            modifier = Modifier
+                .heightIn(max = 200.dp)
+        ) {
+            val filteredSuggestions = suggestions.filter {
+                it.contains(query, ignoreCase = true)
+            }
+            if (filteredSuggestions.isNotEmpty()) {
+                filteredSuggestions.forEach { suggestion ->
+                    DropdownMenuItem(
+                        text = { Text(suggestion) },
+                        onClick = {
+                            query = suggestion
+                            onSuggestionClick(suggestion)
+                            isDropdownExpanded = false
+                        }
+                    )
+                }
+            } else {
+                DropdownMenuItem(
+                    text = { Text("No suggestions found") },
+                    onClick = {}
+                )
+            }
+        }
+    }
+}
+
 @Composable
 fun DisplayAssignedMembers (
     request: SpecialRequest
@@ -1101,24 +1089,6 @@ fun UpdateStatusDialog (
             }
         }
     )
-}
-
-@Composable
-fun MemberItems (
-    title: String,
-    onSelect: (String) -> Unit
-) {
-    Row (
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-            .clickable {
-                onSelect(title)
-            }
-            .padding(4.dp)
-    ) {
-        Text(text = title, fontSize = 16.sp)
-    }
 }
 
 @Composable

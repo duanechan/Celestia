@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,7 +26,10 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -56,6 +60,7 @@ import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.VegetableViewModel
 import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
@@ -189,7 +194,8 @@ fun DisplaySpecialReq(
 fun AddSpecialReq(
     navController: NavController,
     specialRequestViewModel: SpecialRequestViewModel,
-    userViewModel: UserViewModel
+    userViewModel: UserViewModel,
+    vegetableViewModel: VegetableViewModel
 ) {
     var subject by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -199,6 +205,7 @@ fun AddSpecialReq(
     var additional by remember { mutableStateOf("") }
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     val userData by userViewModel.userData.observeAsState()
+    val vegetables by vegetableViewModel.vegData.observeAsState()
     val trackRecord = remember { mutableStateListOf<TrackRecord>() }
     var deliveryAddress by remember { mutableStateOf("") }
 
@@ -218,8 +225,12 @@ fun AddSpecialReq(
     var collectionMethodEmpty by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
+        vegetableViewModel.fetchVegetables()
         userViewModel.fetchUser(uid)
     }
+
+    val vegetableList = vegetables?.map { it.name } ?: emptyList()
+
     Column (
         modifier = Modifier
             .fillMaxSize()
@@ -299,18 +310,17 @@ fun AddSpecialReq(
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Dropdown
-                OutlinedTextField(
-                    value = productRow.name,
-                    onValueChange = { newValue ->
-                        productRows[index] = productRow.copy(name = newValue)
-                        productEmpty[index] = productEmpty[index].copy(name = newValue.isEmpty())
+                AutocompleteTextField(
+                    suggestions = vegetableList,
+                    onSuggestionClick = { selectedProduct ->
+                        productRows[index] = productRow.copy(name = selectedProduct)
+                        productEmpty[index] = productEmpty[index].copy(name = selectedProduct.isEmpty())
                     },
                     modifier = Modifier
                         .padding(vertical = 4.dp)
-                        .weight(1f),
-                    singleLine = true
+                        .weight(1f)
                 )
+
                 Spacer(modifier = Modifier.width(8.dp))
                 OutlinedTextField(
                     value = if (productRow.quantity == 0) "" else productRow.quantity.toString(),
@@ -321,6 +331,7 @@ fun AddSpecialReq(
                             productEmpty[index] = productEmpty[index].copy(quantity = newIntValue <= 0)
                         }
                     },
+                    label = { Text("Enter Quantity") },
                     modifier = Modifier
                         .padding(vertical = 4.dp)
                         .weight(1f),
@@ -366,6 +377,11 @@ fun AddSpecialReq(
                 productRows.add(ProductReq())
                 productEmpty.add(ProductReqValidation())
             },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Green4,
+                contentColor = Green1
+            ),
+            shape = RoundedCornerShape(12.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
@@ -529,11 +545,74 @@ fun AddSpecialReq(
                     navController.navigate(Screen.ClientSpecialReq.route)
                 }
             },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Green4,
+                contentColor = Green1
+            ),
+            shape = RoundedCornerShape(12.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
             Text(text = "Submit Request")
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AutocompleteTextField(
+    suggestions: List<String>,
+    onSuggestionClick: (String) -> Unit,
+    modifier: Modifier
+) {
+    var query by remember { mutableStateOf("") }
+    var isDropdownExpanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = isDropdownExpanded,
+        onExpandedChange = { isDropdownExpanded = it },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = { newQuery ->
+                query = newQuery
+                isDropdownExpanded = newQuery.isNotEmpty()
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(),
+            label = { Text("Enter Product") },
+            singleLine = true
+        )
+
+        ExposedDropdownMenu(
+            expanded = isDropdownExpanded,
+            onDismissRequest = { isDropdownExpanded = false },
+            modifier = Modifier
+                .heightIn(max = 200.dp)
+        ) {
+            val filteredSuggestions = suggestions.filter {
+                it.contains(query, ignoreCase = true)
+            }
+            if (filteredSuggestions.isNotEmpty()) {
+                filteredSuggestions.forEach { suggestion ->
+                    DropdownMenuItem(
+                        text = { Text(suggestion) },
+                        onClick = {
+                            query = suggestion
+                            onSuggestionClick(suggestion)
+                            isDropdownExpanded = false
+                        }
+                    )
+                }
+            } else {
+                DropdownMenuItem(
+                    text = { Text("No suggestions found") },
+                    onClick = {}
+                )
+            }
         }
     }
 }
