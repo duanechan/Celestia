@@ -72,7 +72,17 @@ class FacilityViewModel: ViewModel() {
                         val facility = mapOf(
                             "icon" to icon,
                             "name" to name,
-                            "emails" to emails
+                            "emails" to emails,
+                            // Collection Methods
+                            "isPickupEnabled" to false,
+                            "isDeliveryEnabled" to false,
+                            "pickupLocation" to "",
+                            "deliveryDetails" to "",
+                            // Payment Methods
+                            "isCashEnabled" to false,
+                            "isGcashEnabled" to false,
+                            "cashInstructions" to "",
+                            "gcashNumbers" to ""
                         )
 
                         currentData.value = facility
@@ -103,9 +113,7 @@ class FacilityViewModel: ViewModel() {
                             }
                         }
                     }
-
                 })
-
             } catch (e: Exception) {
                 _facilityState.value = FacilityState.ERROR(e.message.toString())
             }
@@ -190,5 +198,63 @@ class FacilityViewModel: ViewModel() {
                 }
             }
         })
+    }
+
+    fun updateFacilitySettings(
+        facilityName: String,
+        pickupLocation: String,
+        deliveryDetails: String,
+        cashInstructions: String,
+        gcashNumbers: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val updates = hashMapOf<String, Any>(
+                    // Collection Methods
+                    "isPickupEnabled" to (pickupLocation.isNotEmpty()),
+                    "isDeliveryEnabled" to (deliveryDetails.isNotEmpty()),
+                    "pickupLocation" to pickupLocation,
+                    "deliveryDetails" to deliveryDetails,
+                    // Payment Methods
+                    "isCashEnabled" to (cashInstructions.isNotEmpty()),
+                    "isGcashEnabled" to (gcashNumbers.isNotEmpty()),
+                    "cashInstructions" to cashInstructions,
+                    "gcashNumbers" to gcashNumbers
+                )
+
+                database.child(facilityName.lowercase())
+                    .updateChildren(updates)
+                    .addOnSuccessListener {
+                        onSuccess()
+                        _facilityState.value = FacilityState.SUCCESS
+                    }
+                    .addOnFailureListener { e ->
+                        onError(e.message ?: "Failed to update settings")
+                        _facilityState.value = FacilityState.ERROR(e.message ?: "Failed to update settings")
+                    }
+            } catch (e: Exception) {
+                onError(e.message ?: "Unknown error occurred")
+                _facilityState.value = FacilityState.ERROR(e.message ?: "Unknown error occurred")
+            }
+        }
+    }
+    fun FacilityData.toMap(): Map<String, Any> {
+        return mapOf(
+            "icon" to icon,
+            "name" to name,
+            "emails" to emails,
+            // Collection Methods
+            "isPickupEnabled" to isPickupEnabled,
+            "isDeliveryEnabled" to isDeliveryEnabled,
+            "pickupLocation" to pickupLocation,
+            "deliveryDetails" to deliveryDetails,
+            // Payment Methods
+            "isCashEnabled" to isCashEnabled,
+            "isGcashEnabled" to isGcashEnabled,
+            "cashInstructions" to cashInstructions,
+            "gcashNumbers" to gcashNumbers
+        )
     }
 }

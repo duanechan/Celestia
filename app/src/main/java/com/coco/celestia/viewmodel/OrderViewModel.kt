@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.service.NotificationService
 import com.coco.celestia.viewmodel.model.Constants
+import com.coco.celestia.viewmodel.model.FacilityData
 import com.coco.celestia.viewmodel.model.FullFilledBy
 import com.coco.celestia.viewmodel.model.MostOrdered
 import com.coco.celestia.viewmodel.model.Notification
@@ -39,6 +40,7 @@ sealed class MostOrderedState {
 
 class OrderViewModel : ViewModel() {
     private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("orders")
+    private val facilitiesDatabase: DatabaseReference = FirebaseDatabase.getInstance().getReference("facilities")
     private val _orderData = MutableLiveData<List<OrderData>>()
     private val _mostOrderedData = MutableLiveData<List<MostOrdered>>()
     private val _orderState = MutableLiveData<OrderState>()
@@ -46,6 +48,10 @@ class OrderViewModel : ViewModel() {
     val orderData: LiveData<List<OrderData>> = _orderData
     val mostOrderedData: LiveData<List<MostOrdered>> = _mostOrderedData
     val orderState: LiveData<OrderState> = _orderState
+
+    fun setError(message: String) {
+        _orderState.value = OrderState.ERROR(message)
+    }
 
     /**
      * Fetches orders from the database based on the provided UID.
@@ -64,15 +70,11 @@ class OrderViewModel : ViewModel() {
             _orderState.value = OrderState.LOADING
             database.child(uid).addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    val filterKeywords = filter.split(",").map { it.trim() }
                     val orders = snapshot.children
                         .mapNotNull { it.getValue(OrderData::class.java) }
                         .filter { order ->
-                            filterKeywords.any { keyword ->
-                                order::class.memberProperties.any { property ->
-                                    val value = property.getter.call(order)?.toString() ?: ""
-                                    value.contains(keyword, ignoreCase = true)
-                                }
+                            order.orderData.any { product ->
+                                product.type.equals(uid, ignoreCase = true)
                             }
                         }
                     _orderData.value = orders
@@ -221,15 +223,17 @@ class OrderViewModel : ViewModel() {
      * @param order The order data to be placed.
      * @throws Exception If there is an error placing the order.
      */
-    fun placeOrder(
-        uid: String,
-        order: OrderData,
-    ) {
+    fun placeOrder(uid: String, order: OrderData) {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
+            println("Debug - Order Data before saving:")
+            order.orderData.forEach { product ->
+                println("Product: ${product.name}, Type: ${product.type}")
+            }
             val query = database.child(uid).push()
             query.setValue(order)
-                .addOnCompleteListener {
+                .addOnSuccessListener {
+                    println("Debug - Order saved successfully")
                     viewModelScope.launch {
                         val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
                         val formattedDateTime = LocalDateTime.now().format(formatter)
@@ -252,6 +256,7 @@ class OrderViewModel : ViewModel() {
                     _orderState.value = OrderState.SUCCESS
                 }
                 .addOnFailureListener { exception ->
+                    println("Debug - Order save failed: ${exception.message}")
                     _orderState.value = OrderState.ERROR(exception.message ?: "Unknown error")
                 }
         }

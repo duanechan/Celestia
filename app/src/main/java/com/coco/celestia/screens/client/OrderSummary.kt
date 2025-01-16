@@ -39,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -62,11 +63,13 @@ import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green4
 import com.coco.celestia.ui.theme.White1
+import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.BasketItem
 import com.coco.celestia.viewmodel.model.Constants
+import com.coco.celestia.viewmodel.model.FacilityData
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.UserData
@@ -80,7 +83,7 @@ fun OrderSummary(
     navController: NavController,
     userViewModel: UserViewModel,
     orderViewModel: OrderViewModel,
-    productViewModel: ProductViewModel,
+    facilityViewModel: FacilityViewModel,
     items: List<BasketItem>,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
@@ -88,11 +91,19 @@ fun OrderSummary(
     val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
     val formattedDateTime = LocalDateTime.now().format(formatter).toString()
     val userData by userViewModel.userData.observeAsState(UserData())
-    var collection by remember { mutableStateOf("") }
-    var payment by remember { mutableStateOf("") }
+    val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
+
+    // Group items by facility type
+    val groupedItems = items.groupBy { it.productType }
+
+    // Track collection and payment methods for each facility
+    val facilityMethods = remember(groupedItems) {
+        mutableStateMapOf<String, Pair<String, String>>() // facility to (collection, payment)
+    }
 
     LaunchedEffect(Unit) {
         userViewModel.fetchUser(uid)
+        facilityViewModel.fetchFacilities()
     }
 
     Box(
@@ -105,52 +116,98 @@ fun OrderSummary(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                item { UserDetailsHeader() }
-                item { FacilityCard(items) }
-                item { ClientCollectionMethod(onUpdate = { collection = it }) }
-                item { ClientPaymentMethod(onUpdate = { payment = it }) }
-//                items(items) { ItemSummaryCard(it) }
+                item {
+                    UserDetailsHeader()
+                }
+
+                // Display each facility's items and methods
+                // Inside OrderSummary composable...
+                // Inside OrderSummary composable...
+                groupedItems.forEach { (facilityName, facilityItems) ->
+                    val facilityData = facilitiesData.find {
+                        it.name.lowercase() == facilityName.lowercase()
+                    }
+
+                    item {
+                        FacilityCard(
+                            items = facilityItems,
+                            facilityName = facilityName
+                        )
+                    }
+
+                    // Create a temporary OrderData object for each facility
+                    val tempOrderData = OrderData(
+                        orderData = facilityItems.map { item ->
+                            ProductData(
+                                productId = item.productId,
+                                name = item.product,
+                                quantity = item.quantity,
+                                price = item.price,
+                                timestamp = item.timestamp,
+                                type = item.productType
+                            )
+                        },
+                        collectionMethod = facilityMethods[facilityName]?.first ?: "",
+                        paymentMethod = facilityMethods[facilityName]?.second ?: ""
+                    )
+
+                    item {
+                        ClientCollectionMethod(
+                            orderData = tempOrderData,
+                            facilityData = facilityData,
+                            onUpdate = { method ->
+                                facilityMethods[facilityName] = Pair(
+                                    method,
+                                    facilityMethods[facilityName]?.second ?: ""
+                                )
+                            }
+                        )
+                    }
+
+                    item {
+                        ClientPaymentMethod(
+                            orderData = tempOrderData,
+                            facilityData = facilityData,
+                            onUpdate = { method ->
+                                facilityMethods[facilityName] = Pair(
+                                    facilityMethods[facilityName]?.first ?: "",
+                                    method
+                                )
+                            }
+                        )
+                    }
+                }
+
                 item {
                     OrderSummaryActions(
-                        enabled = Pair(
-                            first = collection != "" && payment != "",
-                            second = if (collection == "" && payment == "") {
-                                "Please select a collection and payment method."
-                            } else if (collection == "") {
-                                "Please select a collection method."
-                            } else {
-                                "Please select a payment method."
-                            }
-                        ),
+                        enabled = validateMethods(groupedItems.keys, facilityMethods),
                         totalPrice = items.sumOf { it.price },
                         onPlaceOrder = {
-                            // Place the order
-                            println(items)
-                            orderViewModel.placeOrder(
-                                uid = uid,
-                                order = OrderData(
-                                    orderId = "Order-${UUID.randomUUID()}",
-                                    orderDate = formattedDateTime,
-                                    status = "Pending",
-                                    orderData = items.mapNotNull {
-                                        ProductData(
-                                            productId = it.productId,
-                                            name = it.product,
-                                            quantity = it.quantity,
-                                            price = it.price,
-                                            timestamp = it.timestamp,
-                                            type = it.productType
-                                        )
-                                    },
-                                    client = userData.firstname + " " + userData.lastname,
-                                    collectionMethod = collection,
-                                    paymentMethod = payment
+                            groupedItems.forEach { (facilityName, facilityItems) ->
+                                val methods = facilityMethods[facilityName] ?: Pair("", "")
+                                orderViewModel.placeOrder(
+                                    uid = uid,
+                                    order = OrderData(
+                                        orderId = "Order-${UUID.randomUUID()}",
+                                        orderDate = formattedDateTime,
+                                        status = "Pending",
+                                        orderData = facilityItems.map {
+                                            ProductData(
+                                                productId = it.productId,
+                                                name = it.product,
+                                                quantity = it.quantity,
+                                                price = it.price,
+                                                timestamp = it.timestamp,
+                                                type = it.productType
+                                            )
+                                        },
+                                        client = "${userData.firstname} ${userData.lastname}",
+                                        collectionMethod = methods.first,
+                                        paymentMethod = methods.second
+                                    )
                                 )
-                            )
-                            println(items)
-                            // Navigate the orders screen
+                            }
                             navController.navigate(Screen.ClientOrder.route)
-                            // Clear checkout items from basket
                             userViewModel.clearCheckoutItems(items)
                         },
                         onEvent = { onEvent(it) }
@@ -162,6 +219,94 @@ fun OrderSummary(
         }
     }
 }
+
+//@Composable
+//fun OrderSummary(
+//    navController: NavController,
+//    userViewModel: UserViewModel,
+//    orderViewModel: OrderViewModel,
+//    productViewModel: ProductViewModel,
+//    items: List<BasketItem>,
+//    onEvent: (Triple<ToastStatus, String, Long>) -> Unit
+//) {
+//    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+//    val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+//    val formattedDateTime = LocalDateTime.now().format(formatter).toString()
+//    val userData by userViewModel.userData.observeAsState(UserData())
+//    var collection by remember { mutableStateOf("") }
+//    var payment by remember { mutableStateOf("") }
+//
+//    LaunchedEffect(Unit) {
+//        userViewModel.fetchUser(uid)
+//    }
+//
+//    Box(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(horizontal = 10.dp, vertical = 16.dp)
+//    ) {
+//        if (items.isNotEmpty()) {
+//            LazyColumn(
+//                modifier = Modifier.fillMaxSize(),
+//                verticalArrangement = Arrangement.spacedBy(12.dp)
+//            ) {
+//                item { UserDetailsHeader() }
+//                item { FacilityCard(items) }
+//                item { ClientCollectionMethod(onUpdate = { collection = it }) }
+//                item { ClientPaymentMethod(onUpdate = { payment = it }) }
+////                items(items) { ItemSummaryCard(it) }
+//                item {
+//                    OrderSummaryActions(
+//                        enabled = Pair(
+//                            first = collection != "" && payment != "",
+//                            second = if (collection == "" && payment == "") {
+//                                "Please select a collection and payment method."
+//                            } else if (collection == "") {
+//                                "Please select a collection method."
+//                            } else {
+//                                "Please select a payment method."
+//                            }
+//                        ),
+//                        totalPrice = items.sumOf { it.price },
+//                        onPlaceOrder = {
+//                            // Place the order
+//                            println(items)
+//                            orderViewModel.placeOrder(
+//                                uid = uid,
+//                                order = OrderData(
+//                                    orderId = "Order-${UUID.randomUUID()}",
+//                                    orderDate = formattedDateTime,
+//                                    status = "Pending",
+//                                    orderData = items.mapNotNull {
+//                                        ProductData(
+//                                            productId = it.productId,
+//                                            name = it.product,
+//                                            quantity = it.quantity,
+//                                            price = it.price,
+//                                            timestamp = it.timestamp,
+//                                            type = it.productType
+//                                        )
+//                                    },
+//                                    client = userData.firstname + " " + userData.lastname,
+//                                    collectionMethod = collection,
+//                                    paymentMethod = payment
+//                                )
+//                            )
+//                            println(items)
+//                            // Navigate the orders screen
+//                            navController.navigate(Screen.ClientOrder.route)
+//                            // Clear checkout items from basket
+//                            userViewModel.clearCheckoutItems(items)
+//                        },
+//                        onEvent = { onEvent(it) }
+//                    )
+//                }
+//            }
+//        } else {
+//            EmptyOrders()
+//        }
+//    }
+//}
 
 @Composable
 fun OrderSummaryActions(
@@ -250,32 +395,29 @@ fun UserDetailsHeader() {
 }
 
 @Composable
-fun FacilityCard(items: List<BasketItem>){
+fun FacilityCard(
+    items: List<BasketItem>,
+    facilityName: String
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Green4),
         elevation = CardDefaults.elevatedCardElevation(8.dp),
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
-    ){
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Facility header information
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Facility Name",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Green1
-                )
-                Text(
-                    text = "Order ID",
+                    text = facilityName,
                     style = MaterialTheme.typography.titleMedium,
                     color = Green1
                 )
@@ -287,7 +429,6 @@ fun FacilityCard(items: List<BasketItem>){
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            // List of ItemSummaryCards
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -302,9 +443,9 @@ fun FacilityCard(items: List<BasketItem>){
                     .padding(8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
-            ){
+            ) {
                 Text(
-                    text = "Total: ", //total ng checked items
+                    text = "Total: ",
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
@@ -316,6 +457,74 @@ fun FacilityCard(items: List<BasketItem>){
         }
     }
 }
+
+//@Composable
+//fun FacilityCard(items: List<BasketItem>){
+//    Card(
+//        colors = CardDefaults.cardColors(containerColor = Green4),
+//        elevation = CardDefaults.elevatedCardElevation(8.dp),
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(vertical = 8.dp)
+//    ){
+//        Column(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(16.dp)
+//        ) {
+//            // Facility header information
+//            Row(
+//                verticalAlignment = Alignment.CenterVertically,
+//                horizontalArrangement = Arrangement.SpaceBetween,
+//                modifier = Modifier.fillMaxWidth()
+//            ) {
+//                Text(
+//                    text = "Facility Name",
+//                    style = MaterialTheme.typography.titleMedium,
+//                    color = Green1
+//                )
+//                Text(
+//                    text = "Order ID",
+//                    style = MaterialTheme.typography.titleMedium,
+//                    color = Green1
+//                )
+//            }
+//
+//            Divider(
+//                color = MaterialTheme.colorScheme.onSurface,
+//                thickness = 1.dp,
+//                modifier = Modifier.padding(vertical = 8.dp)
+//            )
+//
+//            // List of ItemSummaryCards
+//            Column(
+//                verticalArrangement = Arrangement.spacedBy(8.dp)
+//            ) {
+//                items.forEach { item ->
+//                    ItemSummaryCard(item = item)
+//                }
+//            }
+//
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(8.dp),
+//                horizontalArrangement = Arrangement.SpaceBetween,
+//                verticalAlignment = Alignment.CenterVertically
+//            ){
+//                Text(
+//                    text = "Total: ", //total ng checked items
+//                    style = MaterialTheme.typography.titleMedium
+//                )
+//                Text(
+//                    text = "PHP ${items.sumOf { it.price }}",
+//                    style = MaterialTheme.typography.titleMedium,
+//                    color = Color.Black
+//                )
+//            }
+//        }
+//    }
+//}
 
 @Composable
 fun ItemSummaryCard(item: BasketItem) {
@@ -392,8 +601,24 @@ fun ItemSummaryCard(item: BasketItem) {
 }
 
 @Composable
-fun ClientCollectionMethod(onUpdate: (String) -> Unit) {
-    var selectedMethod by remember { mutableStateOf("") } // State to track selected method
+fun ClientCollectionMethod(
+    orderData: OrderData,
+    facilityData: FacilityData?,
+    onUpdate: (String) -> Unit
+) {
+    var selectedMethod by remember { mutableStateOf(orderData.collectionMethod) }
+
+    // Construct collection methods based on facility data
+    val enabledMethods = mutableListOf<Pair<String, String>>()
+    if (!facilityData?.pickupLocation.isNullOrEmpty()) {
+        enabledMethods.add(Constants.COLLECTION_PICKUP to facilityData!!.pickupLocation)
+    }
+    if (!facilityData?.deliveryDetails.isNullOrEmpty()) {
+        enabledMethods.add(Constants.COLLECTION_DELIVERY to facilityData!!.deliveryDetails)
+    }
+
+    // Only show if there are enabled methods
+    if (enabledMethods.isEmpty()) return
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -412,7 +637,7 @@ fun ClientCollectionMethod(onUpdate: (String) -> Unit) {
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f) // Allocates space for this group
+                    modifier = Modifier.weight(1f)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Info,
@@ -425,13 +650,8 @@ fun ClientCollectionMethod(onUpdate: (String) -> Unit) {
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
-                Text(
-                    text = "Available In",
-                    style = MaterialTheme.typography.bodyMedium
-                )
             }
 
-            // Card containing collection method options
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -442,10 +662,7 @@ fun ClientCollectionMethod(onUpdate: (String) -> Unit) {
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    listOf(
-                        Constants.COLLECTION_PICKUP to "Pick up location here",
-                        Constants.COLLECTION_DELIVERY to "Couriers here or etc"
-                    ).forEach { (method, description) ->
+                    enabledMethods.forEach { (method, description) ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -473,15 +690,17 @@ fun ClientCollectionMethod(onUpdate: (String) -> Unit) {
                                 Text(
                                     text = description,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray // Optional for better visual distinction
+                                    color = Color.Gray
                                 )
                             }
                         }
-                        Divider(
-                            color = Color.LightGray,
-                            thickness = 1.dp,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
+                        if (method != enabledMethods.last().first) {
+                            Divider(
+                                color = Color.LightGray,
+                                thickness = 1.dp,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -490,8 +709,24 @@ fun ClientCollectionMethod(onUpdate: (String) -> Unit) {
 }
 
 @Composable
-fun ClientPaymentMethod(onUpdate: (String) -> Unit) {
-    var selectedMethod by remember { mutableStateOf("") } // State to track selected method
+fun ClientPaymentMethod(
+    orderData: OrderData,
+    facilityData: FacilityData?,
+    onUpdate: (String) -> Unit
+) {
+    var selectedMethod by remember { mutableStateOf(orderData.paymentMethod) }
+
+    // Construct payment methods based on facility data
+    val enabledMethods = mutableListOf<Pair<String, String>>()
+    if (!facilityData?.cashInstructions.isNullOrEmpty()) {
+        enabledMethods.add(Constants.PAYMENT_CASH to facilityData!!.cashInstructions)
+    }
+    if (!facilityData?.gcashNumbers.isNullOrEmpty()) {
+        enabledMethods.add(Constants.PAYMENT_GCASH to facilityData!!.gcashNumbers)
+    }
+
+    // Only show if there are enabled methods
+    if (enabledMethods.isEmpty()) return
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -510,7 +745,7 @@ fun ClientPaymentMethod(onUpdate: (String) -> Unit) {
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f) // Allocates space for this group
+                    modifier = Modifier.weight(1f)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Info,
@@ -523,13 +758,8 @@ fun ClientPaymentMethod(onUpdate: (String) -> Unit) {
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
-                Text(
-                    text = "Available In",
-                    style = MaterialTheme.typography.bodyMedium
-                )
             }
 
-            // Card containing payment options
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -540,10 +770,7 @@ fun ClientPaymentMethod(onUpdate: (String) -> Unit) {
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    listOf(
-                        Constants.PAYMENT_CASH to "Pay using cash upon delivery.",
-                        Constants.PAYMENT_GCASH to "G-Cash number here."
-                    ).forEach { (method, description) ->
+                    enabledMethods.forEach { (method, description) ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -571,18 +798,238 @@ fun ClientPaymentMethod(onUpdate: (String) -> Unit) {
                                 Text(
                                     text = description,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray // Optional for better visual distinction
+                                    color = Color.Gray
                                 )
                             }
                         }
-                        Divider(
-                            color = Color.LightGray,
-                            thickness = 1.dp,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
+                        if (method != enabledMethods.last().first) {
+                            Divider(
+                                color = Color.LightGray,
+                                thickness = 1.dp,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
                     }
                 }
             }
         }
     }
 }
+
+private fun validateMethods(
+    facilityNames: Set<String>,
+    facilityMethods: Map<String, Pair<String, String>>
+): Pair<Boolean, String> {
+    facilityNames.forEach { facility ->
+        val methods = facilityMethods[facility]
+        if (methods == null || methods.first.isEmpty() || methods.second.isEmpty()) {
+            return Pair(
+                false,
+                if (methods == null || (methods.first.isEmpty() && methods.second.isEmpty())) {
+                    "Please select collection and payment methods for $facility"
+                } else if (methods.first.isEmpty()) {
+                    "Please select collection method for $facility"
+                } else {
+                    "Please select payment method for $facility"
+                }
+            )
+        }
+    }
+    return Pair(true, "")
+}
+
+//@Composable
+//fun ClientCollectionMethod(onUpdate: (String) -> Unit) {
+//    var selectedMethod by remember { mutableStateOf("") } // State to track selected method
+//
+//    Card(
+//        modifier = Modifier.fillMaxWidth(),
+//        colors = CardDefaults.cardColors(containerColor = Green4),
+//        elevation = CardDefaults.elevatedCardElevation(8.dp),
+//    ) {
+//        Column(
+//            modifier = Modifier.padding(10.dp)
+//        ) {
+//            Row(
+//                verticalAlignment = Alignment.CenterVertically,
+//                horizontalArrangement = Arrangement.SpaceBetween,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(bottom = 16.dp)
+//            ) {
+//                Row(
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    modifier = Modifier.weight(1f) // Allocates space for this group
+//                ) {
+//                    Icon(
+//                        imageVector = Icons.Default.Info,
+//                        contentDescription = null,
+//                        tint = Green1
+//                    )
+//                    Spacer(modifier = Modifier.width(8.dp))
+//                    Text(
+//                        text = "Collection Method",
+//                        style = MaterialTheme.typography.titleMedium
+//                    )
+//                }
+//                Text(
+//                    text = "Available In",
+//                    style = MaterialTheme.typography.bodyMedium
+//                )
+//            }
+//
+//            // Card containing collection method options
+//            Card(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(8.dp),
+//                colors = CardDefaults.cardColors(containerColor = White1),
+//                elevation = CardDefaults.elevatedCardElevation(4.dp),
+//            ) {
+//                Column(
+//                    modifier = Modifier.padding(16.dp)
+//                ) {
+//                    listOf(
+//                        Constants.COLLECTION_PICKUP to "Pick up location here",
+//                        Constants.COLLECTION_DELIVERY to "Couriers here or etc"
+//                    ).forEach { (method, description) ->
+//                        Row(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .clickable {
+//                                    selectedMethod = method
+//                                    onUpdate(selectedMethod)
+//                                }
+//                                .padding(8.dp),
+//                            verticalAlignment = Alignment.CenterVertically
+//                        ) {
+//                            RadioButton(
+//                                selected = selectedMethod == method,
+//                                onClick = {
+//                                    selectedMethod = method
+//                                    onUpdate(selectedMethod)
+//                                },
+//                                colors = RadioButtonDefaults.colors(selectedColor = Green1)
+//                            )
+//                            Spacer(modifier = Modifier.width(8.dp))
+//                            Column {
+//                                Text(
+//                                    text = method,
+//                                    style = MaterialTheme.typography.bodyMedium
+//                                )
+//                                Text(
+//                                    text = description,
+//                                    style = MaterialTheme.typography.bodySmall,
+//                                    color = Color.Gray // Optional for better visual distinction
+//                                )
+//                            }
+//                        }
+//                        Divider(
+//                            color = Color.LightGray,
+//                            thickness = 1.dp,
+//                            modifier = Modifier.padding(vertical = 8.dp)
+//                        )
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
+
+//@Composable
+//fun ClientPaymentMethod(onUpdate: (String) -> Unit) {
+//    var selectedMethod by remember { mutableStateOf("") } // State to track selected method
+//
+//    Card(
+//        modifier = Modifier.fillMaxWidth(),
+//        colors = CardDefaults.cardColors(containerColor = Green4),
+//        elevation = CardDefaults.elevatedCardElevation(8.dp),
+//    ) {
+//        Column(
+//            modifier = Modifier.padding(10.dp)
+//        ) {
+//            Row(
+//                verticalAlignment = Alignment.CenterVertically,
+//                horizontalArrangement = Arrangement.SpaceBetween,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(bottom = 16.dp)
+//            ) {
+//                Row(
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    modifier = Modifier.weight(1f) // Allocates space for this group
+//                ) {
+//                    Icon(
+//                        imageVector = Icons.Default.Info,
+//                        contentDescription = null,
+//                        tint = Green1
+//                    )
+//                    Spacer(modifier = Modifier.width(8.dp))
+//                    Text(
+//                        text = "Payment Method",
+//                        style = MaterialTheme.typography.titleMedium
+//                    )
+//                }
+//                Text(
+//                    text = "Available In",
+//                    style = MaterialTheme.typography.bodyMedium
+//                )
+//            }
+//
+//            // Card containing payment options
+//            Card(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(8.dp),
+//                colors = CardDefaults.cardColors(containerColor = White1),
+//                elevation = CardDefaults.elevatedCardElevation(4.dp),
+//            ) {
+//                Column(
+//                    modifier = Modifier.padding(16.dp)
+//                ) {
+//                    listOf(
+//                        Constants.PAYMENT_CASH to "Pay using cash upon delivery.",
+//                        Constants.PAYMENT_GCASH to "G-Cash number here."
+//                    ).forEach { (method, description) ->
+//                        Row(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .clickable {
+//                                    selectedMethod = method
+//                                    onUpdate(selectedMethod)
+//                                }
+//                                .padding(8.dp),
+//                            verticalAlignment = Alignment.CenterVertically
+//                        ) {
+//                            RadioButton(
+//                                selected = selectedMethod == method,
+//                                onClick = {
+//                                    selectedMethod = method
+//                                    onUpdate(selectedMethod)
+//                                },
+//                                colors = RadioButtonDefaults.colors(selectedColor = Green1)
+//                            )
+//                            Spacer(modifier = Modifier.width(8.dp))
+//                            Column {
+//                                Text(
+//                                    text = method,
+//                                    style = MaterialTheme.typography.bodyMedium
+//                                )
+//                                Text(
+//                                    text = description,
+//                                    style = MaterialTheme.typography.bodySmall,
+//                                    color = Color.Gray // Optional for better visual distinction
+//                                )
+//                            }
+//                        }
+//                        Divider(
+//                            color = Color.LightGray,
+//                            thickness = 1.dp,
+//                            modifier = Modifier.padding(vertical = 8.dp)
+//                        )
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}

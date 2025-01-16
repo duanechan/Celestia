@@ -725,8 +725,6 @@ fun NavGraph(
                 reorderPoint = reorderPoint,
                 isInStore = isInStore,
                 weightUnit = weightUnit,
-                isDelivery = isDelivery,
-                isGcash = isGcash,
                 notes = notes,
                 onProductNameChange = { productViewModel.onProductNameChange(it) },
                 onDescriptionChange = { productViewModel.updateDescription(it) },
@@ -739,8 +737,6 @@ fun NavGraph(
                 onReorderPointChange = { newValue -> reorderPoint = newValue.toDoubleOrNull() ?: 0.0 },
                 onIsInStoreChange = { isInStore = it },
                 onWeightUnitChange = { weightUnit = it },
-                onCollectionMethodChange = { isDelivery = it },
-                onPaymentMethodChange = { isGcash = it },
                 onAddClick = {
                     navController.navigate(Screen.CoopInventory.route) {
                         popUpTo(Screen.CoopInventory.route) { inclusive = true }
@@ -807,8 +803,6 @@ fun NavGraph(
                 reorderPoint = reorderPoint,
                 isInStore = isInStore,
                 weightUnit = weightUnit,
-                isDelivery = isDelivery,
-                isGcash = isGcash,
                 notes = notes,
                 onProductNameChange = { productViewModel.onProductNameChange(it) },
                 onDescriptionChange = { productViewModel.updateDescription(it) },
@@ -821,8 +815,6 @@ fun NavGraph(
                 onReorderPointChange = { newValue -> reorderPoint = newValue.toDoubleOrNull() ?: 0.0 },
                 onIsInStoreChange = { isInStore = it },
                 onWeightUnitChange = { weightUnit = it },
-                onCollectionMethodChange = { isDelivery = it },
-                onPaymentMethodChange = { isGcash = it },
                 onAddClick = {
                     navController.navigate(Screen.CoopInventory.route) {
                         popUpTo(Screen.CoopInventory.route) { inclusive = true }
@@ -1180,7 +1172,7 @@ fun NavGraph(
                 navController = navController,
                 userViewModel = userViewModel,
                 orderViewModel = orderViewModel,
-                productViewModel = productViewModel,
+                facilityViewModel = facilityViewModel,  // Add this
                 items = items,
                 onEvent = { onEvent(it) }
             )

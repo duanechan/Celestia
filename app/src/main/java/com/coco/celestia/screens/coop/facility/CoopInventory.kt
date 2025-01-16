@@ -1,6 +1,7 @@
 package com.coco.celestia.screens.coop.facility
 
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -30,6 +31,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -72,6 +74,7 @@ import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.model.FacilityData
 import com.coco.celestia.viewmodel.model.ProductData
 
 @Composable
@@ -307,7 +310,6 @@ fun CoopProductInventory(
                                         }
                                     }
 
-                                    //added confirgure icon
                                     IconButton(
                                         onClick = { showConfigureDialog = true },
                                         modifier = Modifier
@@ -315,7 +317,7 @@ fun CoopProductInventory(
                                             .size(48.dp)
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.Settings, // Replace with a configuration-related icon
+                                            imageVector = Icons.Default.Settings,
                                             contentDescription = "Configure",
                                             modifier = Modifier
                                                 .size(24.dp)
@@ -324,167 +326,17 @@ fun CoopProductInventory(
                                     }
                                 }
 
-                                var isPickupChecked by remember { mutableStateOf(false) } // State for Pickup switch
-                                var isDeliveredChecked by remember { mutableStateOf(false) }
-                                // Configure Dialog
+                                // Configuration Dialog
                                 if (showConfigureDialog) {
-                                    AlertDialog(
-                                        onDismissRequest = { showConfigureDialog = false },
-                                        title = { Text("Configure Settings") },
-                                        text = {
-                                            Column(
-                                                modifier = Modifier.padding(vertical = 8.dp),
-                                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                                            ) {
-                                                Column(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                                ) {
-                                                    // Collection Method
-                                                    Text(
-                                                        text = "Collection Method",
-                                                        style = MaterialTheme.typography.titleMedium,
-                                                        fontWeight = FontWeight.Medium,
-                                                        modifier = Modifier.padding(top = 8.dp)
-                                                    )
-                                                    Row(
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .padding(vertical = 8.dp),
-                                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                                        verticalAlignment = Alignment.CenterVertically
-                                                    ) {
-                                                        Text("Pickup")
-                                                        Switch(
-                                                            checked = isPickupChecked,
-                                                            onCheckedChange = { isPickupChecked = it },
-                                                            modifier = Modifier
-                                                                .scale(0.8f)
-                                                                .semantics { testTag = "android:id/PickupSwitch" }
-                                                        )
-                                                    }
-                                                    // Display the text field only if the switch is toggled on
-                                                    if (isPickupChecked) {
-                                                        OutlinedTextField(
-                                                            value = "", // Initial value
-                                                            onValueChange = {}, // No action for now
-                                                            label = { Text("Pick Up Location (Enter pick up location here)") },
-                                                            placeholder = { Text("Enter pick up location here") },
-                                                            modifier = Modifier
-                                                                .fillMaxWidth()
-                                                                .semantics { testTag = "android:id/PickUpLocation" }
-                                                        )
-                                                    }
-
-                                                    Row(
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .padding(vertical = 8.dp),
-                                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                                        verticalAlignment = Alignment.CenterVertically
-                                                    ) {
-                                                        Text("Delivery")
-                                                        Switch(
-                                                            checked = isDeliveredChecked, // Default unchecked
-                                                            onCheckedChange = { isDeliveredChecked = it }, // No action
-                                                            modifier = Modifier
-                                                                .scale(0.8f)
-                                                                .semantics { testTag = "android:id/DeliverySwitch" }
-                                                        )
-                                                    }
-                                                    // Display the text field only if the switch is toggled on
-                                                    if (isDeliveredChecked) {
-                                                        OutlinedTextField(
-                                                            value = "", // Initial value
-                                                            onValueChange = {}, // No action for now
-                                                            label = { Text("Delivery Details (Enter delivery/courier used)") },
-                                                            placeholder = { Text("Enter delivery/courier used") },
-                                                            modifier = Modifier
-                                                                .fillMaxWidth()
-                                                                .semantics { testTag = "android:id/PickUpLocation" }
-                                                        )
-                                                    }
-
-                                                    var isCashChecked by remember { mutableStateOf(false) }
-                                                    var isGCashChecked by remember { mutableStateOf(false) }
-                                                    // Payment Method
-                                                    Text(
-                                                        text = "Payment Method",
-                                                        style = MaterialTheme.typography.titleMedium,
-                                                        fontWeight = FontWeight.Medium,
-                                                        modifier = Modifier.padding(top = 8.dp)
-                                                    )
-                                                    Row(
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .padding(vertical = 8.dp),
-                                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                                        verticalAlignment = Alignment.CenterVertically
-                                                    ) {
-                                                        Text("Cash")
-                                                        Switch(
-                                                            checked = isCashChecked, // Default unchecked
-                                                            onCheckedChange = { isCashChecked = it }, // No action
-                                                            modifier = Modifier
-                                                                .scale(0.8f)
-                                                                .semantics { testTag = "android:id/CashSwitch" }
-                                                        )
-                                                    }
-                                                    // Display the text field only if the switch is toggled on
-                                                    if (isCashChecked) {
-                                                        OutlinedTextField(
-                                                            value = "", // Initial value
-                                                            onValueChange = {}, // No action for now
-                                                            label = { Text("Cash Details (Enter instructions or something)") },
-                                                            placeholder = { Text("Enter instructions or something") },
-                                                            modifier = Modifier
-                                                                .fillMaxWidth()
-                                                                .semantics { testTag = "android:id/PickUpLocation" }
-                                                        )
-                                                    }
-
-                                                    Row(
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .padding(vertical = 8.dp),
-                                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                                        verticalAlignment = Alignment.CenterVertically
-                                                    ) {
-                                                        Text("GCash")
-                                                        Switch(
-                                                            checked = isGCashChecked, // Default unchecked
-                                                            onCheckedChange = { isGCashChecked = it }, // No action
-                                                            modifier = Modifier
-                                                                .scale(0.8f)
-                                                                .semantics { testTag = "android:id/GCashSwitch" }
-                                                        )
-                                                    }
-                                                    // Display the text field only if the switch is toggled on
-                                                    if (isGCashChecked) {
-                                                        OutlinedTextField(
-                                                            value = "", // Initial value
-                                                            onValueChange = {}, // No action for now
-                                                            label = { Text("GCash number (Enter GCash Number or Numbers)") },
-                                                            placeholder = { Text("Enter GCash Number or Numbers") },
-                                                            modifier = Modifier
-                                                                .fillMaxWidth()
-                                                                .semantics { testTag = "android:id/PickUpLocation" }
-                                                        )
-                                                    }
-                                                }//
-                                            }
-                                        },
-                                        confirmButton = {
-                                            TextButton(onClick = { showConfigureDialog = false }) {
-                                                Text("Confirm")
-                                            }
-                                        },
-                                        dismissButton = {
-                                            TextButton(onClick = { showConfigureDialog = false }) {
-                                                Text("Cancel")
-                                            }
-                                        }
-                                    )
+                                    userFacility?.let { facility ->
+                                        FacilityConfigurationSection(
+                                            showConfigureDialog = showConfigureDialog,
+                                            facilityViewModel = facilityViewModel,
+                                            facilityName = facility.name,
+                                            currentConfiguration = facility,
+                                            onDismiss = { showConfigureDialog = false }
+                                        )
+                                    }
                                 }
 
                                 val filteredProducts = productData.filter { product ->
@@ -560,6 +412,213 @@ fun CoopProductInventory(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun FacilityConfigurationSection(
+    showConfigureDialog: Boolean,
+    facilityViewModel: FacilityViewModel,
+    facilityName: String,
+    currentConfiguration: FacilityData?,
+    onDismiss: () -> Unit
+) {
+    // Track enabled states
+    var isPickupEnabled by remember(currentConfiguration) {
+        mutableStateOf(currentConfiguration?.isPickupEnabled ?: false)
+    }
+    var isDeliveryEnabled by remember(currentConfiguration) {
+        mutableStateOf(currentConfiguration?.isDeliveryEnabled ?: false)
+    }
+    var isCashEnabled by remember(currentConfiguration) {
+        mutableStateOf(currentConfiguration?.isCashEnabled ?: false)
+    }
+    var isGcashEnabled by remember(currentConfiguration) {
+        mutableStateOf(currentConfiguration?.isGcashEnabled ?: false)
+    }
+
+    // Track text field values
+    var pickupLocation by remember(currentConfiguration) {
+        mutableStateOf(currentConfiguration?.pickupLocation ?: "")
+    }
+    var deliveryDetails by remember(currentConfiguration) {
+        mutableStateOf(currentConfiguration?.deliveryDetails ?: "")
+    }
+    var cashInstructions by remember(currentConfiguration) {
+        mutableStateOf(currentConfiguration?.cashInstructions ?: "")
+    }
+    var gcashNumbers by remember(currentConfiguration) {
+        mutableStateOf(currentConfiguration?.gcashNumbers ?: "")
+    }
+
+    if (showConfigureDialog) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("Configure Settings") },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .verticalScroll(rememberScrollState())
+                        .padding(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Collection Method Section
+                        Text(
+                            text = "Collection Method",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+
+                        // Pickup Method
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Enable Pick Up",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Switch(
+                                checked = isPickupEnabled,
+                                onCheckedChange = { isPickupEnabled = it }
+                            )
+                        }
+
+                        AnimatedVisibility(visible = isPickupEnabled) {
+                            OutlinedTextField(
+                                value = pickupLocation,
+                                onValueChange = { pickupLocation = it },
+                                label = { Text("Pick Up Location") },
+                                placeholder = { Text("Enter pick up location here") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics { testTag = "android:id/PickUpLocation" }
+                            )
+                        }
+
+                        // Delivery Method
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Enable Delivery",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Switch(
+                                checked = isDeliveryEnabled,
+                                onCheckedChange = { isDeliveryEnabled = it }
+                            )
+                        }
+
+                        AnimatedVisibility(visible = isDeliveryEnabled) {
+                            OutlinedTextField(
+                                value = deliveryDetails,
+                                onValueChange = { deliveryDetails = it },
+                                label = { Text("Delivery Details") },
+                                placeholder = { Text("Enter delivery/courier used") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics { testTag = "android:id/DeliveryDetails" }
+                            )
+                        }
+
+                        // Payment Method Section
+                        Text(
+                            text = "Payment Method",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(top = 16.dp)
+                        )
+
+                        // Cash Payment
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Enable Cash Payment",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Switch(
+                                checked = isCashEnabled,
+                                onCheckedChange = { isCashEnabled = it }
+                            )
+                        }
+
+                        AnimatedVisibility(visible = isCashEnabled) {
+                            OutlinedTextField(
+                                value = cashInstructions,
+                                onValueChange = { cashInstructions = it },
+                                label = { Text("Cash Instructions") },
+                                placeholder = { Text("Enter instructions for cash payments") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics { testTag = "android:id/CashDetails" }
+                            )
+                        }
+
+                        // GCash Payment
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Enable GCash Payment",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Switch(
+                                checked = isGcashEnabled,
+                                onCheckedChange = { isGcashEnabled = it }
+                            )
+                        }
+
+                        AnimatedVisibility(visible = isGcashEnabled) {
+                            OutlinedTextField(
+                                value = gcashNumbers,
+                                onValueChange = { gcashNumbers = it },
+                                label = { Text("GCash Numbers") },
+                                placeholder = { Text("Enter GCash number(s)") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .semantics { testTag = "android:id/GCashNumber" }
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        facilityViewModel.updateFacilitySettings(
+                            facilityName = facilityName,
+                            pickupLocation = if (isPickupEnabled) pickupLocation else "",
+                            deliveryDetails = if (isDeliveryEnabled) deliveryDetails else "",
+                            cashInstructions = if (isCashEnabled) cashInstructions else "",
+                            gcashNumbers = if (isGcashEnabled) gcashNumbers else "",
+                            onSuccess = onDismiss,
+                            onError = { /* Handle error */ }
+                        )
+                    }
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
@@ -695,29 +754,41 @@ fun LoadingScreen(message: String) {
 
 @Composable
 fun ErrorScreen(message: String) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Icon(
+            imageVector = Icons.Default.Close,
+            contentDescription = "Error",
+            tint = MaterialTheme.colorScheme.error,
+            modifier = Modifier
+                .size(48.dp)
+                .padding(bottom = 16.dp)
+        )
+
+        Text(
+            text = "Error",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Button(
+            onClick = { /* TODO: Add retry logic */ },
+            modifier = Modifier.padding(top = 16.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Error",
-                tint = MaterialTheme.colorScheme.error,
-                modifier = Modifier.size(48.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Error: $message",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.error,
-                textAlign = TextAlign.Center
-            )
+            Text("Try Again")
         }
     }
 }

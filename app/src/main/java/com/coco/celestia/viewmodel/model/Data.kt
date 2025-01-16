@@ -25,7 +25,17 @@ data class UserData(
 data class FacilityData(
     val icon: Int = R.drawable.facility,
     val name: String = "",
-    val emails: MutableList<String> = mutableListOf()
+    var emails: MutableList<String> = mutableListOf(),
+    // Collection Method
+    var isPickupEnabled: Boolean = false,
+    var isDeliveryEnabled: Boolean = false,
+    var pickupLocation: String = "",
+    var deliveryDetails: String = "",
+    // Payment Method
+    var isCashEnabled: Boolean = false,
+    var isGcashEnabled: Boolean = false,
+    var cashInstructions: String = "",
+    var gcashNumbers: String = ""
 )
 
 data class OrderData(
