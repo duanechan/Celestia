@@ -42,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,10 +55,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.VegetableViewModel
@@ -80,6 +83,24 @@ import java.util.UUID
 fun DisplaySpecialReq(
     navController: NavController
 ) {
+    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+    val orderViewModel: OrderViewModel = viewModel()
+    val orderData by orderViewModel.orderData.observeAsState(emptyList())
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    val filters = listOf(
+        "To Review",
+        "In Progress",
+        "Completed",
+        "Cancelled"
+    )
+
+    LaunchedEffect(Unit) {
+        orderViewModel.fetchOrders(
+            uid = uid,
+            filter = ""
+        )
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -94,13 +115,7 @@ fun DisplaySpecialReq(
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                val filters = listOf(
-                    "To Review",
-                    "In Progress",
-                    "Completed",
-                    "Cancelled"
-                )
-                var selectedTabIndex by remember { mutableStateOf(0) }
+
 
                 Row(
                     modifier = Modifier
@@ -154,24 +169,26 @@ fun DisplaySpecialReq(
                     }
                 }
 
-//                Column {
-//                    // Placeholder OrderCard
-//                    val placeholderOrder = OrderData(
-//                        orderData = listOf(
-//                            ProductData(name = "Product A", quantity = 2, price = 100.0),
-//                            ProductData(name = "Product B", quantity = 1, price = 150.0)
-//                        ),
-//                        status = "To Review",
-//                        collectionMethod = "Pickup",
-//                        paymentMethod = "Cash"
-//                    )
-//
-//                    OrderCard(
-//                        order = placeholderOrder,
-//                        index = "12345",
-//                        navController = navController
-//                    )
-//                }
+                val filteredOrders = orderData.filter { it.status == filters[selectedTabIndex] }
+                Column(modifier = Modifier.fillMaxSize()) {
+                    if (filteredOrders.isNotEmpty()) {
+                        for (order in filteredOrders) {
+                            OrderCard(
+                                order = order,
+                                index = "12345",
+                                navController = navController
+                            )
+                        }
+                    } else {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Text("Empty")
+                        }
+                    }
+
+                }
             }
         }
 

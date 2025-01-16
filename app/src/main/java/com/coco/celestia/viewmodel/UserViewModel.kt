@@ -1,13 +1,10 @@
 package com.coco.celestia.viewmodel
 
-import android.util.Log
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.viewmodel.model.BasketItem
-import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.UserData
 import com.coco.celestia.viewmodel.model.toMap
 import com.google.firebase.FirebaseNetworkException
@@ -24,9 +21,6 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.MutableData
 import com.google.firebase.database.Transaction
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.database.getValue
-import com.google.firebase.database.snapshots
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
@@ -489,7 +483,7 @@ class UserViewModel : ViewModel() {
         }
     }
 
-    fun clearCheckoutItems(items: List<BasketItem>) {
+    fun clearItems(items: List<BasketItem>) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
         viewModelScope.launch {
             _userState.value = UserState.LOADING
@@ -501,6 +495,7 @@ class UserViewModel : ViewModel() {
                         !items.any { it.id == basketItem.id }
                     } ?: emptyList()
                 )
+                _userState.value = UserState.SUCCESS
             } catch (e: Exception) {
                 _userState.value = UserState.ERROR(e.message ?: "Unknown error")
             }

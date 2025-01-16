@@ -123,7 +123,7 @@ fun FacilityNotification() {
             .padding(top = 3.dp)
     ) {
         if (notifications.isNotEmpty()) {
-            items(notifications) { notification ->
+            items(sortNotificationsByTimestamp(notifications)) { notification ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()

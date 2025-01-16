@@ -9,18 +9,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -29,6 +28,8 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -38,7 +39,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -50,7 +50,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
@@ -62,7 +61,7 @@ import com.coco.celestia.ui.theme.BgColor
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green4
 import com.coco.celestia.ui.theme.White1
-import com.coco.celestia.viewmodel.ProductState
+import com.coco.celestia.ui.theme.mintsansFontFamily
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
@@ -70,12 +69,8 @@ import com.coco.celestia.viewmodel.model.BasketItem
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Collections
 
 @Composable
 fun BasketScreen(
@@ -111,7 +106,7 @@ fun BasketScreen(
             UserState.SUCCESS -> {
                 if (userData.basket.isNotEmpty()) {
                     Basket(
-//                        productViewModel = productViewModel,
+                        userViewModel = userViewModel,
                         items = userData.basket,
                         checkoutItems = checkoutItems,
                         onCheckout = {
@@ -129,7 +124,8 @@ fun BasketScreen(
                                     )
                                 )
                             }
-                        }
+                        },
+                        onRemove = { onEvent(it) }
                     )
                 } else {
                     BasketEmpty()
@@ -143,13 +139,16 @@ fun BasketScreen(
 
 @Composable
 fun Basket(
-//    productViewModel: ProductViewModel,
+    userViewModel: UserViewModel,
     items: List<BasketItem>,
     checkoutItems: SnapshotStateList<BasketItem>,
-    onCheckout: (SnapshotStateList<BasketItem>) -> Unit
+    onCheckout: (SnapshotStateList<BasketItem>) -> Unit,
+    onRemove: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val productViewModel: ProductViewModel = viewModel()
     val productData by productViewModel.productData.observeAsState(emptyList())
+    var removingItem by remember { mutableStateOf(BasketItem()) }
+    var deleteModal by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         productViewModel.fetchProducts(
@@ -181,9 +180,21 @@ fun Basket(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Facility Name",
+                            text = item.productType,
                             style = MaterialTheme.typography.titleMedium
                         )
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Remove Item",
+                            tint = Green1,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50.dp))
+                                .clickable {
+                                    removingItem = item
+                                    deleteModal = true
+                                }
+                        )
+
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -207,6 +218,43 @@ fun Basket(
             }
         }
         BasketActions(totalPrice = checkoutItems.sumOf { it.price }, onCheckout = { onCheckout(checkoutItems) })
+    }
+    if (deleteModal) {
+        AlertDialog(
+            onDismissRequest = { deleteModal = false },
+            title = {
+                Text(text = "Removing ${removingItem.product}", fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily)
+            },
+            text = {
+                Text(text = "Do you want to remove this item from the basket?", fontFamily = mintsansFontFamily)
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        userViewModel.clearItems(listOf(removingItem))
+                        deleteModal = false
+                        onRemove(
+                            Triple(
+                                ToastStatus.SUCCESSFUL,
+                                "${removingItem.product} removed from the basket.",
+                                System.currentTimeMillis()
+                            )
+                        )
+                    },
+                    colors = ButtonDefaults.buttonColors(Green4),
+                ) {
+                    Text(text = "Remove", fontFamily = mintsansFontFamily, color = Green1)
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { deleteModal = false },
+                    colors = ButtonDefaults.buttonColors(Color.Gray),
+                ) {
+                    Text(text = "Cancel", fontFamily = mintsansFontFamily, color = Color.White)
+                }
+            },
+        )
     }
 }
 
