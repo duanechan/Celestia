@@ -1,162 +1,135 @@
-package com.coco.celestia.screens.farmer
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import com.coco.celestia.ui.theme.BgColor
-import com.coco.celestia.ui.theme.DarkGreen
-
-//TODO: need backend to connect order requests notifications etc.,
-//boolean = true will show placeholder notification content
-//boolean = false will show placeholder no notification content
-@Composable
-fun FarmerNotification(hasNotifications: Boolean = true, onRefresh: () -> Unit = {}) {
-    Scaffold { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(BgColor)
-                .padding(paddingValues)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(8.dp)
-            ) {
-                // Notifications
-                if (hasNotifications) {
-                    NotificationItem(
-                        title = "Pending Order",
-                        message = "There is a pending request for an order from the Cooperative.",
-                        timestamp = "2 hours ago",
-                        onClick = { /* TODO: Navigate to specific screen */ }
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    NotificationItem(
-                        title = "Order Cancelled",
-                        message = "The order of 50kg of potatoes has been cancelled.",
-                        timestamp = "1 day ago",
-                        onClick = { }
-                    )
-                } else {
-                    NoNotifications(onRefresh = onRefresh)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun NotificationItem(
-    title: String,
-    message: String,
-    timestamp: String,
-    onClick: () -> Unit
-) {
-    Button(
-        onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp)
-            .clip(RoundedCornerShape(12.dp))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Notification Icon
-            Icon(
-                imageVector = Icons.Default.Notifications,
-                contentDescription = "Notification Icon",
-                tint = DarkGreen,
-                modifier = Modifier.size(48.dp)
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            // Notification Content
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = message,
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            // Notification Timestamp
-            Text(
-                text = timestamp,
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-            )
-        }
-    }
-}
-
-@Composable
-fun NoNotifications(onRefresh: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            imageVector = Icons.Default.Notifications,
-            contentDescription = "Notification Icon",
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "No Notifications Yet",
-            fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        // Refresh Button
-        Button(
-            onClick = { onRefresh() },
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-        ) {
-            Text(
-                text = "Refresh",
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onPrimary
-            )
-        }
-    }
-}
+//package com.coco.celestia.screens.farmer
+//
+//import android.util.Log
+//import androidx.compose.foundation.clickable
+//import androidx.compose.foundation.layout.*
+//import androidx.compose.foundation.lazy.LazyColumn
+//import androidx.compose.foundation.lazy.items
+//import androidx.compose.foundation.shape.RoundedCornerShape
+//import androidx.compose.material3.*
+//import androidx.compose.runtime.Composable
+//import androidx.compose.runtime.LaunchedEffect
+//import androidx.compose.runtime.mutableStateListOf
+//import androidx.compose.runtime.remember
+//import androidx.compose.ui.Alignment
+//import androidx.compose.ui.Modifier
+//import androidx.compose.ui.res.painterResource
+//import androidx.compose.ui.text.font.FontWeight
+//import androidx.compose.ui.unit.dp
+//import androidx.compose.ui.unit.sp
+//import com.coco.celestia.R
+//import com.coco.celestia.service.NotificationService
+//import com.coco.celestia.ui.theme.Cinnabar
+//import com.coco.celestia.ui.theme.Green1
+//import com.coco.celestia.ui.theme.mintsansFontFamily
+//import com.coco.celestia.viewmodel.model.Notification
+//import com.coco.celestia.viewmodel.model.OrderData
+//import com.google.firebase.auth.FirebaseAuth
+//
+//@Composable
+//fun FarmerNotification() {
+//    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+//    val notifications = remember { mutableStateListOf<Notification>() }
+//
+//    LaunchedEffect(Unit) {
+//        NotificationService.observeUserNotifications(
+//            uid = uid,
+//            onNotificationsChanged = {
+//                notifications.clear()
+//                notifications.addAll(it)
+//            },
+//            onError = { error ->
+//                Log.e("FarmerNotification", "Error fetching notifications", error.toException())
+//            }
+//        )
+//    }
+//
+//    LazyColumn(
+//        modifier = Modifier
+//            .fillMaxSize()
+//            .padding(top = 3.dp)
+//    ) {
+//        if (notifications.isNotEmpty()) {
+//            items(notifications) { notification ->
+//                Card(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(top = 7.dp, start = 10.dp, end = 10.dp)
+//                        .clickable {
+//                        },
+//                    shape = RoundedCornerShape(10.dp)
+//                ) {
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(12.dp)
+//                    ) {
+//                        // Notification Icon
+//                        Icon(
+//                            painter = painterResource(R.drawable.notifcon),
+//                            contentDescription = "Notification Icon",
+//                            modifier = Modifier
+//                                .size(40.dp)
+//                                .align(Alignment.CenterVertically),
+//                            tint = Green1
+//                        )
+//
+//                        Spacer(modifier = Modifier.width(12.dp))
+//
+//                        Column(
+//                            modifier = Modifier.weight(1f)
+//                        ) {
+//                            Text(
+//                                text = notification.message,
+//                                fontSize = 16.sp,
+//                                fontWeight = FontWeight.Bold,
+//                                fontFamily = mintsansFontFamily,
+//                                color = MaterialTheme.colorScheme.onBackground
+//                            )
+//
+//                            Text(
+//                                text = (notification.details as? OrderData)?.orderData?.get(0)?.name ?: "No details",
+//                                fontSize = 14.sp,
+//                                fontFamily = mintsansFontFamily,
+//                                color = MaterialTheme.colorScheme.onBackground,
+//                                modifier = Modifier.padding(top = 4.dp)
+//                            )
+//
+//                            Text(
+//                                text = notification.timestamp,
+//                                fontSize = 14.sp,
+//                                fontFamily = mintsansFontFamily,
+//                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+//                                modifier = Modifier
+//                                    .align(Alignment.End)
+//                                    .padding(top = 8.dp)
+//                            )
+//                        }
+//
+//                        if (!notification.hasRead) {
+//                            Text(
+//                                text = "⬤",
+//                                fontSize = 20.sp,
+//                                color = Cinnabar,
+//                                modifier = Modifier.align(Alignment.CenterVertically)
+//                            )
+//                        }
+//                    }
+//                }
+//            }
+//        } else {
+//            item {
+//                Box(
+//                    modifier = Modifier.fillMaxSize(),
+//                    contentAlignment = Alignment.Center
+//                ) {
+//                    Text(
+//                        text = "No notifications",
+//                        fontSize = 16.sp,
+//                        color = MaterialTheme.colorScheme.onBackground
+//                    )
+//                }
+//            }
+//        }
+//    }
+//}

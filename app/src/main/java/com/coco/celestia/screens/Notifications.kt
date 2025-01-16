@@ -1,5 +1,6 @@
 package com.coco.celestia.screens
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,13 +41,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.components.toast.ToastStatus
-import com.coco.celestia.screens.farmer.FarmerNotification
 import com.coco.celestia.service.NotificationService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.Notification
+import com.coco.celestia.viewmodel.model.NotificationType
 import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDateTime
@@ -138,7 +140,7 @@ fun FacilityNotification() {
                     ) {
                         // Notification Icon
                         Icon(
-                            painter = painterResource(R.drawable.notificon),
+                            painter = painterResource(R.drawable.notifcon),
                             contentDescription = "Notification Icon",
                             modifier = Modifier
                                 .size(40.dp)
@@ -206,7 +208,135 @@ fun FacilityNotification() {
     }
 }
 
+@Composable
+fun FarmerNotification() {
+    val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+    val notifications = remember { mutableStateListOf<Notification>() }
 
+    if (notifications.isEmpty()) {
+        notifications.add(
+            Notification(
+                timestamp = "October 10, 2023 10:00AM",
+                sender = "System",
+                message = "New Order Request by Jack!",
+                details = OrderData(
+                    orderId = "12345",
+                    orderDate = "January 19, 2023",
+                    targetDate = "January 24, 2023",
+                    status = "Pending",
+                    orderData = listOf(ProductData(name = "Sample Product", quantity = 1)),
+                    client = "Jane Doe",
+                    barangay = "Sample Barangay",
+                    street = "Sample Street"
+                ),
+                type = NotificationType.Notice,
+                hasRead = false
+            )
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        NotificationService.observeUserNotifications(
+            uid = uid,
+            onNotificationsChanged = {
+                notifications.clear()
+                notifications.addAll(it)
+            },
+            onError = { error ->
+                Log.e("FarmerNotification", "Error fetching notifications", error.toException())
+            }
+        )
+    }
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 3.dp)
+    ) {
+        if (notifications.isNotEmpty()) {
+            items(notifications) { notification ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 7.dp, start = 10.dp, end = 10.dp)
+                        .clickable {
+                        },
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp)
+                    ) {
+                        // Notification Icon
+                        Icon(
+                            painter = painterResource(R.drawable.notifcon),
+                            contentDescription = "Notification Icon",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .align(Alignment.CenterVertically),
+                            tint = Green1
+                        )
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column(
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = notification.message,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = mintsansFontFamily,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+
+                            Text(
+                                text = (notification.details as? OrderData)?.orderData?.get(0)?.name ?: "No details",
+                                fontSize = 14.sp,
+                                fontFamily = mintsansFontFamily,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+
+                            Text(
+                                text = notification.timestamp,
+                                fontSize = 14.sp,
+                                fontFamily = mintsansFontFamily,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                modifier = Modifier
+                                    .align(Alignment.End)
+                                    .padding(top = 8.dp)
+                            )
+                        }
+
+                        if (!notification.hasRead) {
+                            Text(
+                                text = "⬤",
+                                fontSize = 20.sp,
+                                color = Cinnabar,
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
+            item {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No notifications",
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+            }
+        }
+    }
+}
 
 fun sortNotificationsByTimestamp(notifications: List<Notification>): List<Notification> {
     val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
