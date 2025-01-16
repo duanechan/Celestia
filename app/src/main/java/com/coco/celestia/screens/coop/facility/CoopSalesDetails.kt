@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -30,6 +31,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -57,6 +59,7 @@ import com.coco.celestia.viewmodel.SalesState
 import com.coco.celestia.viewmodel.SalesViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.SalesData
+import kotlin.math.max
 
 @Composable
 fun CoopSalesDetails(
@@ -187,6 +190,7 @@ fun CoopSalesDetails(
 @Composable
 fun OnlineSalesDetails(order: OrderData, navController: NavController){
     var showDialog by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -211,10 +215,53 @@ fun OnlineSalesDetails(order: OrderData, navController: NavController){
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                Icon(
-                    Icons.Default.MoreVert,
-                    contentDescription = "More options",
-                    tint = Green1
+                Box {
+                    IconButton(onClick = { expanded = true }) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = "More options",
+                            tint = Green1
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Update Order Status") },
+                            onClick = {
+                                expanded = false
+                                showDialog = true
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Dialog for Updating Order Status
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDialog = false },
+                    title = {
+                        Text(text = "Update Order Status")
+                    },
+                    text = {
+                        UpdateStatusCard(
+                            status = order.status,
+                            statusDescription = "Your item is ${order.status.lowercase()}.",
+                            dateTime = order.orderDate
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { showDialog = false }) {
+                            Text(text = "Save")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDialog = false }) {
+                            Text(text = "Cancel")
+                        }
+                    }
                 )
             }
 
@@ -260,7 +307,7 @@ fun OnlineSalesDetails(order: OrderData, navController: NavController){
             }
         }
 
-        //Product Order Details
+        // Product Order Details
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -268,33 +315,49 @@ fun OnlineSalesDetails(order: OrderData, navController: NavController){
             colors = CardDefaults.cardColors(containerColor = White1)
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = "Items (${order.orderData.size})",
-                    style = MaterialTheme.typography.titleMedium,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 16.dp)
-                )
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                order.orderData.forEach { item ->
-                    ItemCard(item)
+                // Header: Always visible
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Items (${order.orderData.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                        textAlign = TextAlign.Center
+                    )
                 }
 
-                Text(
-                    text = "Total: PHP ${order.orderData.sumOf { it.price }}",
-                    style = MaterialTheme.typography.titleMedium,
-                )
+                // Scrollable Content: Items
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 250.dp) // Limit the height for the scrollable area
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // List of Items
+                    order.orderData.forEach { item ->
+                        ItemCard(item)
+                    }
+                }
+
+                // Footer: Always visible
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Total: PHP ${order.orderData.sumOf { it.price }}",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
             }
         }
 
