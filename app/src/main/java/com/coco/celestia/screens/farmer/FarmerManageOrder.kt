@@ -207,11 +207,12 @@ fun FarmerManageOrder(
                             ?.dateTime
                     }
                     ?.forEach { assigned ->
-                    if (searchQuery.isEmpty() ||
-                        assigned.subject.contains(searchQuery, ignoreCase = true) ||
-                        assigned.name.contains(searchQuery, ignoreCase = true) ||
-                        assigned.assignedMember.any { it.status.contains(searchQuery,ignoreCase = true) }
-                        ) {
+                        if (searchQuery.isEmpty() ||
+                            assigned.subject.contains(searchQuery, ignoreCase = true) ||
+                            assigned.name.contains(searchQuery, ignoreCase = true) ||
+                            assigned.assignedMember.any { it.status.contains(searchQuery, ignoreCase = true) } ||
+                            assigned.products.any { it.name.contains(searchQuery, ignoreCase = true) } // Search for product names
+                        ){
                         DisplayRequestCard(
                             navController,
                             assigned,
@@ -225,14 +226,14 @@ fun FarmerManageOrder(
 }
 
 @Composable
-fun DisplayRequestCard (
+fun DisplayRequestCard(
     navController: NavController,
     specialRequest: SpecialRequest,
     farmerEmail: String,
 ) {
     val assignedMember = specialRequest.assignedMember.find { it.email == farmerEmail }
 
-    Card (
+    Card(
         colors = CardDefaults.cardColors(
             containerColor = White1
         ),
@@ -241,27 +242,31 @@ fun DisplayRequestCard (
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .padding(bottom = 16.dp)
-            .clickable (
+            .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = rememberRipple(bounded = true)
             ) {
-                navController.navigate(Screen.FarmerRequestCardDetails.createRoute(specialRequest.specialRequestUID, farmerEmail,
-                    assignedMember?.product ?: ""
-                ))
+                navController.navigate(
+                    Screen.FarmerRequestCardDetails.createRoute(
+                        specialRequest.specialRequestUID,
+                        farmerEmail,
+                        assignedMember?.product ?: ""
+                    )
+                )
             },
     ) {
-        Column (
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
-        ){
+        ) {
             Text(
                 text = assignedMember?.status ?: "",
                 color = Green2
             )
             Text(
-                text = specialRequest.subject,
+                text = specialRequest.products.joinToString(", ") { it.name }, //changed subject to products
                 fontSize = 24.sp,
                 color = Green1
             )
@@ -783,6 +788,7 @@ fun DisplayDetails (
         }
     }
 }
+
 //DON'T REMOVE ATM
 @Composable
 fun FarmerManageRequest(
