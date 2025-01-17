@@ -139,7 +139,8 @@ class SpecialRequestViewModel : ViewModel() {
 
     fun fetchAssignedProducts(
         farmerEmail: String,
-        statusFilter: String
+        statusFilter: String,
+        status: String
     ) {
         viewModelScope.launch {
             database.addListenerForSingleValueEvent(object : ValueEventListener {

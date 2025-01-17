@@ -81,6 +81,13 @@ val OliveGreen = Color(0xFF8d8d5f)
 val Green = Color(0xFF99CCB0)
 val Blue = Color(0xFFABE2EF)
 val Sand2 = Color(0xFFd6af74)
+val GreenShade1 = Color(0xFF4CAF50)
+val GreenShade2 = Color(0xFF66BB6A)
+val GreenShade3 = Color(0xFF81C784)
+val GreenShade4 = Color(0xFFA5D6A7)
+val GreenShade5 = Color(0xFFC8E6C9)
+val GreenShade6 = Color(0xFFE8F5E9)
+val GreenShade7 = Color(0xFF2E7D32)
 
 // Coop WhiteBG
 val CoopBackground = Color(0xFFFDFDFD)

@@ -66,12 +66,12 @@ fun Notifications(
         role == "Admin" -> {
             AdminNotification()
         }
-        role.startsWith("Coop") -> {
+        role == "Farmer" || role.startsWith("Coop") -> {
             FacilityNotification(role, navController)
         }
-        role == "Farmer" -> {
-            FarmerNotification()
-        }
+//        role == "Farmer" -> {
+//            FarmerNotification()
+//        }
         role == "Client" && showDialog -> {
 //            ClientNotification(
 //                notifications = notifications,

@@ -7,6 +7,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -90,12 +91,14 @@ fun FarmerManageOrder(
 
     var searchQuery by remember { mutableStateOf("") }
     var tabName by remember { mutableStateOf("In Progress") }
+    var selectedStatus by remember { mutableStateOf("") }
 
-    LaunchedEffect(tabName) {
+    LaunchedEffect(tabName, selectedStatus) {
         userViewModel.fetchUser(uid)
         specialRequestViewModel.fetchAssignedProducts(
             userData?.email ?: "",
-            tabName
+            tabName,
+            selectedStatus
         )
     }
 
@@ -110,7 +113,7 @@ fun FarmerManageOrder(
         val coroutineScope = rememberCoroutineScope()
 
         TabRow(
-            selectedTabIndex = pagerState.pageCount,
+            selectedTabIndex = pagerState.currentPage,
             containerColor = Green4,
             contentColor = Green1,
             divider = {},
@@ -157,40 +160,82 @@ fun FarmerManageOrder(
                     .background(color = BgColor)
                     .verticalScroll(rememberScrollState())
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder = { Text("Search orders...", color = DarkGreen) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search Icon",
-                                tint = Cocoa
-                            )
-                        },
+                if (page == 0) {
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
-                            .background(color = White2, shape = RoundedCornerShape(16.dp))
-                            .border(BorderStroke(1.dp, color = DarkGreen), shape = RoundedCornerShape(16.dp)),
-                        singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent,
-                            errorIndicatorColor = Color.Transparent,
-                            focusedTextColor = Cocoa,
-                            unfocusedTextColor = DarkGreen
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            placeholder = { Text("Search orders...", color = DarkGreen) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search Icon",
+                                    tint = Cocoa
+                                )
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .background(color = White2, shape = RoundedCornerShape(16.dp))
+                                .border(BorderStroke(1.dp, color = DarkGreen), shape = RoundedCornerShape(16.dp)),
+                            singleLine = true,
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent,
+                                errorIndicatorColor = Color.Transparent,
+                                focusedTextColor = Cocoa,
+                                unfocusedTextColor = DarkGreen
+                            )
                         )
-                    )
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val statuses = listOf(
+                            "PLANTING", "PLANTED", "GROWING",
+                            "READY TO HARVEST", "HARVESTING", "HARVESTED", "PICKED UP BY COOP"
+                        )
+                        val statusColors = mapOf(
+                            "PLANTING" to GreenShade1,
+                            "PLANTED" to GreenShade2,
+                            "GROWING" to GreenShade3,
+                            "READY TO HARVEST" to GreenShade4,
+                            "HARVESTING" to GreenShade5,
+                            "HARVESTED" to GreenShade6,
+                            "PICKED UP BY COOP" to GreenShade7
+                        )
+                        statuses.forEach { status ->
+                            Button(
+                                onClick = {
+                                    selectedStatus = status
+                                    specialRequestViewModel.fetchAssignedProducts(
+                                        userData?.email ?: "",
+                                        tabName,
+                                        status
+                                    )
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = statusColors[status] ?: Green1,
+                                    contentColor = if (selectedStatus == status) Color.White else DarkGreen
+                                )
+                            ) {
+                                Text(text = status)
+                            }
+                        }
+                    }
                 }
 
                 tabName = if (page == 0) {
@@ -200,6 +245,7 @@ fun FarmerManageOrder(
                 }
 
                 assignedProducts
+                    ?.filter { it.status == selectedStatus || selectedStatus.isEmpty() }
                     ?.sortedByDescending { assigned ->
                         assigned.trackRecord
                             .filter { it.description.contains("assigned", ignoreCase = true) }
@@ -213,13 +259,13 @@ fun FarmerManageOrder(
                             assigned.assignedMember.any { it.status.contains(searchQuery, ignoreCase = true) } ||
                             assigned.products.any { it.name.contains(searchQuery, ignoreCase = true) } // Search for product names
                         ){
-                        DisplayRequestCard(
-                            navController,
-                            assigned,
-                            userData?.email ?: ""
-                        )
+                            DisplayRequestCard(
+                                navController,
+                                assigned,
+                                userData?.email ?: ""
+                            )
+                        }
                     }
-                }
             }
         }
     }
@@ -869,14 +915,14 @@ fun ManageOrderCards(
     }
 
     val backgroundColor = when (displayStatus) {
-        "ACCEPTED" -> SageGreen
+//        "ACCEPTED" -> SageGreen
         "PLANTING" -> Tangerine
         "PLANTED" -> DeepTangerine
         "GROWING" -> BrownTangerine
-        "READY FOR HARVEST" -> Brown2
+        "READY TO HARVEST" -> Brown2
         "HARVESTING" -> Brown3
         "HARVESTED" -> Brown1
-        "DELIVERING" -> Green
+        "PICKED UP BY COOP" -> Green
 //        "PICKUP" -> Blue
         "COMPLETED" -> SageGreen.copy(alpha = 0.7f)
         "CALAMITY AFFECTED" -> SolidRed
@@ -887,15 +933,15 @@ fun ManageOrderCards(
     }
 
     val iconPainter: Painter? = when (displayStatus) {
-        "ACCEPTED" -> painterResource(id = R.drawable.preparing)
+//        "ACCEPTED" -> painterResource(id = R.drawable.preparing)
         "PLANTING" -> painterResource(id = R.drawable.plant_hand)
         "PLANTED" -> painterResource(id = R.drawable.plant)
         "GROWING" -> painterResource(id = R.drawable.planting)
-        "READY FOR HARVEST" -> painterResource(id = R.drawable.harvest)
+        "READY TO HARVEST" -> painterResource(id = R.drawable.harvest)
         "HARVESTING" -> painterResource(id = R.drawable.harvest_basket)
         "HARVESTED" -> painterResource(id = R.drawable.harvested)
 //        "HARVESTING_MEAT" -> painterResource(id = R.drawable.cow_animal)
-        "DELIVERING" -> painterResource(id = R.drawable.deliveryicon)
+        "PICKED UP BY COOP" -> painterResource(id = R.drawable.deliveryicon)
 //        "PICKUP" -> painterResource(id = R.drawable.pickup)
         "CANCELLED" -> painterResource(id = R.drawable.cancelled)
         "CALAMITY AFFECTED" -> painterResource(id = R.drawable.calamity)
