@@ -83,6 +83,8 @@ fun OrderSummary(
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
     val formattedDateTime = LocalDateTime.now().format(formatter).toString()
+    val idFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+    val formattedOrderId = "OID-${LocalDateTime.now().format(idFormatter)}"
     val userData by userViewModel.userData.observeAsState(UserData())
     val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
 
@@ -181,7 +183,7 @@ fun OrderSummary(
                                 orderViewModel.placeOrder(
                                     uid = uid,
                                     order = OrderData(
-                                        orderId = "Order-${UUID.randomUUID()}",
+                                        orderId = formattedOrderId,
                                         orderDate = formattedDateTime,
                                         status = "Pending",
                                         orderData = facilityItems.map {

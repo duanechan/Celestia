@@ -8,6 +8,7 @@ import com.coco.celestia.viewmodel.model.NotificationType
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.UserData
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -194,8 +195,39 @@ object NotificationService {
                 .mapNotNull { it.getValue(FullFilledBy::class.java) },
             partialQuantity = snapshot.child("partialQuantity").getValue(Int::class.java) ?: 0,
             fulfilled = snapshot.child("fulfilled").getValue(Int::class.java) ?: 0,
-            collectionMethod = snapshot.child("collectionMethod").getValue(String::class.java) ?: Constants.COLLECTION_PICKUP,
-            paymentMethod = snapshot.child("paymentMethod").getValue(String::class.java) ?: Constants.PAYMENT_CASH
+            collectionMethod = snapshot.child("collectionMethod").getValue(String::class.java) ?: "",
+            paymentMethod = snapshot.child("paymentMethod").getValue(String::class.java) ?: ""
         )
+    }
+
+    fun markAsRead(
+        notification: Notification,
+        onComplete: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+        usersRef
+            .child(uid)
+            .child("notifications")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val notificationKey = snapshot.children.find { snapshot ->
+                        snapshot.child("timestamp").getValue(String::class.java) == notification.timestamp &&
+                                snapshot.child("sender").getValue(String::class.java) == notification.sender
+                    }?.key
+
+                    notificationKey?.let {
+                        usersRef
+                            .child(uid)
+                            .child("notifications")
+                            .child(it)
+                            .child("hasRead")
+                            .setValue(true)
+                            .addOnSuccessListener { onComplete() }
+                            .addOnFailureListener { e -> onError(e.message.toString()) }
+                    }
+                }
+                override fun onCancelled(error: DatabaseError) { onError(error.message) }
+            })
     }
 }

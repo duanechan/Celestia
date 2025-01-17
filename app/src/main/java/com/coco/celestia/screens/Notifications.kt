@@ -129,7 +129,11 @@ fun FacilityNotification() {
                         .fillMaxWidth()
                         .padding(top = 7.dp, start = 10.dp, end = 10.dp)
                         .clickable {
-                            // Create an action when a notification card is clicked
+                            NotificationService.markAsRead(
+                                notification = notification,
+                                onComplete = { /* Action for successfully reading notification */ },
+                                onError = { /* Action for failing to read notification */ }
+                            )
                         },
                     shape = RoundedCornerShape(10.dp)
                 ) {
