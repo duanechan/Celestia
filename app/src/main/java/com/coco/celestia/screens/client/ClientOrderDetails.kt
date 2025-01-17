@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -64,6 +65,7 @@ import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.FacilityData
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
+import com.coco.celestia.viewmodel.model.StatusUpdate
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -477,10 +479,13 @@ fun TrackOrderSection(orderData: OrderData) {
             )
         }
 
+        Spacer(modifier = Modifier.height(8.dp))
+
         ClientOrderStatus(
             status = orderData.status,
             statusDescription = orderData.statusDescription,
-            dateTime = orderData.orderDate
+            dateTime = orderData.orderDate,
+            statusHistory = orderData.statusHistory ?: emptyList()
         )
     }
 }
@@ -489,39 +494,141 @@ fun TrackOrderSection(orderData: OrderData) {
 fun ClientOrderStatus(
     status: String,
     statusDescription: String,
-    dateTime: String
+    dateTime: String,
+    statusHistory: List<StatusUpdate> = emptyList()
+) {
+    val allStatuses = listOf(
+        "Pending",
+        "Confirmed",
+        "To Deliver",
+        "To Receive",
+        "Completed"
+    )
+
+    val currentIndex = allStatuses.indexOf(status)
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        allStatuses.forEachIndexed { index, currentStatus ->
+            val isCurrent = index == currentIndex
+            val isPast = index < currentIndex
+            val showInfo = isCurrent || isPast
+
+            if (isCurrent || isPast) {
+                val statusUpdate = if (isCurrent) {
+                    StatusUpdate(status, statusDescription, dateTime)
+                } else {
+                    statusHistory.find { it.status == currentStatus }
+                }
+
+                ClientTimelineStep(
+                    status = currentStatus,
+                    statusDescription = statusUpdate?.statusDescription ?: "",
+                    dateTime = statusUpdate?.dateTime ?: "",
+                    showInfo = showInfo,
+                    isCurrent = isCurrent,
+                    isCompleted = isPast,
+                    showLine = index < allStatuses.lastIndex
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ClientTimelineStep(
+    status: String,
+    statusDescription: String,
+    dateTime: String,
+    showInfo: Boolean,
+    isCurrent: Boolean,
+    isCompleted: Boolean,
+    showLine: Boolean
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
+            .padding(vertical = 4.dp),
         verticalAlignment = Alignment.Top
     ) {
-        Box(
-            modifier = Modifier
-                .size(12.dp)
-                .background(MaterialTheme.colorScheme.primary, CircleShape)
-        )
-
-        Spacer(modifier = Modifier.width(16.dp))
-
         Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .wrapContentHeight()
+                .width(24.dp)
+        ) {
+            // Status dot
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .background(
+                        color = when {
+                            isCurrent || isCompleted -> MaterialTheme.colorScheme.primary
+                            else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        },
+                        shape = CircleShape
+                    )
+            ) {
+                if (isCurrent) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .background(Color.White, CircleShape)
+                            .align(Alignment.Center)
+                    )
+                }
+            }
+
+            // Connecting line
+            if (showLine) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Box(
+                    modifier = Modifier
+                        .width(2.dp)
+                        .height(40.dp)
+                        .background(
+                            color = if (isCompleted) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                        )
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        // Status details
+        Column(
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
                 text = status,
                 style = MaterialTheme.typography.bodyMedium,
+                color = when {
+                    isCurrent -> MaterialTheme.colorScheme.primary
+                    isCompleted -> MaterialTheme.colorScheme.primary
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                }
             )
-            Text(
-                text = statusDescription,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = dateTime,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+
+            if (showInfo && statusDescription.isNotEmpty()) {
+                Text(
+                    text = statusDescription,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            if (showInfo && dateTime.isNotEmpty()) {
+                Text(
+                    text = dateTime,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

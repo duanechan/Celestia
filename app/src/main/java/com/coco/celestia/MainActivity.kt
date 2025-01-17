@@ -193,7 +193,7 @@ fun AppStateAndContent(
         "Products" to Screen.CoopInventory.route,
         "Sales" to Screen.CoopSales.route,
         "Purchases" to Screen.CoopPurchases.route,
-        "Reports" to Screen.CoopReports.route,
+//        "Reports" to Screen.CoopReports.route,
         "Settings" to Screen.Settings.route
     )
 
@@ -524,7 +524,7 @@ fun App() {
                                                 imageVector = when (label) {
                                                     "Home" -> Icons.Default.Home
                                                     "Settings" -> Icons.Default.Settings
-                                                    "Reports" -> Icons.Default.Info
+//                                                    "Reports" -> Icons.Default.Info
                                                     else -> Icons.Default.Home
                                                 },
                                                 contentDescription = null,

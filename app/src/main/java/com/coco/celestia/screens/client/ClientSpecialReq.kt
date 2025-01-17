@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,8 +26,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -61,6 +66,7 @@ import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.SpecialReqState
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.VegetableViewModel
@@ -84,8 +90,9 @@ fun DisplaySpecialReq(
     navController: NavController
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-    val orderViewModel: OrderViewModel = viewModel()
-    val orderData by orderViewModel.orderData.observeAsState(emptyList())
+    val specialReqViewModel: SpecialRequestViewModel = viewModel()
+    val specialReqData by specialReqViewModel.specialReqData.observeAsState(emptyList())
+    val specialReqState by specialReqViewModel.specialReqState.observeAsState(SpecialReqState.LOADING)
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val filters = listOf(
         "To Review",
@@ -95,9 +102,10 @@ fun DisplaySpecialReq(
     )
 
     LaunchedEffect(Unit) {
-        orderViewModel.fetchOrders(
-            uid = uid,
-            filter = ""
+        specialReqViewModel.fetchSpecialRequests(
+            filter = "",
+            orderBy = "Requested",
+            ascending = false
         )
     }
 
@@ -115,13 +123,11 @@ fun DisplaySpecialReq(
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp)
-                        .background(Color.White, shape = RoundedCornerShape(12.dp)),
+                        .background(White1, shape = RoundedCornerShape(12.dp)),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -169,25 +175,86 @@ fun DisplaySpecialReq(
                     }
                 }
 
-                val filteredOrders = orderData.filter { it.status == filters[selectedTabIndex] }
-                Column(modifier = Modifier.fillMaxSize()) {
-                    if (filteredOrders.isNotEmpty()) {
-                        for (order in filteredOrders) {
-                            OrderCard(
-                                order = order,
-                                index = "12345",
-                                navController = navController
-                            )
-                        }
-                    } else {
+                when (specialReqState) {
+                    SpecialReqState.LOADING -> {
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier.fillMaxSize()
                         ) {
-                            Text("Empty")
+                            CircularProgressIndicator()
                         }
                     }
-
+                    SpecialReqState.EMPTY -> {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ShoppingCart,
+                                    contentDescription = "No Orders",
+                                    modifier = Modifier.size(48.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("No Orders Found")
+                            }
+                        }
+                    }
+                    SpecialReqState.SUCCESS -> {
+                        val userRequests = specialReqData
+                            .filter { it.uid == uid }
+                            .sortedByDescending { request ->
+                                LocalDateTime.parse(
+                                    request.dateRequested,
+                                    DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
+                                )
+                            }
+                        val filteredRequests = userRequests.filter { it.status == filters[selectedTabIndex] }
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            if (filteredRequests.isNotEmpty()) {
+                                for (request in filteredRequests) {
+                                    OrderCard(
+                                        order = request,
+                                        index = request.specialRequestUID,
+                                        navController = navController
+                                    )
+                                }
+                            } else {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        Icon(
+                                            imageVector = Icons.Default.ShoppingCart,
+                                            contentDescription = "No Orders",
+                                            modifier = Modifier.size(30.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text("No Orders Found")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    is SpecialReqState.ERROR -> {
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Text(
+                                text = (specialReqState as SpecialReqState.ERROR).message,
+                                color = Color.Red
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -206,6 +273,63 @@ fun DisplaySpecialReq(
     }
 }
 
+@Composable
+fun OrderCard(
+    order: SpecialRequest,
+    index: String,
+    navController: NavController
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = White1
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = order.subject,
+                fontWeight = FontWeight.Bold,
+                color = Green1,
+                fontSize = 16.sp
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Date Requested: ${order.dateRequested}",
+                    color = Green1,
+                    fontSize = 14.sp
+                )
+
+                Text(
+                    text = order.status,
+                    fontWeight = FontWeight.Bold,
+                    color = Green1,
+                    fontSize = 14.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Target Date: ${order.targetDate}",
+                color = Green1,
+                fontSize = 14.sp
+            )
+        }
+    }
+}
 
 @Composable
 fun AddSpecialReq(

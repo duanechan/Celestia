@@ -1,5 +1,7 @@
 package com.coco.celestia.screens.coop.facility
 
+import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,11 +17,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.navigation.NavController
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
+import com.coco.celestia.R
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
@@ -105,6 +113,7 @@ fun CoopInventoryDetails(
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 private fun ProductHeader(
     product: ProductData,
@@ -114,6 +123,18 @@ private fun ProductHeader(
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+    var productImage by remember { mutableStateOf<Uri?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    DisposableEffect(product.productId) {
+        isLoading = true
+        ImageService.fetchProductImage(product.productId) { uri ->
+            productImage = uri
+            isLoading = false
+        }
+
+        onDispose { }
+    }
 
     Box(
         modifier = Modifier
@@ -245,13 +266,27 @@ private fun ProductHeader(
 
                 Card(
                     modifier = Modifier.size(100.dp),
-                    colors = CardDefaults.cardColors(containerColor = Green4)
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("+ Add\nImage", textAlign = TextAlign.Center)
+                        if (isLoading || productImage == null) {
+                            Image(
+                                painter = painterResource(R.drawable.product_icon),
+                                contentDescription = "Loading",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Image(
+                                painter = rememberImagePainter(productImage),
+                                contentDescription = product.name,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     }
                 }
             }

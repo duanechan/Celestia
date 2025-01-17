@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
@@ -560,15 +561,19 @@ fun SlideshowCarousel(items: List<CarouselItem>, navController: NavController) {
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun CarouselCard(item: CarouselItem, onClick: () -> Unit) {
     var productImage by remember { mutableStateOf<Uri?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
 
-    LaunchedEffect(Unit) {
-        ImageService.fetchProductImage(item.carouselId) {
-            println(item.carouselId)
-            productImage = it
+    DisposableEffect(item.carouselId) {
+        isLoading = true
+        ImageService.fetchProductImage(item.carouselId) { uri ->
+            productImage = uri
+            isLoading = false
         }
+        onDispose { }
     }
 
     Box(
@@ -578,12 +583,22 @@ fun CarouselCard(item: CarouselItem, onClick: () -> Unit) {
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
     ) {
-        Image(
-            painter = if (productImage != null) rememberImagePainter(productImage) else painterResource(item.imageRes),
-            contentDescription = item.title,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
+        if (isLoading || productImage == null) {
+            Image(
+                painter = painterResource(R.drawable.product_image),
+                contentDescription = "Loading",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            Image(
+                painter = rememberImagePainter(productImage),
+                contentDescription = item.title,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
