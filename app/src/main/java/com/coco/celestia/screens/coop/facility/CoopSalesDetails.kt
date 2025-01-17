@@ -228,24 +228,11 @@ fun OnlineSalesDetails(
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Box {
-                    IconButton(onClick = { expanded = true }) {
-                        Icon(
-                            Icons.Default.MoreVert,
-                            contentDescription = "More options",
-                            tint = Green1
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
+                    Button(
+                        onClick = { showDialog = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = Green1)
                     ) {
-                        DropdownMenuItem(
-                            text = { Text("Update Order Status") },
-                            onClick = {
-                                expanded = false
-                                showDialog = true
-                            }
-                        )
+                        Text("Update Status")
                     }
                 }
             }
@@ -356,6 +343,7 @@ fun OnlineSalesDetails(
                         style = MaterialTheme.typography.titleMedium,
                         textAlign = TextAlign.Center
                     )
+                    Divider(color = Green4, thickness = 1.dp)
                 }
 
                 Column(
@@ -377,6 +365,7 @@ fun OnlineSalesDetails(
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    Divider(color = Green4, thickness = 1.dp)
                     Text(
                         text = "Total: PHP ${currentOrder.orderData.sumOf { it.price }}",
                         style = MaterialTheme.typography.titleMedium
@@ -392,13 +381,28 @@ fun OnlineSalesDetails(
                 .padding(16.dp),
             colors = CardDefaults.cardColors(containerColor = White1)
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Collection Method",
+                    style = MaterialTheme.typography.titleSmall
+                )
+            }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(text = currentOrder.collectionMethod)
+                Text(
+                    text = currentOrder.collectionMethod,
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
         }
 
@@ -409,13 +413,28 @@ fun OnlineSalesDetails(
                 .padding(16.dp),
             colors = CardDefaults.cardColors(containerColor = White1)
         ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Payment Method",
+                    style = MaterialTheme.typography.titleSmall,
+                )
+            }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(text = currentOrder.paymentMethod)
+                Text(
+                    text = currentOrder.paymentMethod,
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
         }
 
