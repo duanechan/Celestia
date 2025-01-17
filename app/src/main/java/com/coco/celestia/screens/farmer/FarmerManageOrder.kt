@@ -529,7 +529,10 @@ fun DisplayUpdateStatus (
 ) {
     var status by remember { mutableStateOf("") }
     var statusExpanded by remember { mutableStateOf(false) }
-    val statusList = listOf("Test", " Test", "Test")
+    val statusList = listOf("Planting","Planted", "Growing", "Ready to Harvest", "Harvesting",
+        "Harvested", "Picked Up by Coop", "Calamity-Affected", "Completed",
+        "Test", " Test", "Test")
+
 
     AlertDialog(
         onDismissRequest = onDismiss,
