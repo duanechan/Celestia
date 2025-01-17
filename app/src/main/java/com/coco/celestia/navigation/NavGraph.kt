@@ -221,7 +221,10 @@ fun NavGraph(
         }
         composable(route = Screen.Notifications.route) {
             onNavigate("Notifications")
-            Notifications(role = userRole)
+            Notifications(
+                role = userRole,
+                navController = navController
+            )
         }
         composable(route = Screen.Farmer.route) {
             onNavigate("Dashboard")

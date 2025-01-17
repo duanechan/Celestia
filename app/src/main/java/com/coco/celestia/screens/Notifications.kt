@@ -41,6 +41,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.components.toast.ToastStatus
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.NotificationService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.UserState
@@ -57,6 +58,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun Notifications(
     role: String,
+    navController: NavController
 ) {
     var showDialog by remember { mutableStateOf(true) }
 
@@ -65,7 +67,7 @@ fun Notifications(
             AdminNotification()
         }
         role.startsWith("Coop") -> {
-            FacilityNotification()
+            FacilityNotification(role, navController)
         }
         role == "Farmer" -> {
             FarmerNotification()
@@ -102,7 +104,7 @@ fun AdminNotification() {
 }
 
 @Composable
-fun FacilityNotification() {
+fun FacilityNotification(role: String, navController: NavController) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var notifications = remember { mutableStateListOf<Notification>() }
 
@@ -131,7 +133,13 @@ fun FacilityNotification() {
                         .clickable {
                             NotificationService.markAsRead(
                                 notification = notification,
-                                onComplete = { /* Action for successfully reading notification */ },
+                                onComplete = {
+                                    when {
+                                         role.startsWith("Coop") && notification.type == NotificationType.OrderPlaced ->
+                                            navController.navigate(Screen.CoopOrderDetails.createRoute((notification.details as OrderData).orderId))
+                                        else -> {}
+                                    }
+                                },
                                 onError = { /* Action for failing to read notification */ }
                             )
                         },
