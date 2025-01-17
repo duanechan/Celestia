@@ -216,15 +216,15 @@ fun FarmerNotification() {
     if (notifications.isEmpty()) {
         notifications.add(
             Notification(
-                timestamp = "October 10, 2023 10:00AM",
+                timestamp = "January 17, 2025 10:00AM",
                 sender = "System",
-                message = "New Order Request by Jack!",
+                message = "New Order Request by Diwata Pares!",
                 details = OrderData(
                     orderId = "12345",
                     orderDate = "January 19, 2023",
                     targetDate = "January 24, 2023",
                     status = "Pending",
-                    orderData = listOf(ProductData(name = "Sample Product", quantity = 1)),
+                    orderData = listOf(ProductData(name = "Beef", quantity = 1)),
                     client = "Jane Doe",
                     barangay = "Sample Barangay",
                     street = "Sample Street"
