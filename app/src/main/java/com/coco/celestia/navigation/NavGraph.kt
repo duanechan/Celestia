@@ -37,6 +37,7 @@ import com.coco.celestia.screens.client.ClientContact
 import com.coco.celestia.screens.client.ClientDashboard
 import com.coco.celestia.screens.client.ClientOrder
 import com.coco.celestia.screens.client.ClientOrderDetails
+import com.coco.celestia.screens.client.ClientSpecialReqDetails
 import com.coco.celestia.screens.client.DisplaySpecialReq
 import com.coco.celestia.screens.client.OrderSummary
 import com.coco.celestia.screens.client.ProductCatalog
@@ -1158,6 +1159,20 @@ fun NavGraph(
                 showSearch = showSearch
             )
         }
+
+        composable(
+            route = Screen.ClientSpecialReqDetails.route,
+            arguments = listOf(navArgument("specialRequestUID") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val specialRequestUID = backStackEntry.arguments?.getString("specialRequestUID") ?: ""
+            onNavigate("Request Details")
+            ClientSpecialReqDetails(
+                navController = navController,
+                specialRequestViewModel = specialRequestViewModel,
+                specialRequestUID = specialRequestUID
+            )
+        }
+
         composable(route = Screen.Basket.route) {
             onNavigate("Basket")
             BasketScreen(

@@ -282,7 +282,10 @@ fun OrderCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(8.dp)
+            .clickable {
+                navController.navigate(Screen.ClientSpecialReqDetails.createRoute(order.specialRequestUID))
+            },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = White1
@@ -297,7 +300,8 @@ fun OrderCard(
                 text = order.subject,
                 fontWeight = FontWeight.Bold,
                 color = Green1,
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                fontFamily = mintsansFontFamily
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -309,14 +313,16 @@ fun OrderCard(
                 Text(
                     text = "Date Requested: ${order.dateRequested}",
                     color = Green1,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    fontFamily = mintsansFontFamily
                 )
 
                 Text(
                     text = order.status,
                     fontWeight = FontWeight.Bold,
                     color = Green1,
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -325,7 +331,8 @@ fun OrderCard(
             Text(
                 text = "Target Date: ${order.targetDate}",
                 color = Green1,
-                fontSize = 14.sp
+                fontSize = 14.sp,
+                fontFamily = mintsansFontFamily
             )
         }
     }
