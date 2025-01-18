@@ -4,7 +4,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.coco.celestia.service.NotificationService
+import com.coco.celestia.viewmodel.model.Notification
+import com.coco.celestia.viewmodel.model.NotificationType
 import com.coco.celestia.viewmodel.model.SpecialRequest
+import com.coco.celestia.viewmodel.model.StatusUpdate
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -28,6 +32,25 @@ class SpecialRequestViewModel : ViewModel() {
     val specialReqData: LiveData<List<SpecialRequest>> = _specialReqData
     val specialReqState: LiveData<SpecialReqState> = _specialReqState
 
+    private suspend fun notify(type: NotificationType, specialReq: SpecialRequest) {
+        val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
+        val formattedDateTime = LocalDateTime.now().format(formatter)
+
+        val notification = Notification(
+            timestamp = formattedDateTime,
+            sender = specialReq.name,
+            details = specialReq,
+            message = "Special request from ${specialReq.name}: ${specialReq.subject}",
+            type = type
+        )
+
+        NotificationService.pushNotifications(
+            notification = notification,
+            onComplete = { },
+            onError = { }
+        )
+    }
+
     fun addSpecialRequest(
         uid: String,
         specialReq: SpecialRequest
@@ -37,6 +60,7 @@ class SpecialRequestViewModel : ViewModel() {
             val query = database.child(uid).push()
             query.setValue(specialReq)
                 .addOnCompleteListener {
+                    viewModelScope.launch { notify(NotificationType.ClientSpecialRequest, specialReq) }
                     _specialReqState.value = SpecialReqState.SUCCESS
                 }
                 .addOnFailureListener { exception ->

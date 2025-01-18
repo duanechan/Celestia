@@ -1,12 +1,9 @@
 package com.coco.celestia.service
 
-import com.coco.celestia.viewmodel.model.BasketItem
-import com.coco.celestia.viewmodel.model.Constants
-import com.coco.celestia.viewmodel.model.FullFilledBy
+import com.coco.celestia.util.DataParser
 import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.NotificationType
 import com.coco.celestia.viewmodel.model.OrderData
-import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -34,7 +31,7 @@ object NotificationService {
             .addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val notifications = snapshot.children
-                        .mapNotNull { parseNotificationData(it) }
+                        .mapNotNull { DataParser.parseNotificationData(it) }
                     onNotificationsChanged(notifications)
                 }
 
@@ -42,28 +39,6 @@ object NotificationService {
                     onError(error)
                 }
             })
-    }
-
-    private fun parseNotificationData(snapshot: DataSnapshot): Notification {
-        val type = when (snapshot.child("type").getValue(String::class.java) ?: "") {
-            "OrderUpdated" -> NotificationType.OrderUpdated
-            "OrderPlaced" -> NotificationType.OrderPlaced
-            else -> NotificationType.Notice
-        }
-        val details: Any = when (type) {
-            NotificationType.Notice -> parseUserData(snapshot.child("details"))
-            NotificationType.OrderUpdated,
-            NotificationType.OrderPlaced -> parseOrderData(snapshot.child("details"))
-        }
-
-        return Notification(
-            timestamp = snapshot.child("timestamp").getValue(String::class.java) ?: "",
-            sender = snapshot.child("sender").getValue(String::class.java) ?: "",
-            message = snapshot.child("message").getValue(String::class.java) ?: "",
-            details = details,
-            type = type,
-            hasRead = snapshot.child("hasRead").getValue(Boolean::class.java) ?: false,
-        )
     }
 
     private suspend fun DataSnapshot.findUserByEmailAndName(recipient: UserData): String? = coroutineScope {
@@ -90,17 +65,20 @@ object NotificationService {
                 }
 
                 val recipients = snapshot.children
-                    .mapNotNull { parseUserData(it) }
+                    .mapNotNull { DataParser.parseUserData(it) }
                     .filter {
                         when (type) {
                             NotificationType.Notice -> it.firstname.isNotEmpty()
-                            NotificationType.OrderPlaced -> {
+                            NotificationType.ClientOrderPlaced -> {
                                 (details as OrderData).orderData.any { product ->
                                     "Coop${product.type}" == it.role
                                 }
                             }
                             NotificationType.OrderUpdated -> {
                                 "${it.firstname} ${it.lastname}" == (details as OrderData).client
+                            }
+                            NotificationType.ClientSpecialRequest -> {
+                                it.role == "Admin"
                             }
                         }
                     }
@@ -159,45 +137,6 @@ object NotificationService {
             .setValue(notification)
             .addOnSuccessListener { continuation.resume(true) }
             .addOnFailureListener { continuation.resumeWithException(it) }
-    }
-
-    private fun parseUserData(snapshot: DataSnapshot): UserData {
-        return UserData(
-            email = snapshot.child("email").getValue(String::class.java) ?: "",
-            firstname = snapshot.child("firstname").getValue(String::class.java) ?: "",
-            lastname = snapshot.child("lastname").getValue(String::class.java) ?: "",
-            role = snapshot.child("role").getValue(String::class.java) ?: "",
-            basket = snapshot.child("basket").children.mapNotNull { item ->
-                item.getValue(BasketItem::class.java)
-            },
-            phoneNumber = snapshot.child("phoneNumber").getValue(String::class.java) ?: "",
-            streetNumber = snapshot.child("streetNumber").getValue(String::class.java) ?: "",
-            barangay = snapshot.child("barangay").getValue(String::class.java) ?: "",
-            online = snapshot.child("online").getValue(Boolean::class.java) ?: false,
-            isChecked = snapshot.child("isChecked").getValue(Boolean::class.java) ?: false,
-            registrationDate = snapshot.child("registrationDate").getValue(String::class.java) ?: ""
-        )
-    }
-
-    private fun parseOrderData(snapshot: DataSnapshot): OrderData {
-        return OrderData(
-            orderId = snapshot.child("orderId").getValue(String::class.java) ?: "",
-            orderDate = snapshot.child("orderDate").getValue(String::class.java) ?: "",
-            targetDate = snapshot.child("targetDate").getValue(String::class.java) ?: "",
-            status = snapshot.child("status").getValue(String::class.java) ?: "",
-            orderData = snapshot.child("orderData").children
-                .mapNotNull { it.getValue(ProductData::class.java) },
-            client = snapshot.child("client").getValue(String::class.java) ?: "",
-            barangay = snapshot.child("barangay").getValue(String::class.java) ?: "",
-            street = snapshot.child("street").getValue(String::class.java) ?: "",
-            rejectionReason = snapshot.child("rejectionReason").getValue(String::class.java) ?: "",
-            fulfilledBy = snapshot.child("fulfilledBy").children
-                .mapNotNull { it.getValue(FullFilledBy::class.java) },
-            partialQuantity = snapshot.child("partialQuantity").getValue(Int::class.java) ?: 0,
-            fulfilled = snapshot.child("fulfilled").getValue(Int::class.java) ?: 0,
-            collectionMethod = snapshot.child("collectionMethod").getValue(String::class.java) ?: "",
-            paymentMethod = snapshot.child("paymentMethod").getValue(String::class.java) ?: ""
-        )
     }
 
     fun markAsRead(

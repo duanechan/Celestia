@@ -5,8 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.service.NotificationService
+import com.coco.celestia.util.DataParser
 import com.coco.celestia.viewmodel.model.Constants
-import com.coco.celestia.viewmodel.model.FacilityData
 import com.coco.celestia.viewmodel.model.FullFilledBy
 import com.coco.celestia.viewmodel.model.MostOrdered
 import com.coco.celestia.viewmodel.model.Notification
@@ -19,7 +19,6 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -48,6 +47,25 @@ class OrderViewModel : ViewModel() {
     val orderData: LiveData<List<OrderData>> = _orderData
     val mostOrderedData: LiveData<List<MostOrdered>> = _mostOrderedData
     val orderState: LiveData<OrderState> = _orderState
+
+    private suspend fun notify(type: NotificationType, order: OrderData) {
+        val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
+        val formattedDateTime = LocalDateTime.now().format(formatter)
+
+        val notification = Notification(
+            timestamp = formattedDateTime,
+            sender = order.client,
+            details = order,
+            message = "New order request from ${order.client}!",
+            type = type
+        )
+
+        NotificationService.pushNotifications(
+            notification = notification,
+            onComplete = { },
+            onError = { }
+        )
+    }
 
     /**
      * Fetches orders from the database based on the provided UID.
@@ -158,7 +176,7 @@ class OrderViewModel : ViewModel() {
 
                     val orders = snapshot.children
                         .flatMap { userSnapshot -> userSnapshot.children
-                            .mapNotNull { snapshot -> parseOrderData(snapshot) }
+                            .mapNotNull { snapshot -> DataParser.parseOrderData(snapshot) }
                             .filter { order ->
                                 // This should filter orders based on the facility? ☠️
                                 val coopOrder = order.orderData.any { it.type == role.replace("Coop", "") }
@@ -190,36 +208,6 @@ class OrderViewModel : ViewModel() {
                 }
             })
         }
-    }
-
-    private fun parseOrderData(snapshot: DataSnapshot): OrderData {
-        return OrderData(
-            orderId = snapshot.child("orderId").getValue(String::class.java) ?: "",
-            orderDate = snapshot.child("orderDate").getValue(String::class.java) ?: "",
-            targetDate = snapshot.child("targetDate").getValue(String::class.java) ?: "",
-            status = snapshot.child("status").getValue(String::class.java) ?: "",
-            statusDescription = snapshot.child("statusDescription").getValue(String::class.java) ?: "",
-            orderData = snapshot.child("orderData").children
-                .mapNotNull { it.getValue(ProductData::class.java) },
-            client = snapshot.child("client").getValue(String::class.java) ?: "",
-            barangay = snapshot.child("barangay").getValue(String::class.java) ?: "",
-            street = snapshot.child("street").getValue(String::class.java) ?: "",
-            rejectionReason = snapshot.child("rejectionReason").getValue(String::class.java) ?: "",
-            fulfilledBy = snapshot.child("fulfilledBy").children
-                .mapNotNull { it.getValue(FullFilledBy::class.java) },
-            partialQuantity = snapshot.child("partialQuantity").getValue(Int::class.java) ?: 0,
-            fulfilled = snapshot.child("fulfilled").getValue(Int::class.java) ?: 0,
-            collectionMethod = snapshot.child("collectionMethod").getValue(String::class.java) ?: Constants.COLLECTION_PICKUP,
-            paymentMethod = snapshot.child("paymentMethod").getValue(String::class.java) ?: Constants.PAYMENT_CASH,
-            statusHistory = snapshot.child("statusHistory").children.mapNotNull { historySnapshot ->
-                StatusUpdate(
-                    status = historySnapshot.child("status").getValue(String::class.java) ?: "",
-                    statusDescription = historySnapshot.child("statusDescription").getValue(String::class.java) ?: "",
-                    dateTime = historySnapshot.child("dateTime").getValue(String::class.java) ?: "",
-                    updatedBy = historySnapshot.child("updatedBy").getValue(String::class.java) ?: ""
-                )
-            }
-        )
     }
 
 
@@ -265,22 +253,7 @@ class OrderViewModel : ViewModel() {
             val query = database.child(uid).push()
             query.setValue(orderWithHistory)
                 .addOnSuccessListener {
-                    viewModelScope.launch {
-                        val notification = Notification(
-                            timestamp = formattedDateTime,
-                            sender = orderWithHistory.client,
-                            details = orderWithHistory,
-                            message = "New order request from ${orderWithHistory.client}!",
-                            type = NotificationType.OrderPlaced
-                        )
-
-                        NotificationService.pushNotifications(
-                            notification = notification,
-                            onComplete = { },
-                            onError = { }
-                        )
-                    }
-
+                    viewModelScope.launch { notify(NotificationType.ClientOrderPlaced, orderWithHistory) }
                     _orderState.value = OrderState.SUCCESS
                 }
                 .addOnFailureListener { exception ->

@@ -9,48 +9,36 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
-import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.NotificationService
 import com.coco.celestia.ui.theme.*
-import com.coco.celestia.viewmodel.UserState
-import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.NotificationType
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
-import com.coco.celestia.viewmodel.model.UserData
+import com.coco.celestia.viewmodel.model.SpecialRequest
 import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -60,51 +48,6 @@ fun Notifications(
     role: String,
     navController: NavController
 ) {
-    var showDialog by remember { mutableStateOf(true) }
-
-    when {
-        role == "Admin" -> {
-            AdminNotification()
-        }
-        role == "Farmer" || role.startsWith("Coop") -> {
-            FacilityNotification(role, navController)
-        }
-//        role == "Farmer" -> {
-//            FarmerNotification()
-//        }
-        role == "Client" && showDialog -> {
-//            ClientNotification(
-//                notifications = notifications,
-//                onDismiss = {
-//                    showDialog = false
-//                    onDismiss()
-//                }
-//            )
-        }
-        else -> {
-            DefaultNotification()
-        }
-    }
-}
-
-@Composable
-fun AdminNotification() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "No notifications",
-            fontSize = 16.sp,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-    }
-}
-
-@Composable
-fun FacilityNotification(role: String, navController: NavController) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var notifications = remember { mutableStateListOf<Notification>() }
 
@@ -115,16 +58,16 @@ fun FacilityNotification(role: String, navController: NavController) {
                 notifications.clear()
                 notifications.addAll(it)
             },
-            onError = {}
+            onError = { notifications.clear() }
         )
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 3.dp)
-    ) {
-        if (notifications.isNotEmpty()) {
+    if (notifications.isNotEmpty()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 3.dp)
+        ) {
             items(sortNotificationsByTimestamp(notifications)) { notification ->
                 Card(
                     modifier = Modifier
@@ -134,9 +77,17 @@ fun FacilityNotification(role: String, navController: NavController) {
                             NotificationService.markAsRead(
                                 notification = notification,
                                 onComplete = {
-                                    when {
-                                         role.startsWith("Coop") && notification.type == NotificationType.OrderPlaced ->
-                                            navController.navigate(Screen.CoopOrderDetails.createRoute((notification.details as OrderData).orderId))
+                                    when (notification.type) {
+                                        NotificationType.ClientOrderPlaced ->
+                                            navController.navigate(
+                                                Screen.CoopOrderDetails.createRoute(
+                                                    (notification.details as OrderData).orderId)
+                                            )
+                                        NotificationType.ClientSpecialRequest ->
+                                            navController.navigate(
+                                                Screen.AdminSpecialRequestsDetails.createRoute(
+                                                    (notification.details as SpecialRequest).specialRequestUID)
+                                            )
                                         else -> {}
                                     }
                                 },
@@ -174,7 +125,7 @@ fun FacilityNotification(role: String, navController: NavController) {
                             )
 
                             Text(
-                                text = (notification.details as OrderData).orderData[0].name,
+                                text = parseDetails(notification.details),
                                 fontSize = 14.sp,
                                 fontFamily = mintsansFontFamily,
                                 color = MaterialTheme.colorScheme.onBackground,
@@ -203,20 +154,48 @@ fun FacilityNotification(role: String, navController: NavController) {
                     }
                 }
             }
-        } else {
-            item {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "No notifications",
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
-            }
         }
+    } else {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No notifications",
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
+    }
+}
+
+private fun parseDetails(details: Any): String {
+    return when (details) {
+        is OrderData -> {
+            var str = "${details.client} ordered ${details.orderData[0].quantity} Kg of ${details.orderData[0].name}"
+            if (details.orderData.size > 1) {
+                str += ", and ${details.orderData.size - 1} more..."
+            }
+            str
+        }
+        is SpecialRequest -> details.description
+        else -> "Unknown"
+    }
+}
+
+@Composable
+fun AdminNotification() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "No notifications",
+            fontSize = 16.sp,
+            color = MaterialTheme.colorScheme.onBackground
+        )
     }
 }
 

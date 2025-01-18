@@ -5,7 +5,6 @@ import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlin.reflect.KProperty1
-import kotlin.reflect.full.memberProperties
 
 data class UserData(
     val email: String = "",
@@ -264,7 +263,10 @@ data class Notification(
 )
 
 enum class NotificationType {
-    Notice, OrderPlaced, OrderUpdated
+    Notice,
+    ClientOrderPlaced,
+    ClientSpecialRequest,
+    OrderUpdated
 }
 
 data class CalendarUIState(
