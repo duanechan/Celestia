@@ -63,6 +63,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
@@ -75,6 +76,7 @@ import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.SpecialRequest
+import com.coco.celestia.viewmodel.model.TrackRecord
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -343,9 +345,15 @@ fun DisplayRequestDetails (
     val dateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy")
     val date = dateTime.format(dateFormatter)
 
+    val currentDateTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
+    val formattedDateTime = currentDateTime.format(formatter)
+
     var checked by remember { mutableStateOf(true) }
     var updateStatusDialog by remember { mutableStateOf(false) }
     var description by remember { mutableStateOf("") }
+
+    val trackRecord = remember { mutableStateListOf(*specialRequest?.trackRecord!!.toTypedArray()) }
 
     Column (
         modifier = Modifier
@@ -552,6 +560,17 @@ fun DisplayRequestDetails (
             DisplayUpdateStatus(
                 product = product,
                 onConfirm = { status ->
+                    specialRequest.assignedMember.map { member ->
+                        if (member.email == farmerEmail) {
+                            val addTrack = TrackRecord(
+                                description = "Farmer ${member.name} status: $status",
+                                dateTime = formattedDateTime
+                            )
+
+                            trackRecord.add(addTrack)
+                        }
+                    }
+
                     specialRequestViewModel.updateSpecialRequest(
                         specialRequest.copy(
                             assignedMember = specialRequest.assignedMember.map { member ->
@@ -560,9 +579,11 @@ fun DisplayRequestDetails (
                                 } else {
                                     member
                                 }
-                            }
+                            },
+                            trackRecord = trackRecord
                         )
                     )
+
 
                     updateStatusDialog = false
                 },
@@ -581,8 +602,7 @@ fun DisplayUpdateStatus (
     var status by remember { mutableStateOf("") }
     var statusExpanded by remember { mutableStateOf(false) }
     val statusList = listOf("Planting","Planted", "Growing", "Ready to Harvest", "Harvesting",
-        "Harvested", "Picked Up by Coop", "Calamity-Affected", "Completed",
-        "Test", " Test", "Test")
+        "Harvested", "Picked Up by Coop", "Calamity-Affected", "Completed")
 
 
     AlertDialog(

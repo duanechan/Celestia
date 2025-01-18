@@ -335,6 +335,16 @@ fun SpecialRequestDetails(
                 updateEmail = updateStatusEmail
                 updateStatus = status
 
+                request.assignedMember.map { member ->
+                    if (member.email == updateEmail) {
+                        val addRecord = TrackRecord(
+                            description = "Farmer ${member.name} status: $updateStatus",
+                            dateTime = formattedDateTime
+                        )
+
+                        trackRecord.add(addRecord)
+                    }
+                }
                 specialRequestViewModel.updateSpecialRequest(
                     request.copy(
                             assignedMember = request.assignedMember.map { member ->
@@ -343,7 +353,8 @@ fun SpecialRequestDetails(
                                 } else {
                                     member
                                 }
-                            }
+                            },
+                            trackRecord = trackRecord
                         )
                 )
                 updateStatusDialog = false
