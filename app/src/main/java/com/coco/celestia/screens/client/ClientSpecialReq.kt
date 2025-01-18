@@ -3,6 +3,7 @@
 package com.coco.celestia.screens.client
 
 import android.app.DatePickerDialog
+import android.net.Uri
 import android.widget.DatePicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,6 +24,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Search
@@ -36,6 +39,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.ScrollableTabRow
@@ -71,8 +75,8 @@ import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.VegetableViewModel
 import com.coco.celestia.viewmodel.model.Constants
-import com.coco.celestia.viewmodel.model.OrderData
-import com.coco.celestia.viewmodel.model.ProductData
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.material.icons.filled.Close
 import com.coco.celestia.viewmodel.model.ProductReq
 import com.coco.celestia.viewmodel.model.ProductReqValidation
 import com.coco.celestia.viewmodel.model.SpecialRequest
@@ -372,6 +376,9 @@ fun AddSpecialReq(
     val productEmpty = remember { mutableStateListOf(ProductReqValidation()) }
     var collectionMethodEmpty by remember { mutableStateOf(false) }
 
+    var selectedFiles by remember { mutableStateOf<List<Uri>>(emptyList()) }
+
+
     LaunchedEffect(Unit) {
         vegetableViewModel.fetchVegetables()
         userViewModel.fetchUser(uid)
@@ -642,6 +649,93 @@ fun AddSpecialReq(
                 .fillMaxWidth()
                 .padding(vertical = 4.dp)
         )
+
+        Text(
+            text = "Attachments",
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            colors = CardDefaults.cardColors(containerColor = White1),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                // Show selected files
+                selectedFiles.forEach { uri ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowForward,
+                                contentDescription = "File",
+                                tint = Green1
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = uri.lastPathSegment ?: "File",
+                                color = Green1,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        IconButton(
+                            onClick = {
+                                selectedFiles = selectedFiles.filter { it != uri }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Remove file",
+                                tint = Green1
+                            )
+                        }
+                    }
+                }
+
+                // Add file button
+                Button(
+                    onClick = {
+                        // Launch file picker
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Green4,
+                        contentColor = Green1
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Attach file"
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Attach Files")
+                    }
+                }
+            }
+        }
 
         Button(
             onClick = {
