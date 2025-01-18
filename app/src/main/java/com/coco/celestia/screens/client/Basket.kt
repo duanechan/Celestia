@@ -150,6 +150,12 @@ fun Basket(
     var removingItem by remember { mutableStateOf(BasketItem()) }
     var deleteModal by remember { mutableStateOf(false) }
 
+    val aggregatedItems = items.groupBy { it.productId }.map { (productId, itemList) ->
+        val totalQuantity = itemList.sumOf { it.quantity }
+        val totalPrice = itemList.sumOf { it.price }
+        itemList.first().copy(quantity = totalQuantity, price = totalPrice)
+    }
+
     LaunchedEffect(Unit) {
         productViewModel.fetchProducts(
             filter = items.joinToString(", ") { it.productId },
@@ -162,7 +168,7 @@ fun Basket(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        for (item in items) {
+        for (item in aggregatedItems) {
             //facility card added
             Card(
                 modifier = Modifier
