@@ -8,7 +8,6 @@ import com.coco.celestia.service.NotificationService
 import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.NotificationType
 import com.coco.celestia.viewmodel.model.SpecialRequest
-import com.coco.celestia.viewmodel.model.StatusUpdate
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -163,8 +162,7 @@ class SpecialRequestViewModel : ViewModel() {
 
     fun fetchAssignedProducts(
         farmerEmail: String,
-        statusFilter: String,
-        status: String
+        statusFilter: String
     ) {
         viewModelScope.launch {
             database.addListenerForSingleValueEvent(object : ValueEventListener {
