@@ -4,7 +4,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.PurchaseOrder
+import com.coco.celestia.viewmodel.model.PurchaseOrderItem
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -26,6 +28,7 @@ sealed class PurchaseOrderState {
 
 class PurchaseOrderViewModel : ViewModel() {
     private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("purchase_orders")
+    private val productsRef: DatabaseReference = FirebaseDatabase.getInstance().getReference("products")
     private val _purchaseOrderData = MutableLiveData<List<PurchaseOrder>>()
     private val _purchaseOrderState = MutableLiveData<PurchaseOrderState>()
     val InputDate: LiveData<List<PurchaseOrder>> = _purchaseOrderData
@@ -148,10 +151,27 @@ class PurchaseOrderViewModel : ViewModel() {
                     purchaseOrder
                 }
 
-                database.child(finalPurchaseOrder.purchaseNumber)
-                    .setValue(finalPurchaseOrder)
-                    .addOnSuccessListener { onSuccess() }
-                    .addOnFailureListener { onError(it.message ?: "Error saving purchase order") }
+                if (!finalPurchaseOrder.savedAsDraft) {
+                    updateProductQuantities(
+                        finalPurchaseOrder.items,
+                        onSuccess = {
+                            database.child(finalPurchaseOrder.purchaseNumber)
+                                .setValue(finalPurchaseOrder)
+                                .addOnSuccessListener { onSuccess() }
+                                .addOnFailureListener { error ->
+                                    onError(error.message ?: "Error saving purchase order")
+                                }
+                        },
+                        onError = { error -> onError(error) }
+                    )
+                } else {
+                    database.child(finalPurchaseOrder.purchaseNumber)
+                        .setValue(finalPurchaseOrder)
+                        .addOnSuccessListener { onSuccess() }
+                        .addOnFailureListener { error ->
+                            onError(error.message ?: "Error saving purchase order")
+                        }
+                }
             } catch (e: Exception) {
                 onError(e.message ?: "Error processing purchase order")
             }
@@ -165,41 +185,63 @@ class PurchaseOrderViewModel : ViewModel() {
         }
     }
 
-    fun updatePurchaseOrderStatus(
-        purchaseOrderNumber: String,
-        newStatus: String,
+    private fun updateProductQuantities(
+        items: List<PurchaseOrderItem>,
         onSuccess: () -> Unit,
-        onError: (String) -> Unit = {}
+        onError: (String) -> Unit
     ) {
-        viewModelScope.launch {
-            try {
-                database.orderByChild("purchaseNumber")
-                    .equalTo(purchaseOrderNumber)
-                    .addListenerForSingleValueEvent(object : ValueEventListener {
-                        override fun onDataChange(snapshot: DataSnapshot) {
-                            val purchaseOrderSnapshot = snapshot.children.firstOrNull()
-                            if (purchaseOrderSnapshot != null) {
-                                val purchaseOrder = purchaseOrderSnapshot.getValue(PurchaseOrder::class.java)
-                                purchaseOrder?.let {
-                                    val updatedOrder = it.copy(status = newStatus)
-                                    database.child(purchaseOrderSnapshot.key!!)
-                                        .setValue(updatedOrder)
-                                        .addOnSuccessListener { onSuccess() }
-                                        .addOnFailureListener { error ->
-                                            onError(error.message ?: "Error updating purchase order status")
-                                        }
-                                }
-                            } else {
-                                onError("Purchase order not found")
-                            }
-                        }
+        if (items.isEmpty()) {
+            onSuccess()
+            return
+        }
 
-                        override fun onCancelled(error: DatabaseError) {
-                            onError(error.message)
+        var completedUpdates = 0
+        var hasError = false
+
+        items.forEach { item ->
+            val productRef = productsRef.child(item.productId)
+
+            productRef.get().addOnSuccessListener { snapshot ->
+                if (hasError) return@addOnSuccessListener
+
+                if (!snapshot.exists()) {
+                    hasError = true
+                    onError("Product with ID ${item.productId} not found")
+                    return@addOnSuccessListener
+                }
+
+                val product = snapshot.getValue(ProductData::class.java)
+                if (product == null) {
+                    hasError = true
+                    onError("Invalid data for product ${item.productId}")
+                    return@addOnSuccessListener
+                }
+
+                val newQuantity = product.quantity + item.quantity
+                val newTotalPurchases = product.totalPurchases + item.quantity
+                val updates = hashMapOf<String, Any>(
+                    "quantity" to newQuantity,
+                    "totalPurchases" to newTotalPurchases
+                )
+
+                productRef.updateChildren(updates)
+                    .addOnSuccessListener {
+                        completedUpdates++
+                        if (completedUpdates == items.size && !hasError) {
+                            onSuccess()
                         }
-                    })
-            } catch (e: Exception) {
-                onError(e.message ?: "Error updating purchase order status")
+                    }
+                    .addOnFailureListener { error ->
+                        if (!hasError) {
+                            hasError = true
+                            onError("Failed to update product ${item.itemName}: ${error.message}")
+                        }
+                    }
+            }.addOnFailureListener { error ->
+                if (!hasError) {
+                    hasError = true
+                    onError("Failed to fetch product ${item.itemName}: ${error.message}")
+                }
             }
         }
     }

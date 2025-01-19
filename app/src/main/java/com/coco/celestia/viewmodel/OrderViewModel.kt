@@ -40,6 +40,7 @@ sealed class MostOrderedState {
 
 class OrderViewModel : ViewModel() {
     private val database: DatabaseReference = FirebaseDatabase.getInstance().getReference("orders")
+    private val productsRef: DatabaseReference = FirebaseDatabase.getInstance().getReference("products")
     private val _orderData = MutableLiveData<List<OrderData>>()
     private val _mostOrderedData = MutableLiveData<List<MostOrdered>>()
     private val _orderState = MutableLiveData<OrderState>()
@@ -76,10 +77,7 @@ class OrderViewModel : ViewModel() {
      * @param filter The filter criteria to apply to the orders (e.g., "Packed coffee, Green beans").
      * @throws DatabaseError If there is an error fetching the orders.
      */
-    fun fetchOrders(
-        uid: String,
-        filter: String,
-    ) {
+    fun fetchOrders(uid: String, filter: String) {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
             database.child(uid).addValueEventListener(object : ValueEventListener {
@@ -95,6 +93,8 @@ class OrderViewModel : ViewModel() {
                                 }
                             }
                         }
+                        .sortedByDescending { it.timestamp }
+
                     _orderData.value = orders
                     _orderState.value =
                         if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS
@@ -164,10 +164,7 @@ class OrderViewModel : ViewModel() {
      * @param role The role of the user (e.g., "Coop", "Farmer", "Admin").
      * @throws DatabaseError If there is an error fetching the orders
      */
-    fun fetchAllOrders(
-        filter: String,
-        role: String
-    ) {
+    fun fetchAllOrders(filter: String, role: String) {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
             database.addValueEventListener(object : ValueEventListener {
@@ -175,28 +172,32 @@ class OrderViewModel : ViewModel() {
                     val filterKeywords = filter.split(",").map { it.trim() }
 
                     val orders = snapshot.children
-                        .flatMap { userSnapshot -> userSnapshot.children
-                            .mapNotNull { snapshot -> DataParser.parseOrderData(snapshot) }
-                            .filter { order ->
-                                // This should filter orders based on the facility? ☠️
-                                val coopOrder = order.orderData.any { it.type == role.replace("Coop", "") }
-                                val matchesFilter = filterKeywords.any { keyword ->
-                                    order::class.memberProperties.any { property ->
-                                        val value = property.getter.call(order)?.toString() ?: ""
-                                        value.contains(keyword, ignoreCase = true)
+                        .flatMap { userSnapshot ->
+                            userSnapshot.children
+                                .mapNotNull { snapshot -> DataParser.parseOrderData(snapshot) }
+                                .filter { order ->
+                                    val coopOrder = order.orderData.any {
+                                        it.type == role.replace("Coop", "")
+                                    }
+                                    val matchesFilter = filterKeywords.any { keyword ->
+                                        order::class.memberProperties.any { property ->
+                                            val value = property.getter.call(order)?.toString() ?: ""
+                                            value.contains(keyword, ignoreCase = true)
+                                        }
+                                    }
+                                    val removeCancelReject =
+                                        (order.status != "CANCELLED" && order.status != "REJECTED")
+                                    when {
+                                        role.startsWith("Coop") ->
+                                            coopOrder && matchesFilter && removeCancelReject
+                                        role == "Admin" -> coopOrder && matchesFilter
+                                        role == "Farmer" -> matchesFilter
+                                        role == "Client" -> matchesFilter
+                                        else -> matchesFilter
                                     }
                                 }
-                                val removeCancelReject =
-                                    (order.status != "CANCELLED" && order.status != "REJECTED")
-                                when {
-                                    role.startsWith("Coop") -> coopOrder && matchesFilter && removeCancelReject
-                                    role == "Admin" -> coopOrder && matchesFilter
-                                    role == "Farmer" -> matchesFilter
-                                    role == "Client" -> matchesFilter
-                                    else -> matchesFilter
-                                }
-                            }
                         }
+                        .sortedByDescending { it.timestamp }
 
                     _orderData.value = orders
                     _orderState.value =
@@ -209,7 +210,6 @@ class OrderViewModel : ViewModel() {
             })
         }
     }
-
 
     /**
      * Places an order in the database based on the provided UID.
@@ -224,8 +224,12 @@ class OrderViewModel : ViewModel() {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
 
-            val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
-            val formattedDateTime = LocalDateTime.now().format(formatter)
+            val displayFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
+            val timestampFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+            val currentDateTime = LocalDateTime.now()
+
+            val formattedDisplayDate = currentDateTime.format(displayFormatter)
+            val timestamp = currentDateTime.format(timestampFormatter)
 
             val statusDescription = when(order.status) {
                 "Pending" -> "Your order is being reviewed"
@@ -241,19 +245,23 @@ class OrderViewModel : ViewModel() {
             val initialStatus = StatusUpdate(
                 status = order.status,
                 statusDescription = statusDescription,
-                dateTime = formattedDateTime,
+                dateTime = formattedDisplayDate,
                 updatedBy = ""
             )
 
-            val orderWithHistory = order.copy(
+            val orderWithTimestamp = order.copy(
+                orderDate = formattedDisplayDate,
+                timestamp = timestamp,
                 statusDescription = statusDescription,
                 statusHistory = listOf(initialStatus)
             )
 
             val query = database.child(uid).push()
-            query.setValue(orderWithHistory)
+            query.setValue(orderWithTimestamp)
                 .addOnSuccessListener {
-                    viewModelScope.launch { notify(NotificationType.ClientOrderPlaced, orderWithHistory) }
+                    viewModelScope.launch {
+                        notify(NotificationType.ClientOrderPlaced, orderWithTimestamp)
+                    }
                     _orderState.value = OrderState.SUCCESS
                 }
                 .addOnFailureListener { exception ->
@@ -306,6 +314,11 @@ class OrderViewModel : ViewModel() {
 
                                     order.ref.setValue(orderWithHistory)
                                         .addOnSuccessListener {
+                                            if (updatedOrderData.status == "Completed") {
+                                                viewModelScope.launch {
+                                                    updateProductStock(updatedOrderData.orderData)
+                                                }
+                                            }
                                             _orderState.value = OrderState.SUCCESS
                                         }
                                         .addOnFailureListener { exception ->
@@ -324,6 +337,43 @@ class OrderViewModel : ViewModel() {
                     _orderState.value = OrderState.ERROR(error.message)
                 }
             })
+        }
+    }
+
+    private fun updateProductStock(orderData: List<ProductData>) {
+        try {
+            orderData.forEach { product ->
+                productsRef.child(product.productId)
+                    .get()
+                    .addOnSuccessListener { snapshot ->
+                        if (snapshot.exists()) {
+                            val currentProduct = snapshot.getValue(ProductData::class.java)
+                            currentProduct?.let {
+                                val newQuantity = it.quantity - product.quantity
+                                val newTotalQuantitySold = it.totalQuantitySold + product.quantity
+                                val updates = hashMapOf<String, Any>(
+                                    "quantity" to newQuantity,
+                                    "totalQuantitySold" to newTotalQuantitySold
+                                )
+
+                                productsRef.child(product.productId)
+                                    .updateChildren(updates)
+                                    .addOnFailureListener { error ->
+                                        _orderState.value = OrderState.ERROR(
+                                            "Failed to update product ${product.name}: ${error.message}"
+                                        )
+                                    }
+                            }
+                        }
+                    }
+                    .addOnFailureListener { error ->
+                        _orderState.value = OrderState.ERROR(
+                            "Failed to fetch product ${product.name}: ${error.message}"
+                        )
+                    }
+            }
+        } catch (e: Exception) {
+            _orderState.value = OrderState.ERROR(e.message ?: "Failed to update product quantities")
         }
     }
 

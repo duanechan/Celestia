@@ -482,31 +482,42 @@ fun OrderStatus(
         "Completed"
     )
 
-    val currentIndex = allStatuses.indexOf(status)
+    val currentIndex = allStatuses.indexOfFirst { it.equals(status, ignoreCase = true) }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-
         allStatuses.forEachIndexed { index, currentStatus ->
             val isCurrent = index == currentIndex
             val isPast = index < currentIndex
-            val showInfo = isCurrent || isPast
+
+            val statusUpdate = when {
+                isCurrent -> {
+                    statusHistory.findLast { it.status.equals(currentStatus, ignoreCase = true) }
+                        ?: StatusUpdate(
+                            status = status,
+                            statusDescription = statusDescription,
+                            dateTime = dateTime,
+                            updatedBy = ""
+                        )
+                }
+                isPast -> statusHistory.findLast {
+                    it.status.equals(currentStatus, ignoreCase = true)
+                }
+                else -> null
+            }
 
             if (isCurrent || isPast) {
-                val statusUpdate = if (isCurrent) {
-                    StatusUpdate(status, statusDescription, dateTime)
-                } else {
-                    statusHistory.find { it.status == currentStatus }
-                }
-
                 TimelineStep(
                     status = currentStatus,
-                    statusDescription = statusUpdate?.statusDescription ?: "",
-                    dateTime = statusUpdate?.dateTime ?: "",
-                    showInfo = showInfo,
+                    statusDescription = when {
+                        isCurrent && statusUpdate?.statusDescription.isNullOrBlank() -> statusDescription
+                        else -> statusUpdate?.statusDescription ?: ""
+                    },
+                    dateTime = statusUpdate?.dateTime ?: dateTime,
+                    showInfo = true,
                     isCurrent = isCurrent,
                     isCompleted = isPast,
                     showLine = index < allStatuses.lastIndex
@@ -526,6 +537,7 @@ private fun TimelineStep(
     isCompleted: Boolean,
     showLine: Boolean
 ) {
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -538,7 +550,6 @@ private fun TimelineStep(
                 .wrapContentHeight()
                 .width(24.dp)
         ) {
-            // Status dot
             Box(
                 modifier = Modifier
                     .size(12.dp)
@@ -560,12 +571,8 @@ private fun TimelineStep(
                 }
             }
 
-            // Connecting line
             if (showLine) {
-                Spacer(
-                    modifier = Modifier
-                        .height(4.dp)
-                )
+                Spacer(modifier = Modifier.height(4.dp))
                 Box(
                     modifier = Modifier
                         .width(2.dp)
@@ -580,7 +587,6 @@ private fun TimelineStep(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // Status details
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -595,7 +601,7 @@ private fun TimelineStep(
                 }
             )
 
-            if (showInfo && statusDescription.isNotEmpty()) {
+            if (showInfo && statusDescription.isNotBlank()) {
                 Text(
                     text = statusDescription,
                     style = MaterialTheme.typography.bodyMedium,
@@ -603,7 +609,7 @@ private fun TimelineStep(
                 )
             }
 
-            if (showInfo && dateTime.isNotEmpty()) {
+            if (showInfo && dateTime.isNotBlank()) {
                 Text(
                     text = dateTime,
                     style = MaterialTheme.typography.bodySmall,
@@ -691,20 +697,17 @@ fun UpdateStatusCard(
                             text = { Text(option) },
                             onClick = {
                                 statusValue = option
-                                // Only update description if it hasn't been manually edited
                                 if (!isEditingDescription) {
                                     statusDescriptionValue = statusOptions[option] ?: ""
                                 }
                                 expanded = false
 
-                                // Create new status update
                                 val newUpdate = StatusUpdate(
                                     status = option,
                                     statusDescription = statusDescriptionValue,
                                     dateTime = currentDateTime
                                 )
 
-                                // Create updated history
                                 val updatedHistory = statusHistory + newUpdate
 
                                 onStatusUpdate(option, statusDescriptionValue, updatedHistory)

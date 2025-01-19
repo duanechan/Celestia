@@ -52,6 +52,7 @@ import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import com.coco.celestia.viewmodel.model.OrderItem
 
 @Composable
 fun CoopSales(
@@ -399,13 +400,6 @@ private fun SalesCard(
 
 
 // ONLINE SALES
-// TODO: Remove this data class later kapag meron na yung ordering sa retail
-data class OrderItem(
-    val status: String,
-    var totalActivities: Int
-)
-// TODO: I'll modify this kapag naayos na yung ordering sa client side
-// TODO: Pati yung Sales tab modify nalang din since currently nagpapakita yung in-store sales
 @Composable
 private fun OnlineSalesContentUI(
     navController: NavController,
@@ -417,7 +411,7 @@ private fun OnlineSalesContentUI(
     var selectedOrderStatus by remember { mutableStateOf("Pending") }
     var searchQuery by remember { mutableStateOf("") }
     var showSortDropdown by remember { mutableStateOf(false) }
-    var sortOption by remember { mutableStateOf("A-Z") }
+    var sortOption by remember { mutableStateOf("Newest First") }
 
     val tabs = listOf("Orders", "Sales")
     val statuses = listOf(
@@ -449,6 +443,7 @@ private fun OnlineSalesContentUI(
             .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
+        // Tabs
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -496,10 +491,12 @@ private fun OnlineSalesContentUI(
         // Tab Content
         when (selectedTab) {
             "Orders" -> {
+                // Update status counters
                 statuses.forEach { order ->
                     order.totalActivities = facilityOrders.count { it.status == order.status }
                 }
 
+                // Status filters
                 LazyRow(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -597,20 +594,6 @@ private fun OnlineSalesContentUI(
                             modifier = Modifier.background(White1)
                         ) {
                             DropdownMenuItem(
-                                text = { Text("A-Z") },
-                                onClick = {
-                                    sortOption = "A-Z"
-                                    showSortDropdown = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Z-A") },
-                                onClick = {
-                                    sortOption = "Z-A"
-                                    showSortDropdown = false
-                                }
-                            )
-                            DropdownMenuItem(
                                 text = { Text("Newest First") },
                                 onClick = {
                                     sortOption = "Newest First"
@@ -624,10 +607,25 @@ private fun OnlineSalesContentUI(
                                     showSortDropdown = false
                                 }
                             )
+                            DropdownMenuItem(
+                                text = { Text("A-Z") },
+                                onClick = {
+                                    sortOption = "A-Z"
+                                    showSortDropdown = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Z-A") },
+                                onClick = {
+                                    sortOption = "Z-A"
+                                    showSortDropdown = false
+                                }
+                            )
                         }
                     }
                 }
 
+                // Filter and sort orders
                 val filteredAndSortedOrders = facilityOrders
                     .filter { order ->
                         order.status == selectedOrderStatus &&
@@ -649,13 +647,9 @@ private fun OnlineSalesContentUI(
                         when (sortOption) {
                             "A-Z" -> compareBy { it.orderId }
                             "Z-A" -> compareByDescending { it.orderId }
-                            "Newest First" -> compareByDescending {
-                                LocalDate.parse(it.orderDate, DateTimeFormatter.ofPattern("MM/dd/yyyy"))
-                            }
-                            "Oldest First" -> compareBy {
-                                LocalDate.parse(it.orderDate, DateTimeFormatter.ofPattern("MM/dd/yyyy"))
-                            }
-                            else -> compareBy { it.orderId }
+                            "Newest First" -> compareByDescending { it.timestamp }
+                            "Oldest First" -> compareBy { it.timestamp }
+                            else -> compareByDescending { it.timestamp }
                         }
                     )
 
@@ -700,15 +694,14 @@ private fun OnlineSalesContentUI(
                         .padding(bottom = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Search Field
                     OutlinedTextField(
                         value = searchQuery,
-                        onValueChange = { newQuery -> searchQuery = newQuery },
+                        onValueChange = { searchQuery = it },
                         modifier = Modifier
                             .weight(1f)
                             .padding(end = 8.dp)
                             .height(48.dp),
-                        placeholder = { Text(text = "Search sales...") },
+                        placeholder = { Text("Search sales...") },
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.Search,
@@ -730,13 +723,12 @@ private fun OnlineSalesContentUI(
                         colors = OutlinedTextFieldDefaults.colors(
                             cursorColor = Green1,
                             focusedBorderColor = Green1,
-                            unfocusedBorderColor = Green1,
+                            unfocusedBorderColor = Green1
                         ),
                         shape = RoundedCornerShape(8.dp),
                         singleLine = true
                     )
 
-                    // Sort Icon Button
                     Box {
                         IconButton(
                             onClick = { showSortDropdown = !showSortDropdown },
@@ -759,44 +751,16 @@ private fun OnlineSalesContentUI(
                             modifier = Modifier.background(White1)
                         ) {
                             DropdownMenuItem(
-                                text = { Text("A-Z") },
+                                text = { Text("Newest First") },
                                 onClick = {
-                                    sortOption = "A-Z"
+                                    sortOption = "Newest First"
                                     showSortDropdown = false
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Z-A") },
+                                text = { Text("Oldest First") },
                                 onClick = {
-                                    sortOption = "Z-A"
-                                    showSortDropdown = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("By Year") },
-                                onClick = {
-                                    sortOption = "By Year"
-                                    showSortDropdown = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("By Month") },
-                                onClick = {
-                                    sortOption = "By Month"
-                                    showSortDropdown = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("By Week") },
-                                onClick = {
-                                    sortOption = "By Week"
-                                    showSortDropdown = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("By Day") },
-                                onClick = {
-                                    sortOption = "By Day"
+                                    sortOption = "Oldest First"
                                     showSortDropdown = false
                                 }
                             )
@@ -830,10 +794,15 @@ private fun OnlineSalesContentUI(
                         }
                     }
                     OrderState.SUCCESS -> {
-                        // Filter completed orders
-                        val completedOrders = facilityOrders.filter { order ->
-                            order.status == "Completed"
-                        }
+                        val completedOrders = facilityOrders
+                            .filter { order -> order.status == "Completed" }
+                            .sortedWith(
+                                when (sortOption) {
+                                    "Newest First" -> compareByDescending { it.timestamp }
+                                    "Oldest First" -> compareBy { it.timestamp }
+                                    else -> compareByDescending { it.timestamp }
+                                }
+                            )
 
                         if (completedOrders.isEmpty()) {
                             Box(
@@ -848,9 +817,7 @@ private fun OnlineSalesContentUI(
                             }
                         } else {
                             OrdersCard(
-                                filteredOrders = completedOrders.sortedByDescending {
-                                    LocalDate.parse(it.orderDate, DateTimeFormatter.ofPattern("MM/dd/yyyy"))
-                                },
+                                filteredOrders = completedOrders,
                                 navController = navController
                             )
                         }

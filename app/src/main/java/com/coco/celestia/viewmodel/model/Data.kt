@@ -44,10 +44,10 @@ data class StatusUpdate(
     val updatedBy: String = "" // Optional: track who made the update
 )
 
-// Modify OrderData to include status history
 data class OrderData(
     val orderId: String = "",
     val orderDate: String = "",
+    val timestamp: String = "",
     val targetDate: String = "",
     val status: String = "",
     val statusDescription: String = "",
@@ -61,7 +61,7 @@ data class OrderData(
     val fulfilled: Int = 0,
     val collectionMethod: String = "",
     val paymentMethod: String = "",
-    val statusHistory: List<StatusUpdate> = emptyList() // Add this field
+    val statusHistory: List<StatusUpdate> = emptyList()
 )
 
 @Serializable
@@ -312,4 +312,9 @@ data class CarouselItem(
     val title: String,
     val subtitle: String,
     val price: String
+)
+
+data class OrderItem(
+    val status: String,
+    var totalActivities: Int
 )

@@ -9,6 +9,7 @@ import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.ProductReq
 import com.coco.celestia.viewmodel.model.SpecialRequest
+import com.coco.celestia.viewmodel.model.StatusUpdate
 import com.coco.celestia.viewmodel.model.TrackRecord
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.database.DataSnapshot
@@ -31,19 +32,23 @@ object DataParser {
             registrationDate = snapshot.child("registrationDate").getValue(String::class.java) ?: ""
         )
     }
-    
+
     fun parseOrderData(snapshot: DataSnapshot): OrderData {
         return OrderData(
             orderId = snapshot.child("orderId").getValue(String::class.java) ?: "",
             orderDate = snapshot.child("orderDate").getValue(String::class.java) ?: "",
+            timestamp = snapshot.child("timestamp").getValue(String::class.java) ?: "",
             targetDate = snapshot.child("targetDate").getValue(String::class.java) ?: "",
             status = snapshot.child("status").getValue(String::class.java) ?: "",
+            statusDescription = snapshot.child("statusDescription").getValue(String::class.java) ?: "",
+            statusHistory = snapshot.child("statusHistory").children
+                .mapNotNull { it.getValue(StatusUpdate::class.java) },
             orderData = snapshot.child("orderData").children
                 .mapNotNull { it.getValue(ProductData::class.java) },
             client = snapshot.child("client").getValue(String::class.java) ?: "",
             barangay = snapshot.child("barangay").getValue(String::class.java) ?: "",
             street = snapshot.child("street").getValue(String::class.java) ?: "",
-            rejectionReason = snapshot.child("rejectionReason").getValue(String::class.java) ?: "",
+            rejectionReason = snapshot.child("rejectionReason").getValue(String::class.java),
             fulfilledBy = snapshot.child("fulfilledBy").children
                 .mapNotNull { it.getValue(FullFilledBy::class.java) },
             partialQuantity = snapshot.child("partialQuantity").getValue(Int::class.java) ?: 0,
