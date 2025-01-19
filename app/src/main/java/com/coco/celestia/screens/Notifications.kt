@@ -21,6 +21,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -34,22 +36,26 @@ import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.NotificationService
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.NotificationType
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.SpecialRequest
+import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun Notifications(
-    role: String,
-    navController: NavController
+    navController: NavController,
+    userViewModel: UserViewModel,
+    role: String
 ) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
     var notifications = remember { mutableStateListOf<Notification>() }
+    val user by userViewModel.userData.observeAsState(UserData())
 
     LaunchedEffect(Unit) {
         NotificationService.observeUserNotifications(
@@ -60,6 +66,7 @@ fun Notifications(
             },
             onError = { notifications.clear() }
         )
+        userViewModel.fetchUser(uid)
     }
 
     if (notifications.isNotEmpty()) {
@@ -76,22 +83,8 @@ fun Notifications(
                         .clickable {
                             NotificationService.markAsRead(
                                 notification = notification,
-                                onComplete = {
-                                    when (notification.type) {
-                                        NotificationType.ClientOrderPlaced ->
-                                            navController.navigate(
-                                                Screen.CoopOrderDetails.createRoute(
-                                                    (notification.details as OrderData).orderId)
-                                            )
-                                        NotificationType.ClientSpecialRequest ->
-                                            navController.navigate(
-                                                Screen.AdminSpecialRequestsDetails.createRoute(
-                                                    (notification.details as SpecialRequest).specialRequestUID)
-                                            )
-                                        else -> {}
-                                    }
-                                },
-                                onError = { /* Action for failing to read notification */ }
+                                onComplete = { navigateTo(navController, user, role, notification) },
+                                onError = { }
                             )
                         },
                     shape = RoundedCornerShape(10.dp)
@@ -125,7 +118,7 @@ fun Notifications(
                             )
 
                             Text(
-                                text = parseDetails(notification.details),
+                                text = parseDetails(notification),
                                 fontSize = 14.sp,
                                 fontFamily = mintsansFontFamily,
                                 color = MaterialTheme.colorScheme.onBackground,
@@ -169,8 +162,67 @@ fun Notifications(
     }
 }
 
-private fun parseDetails(details: Any): String {
-    return when (details) {
+private fun navigateTo(
+    navController: NavController,
+    user: UserData,
+    role: String,
+    notification: Notification
+) {
+    when (notification.type) {
+        NotificationType.ClientOrderPlaced -> {
+            navController.navigate(
+                Screen.CoopOrderDetails.createRoute(
+                    (notification.details as OrderData).orderId
+                )
+            )
+        }
+        NotificationType.CoopSpecialRequestUpdated -> {
+            notification.details as SpecialRequest
+            when (role) {
+                "Farmer" -> {
+                    val farmer = notification.details.assignedMember
+                        .find { it.email == user.email }
+                    navController.navigate(
+                        Screen.FarmerRequestCardDetails.createRoute(
+                            notification.details.specialRequestUID,
+                            farmer?.email.toString(),
+                            farmer?.product.toString()
+                        )
+                    )
+                }
+                "Client" -> {
+                    navController.navigate(
+                        Screen.ClientSpecialReqDetails.createRoute(
+                            notification.details.specialRequestUID
+                        )
+                    )
+                }
+                "Admin" -> {
+                    navController.navigate(
+                        Screen.AdminSpecialRequestsDetails.createRoute(
+                            notification.details.specialRequestUID
+                        )
+                    )
+                }
+                else -> {
+
+                }
+            }
+        }
+        NotificationType.ClientSpecialRequest -> {
+            navController.navigate(
+                Screen.AdminSpecialRequestsDetails.createRoute(
+                    (notification.details as SpecialRequest).specialRequestUID
+                )
+            )
+        }
+
+        else -> {}
+    }
+}
+
+private fun parseDetails(notification: Notification): String {
+    return when (val details = notification.details) {
         is OrderData -> {
             var str = "${details.client} ordered ${details.orderData[0].quantity} Kg of ${details.orderData[0].name}"
             if (details.orderData.size > 1) {
@@ -178,7 +230,31 @@ private fun parseDetails(details: Any): String {
             }
             str
         }
-        is SpecialRequest -> details.description
+        is SpecialRequest -> {
+            when (notification.type) {
+                NotificationType.ClientSpecialRequest -> {
+                    "From ${details.name}: ${details.description}"
+                }
+                NotificationType.CoopSpecialRequestUpdated -> {
+                    when {
+                        notification.message.contains("accepted", ignoreCase = true) -> {
+                            "Please wait for further updates."
+                        }
+                        notification.message.contains("assigned", ignoreCase = true) -> {
+                            "View Special Request ${details.specialRequestUID}"
+                        }
+                        notification.message.contains("update", ignoreCase = true) -> {
+                            "${(notification.details as SpecialRequest).trackRecord
+                                .maxByOrNull { it.dateTime }?.description}"
+                        }
+                        else -> "Unknown"
+                    }
+                }
+                else -> {
+                    "Test1"
+                }
+            }
+        }
         else -> "Unknown"
     }
 }

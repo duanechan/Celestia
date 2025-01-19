@@ -8,6 +8,8 @@ import com.coco.celestia.service.NotificationService
 import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.NotificationType
 import com.coco.celestia.viewmodel.model.SpecialRequest
+import com.coco.celestia.viewmodel.model.StatusUpdate
+import com.coco.celestia.viewmodel.model.TrackRecord
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -39,7 +41,13 @@ class SpecialRequestViewModel : ViewModel() {
             timestamp = formattedDateTime,
             sender = specialReq.name,
             details = specialReq,
-            message = "Special request from ${specialReq.name}: ${specialReq.subject}",
+            message = when (type) {
+                NotificationType.ClientSpecialRequest -> "Special request from ${specialReq.name}: ${specialReq.subject}"
+                NotificationType.CoopSpecialRequestUpdated -> formatUpdateMessage(specialReq.trackRecord)
+                NotificationType.ClientOrderPlaced,
+                NotificationType.OrderUpdated,
+                NotificationType.Notice -> "Coco"
+            },
             type = type
         )
 
@@ -48,6 +56,16 @@ class SpecialRequestViewModel : ViewModel() {
             onComplete = { },
             onError = { }
         )
+    }
+
+    private fun formatUpdateMessage(trackRecord: List<TrackRecord>): String {
+        val description = trackRecord.maxByOrNull { it.dateTime }?.description.toString()
+        return when {
+            description.contains("accepted", ignoreCase = true) -> "Your special request has been accepted!"
+            description.contains("assigned", ignoreCase = true) -> "You have been assigned to a special request!"
+            description.contains("status", ignoreCase = true) -> "Special Request Update"
+            else -> "Unknown"
+        }
     }
 
     fun addSpecialRequest(
@@ -134,6 +152,7 @@ class SpecialRequestViewModel : ViewModel() {
                                 if (requestUid == specialReq.specialRequestUID) {
                                     request.ref.setValue(specialReq)
                                         .addOnSuccessListener {
+                                            viewModelScope.launch { notify(NotificationType.CoopSpecialRequestUpdated, specialReq) }
                                             _specialReqState.value = SpecialReqState.SUCCESS
                                         }
                                         .addOnFailureListener { exception ->

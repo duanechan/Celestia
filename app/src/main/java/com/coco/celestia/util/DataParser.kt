@@ -87,6 +87,7 @@ object DataParser {
         val type = when (snapshot.child("type").getValue(String::class.java) ?: "") {
             "OrderUpdated" -> NotificationType.OrderUpdated
             "ClientOrderPlaced" -> NotificationType.ClientOrderPlaced
+            "CoopSpecialRequestUpdated" -> NotificationType.CoopSpecialRequestUpdated
             "ClientSpecialRequest" -> NotificationType.ClientSpecialRequest
             else -> NotificationType.Notice
         }
@@ -94,6 +95,7 @@ object DataParser {
             NotificationType.Notice -> parseUserData(snapshot.child("details"))
             NotificationType.OrderUpdated,
             NotificationType.ClientOrderPlaced -> parseOrderData(snapshot.child("details"))
+            NotificationType.CoopSpecialRequestUpdated,
             NotificationType.ClientSpecialRequest -> parseSpecialRequest(snapshot.child("details"))
         }
 

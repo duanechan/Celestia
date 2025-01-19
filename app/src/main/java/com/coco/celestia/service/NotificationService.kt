@@ -4,6 +4,7 @@ import com.coco.celestia.util.DataParser
 import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.NotificationType
 import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.SpecialRequest
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -79,6 +80,21 @@ object NotificationService {
                             }
                             NotificationType.ClientSpecialRequest -> {
                                 it.role == "Admin"
+                            }
+
+                            NotificationType.CoopSpecialRequestUpdated -> {
+                                val description = (details as SpecialRequest).trackRecord
+                                    .maxByOrNull { date -> date.dateTime }?.description.toString()
+                                when {
+                                    description.contains("accepted", ignoreCase = true) -> it.email == details.email
+                                    description.contains("assigned", ignoreCase = true) -> {
+                                        details.assignedMember.any { member -> member.email == it.email }
+                                    }
+                                    description.contains("status", ignoreCase = true) -> {
+                                        it.role == "Admin" || details.email == it.email
+                                    }
+                                    else -> false
+                                }
                             }
                         }
                     }

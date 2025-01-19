@@ -223,8 +223,9 @@ fun NavGraph(
         composable(route = Screen.Notifications.route) {
             onNavigate("Notifications")
             Notifications(
-                role = userRole,
-                navController = navController
+                navController = navController,
+                userViewModel = userViewModel,
+                role = userRole
             )
         }
         composable(route = Screen.Farmer.route) {
@@ -433,6 +434,11 @@ fun NavGraph(
             val requestUid = it.arguments?.getString("requestUid") ?: ""
             val selectedRequest = reqData?.find { request ->
                 request.specialRequestUID == requestUid
+            }
+
+
+            if (selectedRequest == null) {
+                specialRequestViewModel.fetchSpecialRequests("", "", true)
             }
 
             selectedRequest?.let { request ->

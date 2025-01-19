@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.coco.celestia.util.DataParser
 import com.coco.celestia.viewmodel.model.ItemData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.UserData
@@ -37,7 +38,7 @@ class FarmerItemViewModel : ViewModel() {
     suspend fun fetchFarmerName(uid: String): String {
         val userSnapshot = usersDatabase.child(uid).get().await()
         return if (userSnapshot.exists()) {
-            val userData = userSnapshot.getValue(UserData::class.java)
+            val userData = DataParser.parseUserData(userSnapshot)
             userData?.let { "${it.firstname} ${it.lastname}" } ?: ""
         } else {
             ""

@@ -266,7 +266,8 @@ enum class NotificationType {
     Notice,
     ClientOrderPlaced,
     ClientSpecialRequest,
-    OrderUpdated
+    OrderUpdated,
+    CoopSpecialRequestUpdated
 }
 
 data class CalendarUIState(
