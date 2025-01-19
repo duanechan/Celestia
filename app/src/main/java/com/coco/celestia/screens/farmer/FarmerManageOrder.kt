@@ -2,6 +2,7 @@
 
 package com.coco.celestia.screens.farmer
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -208,22 +209,14 @@ fun FarmerManageOrder(
                         "Planting", "Planted", "Growing",
                         "Ready to Harvest", "Harvesting", "Harvested", "Picked up by Coop"
                     )
-                    val statusColors = mapOf(
-                        "Planting" to GreenShade1,
-                        "Planted" to GreenShade2,
-                        "Growing" to GreenShade3,
-                        "Ready to Harvest" to GreenShade4,
-                        "Harvesting" to GreenShade5,
-                        "Harvested" to GreenShade6,
-                        "Picked up by Coop" to GreenShade7
-                    )
+
                     statuses.forEach { status ->
                         Button(
                             onClick = {
                                 farmerStatus = if (farmerStatus == status) "" else status
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = statusColors[status] ?: Green1,
+                                containerColor = if (farmerStatus == status) GreenShade7 else GreenShade4,
                                 contentColor = if (farmerStatus == status) Color.White else DarkGreen
                             )
                         ) {
@@ -275,6 +268,38 @@ fun DisplayRequestCard(
     farmerEmail: String
 ) {
     val assignedMember = specialRequest.assignedMember.find { it.email == farmerEmail }
+    val status = assignedMember?.status ?: ""
+    val normalizedStatus = status.uppercase()
+
+    val backgroundColor = when (normalizedStatus) {
+        "PLANTING" -> Tangerine
+        "PLANTED" -> DeepTangerine
+        "GROWING" -> BrownTangerine
+        "READY TO HARVEST" -> Brown2
+        "HARVESTING" -> Brown3
+        "HARVESTED" -> Brown1
+        "PICKED UP BY COOP" -> Green
+        "COMPLETED" -> SageGreen.copy(alpha = 0.7f)
+        "CALAMITY AFFECTED" -> SolidRed
+        "CANCELLED" -> Copper3
+        else -> {
+            Color.Gray
+        }
+    }
+
+    val iconPainter: Painter? = when (normalizedStatus) {
+        "PLANTING" -> painterResource(id = R.drawable.plant_hand)
+        "PLANTED" -> painterResource(id = R.drawable.plant)
+        "GROWING" -> painterResource(id = R.drawable.planting)
+        "READY TO HARVEST" -> painterResource(id = R.drawable.harvest)
+        "HARVESTING" -> painterResource(id = R.drawable.harvest_basket)
+        "HARVESTED" -> painterResource(id = R.drawable.harvested)
+        "PICKED UP BY COOP" -> painterResource(id = R.drawable.deliveryicon)
+        "COMPLETED" -> painterResource(id = R.drawable.received)
+        "CANCELLED" -> painterResource(id = R.drawable.cancelled)
+        "CALAMITY AFFECTED" -> painterResource(id = R.drawable.calamity)
+        else -> null
+    }
 
     Card(
         colors = CardDefaults.cardColors(
@@ -304,12 +329,35 @@ fun DisplayRequestCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            if (status.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .background(backgroundColor, shape = RoundedCornerShape(16.dp))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (iconPainter != null) {
+                            Icon(
+                                painter = iconPainter,
+                                contentDescription = status,
+                                modifier = Modifier.size(24.dp),
+                                tint = Cocoa
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = status.replace("_", " "),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Cocoa
+                        )
+                    }
+                }
+            }
             Text(
-                text = assignedMember?.status ?: "",
-                color = Green2
-            )
-            Text(
-                text = specialRequest.products.joinToString(", ") { it.name }, //changed subject to products
+                text = specialRequest.products.joinToString(", ") { it.name },
                 fontSize = 24.sp,
                 color = Green1
             )
