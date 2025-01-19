@@ -129,7 +129,15 @@ fun FarmerDashboard(
 //                                modifier = Modifier.padding(start = 8.dp)
 //                            ){}
                 }
-                FarmerOrderOverview(orders = orderData)
+                FarmerOrderOverview(
+                    orders = assignedProducts?.map { assigned ->
+                        OrderData(
+                            orderId = assigned.specialRequestUID,
+                            client = assigned.name,
+                            status = assigned.assignedMember.firstOrNull { it.email == farmerData?.email }?.status ?: "UNKNOWN"
+                        )
+                    } ?: emptyList()
+                )
             }
         }
 
@@ -147,7 +155,7 @@ fun FarmerDashboard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Pending Order Requests",
+                        text = "Recent Order Requests",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = DarkGreen
@@ -184,18 +192,27 @@ fun FarmerDashboard(
 
 @Composable
 fun FarmerOrderOverview(orders: List<OrderData>) {
-    val statuses = listOf("Pending", "In Progress", "Accepted", "Rejected", "Calamity Affected", "Cancelled")
+    val statuses = listOf(
+        "PLANTING", "PLANTED", "GROWING", "READY TO HARVEST",
+        "HARVESTING", "HARVESTED", "PICKED UP BY COOP",
+        "COMPLETED", "CALAMITY AFFECTED"
+    )
+
     val statusCounts = statuses.associateWith { status ->
-        orders.count { it.status == status }
+        orders.count { it.status.equals(status, ignoreCase = true) }
     }
 
     val statusIcons = mapOf(
-        "Pending" to R.drawable.pending,
-        "In Progress" to R.drawable.hour_glass,
-        "Accepted" to Icons.Default.CheckCircle,
-        "Rejected" to R.drawable.reject,
-        "Calamity Affected" to R.drawable.calamity,
-        "Cancelled" to R.drawable.cancelled
+        "PLANTING" to R.drawable.plant_hand,
+        "PLANTED" to R.drawable.plant,
+        "GROWING" to R.drawable.planting,
+        "READY TO HARVEST" to R.drawable.harvest,
+        "HARVESTING" to R.drawable.harvest_basket,
+        "HARVESTED" to R.drawable.harvested,
+        "PICKED UP BY COOP" to R.drawable.deliveryicon,
+        "COMPLETED" to R.drawable.received,
+        "CALAMITY AFFECTED" to R.drawable.calamity
+//        "CANCELLED" to R.drawable.cancelled
     )
 
     Column(
@@ -237,14 +254,6 @@ fun FarmerOrderOverview(orders: List<OrderData>) {
                 }
             }
         }
-
-//        Text(
-//            text = currentMonth.name.lowercase().replaceFirstChar { it.uppercase() },
-//            fontSize = 18.sp,
-//            fontWeight = FontWeight.SemiBold,
-//            color = DarkGreen,
-//            modifier = Modifier.padding(top = 16.dp)
-//        )
     }
 }
 
@@ -252,7 +261,7 @@ fun FarmerOrderOverview(orders: List<OrderData>) {
 fun StatusBox(status: String, count: Int, icon: Any, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .size(110.dp)  // Set both width and height to the same value to make it square
+            .size(110.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(White2)
             .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
@@ -261,7 +270,6 @@ fun StatusBox(status: String, count: Int, icon: Any, modifier: Modifier = Modifi
         Box(
             contentAlignment = Alignment.Center
         ) {
-            // Icon with 50% transparency
             when (icon) {
                 is Int -> {
                     Icon(
@@ -294,25 +302,23 @@ fun StatusBox(status: String, count: Int, icon: Any, modifier: Modifier = Modifi
                     )
                 }
             }
-            // Status count overlayed on the icon
             Text(
                 text = "$count",
-                fontSize = 24.sp, // Larger font size for the number
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
                 modifier = Modifier.padding(8.dp)
             )
         }
-        // Status label below the icon and count
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(top = 60.dp) // Ensure the label doesn't overlap the icon/count
+            modifier = Modifier.padding(top = 60.dp)
         ) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = status,
-                fontSize = 12.sp, // Optional: Slightly larger font for better readability
+                fontSize = 12.sp,
                 color = Color.Gray,
                 textAlign = TextAlign.Center
             )
