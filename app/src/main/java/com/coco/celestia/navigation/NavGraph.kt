@@ -229,39 +229,13 @@ fun NavGraph(
         }
         composable(route = Screen.Farmer.route) {
             onNavigate("Dashboard")
-
-            LaunchedEffect(Unit) {
-                val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
-                userViewModel.fetchUser(uid)
-                orderViewModel.fetchAllOrders(filter = "", role = "Farmer")
-            }
-
-            val userData by userViewModel.userData.observeAsState()
-            val orderData by orderViewModel.orderData.observeAsState(emptyList())
-            val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
-            val searchQuery = ""
-
-            var farmerName by remember { mutableStateOf("") }
-
-            LaunchedEffect(userData) {
-                if (userData != null) {
-                    farmerName = itemViewModel.fetchFarmerName(uid)
-                }
-            }
-
-            if (userData == null || orderState == OrderState.LOADING) {
-                LoadingIndicator()
-            } else {
-                FarmerDashboard(
-                    navController = navController,
-                    userData = userData,
-                    orderData = orderData,
-                    orderState = orderState,
-                    searchQuery = searchQuery,
-                    itemViewModel = viewModel(),
-                    productViewModel = viewModel()
-                )
-            }
+            FarmerDashboard(
+                navController = navController,
+                specialRequestViewModel = specialRequestViewModel,
+                userViewModel = userViewModel,
+                itemViewModel = itemViewModel,
+                productViewModel = productViewModel
+            )
         }
         composable(route = Screen.FarmerManageOrder.route) {
             onNavigate("Order Tabs")

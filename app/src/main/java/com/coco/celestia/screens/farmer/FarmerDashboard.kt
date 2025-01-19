@@ -1,24 +1,14 @@
 package com.coco.celestia.screens.farmer
 
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -29,53 +19,48 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.coco.celestia.R
-import com.coco.celestia.screens.farmer.dialogs.InSeasonProductListDialog
 import com.coco.celestia.screens.farmer.dialogs.ProductListDialog
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.model.OrderData
-import com.coco.celestia.viewmodel.model.UserData
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.ItemState
 import com.coco.celestia.viewmodel.ProductViewModel
-import com.coco.celestia.viewmodel.model.ProductData
+import com.coco.celestia.viewmodel.SpecialRequestViewModel
+import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.Month
 import java.util.*
 
 @Composable
 fun FarmerDashboard(
     navController: NavController,
-    userData: UserData?,
-    orderData: List<OrderData>,
-    orderState: OrderState,
-    searchQuery: String,
-    itemViewModel: FarmerItemViewModel = viewModel(),
-    productViewModel: ProductViewModel = viewModel()
+    specialRequestViewModel: SpecialRequestViewModel,
+    userViewModel: UserViewModel,
+    itemViewModel: FarmerItemViewModel,
+    productViewModel: ProductViewModel
 ) {
     val uid = FirebaseAuth.getInstance().uid.toString()
+    val farmerData by userViewModel.userData.observeAsState()
     val itemData by itemViewModel.itemData.observeAsState(emptyList())
     val itemState by itemViewModel.itemState.observeAsState(ItemState.LOADING)
-    val products by productViewModel.productData.observeAsState(emptyList())
-    val farmerItemViewModel: FarmerItemViewModel = viewModel()
+    val assignedProducts by specialRequestViewModel.specialReqData.observeAsState()
+    val orderData = remember { mutableStateListOf<OrderData>() }
+
     val dateFormat = remember { SimpleDateFormat("EEEE, MMMM d yyyy", Locale.getDefault()) }
     val today = dateFormat.format(Date())
+
     val scrollState = rememberScrollState()
+
     val calendar = Calendar.getInstance()
     val hour = calendar.get(Calendar.HOUR_OF_DAY)
     val greeting = when (hour) {
@@ -86,18 +71,19 @@ fun FarmerDashboard(
 
     var showInSeasonDialog by remember { mutableStateOf(false) }
     var showAllDialog by remember { mutableStateOf(false) }
-    var farmerName by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        userViewModel.fetchUser(uid)
+        specialRequestViewModel.fetchAssignedProducts(
+            farmerData?.email ?: "",
+            "In Progress"
+        )
+    }
 
     LaunchedEffect(uid) {
         itemViewModel.getItems(uid = uid)
         productViewModel.fetchProducts(filter = "", role = "Farmer")
         itemViewModel.fetchFarmerName(uid)
-    }
-
-    LaunchedEffect (Unit) {
-        if (uid.isNotEmpty()) {
-            farmerName = farmerItemViewModel.fetchFarmerName(uid)
-        }
     }
 
     when (itemState) {
@@ -132,7 +118,7 @@ fun FarmerDashboard(
                             color = DarkGreen
                         )
 
-                        userData?.let { user ->
+                        farmerData?.let { user ->
                             Text(
                                 text = "$greeting, ${user.firstname} ${user.lastname}!",
                                 fontSize = 20.sp,
@@ -201,13 +187,23 @@ fun FarmerDashboard(
                                 )
                             }
                         }
-                        OrderStatusSection(
-                            navController = navController,
-                            orderData = orderData,
-                            orderState = orderState,
-                            searchQuery = searchQuery,
-                            farmerName = farmerName
-                        )
+                        assignedProducts
+                            ?.filter { member ->
+                                member.assignedMember.any { it.status.isEmpty() }
+                            }
+                            ?.sortedByDescending { assigned ->
+                                assigned.trackRecord
+                                    .filter { it.description.contains("assigned", ignoreCase = true) }
+                                    .maxByOrNull { it.dateTime }
+                                    ?.dateTime
+                            }
+                            ?.forEach { assigned ->
+                                DisplayRequestCard(
+                                    navController,
+                                    assigned,
+                                    farmerData?.email ?: ""
+                                )
+                            }
                     }
                 }
             }
@@ -392,7 +388,7 @@ fun OrderStatusSection(
         }
         is OrderState.ERROR -> {
             Text(
-                "Failed to load orders: ${(orderState as OrderState.ERROR).message}",
+                "Failed to load orders: ${(orderState).message}",
                 color = Color.Red,
                 modifier = Modifier
                     .padding(16.dp)

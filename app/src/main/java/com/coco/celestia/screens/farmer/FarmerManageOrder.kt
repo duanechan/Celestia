@@ -241,7 +241,7 @@ fun FarmerManageOrder(
                 assignedProducts
                     ?.filter { member ->
                         farmerStatus.isEmpty() ||
-                        member.assignedMember.any { it.status == farmerStatus }
+                                member.assignedMember.any { it.status == farmerStatus }
                     }
                     ?.sortedByDescending { assigned ->
                         assigned.trackRecord
