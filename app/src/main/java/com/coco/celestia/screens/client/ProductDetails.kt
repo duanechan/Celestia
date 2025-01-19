@@ -20,6 +20,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -245,7 +246,13 @@ fun ProductDetails_Action(
 @Composable
 fun ProductDetails_Description(description: String) {
     Column(modifier = Modifier.padding(15.dp)) {
-        Text(text = "Description", fontSize = 25.sp, fontWeight = FontWeight.Bold, color = Green1)
+        Text(
+            text = "Description",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+//            style = MaterialTheme.typography.titleLarge,
+            color = Green1
+        )
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,

@@ -26,6 +26,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -143,6 +146,10 @@ fun ClientOrderDetails(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+
+                //TODO: Support Center
+                SupportCenter()
+
                 // Order details with product list
                 OrderDetailsSection(
                     orderData = currentOrder,
@@ -176,6 +183,87 @@ fun ClientOrderDetails(
                 CircularProgressIndicator()
             }
         }
+    }
+}
+
+@Composable
+fun SupportCenter() {
+    var isExpanded by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(White1)
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { isExpanded = !isExpanded },
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Support Center",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            Icon(
+                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                contentDescription = if (isExpanded) "Collapse" else "Expand"
+            )
+        }
+
+        if (isExpanded) {
+            Column {
+                SupportCenterItemsCard("Request for Return/Refund") // TODO: will show only if the status is already completed
+                SupportCenterItemsCard("Contact BCFAC")
+            }
+        }
+    }
+}
+
+@Composable
+fun SupportCenterItemsCard(label: String){
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = White1
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 0.dp
+        ),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                color = Color.DarkGray
+            )
+            Icon(
+                imageVector = Icons.Default.KeyboardArrowRight,
+                contentDescription = "Arrow",
+                tint = Color.Gray,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        Divider(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+            thickness = 1.dp
+        )
     }
 }
 
