@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.coop.facility
 
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,16 +17,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +45,7 @@ import com.coco.celestia.R
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -74,6 +81,11 @@ fun CoopDashboard(
     val inProgressCount = orders.count { it.status == "IN PROGRESS" }
     val cancelledCount = orders.count { it.status == "CANCELLED" }
     val turnedDownCount = orders.count { it.status == "REJECTED" }
+
+    val lowStockProducts = productViewModel.productData.observeAsState(emptyList()).value
+        .filter { it.quantity <= it.reorderPoint }
+
+    var showLowStockDialog by remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -116,8 +128,30 @@ fun CoopDashboard(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            ItemCard("In-Store Products", "0")
-            ItemCard("Online Products", "0")
+            ItemCard("Active Products", "0")
+            ItemCard("Inactive Products", "0")
+
+            Text(
+                text = "Stock Alerts",
+                fontWeight = FontWeight.Medium,
+                fontSize = 16.sp,
+                color = Color.DarkGray,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+            ItemCard(
+                label = "Low Stocks",
+                count = "5",
+                onClick = { showLowStockDialog = true }
+            )
+
+            // Show dialog when triggered
+            if (showLowStockDialog) {
+                LowStockDialog(
+                    products = lowStockProducts,
+                    onDismiss = { showLowStockDialog = false }
+                )
+            }
 
             Text(
                 text = "Order Statuses",
@@ -139,17 +173,94 @@ fun CoopDashboard(
 }
 
 @Composable
-fun ItemCard(label: String, count: String) {
+fun LowStockDialog(
+    products: List<ProductData>,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        },
+        title = {
+            Text(text = "Low Stock Alert", fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column {
+                if (products.isNotEmpty()) {
+                    products.forEach { product ->
+                        LowStockCard(
+                            label = product.name,
+                            reorderPoint = "Reorder Point: ${product.reorderPoint}",
+                            currentStock = "Current Stock: ${product.quantity}"
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "No low stock products available.",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(vertical = 16.dp)
+                    )
+                }
+            }
+        }
+    )
+}
+
+@Composable
+fun LowStockCard(label: String, reorderPoint: String, currentStock: String) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = White1
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 0.dp
-        ),
+        colors = CardDefaults.cardColors(containerColor = White1),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = label,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.DarkGray
+                )
+                Spacer(modifier = Modifier.size(8.dp))
+                Text(
+                    text = reorderPoint,
+                    fontSize = 14.sp,
+                    color = Color.Gray
+                )
+                Text(
+                    text = currentStock,
+                    fontSize = 14.sp,
+                    color = if (currentStock.contains("0")) Color.Red else Color.Gray
+                )
+            }
+        }
+    }
+}
+
+
+@Composable
+fun ItemCard(label: String, count: String, onClick: () -> Unit = {}) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(containerColor = White1),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(8.dp)
     ) {
         Row(
@@ -164,9 +275,7 @@ fun ItemCard(label: String, count: String) {
                 fontSize = 14.sp,
                 color = Color.DarkGray
             )
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = count,
                     fontSize = 14.sp,
