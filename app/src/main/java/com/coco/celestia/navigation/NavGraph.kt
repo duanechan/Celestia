@@ -232,9 +232,7 @@ fun NavGraph(
             FarmerDashboard(
                 navController = navController,
                 specialRequestViewModel = specialRequestViewModel,
-                userViewModel = userViewModel,
-                itemViewModel = itemViewModel,
-                productViewModel = productViewModel
+                userViewModel = userViewModel
             )
         }
         composable(route = Screen.FarmerManageOrder.route) {

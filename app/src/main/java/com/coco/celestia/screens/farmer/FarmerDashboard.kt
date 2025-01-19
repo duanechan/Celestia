@@ -9,7 +9,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -28,13 +27,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.R
-import com.coco.celestia.screens.farmer.dialogs.ProductListDialog
-import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.ui.theme.*
-import com.coco.celestia.viewmodel.FarmerItemViewModel
-import com.coco.celestia.viewmodel.ItemState
-import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -46,13 +40,9 @@ fun FarmerDashboard(
     navController: NavController,
     specialRequestViewModel: SpecialRequestViewModel,
     userViewModel: UserViewModel,
-    itemViewModel: FarmerItemViewModel,
-    productViewModel: ProductViewModel
 ) {
     val uid = FirebaseAuth.getInstance().uid.toString()
     val farmerData by userViewModel.userData.observeAsState()
-    val itemData by itemViewModel.itemData.observeAsState(emptyList())
-    val itemState by itemViewModel.itemState.observeAsState(ItemState.LOADING)
     val assignedProducts by specialRequestViewModel.specialReqData.observeAsState()
     val orderData = remember { mutableStateListOf<OrderData>() }
 
@@ -69,9 +59,6 @@ fun FarmerDashboard(
         else -> "Good Evening"
     }
 
-    var showInSeasonDialog by remember { mutableStateOf(false) }
-    var showAllDialog by remember { mutableStateOf(false) }
-
     LaunchedEffect(Unit) {
         userViewModel.fetchUser(uid)
         specialRequestViewModel.fetchAssignedProducts(
@@ -80,71 +67,57 @@ fun FarmerDashboard(
         )
     }
 
-    LaunchedEffect(uid) {
-        itemViewModel.getItems(uid = uid)
-        productViewModel.fetchProducts(filter = "", role = "Farmer")
-        itemViewModel.fetchFarmerName(uid)
-    }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BgColor)
+            .verticalScroll(scrollState)
+            .padding(top = 10.dp, bottom = 10.dp)
+    ) {
+        // Greeting and date
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
+                .background(White1, shape = RoundedCornerShape(12.dp))
+                .padding(16.dp)
+        ) {
+            Column {
+                Text(
+                    text = today,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.Start,
+                    color = DarkGreen
+                )
 
-    when (itemState) {
-        is ItemState.LOADING -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                farmerData?.let { user ->
+                    Text(
+                        text = "$greeting, ${user.firstname} ${user.lastname}!",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Start,
+                        color = DarkGreen,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
             }
         }
-        is ItemState.EMPTY,
-        is ItemState.SUCCESS -> {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(BgColor)
-                    .verticalScroll(scrollState)
-                    .padding(top = 10.dp, bottom = 10.dp)
-            ) {
-                // Greeting and date
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
-                        .background(White1, shape = RoundedCornerShape(12.dp))
-                        .padding(16.dp)
-                ) {
-                    Column {
-                        Text(
-                            text = today,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Normal,
-                            textAlign = TextAlign.Start,
-                            color = DarkGreen
-                        )
 
-                        farmerData?.let { user ->
-                            Text(
-                                text = "$greeting, ${user.firstname} ${user.lastname}!",
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Start,
-                                color = DarkGreen,
-                                modifier = Modifier.padding(top = 8.dp)
-                            )
-                        }
-                    }
-                }
-
-                // orders overview
-                Box(
+        // orders overview
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
+                .background(White1, shape = RoundedCornerShape(12.dp))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
-                        .background(White1, shape = RoundedCornerShape(12.dp))
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
 //                            Text(
 //                                text = "Orders Overview",
 //                                fontSize = 16.sp,
@@ -155,82 +128,62 @@ fun FarmerDashboard(
 //                                onClick = { showInSeasonDialog = true },
 //                                modifier = Modifier.padding(start = 8.dp)
 //                            ){}
-                        }
-                        FarmerOrderOverview(orders = orderData)
-                    }
                 }
+                FarmerOrderOverview(orders = orderData)
+            }
+        }
 
-                // Order Listings
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
-                        .background(White1, shape = RoundedCornerShape(12.dp))
+        // Order Listings
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
+                .background(White1, shape = RoundedCornerShape(12.dp))
+        ) {
+            Column(modifier = Modifier.padding(start = 16.dp, top = 5.dp, end = 10.dp, bottom = 20.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.padding(start = 16.dp, top = 5.dp, end = 10.dp, bottom = 20.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Pending Order Requests",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = DarkGreen
-                            )
-                            TextButton(onClick = { navController.navigate("farmer_manage_order") }) {
-                                Text(
-                                    text = "See All",
-                                    color = DarkGreen,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                        assignedProducts
-                            ?.filter { member ->
-                                member.assignedMember.any { it.status.isEmpty() }
-                            }
-                            ?.sortedByDescending { assigned ->
-                                assigned.trackRecord
-                                    .filter { it.description.contains("assigned", ignoreCase = true) }
-                                    .maxByOrNull { it.dateTime }
-                                    ?.dateTime
-                            }
-                            ?.forEach { assigned ->
-                                DisplayRequestCard(
-                                    navController,
-                                    assigned,
-                                    farmerData?.email ?: ""
-                                )
-                            }
+                    Text(
+                        text = "Pending Order Requests",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = DarkGreen
+                    )
+                    TextButton(onClick = { navController.navigate("farmer_manage_order") }) {
+                        Text(
+                            text = "See All",
+                            color = DarkGreen,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
+                assignedProducts
+                    ?.filter { member ->
+                        member.assignedMember.any { it.status.isEmpty() }
+                    }
+                    ?.sortedByDescending { assigned ->
+                        assigned.trackRecord
+                            .filter { it.description.contains("assigned", ignoreCase = true) }
+                            .maxByOrNull { it.dateTime }
+                            ?.dateTime
+                    }
+                    ?.forEach { assigned ->
+                        DisplayRequestCard(
+                            navController,
+                            assigned,
+                            farmerData?.email ?: ""
+                        )
+                    }
             }
         }
-        is ItemState.ERROR -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = "Error loading item data: ${(itemState as ItemState.ERROR).message}",
-                    color = Color.Red,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-        }
-    }
-
-    if (showAllDialog) {
-        ProductListDialog(
-            items = itemData,
-            onDismiss = { showAllDialog = false }
-        )
     }
 }
 
 @Composable
 fun FarmerOrderOverview(orders: List<OrderData>) {
-//    val currentMonth = LocalDate.now().month
-
     val statuses = listOf("Pending", "In Progress", "Accepted", "Rejected", "Calamity Affected", "Cancelled")
     val statusCounts = statuses.associateWith { status ->
         orders.count { it.status == status }
@@ -363,79 +316,6 @@ fun StatusBox(status: String, count: Int, icon: Any, modifier: Modifier = Modifi
                 color = Color.Gray,
                 textAlign = TextAlign.Center
             )
-        }
-    }
-}
-
-@Composable
-fun OrderStatusSection(
-    navController: NavController,
-    orderData: List<OrderData>,
-    orderState: OrderState,
-    searchQuery: String,
-    farmerName: String
-) {
-    when (orderState) {
-        is OrderState.LOADING -> {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 10.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        }
-        is OrderState.ERROR -> {
-            Text(
-                "Failed to load orders: ${(orderState).message}",
-                color = Color.Red,
-                modifier = Modifier
-                    .padding(16.dp)
-            )
-        }
-        is OrderState.EMPTY -> {
-            Text(
-                "No orders available.",
-                modifier = Modifier
-                    .padding(16.dp)
-            )
-        }
-        is OrderState.SUCCESS -> {
-            val filteredOrders = orderData.filter { order ->
-                order.status !in listOf("PENDING", "REJECTED", "COMPLETED", "CANCELLED") &&
-                        order.orderId.contains(searchQuery, ignoreCase = true)
-                order.fulfilledBy.any { it.farmerName == farmerName }
-            }.take(2)
-
-            if (filteredOrders.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 5.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("No orders found.", color = DarkGreen.copy(alpha = 0.7f))
-                }
-            } else {
-                Column {
-                    filteredOrders.forEach { order ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 10.dp, end = 5.dp)
-                        ) {
-                            ManageOrderCards(
-                                navController = navController,
-                                order = order,
-                                farmerName = farmerName,
-                                cardHeight = 100.dp,
-                                showStatus = false
-                            )
-                        }
-                    }
-                }
-            }
         }
     }
 }
