@@ -84,16 +84,14 @@ fun OrderSummary(
     val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
     val formattedDateTime = LocalDateTime.now().format(formatter).toString()
     val idFormatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
-    val formattedOrderId = "OID-${LocalDateTime.now().format(idFormatter)}"
+    val currentDateTime = LocalDateTime.now().format(idFormatter)
     val userData by userViewModel.userData.observeAsState(UserData())
     val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
 
-    // Group items by facility type
     val groupedItems = items.groupBy { it.productType }
 
-    // Track collection and payment methods for each facility
     val facilityMethods = remember(groupedItems) {
-        mutableStateMapOf<String, Pair<String, String>>() // facility to (collection, payment)
+        mutableStateMapOf<String, Pair<String, String>>()
     }
 
     LaunchedEffect(Unit) {
@@ -115,9 +113,6 @@ fun OrderSummary(
                     UserDetailsHeader()
                 }
 
-                // Display each facility's items and methods
-                // Inside OrderSummary composable...
-                // Inside OrderSummary composable...
                 groupedItems.forEach { (facilityName, facilityItems) ->
                     val facilityData = facilitiesData.find {
                         it.name.lowercase() == facilityName.lowercase()
@@ -130,7 +125,6 @@ fun OrderSummary(
                         )
                     }
 
-                    // Create a temporary OrderData object for each facility
                     val tempOrderData = OrderData(
                         orderData = facilityItems.map { item ->
                             ProductData(
@@ -180,6 +174,8 @@ fun OrderSummary(
                         onPlaceOrder = {
                             groupedItems.forEach { (facilityName, facilityItems) ->
                                 val methods = facilityMethods[facilityName] ?: Pair("", "")
+                                val formattedOrderId = "OID-${facilityName.uppercase()}-$currentDateTime"
+
                                 orderViewModel.placeOrder(
                                     uid = uid,
                                     order = OrderData(

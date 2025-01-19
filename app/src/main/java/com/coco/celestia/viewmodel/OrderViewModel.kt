@@ -170,38 +170,52 @@ class OrderViewModel : ViewModel() {
             database.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val filterKeywords = filter.split(",").map { it.trim() }
+                    val facilityName = role.replace("Coop", "")
 
-                    val orders = snapshot.children
-                        .flatMap { userSnapshot ->
-                            userSnapshot.children
-                                .mapNotNull { snapshot -> DataParser.parseOrderData(snapshot) }
-                                .filter { order ->
-                                    val coopOrder = order.orderData.any {
-                                        it.type == role.replace("Coop", "")
-                                    }
-                                    val matchesFilter = filterKeywords.any { keyword ->
-                                        order::class.memberProperties.any { property ->
-                                            val value = property.getter.call(order)?.toString() ?: ""
-                                            value.contains(keyword, ignoreCase = true)
-                                        }
-                                    }
-                                    val removeCancelReject =
-                                        (order.status != "CANCELLED" && order.status != "REJECTED")
-                                    when {
-                                        role.startsWith("Coop") ->
-                                            coopOrder && matchesFilter && removeCancelReject
-                                        role == "Admin" -> coopOrder && matchesFilter
-                                        role == "Farmer" -> matchesFilter
-                                        role == "Client" -> matchesFilter
-                                        else -> matchesFilter
+                    // No need to group by orderId and type since they're now combined in the orderId
+                    val ordersMap = mutableMapOf<String, OrderData>()
+
+                    snapshot.children.forEach { userSnapshot ->
+                        userSnapshot.children.forEach { orderSnapshot ->
+                            val order = DataParser.parseOrderData(orderSnapshot)
+                            if (order != null) {
+                                // Extract facility type from orderId (format: OID-FACILITYNAME-TIMESTAMP)
+                                val orderIdParts = order.orderId.split("-")
+                                val orderFacilityType = if (orderIdParts.size >= 3) orderIdParts[1] else ""
+
+                                val matchesFilter = filterKeywords.isEmpty() || filterKeywords.any { keyword ->
+                                    order::class.memberProperties.any { property ->
+                                        val value = property.getter.call(order)?.toString() ?: ""
+                                        value.contains(keyword, ignoreCase = true)
                                     }
                                 }
+
+                                val removeCancelReject = (order.status != "CANCELLED" && order.status != "REJECTED")
+
+                                val shouldInclude = when {
+                                    role.startsWith("Coop") ->
+                                        orderFacilityType == facilityName && matchesFilter && removeCancelReject
+                                    role == "Admin" ->
+                                        matchesFilter
+                                    role == "Farmer" || role == "Client" ->
+                                        matchesFilter
+                                    else ->
+                                        matchesFilter
+                                }
+
+                                if (shouldInclude) {
+                                    // Use just the orderId as the key since it now includes the facility type
+                                    ordersMap[order.orderId] = order
+                                }
+                            }
                         }
+                    }
+
+                    val orders = ordersMap.values.toList()
                         .sortedByDescending { it.timestamp }
 
                     _orderData.value = orders
-                    _orderState.value =
-                        if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS
+                    _orderState.value = if (orders.isEmpty()) OrderState.EMPTY else OrderState.SUCCESS
                 }
 
                 override fun onCancelled(error: DatabaseError) {

@@ -6,12 +6,8 @@ import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -81,9 +78,6 @@ import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
-
-// TODO: Add checks for every field
-// TODO: Paayos Collection Method and Payment Method!
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalCoilApi::class)
 @Composable
@@ -120,9 +114,11 @@ fun AddProductForm(
     val context = LocalContext.current
     var productImage by remember { mutableStateOf<Uri?>(null) }
     var updatedProductImage by remember { mutableStateOf<Uri?>(null) }
+    var isImageRequired by remember { mutableStateOf(false) }
 
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
         updatedProductImage = it
+        isImageRequired = false
     }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -251,7 +247,12 @@ fun AddProductForm(
                         contentDescription = "Product Image",
                         modifier = Modifier
                             .fillMaxSize()
-                            .align(Alignment.Center),
+                            .align(Alignment.Center)
+                            .border(
+                                width = if (isImageRequired) 2.dp else 0.dp,
+                                color = if (isImageRequired) Color.Red else Color.Transparent,
+                                shape = RectangleShape
+                            ),
                         colorFilter = if (updatedProductImage == null && productImage == null)
                             ColorFilter.tint(Green1) else null
                     )
@@ -483,6 +484,12 @@ fun AddProductForm(
 
         Button(
             onClick = {
+                if (updatedProductImage == null && productImage == null) {
+                    isImageRequired = true
+                    onEvent(Triple(ToastStatus.WARNING, "Product image is required", System.currentTimeMillis()))
+                    return@Button
+                }
+
                 if (productName.isNotEmpty() && quantity > 0 && price > 0.0) {
                     val currentDateTime = LocalDateTime.now()
                     val dateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
@@ -516,9 +523,7 @@ fun AddProductForm(
                         weightUnit = weightUnit,
                         isInStore = isInStore,
                         isActive = true,
-                        dateAdded = formattedDateTime,
-//                        collectionMethod = if (isDelivery) Constants.COLLECTION_DELIVERY else Constants.COLLECTION_PICKUP,
-//                        paymentMethod = if (isGcash) Constants.PAYMENT_GCASH else Constants.PAYMENT_CASH
+                        dateAdded = formattedDateTime
                     )
 
                     updatedProductImage?.let { uri ->
@@ -547,23 +552,23 @@ fun AddProductForm(
                             }
                         }
                     } ?: run {
-                        if (isEditMode) {
+                        if (isEditMode && productImage != null) {
                             productViewModel.updateProduct(product)
                             onEvent(Triple(ToastStatus.SUCCESSFUL, "Product updated successfully", System.currentTimeMillis()))
-                        } else {
-                            productViewModel.addProduct(product)
-                            onEvent(Triple(ToastStatus.SUCCESSFUL, "Product added successfully", System.currentTimeMillis()))
-                        }
-                        onAddClick()
+                            onAddClick()
 
-                        if (isInStore) {
-                            navController.navigate(Screen.CoopInStoreProducts.route) {
-                                popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                            if (isInStore) {
+                                navController.navigate(Screen.CoopInStoreProducts.route) {
+                                    popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                                }
+                            } else {
+                                navController.navigate(Screen.CoopOnlineProducts.route) {
+                                    popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                                }
                             }
                         } else {
-                            navController.navigate(Screen.CoopOnlineProducts.route) {
-                                popUpTo(Screen.AddProductInventory.route) { inclusive = true }
-                            }
+                            onEvent(Triple(ToastStatus.WARNING, "Product image is required", System.currentTimeMillis()))
+                            isImageRequired = true
                         }
                     }
                 } else {

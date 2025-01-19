@@ -3,7 +3,6 @@ package com.coco.celestia.screens.client
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -52,6 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import com.coco.celestia.R
 import com.coco.celestia.components.toast.ToastStatus
@@ -133,8 +134,6 @@ fun BasketScreen(
             }
         }
     }
-
-
 }
 
 @Composable
@@ -147,13 +146,17 @@ fun Basket(
 ) {
     val productViewModel: ProductViewModel = viewModel()
     val productData by productViewModel.productData.observeAsState(emptyList())
-    var removingItem by remember { mutableStateOf(BasketItem()) }
+    var removingItem by remember { mutableStateOf<BasketItem?>(null) }
+    var removingFacility by remember { mutableStateOf<String?>(null) }
     var deleteModal by remember { mutableStateOf(false) }
+    var deleteFacilityModal by remember { mutableStateOf(false) }
 
-    val aggregatedItems = items.groupBy { it.productId }.map { (productId, itemList) ->
-        val totalQuantity = itemList.sumOf { it.quantity }
-        val totalPrice = itemList.sumOf { it.price }
-        itemList.first().copy(quantity = totalQuantity, price = totalPrice)
+    val groupedItems = items.groupBy { it.productType }.mapValues { (_, facilityItems) ->
+        facilityItems.groupBy { it.productId }.map { (_, productItems) ->
+            val totalQuantity = productItems.sumOf { it.quantity }
+            val totalPrice = productItems.sumOf { it.price }
+            productItems.first().copy(quantity = totalQuantity, price = totalPrice)
+        }
     }
 
     LaunchedEffect(Unit) {
@@ -168,8 +171,7 @@ fun Basket(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        for (item in aggregatedItems) {
-            //facility card added
+        groupedItems.forEach { (facility, facilityItems) ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -179,92 +181,220 @@ fun Basket(
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    // First Row: Order ID and Date
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = item.productType,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Remove Item",
-                            tint = Green1,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(50.dp))
-                                .clickable {
-                                    removingItem = item
-                                    deleteModal = true
-                                }
+                            text = facility,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
                         )
 
+                        Row(
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            var allChecked by remember { mutableStateOf(false) }
+                            Checkbox(
+                                checked = allChecked,
+                                onCheckedChange = { checked ->
+                                    allChecked = checked
+                                    if (checked) {
+                                        facilityItems.forEach { item ->
+                                            if (!checkoutItems.any { it.id == item.id }) {
+                                                checkoutItems.add(item)
+                                            }
+                                        }
+                                    } else {
+                                        checkoutItems.removeAll { checkItem ->
+                                            facilityItems.any { it.id == checkItem.id }
+                                        }
+                                    }
+                                },
+                                colors = CheckboxDefaults.colors(checkedColor = Green1)
+                            )
+
+                            IconButton(
+                                onClick = {
+                                    removingFacility = facility
+                                    deleteFacilityModal = true
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete Facility Items",
+                                    tint = Green1
+                                )
+                            }
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
-
                     Divider(
                         color = MaterialTheme.colorScheme.onSurface,
                         thickness = 1.dp,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
 
-                    BasketItemCard(
-                        product = productData.find { it.productId == item.productId } ?: ProductData(),
-                        item = item,
-                        isChecked = checkoutItems.any { it.id == item.id },
-                        onAdd = { checkoutItems.add(it) },
-                        onUpdate = { old, new -> checkoutItems[checkoutItems.indexOf(old)] = new },
-                        onRemove = { checkoutItems.remove(it) }
-                    )
+                    facilityItems.forEach { item ->
+                        BasketItemCard(
+                            product = productData.find { it.productId == item.productId } ?: ProductData(),
+                            item = item,
+                            isChecked = checkoutItems.any { it.id == item.id },
+                            onAdd = { checkoutItems.add(it) },
+                            onUpdate = { old, new -> checkoutItems[checkoutItems.indexOf(old)] = new },
+                            onRemove = { checkoutItems.remove(it) },
+                            onDelete = {
+                                removingItem = item
+                                deleteModal = true
+                            }
+                        )
 
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
                 }
             }
         }
-        BasketActions(totalPrice = checkoutItems.sumOf { it.price }, onCheckout = { onCheckout(checkoutItems) })
+
+        BasketActions(
+            totalPrice = checkoutItems.sumOf { it.price },
+            onCheckout = { onCheckout(checkoutItems) }
+        )
     }
-    if (deleteModal) {
+
+    if (deleteModal && removingItem != null) {
         AlertDialog(
-            onDismissRequest = { deleteModal = false },
+            onDismissRequest = {
+                deleteModal = false
+                removingItem = null
+            },
             title = {
-                Text(text = "Removing ${removingItem.product}", fontWeight = FontWeight.Bold, fontFamily = mintsansFontFamily)
+                Text(
+                    text = "Removing ${removingItem?.product}",
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
+                )
             },
             text = {
-                Text(text = "Do you want to remove this item from the basket?", fontFamily = mintsansFontFamily)
+                Text(
+                    text = "Do you want to remove this item from the basket?",
+                    fontFamily = mintsansFontFamily
+                )
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        userViewModel.clearItems(listOf(removingItem))
-                        deleteModal = false
-                        onRemove(
-                            Triple(
-                                ToastStatus.SUCCESSFUL,
-                                "${removingItem.product} removed from the basket.",
-                                System.currentTimeMillis()
+                        removingItem?.let { item ->
+                            userViewModel.clearItems(listOf(item))
+                            checkoutItems.remove(item)
+                            onRemove(
+                                Triple(
+                                    ToastStatus.SUCCESSFUL,
+                                    "${item.product} removed from the basket.",
+                                    System.currentTimeMillis()
+                                )
                             )
-                        )
+                        }
+                        deleteModal = false
+                        removingItem = null
                     },
                     colors = ButtonDefaults.buttonColors(Green4),
                 ) {
-                    Text(text = "Remove", fontFamily = mintsansFontFamily, color = Green1)
+                    Text(
+                        text = "Remove",
+                        fontFamily = mintsansFontFamily,
+                        color = Green1
+                    )
                 }
             },
             dismissButton = {
                 Button(
-                    onClick = { deleteModal = false },
+                    onClick = {
+                        deleteModal = false
+                        removingItem = null
+                    },
                     colors = ButtonDefaults.buttonColors(Color.Gray),
                 ) {
-                    Text(text = "Cancel", fontFamily = mintsansFontFamily, color = Color.White)
+                    Text(
+                        text = "Cancel",
+                        fontFamily = mintsansFontFamily,
+                        color = Color.White
+                    )
+                }
+            }
+        )
+    }
+
+    if (deleteFacilityModal && removingFacility != null) {
+        AlertDialog(
+            onDismissRequest = {
+                deleteFacilityModal = false
+                removingFacility = null
+            },
+            title = {
+                Text(
+                    text = "Removing All Items from ${removingFacility}",
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
+                )
+            },
+            text = {
+                Text(
+                    text = "Do you want to remove all items from this facility?",
+                    fontFamily = mintsansFontFamily
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        removingFacility?.let { facility ->
+                            val itemsToRemove = items.filter { it.productType == facility }
+                            userViewModel.clearItems(itemsToRemove)
+                            checkoutItems.removeAll { checkItem ->
+                                itemsToRemove.any { it.id == checkItem.id }
+                            }
+                            onRemove(
+                                Triple(
+                                    ToastStatus.SUCCESSFUL,
+                                    "All items from $facility removed from the basket.",
+                                    System.currentTimeMillis()
+                                )
+                            )
+                        }
+                        deleteFacilityModal = false
+                        removingFacility = null
+                    },
+                    colors = ButtonDefaults.buttonColors(Green4),
+                ) {
+                    Text(
+                        text = "Remove All",
+                        fontFamily = mintsansFontFamily,
+                        color = Green1
+                    )
                 }
             },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        deleteFacilityModal = false
+                        removingFacility = null
+                    },
+                    colors = ButtonDefaults.buttonColors(Color.Gray),
+                ) {
+                    Text(
+                        text = "Cancel",
+                        fontFamily = mintsansFontFamily,
+                        color = Color.White
+                    )
+                }
+            }
         )
     }
 }
 
-
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun BasketItemCard(
     product: ProductData,
@@ -272,7 +402,8 @@ fun BasketItemCard(
     isChecked: Boolean,
     onAdd: (BasketItem) -> Unit,
     onUpdate: (BasketItem, BasketItem) -> Unit,
-    onRemove: (BasketItem) -> Unit
+    onRemove: (BasketItem) -> Unit,
+    onDelete: () -> Unit
 ) {
     var image by remember { mutableStateOf<Uri?>(null) }
     var checked by remember { mutableStateOf(false) }
@@ -300,9 +431,25 @@ fun BasketItemCard(
             modifier = Modifier
                 .fillMaxSize()
         ) {
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Clear,
+                    contentDescription = "Delete Item",
+                    tint = Green1,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(end = 36.dp)
             ) {
                 Checkbox(
                     checked = isChecked,
@@ -339,8 +486,6 @@ fun BasketItemCard(
                         },
                         contentDescription = item.product,
                         modifier = Modifier
-//                            .width(100.dp)
-//                            .fillMaxHeight()
                             .fillMaxSize()
                             .clip(RoundedCornerShape(10.dp))
                             .background(Color.White)
@@ -356,17 +501,15 @@ fun BasketItemCard(
                         color = Green1
                     )
                     Text(
-                        text = "Php ${product.price * updatedQuantity}", //price is per unit
+                        text = "Php ${product.price * updatedQuantity}",
                         style = MaterialTheme.typography.titleMedium,
                         color = Green1
                     )
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.End,
-                        modifier = Modifier
-                            .fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-
                         TextButton(
                             onClick = {
                                 if (updatedQuantity > 1) {

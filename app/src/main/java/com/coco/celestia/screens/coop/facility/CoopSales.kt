@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.navigation.NavController
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -25,11 +24,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
@@ -48,9 +49,7 @@ import com.coco.celestia.viewmodel.SalesViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.SalesData
-import kotlinx.coroutines.delay
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import com.coco.celestia.viewmodel.model.OrderItem
 
@@ -682,7 +681,8 @@ private fun OnlineSalesContentUI(
                 } else {
                     OrdersCard(
                         filteredOrders = filteredAndSortedOrders,
-                        navController = navController
+                        navController = navController,
+                        facilityName = facilityName
                     )
                 }
             }
@@ -818,7 +818,8 @@ private fun OnlineSalesContentUI(
                         } else {
                             OrdersCard(
                                 filteredOrders = completedOrders,
-                                navController = navController
+                                navController = navController,
+                                facilityName = facilityName
                             )
                         }
                     }
@@ -831,7 +832,8 @@ private fun OnlineSalesContentUI(
 @Composable
 fun OrdersCard(
     filteredOrders: List<OrderData>,
-    navController: NavController
+    navController: NavController,
+    facilityName: String
 ) {
     if (filteredOrders.isNotEmpty()) {
         LazyColumn(
@@ -841,7 +843,8 @@ fun OrdersCard(
                 OrderStatusesCard(
                     order = order,
                     navController = navController,
-                    modifier = Modifier.padding(vertical = 8.dp)
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    facilityName = facilityName
                 )
             }
         }
@@ -855,30 +858,37 @@ fun OrdersCard(
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun OrderStatusesCard(
     order: OrderData,
     navController: NavController,
+    facilityName: String,
     modifier: Modifier = Modifier
 ) {
+    // Get items for this facility
+    val facilityItems = order.orderData.filter { it.type == facilityName }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .clickable {
-                navController.navigate(Screen.CoopOrderDetails.createRoute(order.orderId))
+                navController.navigate(Screen.CoopOrderDetails.createRoute(orderId = order.orderId))
             },
         colors = CardDefaults.cardColors(containerColor = White1)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(12.dp)
         ) {
+            // Order ID and Date
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = order.orderId.take(14),
+                    text = order.orderId,
+                    fontSize = 13.sp,
                     style = MaterialTheme.typography.titleMedium,
                     color = Green1
                 )
@@ -888,14 +898,25 @@ fun OrderStatusesCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
+            // Client Name
+            if (order.client.isNotEmpty()) {
+                Text(
+                    text = order.client,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+
+            // Items Count and Status
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Items: ${order.orderData.size}",
+                    text = "Items: ${facilityItems.size}",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
@@ -910,8 +931,66 @@ fun OrderStatusesCard(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            for (item in order.orderData) {
-                ItemCard(item)
+            facilityItems.forEach { item ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    var image by remember { mutableStateOf<Uri?>(null) }
+
+                    Box(
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.White)
+                    ) {
+                        LaunchedEffect(item.productId) {
+                            try {
+                                ImageService.fetchProductImage(productId = item.productId) {
+                                    image = it
+                                }
+                            } catch(e: Exception) {
+                                image = null
+                            }
+                        }
+
+                        if (image != null) {
+                            Image(
+                                painter = rememberImagePainter(image),
+                                contentDescription = item.name,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Image(
+                                painter = painterResource(R.drawable.product_icon),
+                                contentDescription = item.name,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = item.name,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = "${item.quantity} ${item.weightUnit}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = "PHP ${item.price}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
             }
 
             Divider(
@@ -920,25 +999,28 @@ fun OrderStatusesCard(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
+            // Collection Method
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ){
                 Text(
-                    text = order.collectionMethod, //collection method
+                    text = order.collectionMethod,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
+
+            // Payment Method and Total
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ){
                 Text(
-                    text = "${ order.paymentMethod } * Unpaid",
+                    text = "${order.paymentMethod} * Unpaid",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = "PHP ${order.orderData.sumOf { it.price } }",
+                    text = "PHP ${facilityItems.sumOf { it.price }}",
                     style = MaterialTheme.typography.titleMedium
                 )
             }
