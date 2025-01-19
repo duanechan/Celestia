@@ -93,14 +93,13 @@ fun FarmerManageOrder(
 
     var searchQuery by remember { mutableStateOf("") }
     var tabName by remember { mutableStateOf("In Progress") }
-    var selectedStatus by remember { mutableStateOf("") }
+    var farmerStatus by remember { mutableStateOf("") }
 
-    LaunchedEffect(tabName, selectedStatus) {
+    LaunchedEffect(tabName) {
         userViewModel.fetchUser(uid)
         specialRequestViewModel.fetchAssignedProducts(
             userData?.email ?: "",
-            tabName,
-            selectedStatus
+            tabName
         )
     }
 
@@ -115,7 +114,7 @@ fun FarmerManageOrder(
         val coroutineScope = rememberCoroutineScope()
 
         TabRow(
-            selectedTabIndex = pagerState.currentPage,
+            selectedTabIndex = pagerState.pageCount,
             containerColor = Green4,
             contentColor = Green1,
             divider = {},
@@ -162,80 +161,73 @@ fun FarmerManageOrder(
                     .background(color = BgColor)
                     .verticalScroll(rememberScrollState())
             ) {
-                if (page == 0) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            placeholder = { Text("Search orders...", color = DarkGreen) },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = "Search Icon",
-                                    tint = Cocoa
-                                )
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .background(color = White2, shape = RoundedCornerShape(16.dp))
-                                .border(BorderStroke(1.dp, color = DarkGreen), shape = RoundedCornerShape(16.dp)),
-                            singleLine = true,
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                disabledContainerColor = Color.Transparent,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                disabledIndicatorColor = Color.Transparent,
-                                errorIndicatorColor = Color.Transparent,
-                                focusedTextColor = Cocoa,
-                                unfocusedTextColor = DarkGreen
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text("Search orders...", color = DarkGreen) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search Icon",
+                                tint = Cocoa
                             )
-                        )
-                    }
-
-                    Row(
+                        },
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        val statuses = listOf(
-                            "PLANTING", "PLANTED", "GROWING",
-                            "READY TO HARVEST", "HARVESTING", "HARVESTED", "PICKED UP BY COOP"
+                            .weight(1f)
+                            .background(color = White2, shape = RoundedCornerShape(16.dp))
+                            .border(BorderStroke(1.dp, color = DarkGreen), shape = RoundedCornerShape(16.dp)),
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            errorIndicatorColor = Color.Transparent,
+                            focusedTextColor = Cocoa,
+                            unfocusedTextColor = DarkGreen
                         )
-                        val statusColors = mapOf(
-                            "PLANTING" to GreenShade1,
-                            "PLANTED" to GreenShade2,
-                            "GROWING" to GreenShade3,
-                            "READY TO HARVEST" to GreenShade4,
-                            "HARVESTING" to GreenShade5,
-                            "HARVESTED" to GreenShade6,
-                            "PICKED UP BY COOP" to GreenShade7
-                        )
-                        statuses.forEach { status ->
-                            Button(
-                                onClick = {
-                                    selectedStatus = status
-                                    specialRequestViewModel.fetchAssignedProducts(
-                                        userData?.email ?: "",
-                                        tabName,
-                                        status
-                                    )
-                                },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = statusColors[status] ?: Green1,
-                                    contentColor = if (selectedStatus == status) Color.White else DarkGreen
-                                )
-                            ) {
-                                Text(text = status)
-                            }
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val statuses = listOf(
+                        "Planting", "Planted", "Growing",
+                        "Ready to Harvest", "Harvesting", "Harvested", "Picked up by Coop"
+                    )
+                    val statusColors = mapOf(
+                        "Planting" to GreenShade1,
+                        "Planted" to GreenShade2,
+                        "Growing" to GreenShade3,
+                        "Ready to Harvest" to GreenShade4,
+                        "Harvesting" to GreenShade5,
+                        "Harvested" to GreenShade6,
+                        "Picked up by Coop" to GreenShade7
+                    )
+                    statuses.forEach { status ->
+                        Button(
+                            onClick = {
+                                farmerStatus = if (farmerStatus == status) "" else status
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = statusColors[status] ?: Green1,
+                                contentColor = if (farmerStatus == status) Color.White else DarkGreen
+                            )
+                        ) {
+                            Text(text = status)
                         }
                     }
                 }
@@ -247,7 +239,10 @@ fun FarmerManageOrder(
                 }
 
                 assignedProducts
-                    ?.filter { it.status == selectedStatus || selectedStatus.isEmpty() }
+                    ?.filter { member ->
+                        farmerStatus.isEmpty() ||
+                        member.assignedMember.any { it.status == farmerStatus }
+                    }
                     ?.sortedByDescending { assigned ->
                         assigned.trackRecord
                             .filter { it.description.contains("assigned", ignoreCase = true) }
@@ -277,7 +272,7 @@ fun FarmerManageOrder(
 fun DisplayRequestCard(
     navController: NavController,
     specialRequest: SpecialRequest,
-    farmerEmail: String,
+    farmerEmail: String
 ) {
     val assignedMember = specialRequest.assignedMember.find { it.email == farmerEmail }
 
