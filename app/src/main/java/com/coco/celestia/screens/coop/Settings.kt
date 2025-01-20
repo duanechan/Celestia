@@ -1,15 +1,21 @@
 package com.coco.celestia.screens.coop
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -25,6 +31,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,12 +40,16 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.BuildConfig
 import com.coco.celestia.R
+import com.coco.celestia.screens.coop.facility.ErrorScreen
+import com.coco.celestia.screens.coop.facility.LoadingScreen
+import com.coco.celestia.screens.coop.facility.NoFacilityScreen
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.FacilityData
 
 // TODO: Contact Developer Team UI
 // TODO: Configurations (admin side)
@@ -74,7 +86,6 @@ fun Settings(navController: NavController, userRole: String) {
             navController.navigate(Screen.AccessControl.route)
         }
 
-        // Configurations - Only shown for Admin role
         if (!userRole.startsWith("Coop", ignoreCase = true)) {
             Text(
                 text = "Configurations",
@@ -92,6 +103,15 @@ fun Settings(navController: NavController, userRole: String) {
             }
             SettingsItem(text = "Members", iconResId = R.drawable.members) {
                 navController.navigate("members")
+            }
+        } else {
+            Text(
+                text = "Configurations",
+                modifier = Modifier.padding(top = 16.dp),
+                color = Color.Gray
+            )
+            SettingsItem(text = "Collection & Payment Settings", iconResId = R.drawable.facility) {
+                navController.navigate(Screen.FacilitySettings.route)
             }
         }
 
@@ -151,6 +171,361 @@ fun SettingsItem(text: String, iconResId: Int, clickAction: () -> Unit) {
                 text = text,
                 fontSize = 16.sp
             )
+        }
+    }
+}
+
+@Composable
+fun FacilitySettingsScreen(
+    facilityViewModel: FacilityViewModel,
+    currentUserEmail: String,
+    currentUserRole: String,
+    navController: NavController
+) {
+    val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
+    val facilityState by facilityViewModel.facilityState.observeAsState(FacilityState.LOADING)
+
+    LaunchedEffect(Unit) {
+        facilityViewModel.fetchFacilities()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(White2)
+    ) {
+        when (facilityState) {
+            is FacilityState.LOADING -> {
+                LoadingScreen("Loading facilities...")
+            }
+            is FacilityState.ERROR -> {
+                ErrorScreen((facilityState as FacilityState.ERROR).message)
+            }
+            else -> {
+                val userFacilities = if (currentUserRole.startsWith("Admin", ignoreCase = true)) {
+                    facilitiesData
+                } else {
+                    facilitiesData.filter { facility ->
+                        facility.emails.contains(currentUserEmail)
+                    }
+                }
+
+                if (userFacilities.isEmpty()) {
+                    NoFacilityScreen()
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(userFacilities) { facility ->
+                                FacilityConfigurationSettings(
+                                    facility = facility,
+                                    facilityViewModel = facilityViewModel,
+                                    navController = navController
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FacilityConfigurationSettings(
+    facility: FacilityData,
+    facilityViewModel: FacilityViewModel,
+    navController: NavController
+) {
+    var isPickupEnabled by remember(facility) {
+        mutableStateOf(facility.pickupLocation.isNotBlank())
+    }
+    var isDeliveryEnabled by remember(facility) {
+        mutableStateOf(facility.deliveryDetails.isNotBlank())
+    }
+    var isCashEnabled by remember(facility) {
+        mutableStateOf(facility.cashInstructions.isNotBlank())
+    }
+    var isGcashEnabled by remember(facility) {
+        mutableStateOf(facility.gcashNumbers.isNotBlank())
+    }
+
+    var pickupLocation by remember(facility) {
+        mutableStateOf(facility.pickupLocation)
+    }
+    var deliveryDetails by remember(facility) {
+        mutableStateOf(facility.deliveryDetails)
+    }
+    var cashInstructions by remember(facility) {
+        mutableStateOf(facility.cashInstructions)
+    }
+    var gcashNumbers by remember(facility) {
+        mutableStateOf(facility.gcashNumbers)
+    }
+
+    fun disableSetting(
+        onDisable: () -> Unit,
+        onClear: () -> Unit
+    ) {
+        onDisable()
+        onClear()
+        facilityViewModel.updateFacilitySettings(
+            facilityName = facility.name,
+            pickupLocation = if (isPickupEnabled) pickupLocation else "",
+            deliveryDetails = if (isDeliveryEnabled) deliveryDetails else "",
+            cashInstructions = if (isCashEnabled) cashInstructions else "",
+            gcashNumbers = if (isGcashEnabled) gcashNumbers else "",
+            onSuccess = { /* Handle success */ },
+            onError = { /* Handle error */ }
+        )
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = White1)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = facility.name,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            // Collection Methods Section
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Collection Methods",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium
+                )
+
+                // Pickup
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Pick Up")
+                        Switch(
+                            checked = isPickupEnabled,
+                            onCheckedChange = { enabled ->
+                                if (!enabled) {
+                                    disableSetting(
+                                        onDisable = { isPickupEnabled = false },
+                                        onClear = { pickupLocation = "" }
+                                    )
+                                } else {
+                                    isPickupEnabled = true
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Green1,
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = Color.Gray
+                            )
+                        )
+                    }
+
+                    AnimatedVisibility(visible = isPickupEnabled) {
+                        OutlinedTextField(
+                            value = pickupLocation,
+                            onValueChange = { pickupLocation = it },
+                            label = { Text("Pick Up Location") },
+                            placeholder = { Text("Enter pick up location here") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                                .semantics { testTag = "android:id/PickUpLocation" }
+                        )
+                    }
+                }
+
+                // Delivery
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Delivery")
+                        Switch(
+                            checked = isDeliveryEnabled,
+                            onCheckedChange = { enabled ->
+                                if (!enabled) {
+                                    disableSetting(
+                                        onDisable = { isDeliveryEnabled = false },
+                                        onClear = { deliveryDetails = "" }
+                                    )
+                                } else {
+                                    isDeliveryEnabled = true
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Green1,
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = Color.Gray
+                            )
+                        )
+                    }
+
+                    AnimatedVisibility(visible = isDeliveryEnabled) {
+                        OutlinedTextField(
+                            value = deliveryDetails,
+                            onValueChange = { deliveryDetails = it },
+                            label = { Text("Delivery Details") },
+                            placeholder = { Text("Enter delivery/courier used") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                                .semantics { testTag = "android:id/DeliveryDetails" }
+                        )
+                    }
+                }
+            }
+
+            // Payment Methods Section
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Payment Methods",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium
+                )
+
+                // Cash
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Cash Payment")
+                        Switch(
+                            checked = isCashEnabled,
+                            onCheckedChange = { enabled ->
+                                if (!enabled) {
+                                    disableSetting(
+                                        onDisable = { isCashEnabled = false },
+                                        onClear = { cashInstructions = "" }
+                                    )
+                                } else {
+                                    isCashEnabled = true
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Green1,
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = Color.Gray
+                            )
+                        )
+                    }
+
+                    AnimatedVisibility(visible = isCashEnabled) {
+                        OutlinedTextField(
+                            value = cashInstructions,
+                            onValueChange = { cashInstructions = it },
+                            label = { Text("Cash Instructions") },
+                            placeholder = { Text("Enter instructions for cash payments") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                                .semantics { testTag = "android:id/CashDetails" }
+                        )
+                    }
+                }
+
+                // GCash
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("GCash Payment")
+                        Switch(
+                            checked = isGcashEnabled,
+                            onCheckedChange = { enabled ->
+                                if (!enabled) {
+                                    disableSetting(
+                                        onDisable = { isGcashEnabled = false },
+                                        onClear = { gcashNumbers = "" }
+                                    )
+                                } else {
+                                    isGcashEnabled = true
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Green1,
+                                uncheckedThumbColor = Color.White,
+                                uncheckedTrackColor = Color.Gray
+                            )
+                        )
+                    }
+
+                    AnimatedVisibility(visible = isGcashEnabled) {
+                        OutlinedTextField(
+                            value = gcashNumbers,
+                            onValueChange = { gcashNumbers = it },
+                            label = { Text("GCash Numbers") },
+                            placeholder = { Text("Enter GCash number(s)") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                                .semantics { testTag = "android:id/GCashNumber" }
+                        )
+                    }
+                }
+            }
+
+            if (isPickupEnabled || isDeliveryEnabled || isCashEnabled || isGcashEnabled) {
+                Button(
+                    onClick = {
+                        facilityViewModel.updateFacilitySettings(
+                            facilityName = facility.name,
+                            pickupLocation = if (isPickupEnabled) pickupLocation else "",
+                            deliveryDetails = if (isDeliveryEnabled) deliveryDetails else "",
+                            cashInstructions = if (isCashEnabled) cashInstructions else "",
+                            gcashNumbers = if (isGcashEnabled) gcashNumbers else "",
+                            onSuccess = {
+                                navController.navigate(Screen.Settings.route) {
+                                    popUpTo(Screen.Settings.route)
+                                }
+                            },
+                            onError = { /* Handle error */ }
+                        )
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Green1,
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                ) {
+                    Text("Save Changes")
+                }
+            }
         }
     }
 }
