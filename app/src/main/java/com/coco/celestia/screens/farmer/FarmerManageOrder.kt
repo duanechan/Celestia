@@ -94,7 +94,6 @@ fun FarmerManageOrder(
 
     var searchQuery by remember { mutableStateOf("") }
     var tabName by remember { mutableStateOf("In Progress") }
-//    var farmerStatus by remember { mutableStateOf("") }
     var farmerStatus by remember { mutableStateOf("All") }
 
     LaunchedEffect(tabName) {
@@ -165,8 +164,8 @@ fun FarmerManageOrder(
             ) {
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 10.dp, bottom = 2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextField(
@@ -199,29 +198,32 @@ fun FarmerManageOrder(
                     )
                 }
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    val statuses = listOf(
-                        "All", "Planting", "Planted", "Growing",
-                        "Ready to Harvest", "Harvesting", "Harvested", "Picked up by Coop"
-                    )
+                if (page == 0) {
+                    // Filter section for "In Progress" tab
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val statuses = listOf(
+                            "All", "Planting", "Planted", "Growing",
+                            "Ready to Harvest", "Harvesting", "Harvested", "Picked up by Coop"
+                        )
 
-                    statuses.forEach { status ->
-                        Button(
-                            onClick = {
-                                farmerStatus = status
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (farmerStatus == status) GreenShade7 else GreenShade4,
-                                contentColor = if (farmerStatus == status) Color.White else DarkGreen
-                            )
-                        ) {
-                            Text(text = status)
+                        statuses.forEach { status ->
+                            Button(
+                                onClick = {
+                                    farmerStatus = status
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if (farmerStatus == status) Green3 else Green5,
+                                    contentColor = if (farmerStatus == status) Color.White else DarkGreen
+                                )
+                            ) {
+                                Text(text = status)
+                            }
                         }
                     }
                 }
@@ -231,7 +233,7 @@ fun FarmerManageOrder(
                 } else {
                     "Completed"
                 }
-                //search would only result searching under the filtered status
+
                 assignedProducts
                     ?.filter { member ->
                         farmerStatus == "All" ||
@@ -273,12 +275,12 @@ fun DisplayRequestCard(
     val normalizedStatus = status.uppercase()
 
     val backgroundColor = when (normalizedStatus) {
-        "PLANTING" -> Tangerine
-        "PLANTED" -> DeepTangerine
-        "GROWING" -> BrownTangerine
-        "READY TO HARVEST" -> Brown2
-        "HARVESTING" -> Brown3
-        "HARVESTED" -> Brown1
+        "PLANTING" -> Green6
+        "PLANTED" -> Green7
+        "GROWING" -> Green9
+        "READY TO HARVEST" -> Green8
+        "HARVESTING" -> Green10
+        "HARVESTED" -> Green11
         "PICKED UP BY COOP" -> Green
         "COMPLETED" -> SageGreen.copy(alpha = 0.7f)
         "CALAMITY AFFECTED" -> SolidRed

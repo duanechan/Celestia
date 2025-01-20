@@ -31,6 +31,14 @@ val Green4 = Color(0XFFC0CFB2)
 val White1 = Color(0XFFE4E6D9)
 val White2 = Color(0XFFECEDE8)
 
+val Green5 = Color(0xffbabf9f)
+val Green6 = Color(0xffa2a97c)
+val Green7 = Color(0xff8b9361)
+val Green8 = Color(0xff818a5a)
+val Green9 = Color(0xff9ea677)
+val Green10 = Color (0xff8f9864)
+val Green11 = Color (0xffb7bd99)
+
 //Client Palette
 val LightOrange = Color(0xFFe79857) //top bar
 val ClientBG = Color (0xFFECDFCC)  //client bg
