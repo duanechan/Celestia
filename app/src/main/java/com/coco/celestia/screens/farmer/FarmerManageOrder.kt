@@ -408,24 +408,13 @@ fun DisplayRequestDetails (
 
     val trackRecord = remember { mutableStateListOf(*specialRequest?.trackRecord!!.toTypedArray()) }
 
-    Column (
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(White2)
             .verticalScroll(rememberScrollState())
+            .padding(top = 16.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(Green4)
-                .padding(horizontal = 8.dp)
-                .padding(bottom = 8.dp)
-        ) {
-            Text(
-                text = "Date of Request: $date"
-            )
-        }
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -438,21 +427,32 @@ fun DisplayRequestDetails (
                     color = Green4,
                     shape = RoundedCornerShape(12.dp)
                 )
+                .padding(16.dp)
         ) {
-            Text(
-                text = "Request ID",
-                modifier = Modifier
-                    .padding(16.dp)
-                    .weight(1f)
-            )
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row {
+                    Text(
+                        text = "Date of Request: ",
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = "$date"
+                    )
+                }
 
-            Text(
-                text = specialRequest?.specialRequestUID?.split("-")?.take(4)?.joinToString("-")
-                    ?: "",
-                modifier = Modifier
-                    .padding(16.dp)
-                    .weight(2f)
-            )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row {
+                    Text(
+                        text = "Request ID: ",
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = specialRequest?.specialRequestUID?.split("-")?.take(4)
+                            ?.joinToString("-") ?: ""
+                    )
+                }
+            }
         }
 
         Row(
@@ -530,23 +530,12 @@ fun DisplayRequestDetails (
             }
         }
 
-        OutlinedTextField(
-            value = description,
-            onValueChange = { description = it },
-            label = { Text("Update Progress") },
-            placeholder = { Text("Update the cooperative with your progress...") },
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
-        //Update Status
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
+            // Assign Milestone
             Button(
                 onClick = {
                     updateStatusDialog = true
@@ -557,24 +546,35 @@ fun DisplayRequestDetails (
                     containerColor = Green1
                 ),
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxWidth()
                     .height(56.dp)
+                    .padding(top = 8.dp, bottom = 8.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Update Status")
+                    Text("Assign Milestone")
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(
                         painter = painterResource(id = R.drawable.update),
                         contentDescription = "Update Status Icon",
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(20.dp),
                         tint = Color.White
                     )
                 }
             }
+
+            OutlinedTextField(
+                value = description,
+                onValueChange = { description = it },
+                label = { Text("Update Progress") },
+                placeholder = { Text("Update the cooperative with your progress...") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp)
+            )
 
             // Track Order
             Button(
@@ -587,8 +587,9 @@ fun DisplayRequestDetails (
                     containerColor = Green1
                 ),
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxWidth()
                     .height(56.dp)
+                    .padding(top = 16.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -600,7 +601,7 @@ fun DisplayRequestDetails (
                     Icon(
                         painter = painterResource(id = R.drawable.deliveryicon),
                         contentDescription = "Track Order Icon",
-                        modifier = Modifier.size(15.dp),
+                        modifier = Modifier.size(20.dp),
                         tint = Color.White
                     )
                 }
@@ -646,6 +647,7 @@ fun DisplayRequestDetails (
     }
 }
 
+//Changed Status to Milestone
 @Composable
 fun DisplayUpdateStatus (
     product: String,
@@ -660,7 +662,7 @@ fun DisplayUpdateStatus (
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Update Status For:") },
+        title = { Text("Update Milestone For:") },
         text = {
             Column {
                 TextField(
@@ -694,7 +696,7 @@ fun DisplayUpdateStatus (
                                 shape = RoundedCornerShape(12.dp)
                             )
                             .clickable { statusExpanded = !statusExpanded },
-                        label = { Text("Select Status") },
+                        label = { Text("Select Milestone") },
                         value = status,
                         onValueChange = {
                             status = it
@@ -836,6 +838,7 @@ fun DisplayDetails (
         ) {
             Text(
                 text = "Product/s and Quantity",
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .padding(horizontal = 12.dp)
                     .padding(top = 12.dp, bottom = 4.dp)
@@ -853,23 +856,41 @@ fun DisplayDetails (
                 }
             }
 
-            Text(
-                text = "Target Delivery Date: ${specialRequest.targetDate}",
+            Row(
                 modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp)
+                    .padding(2.dp)
+            ) {
+                Text(
+                    text = "Target Delivery Date: ",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                )
+                Text(
+                    text = "${specialRequest.targetDate}"
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(horizontal = 12.dp)
                     .padding(top = 12.dp, bottom = 4.dp)
-            )
-
-            Text(
-                text = "Collection Method: ${specialRequest.collectionMethod}",
-                modifier = Modifier
-                    .padding(horizontal = 12.dp)
-                    .padding(top = 12.dp, bottom = 4.dp)
-            )
-
+            ) {
+                Text(
+                    text = "Collection Method: ",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                )
+                Text(
+                    text = "${specialRequest.collectionMethod}",
+                )
+            }
             if (specialRequest.collectionMethod == Constants.COLLECTION_DELIVERY) {
                 Text(
                     text = "Delivery Location:",
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .padding(horizontal = 12.dp)
                         .padding(top = 12.dp, bottom = 4.dp)
@@ -877,6 +898,7 @@ fun DisplayDetails (
             } else {
                 Text(
                     text = "Pick Up Location:",
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .padding(horizontal = 12.dp)
                         .padding(top = 12.dp, bottom = 4.dp)
@@ -892,6 +914,7 @@ fun DisplayDetails (
 
             Text(
                 text = "Additional Request/s:",
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .padding(horizontal = 12.dp)
                     .padding(top = 12.dp, bottom = 4.dp)
