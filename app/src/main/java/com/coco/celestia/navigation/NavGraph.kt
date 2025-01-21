@@ -781,8 +781,6 @@ fun NavGraph(
                     reorderPoint = product.reorderPoint
                     notes = product.notes
                     isInStore = product.isInStore
-//                    isDelivery = product.collectionMethod == Constants.COLLECTION_DELIVERY
-//                    isGcash = product.paymentMethod == Constants.PAYMENT_GCASH
                     weightUnit = product.weightUnit
                 }
             }
@@ -827,7 +825,8 @@ fun NavGraph(
                         popUpTo(Screen.CoopInventory.route) { inclusive = true }
                     }
                 },
-                onEvent = { onEvent(it) }
+                onEvent = { onEvent(it) },
+                isEditMode = true
             )
         }
 
