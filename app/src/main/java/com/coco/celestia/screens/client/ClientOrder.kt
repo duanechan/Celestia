@@ -18,12 +18,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
@@ -49,6 +49,7 @@ import androidx.navigation.NavController
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import com.coco.celestia.R
+import com.coco.celestia.screens.coop.facility.ItemCard
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.*
@@ -105,20 +106,21 @@ fun ClientOrder(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp)
-                    .background(Color.White, shape = RoundedCornerShape(12.dp)),
+                    .padding(12.dp)
+                    .background(Color.White, shape = RoundedCornerShape(16.dp)),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = "Search",
-                    modifier = Modifier.padding(start = 16.dp)
+                    modifier = Modifier.padding(start = 16.dp),
+                    tint = Green1
                 )
 
                 TextField(
                     value = searchText,
                     onValueChange = { newText -> searchText = newText },
-                    placeholder = { Text("Search") },
+                    placeholder = { Text("Search Orders...", color = Color.Gray) },
                     modifier = Modifier.weight(1f),
                     maxLines = 1,
                     singleLine = true,
@@ -129,6 +131,20 @@ fun ClientOrder(
                         unfocusedIndicatorColor = Color.Transparent
                     )
                 )
+
+                // Clear Button for Search
+                if (searchText.isNotEmpty()) {
+                    IconButton(
+                        onClick = { searchText = "" },
+                        modifier = Modifier.padding(end = 16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Clear,
+                            contentDescription = "Clear Search",
+                            tint = Green1
+                        )
+                    }
+                }
             }
 
             // Tab Row
@@ -159,7 +175,7 @@ fun ClientOrder(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
+                    .padding(horizontal = 2.dp)
             ) {
                 val filteredOrders = orderData.filter { order ->
                     order.status.equals(filters[selectedTabIndex], ignoreCase = true) &&
@@ -217,16 +233,16 @@ fun OrderCard(
             .fillMaxWidth()
             .padding(16.dp)
             .clickable {
-                navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId)) // Use the order parameter
+                navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId))
             },
         colors = CardDefaults.cardColors(containerColor = White1),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.elevatedCardElevation(8.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // First Row: Order ID and Date
+            // Order ID and Date
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -238,12 +254,14 @@ fun OrderCard(
                 )
                 Text(
                     text = order.orderDate,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
                 )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Order Status and Item Count
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -253,7 +271,7 @@ fun OrderCard(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
-                    text = order.status, // Placeholder status
+                    text = order.status,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -264,7 +282,7 @@ fun OrderCard(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            // Placeholder Items
+            // Items in the Order
             order.orderData.forEach { product ->
                 ItemCard(product)
             }
@@ -281,92 +299,27 @@ fun OrderCard(
             ) {
                 Text(
                     text = order.collectionMethod,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+                Text(
+                    text = order.paymentMethod,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
                 )
             }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.End
             ) {
-                Text(
-                    text = order.paymentMethod,
-                    style = MaterialTheme.typography.bodyMedium
-                )
                 Text(
                     text = "Total: PHP ${order.orderData.sumOf { it.price }}",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Green1
                 )
             }
-        }
-    }
-}
-
-@OptIn(ExperimentalCoilApi::class)
-@Composable
-fun ItemCard(item: ProductData) {
-    var productImage by remember { mutableStateOf<Uri?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
-
-    DisposableEffect(item.productId) {
-        isLoading = true
-        ImageService.fetchProductImage(item.productId) { uri ->
-            productImage = uri
-            isLoading = false
-        }
-
-        onDispose { }
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Card(
-            modifier = Modifier.size(60.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                if (isLoading || productImage == null) {
-                    Image(
-                        painter = painterResource(R.drawable.product_image),
-                        contentDescription = "Loading",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Image(
-                        painter = rememberImagePainter(productImage),
-                        contentDescription = item.name,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
-        }
-
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = item.name,
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                text = "${item.quantity} kg",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "PHP ${item.price}",
-                style = MaterialTheme.typography.bodyMedium
-            )
         }
     }
 }
