@@ -71,6 +71,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import com.coco.celestia.ui.theme.*
@@ -535,36 +536,57 @@ fun DisplayRequestDetails (
                 .fillMaxSize()
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            // Assign Milestone
-            Button(
-                onClick = {
-                    updateStatusDialog = true
-                },
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = Color.White,
-                    containerColor = Green1
-                ),
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
-                    .padding(top = 8.dp, bottom = 8.dp)
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
+                // Assign Milestone
+                Button(
+                    onClick = {
+                        updateStatusDialog = true
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = Color.White,
+                        containerColor = Green1
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp)
                 ) {
-                    Text("Assign Milestone")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        painter = painterResource(id = R.drawable.update),
-                        contentDescription = "Update Status Icon",
-                        modifier = Modifier.size(20.dp),
-                        tint = Color.White
+                    Text(
+                        text = "Assign Milestone",
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                // Notify Unforeseen Circumstances
+                Button(
+                    onClick = {
+                        // Handle "Notify Unforeseen Circumstances" action
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = Color.White,
+                        containerColor = Green1
+                    ),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp)
+                ) {
+                    Text(
+                        text = "Notify Unforeseen Circumstances",
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
+
 
             OutlinedTextField(
                 value = description,
@@ -573,10 +595,18 @@ fun DisplayRequestDetails (
                 placeholder = { Text("Update the cooperative with your progress...") },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 16.dp)
+                    .padding(vertical = 16.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    disabledContainerColor = Color.White,
+                    errorContainerColor = Color.White,
+                    focusedIndicatorColor = Green1,
+                    unfocusedIndicatorColor = Green4
+                )
             )
 
-            // Track Order
+            // Track Progress
             Button(
                 onClick = {
                     // Track order action
@@ -596,7 +626,7 @@ fun DisplayRequestDetails (
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Track Order")
+                    Text("Track Progress")
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(
                         painter = painterResource(id = R.drawable.deliveryicon),
