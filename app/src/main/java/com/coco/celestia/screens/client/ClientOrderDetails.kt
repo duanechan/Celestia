@@ -196,51 +196,56 @@ fun SupportCenter() {
             .background(White1)
             .padding(16.dp)
     ) {
-        Row(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { isExpanded = !isExpanded },
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .clickable { isExpanded = !isExpanded }
         ) {
-            Text(
-                text = "Support Center",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Support Center",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
 
-            Icon(
-                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                contentDescription = if (isExpanded) "Collapse" else "Expand"
-            )
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (isExpanded) "Collapse" else "Expand"
+                )
+            }
         }
 
         if (isExpanded) {
-            Column {
-                SupportCenterItemsCard("Request for Return/Refund") // TODO: will show only if the status is already completed
-                SupportCenterItemsCard("Contact BCFAC")
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                SupportCenterItemsCard("Cancel Order") // TODO: Handling of cancelled orders
+                SupportCenterItemsCard("Request for Return/Refund") // TODO: Display based on status
+                SupportCenterItemsCard("Contact BCFAC") // TODO: Add coop contact details
             }
         }
     }
 }
 
+
 @Composable
 fun SupportCenterItemsCard(label: String){
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = White1
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 0.dp
-        ),
-        shape = RoundedCornerShape(8.dp)
+            .fillMaxSize()
+            .clickable{true},
+//            .padding(vertical = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = White1),
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(5.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
