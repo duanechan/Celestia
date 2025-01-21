@@ -144,43 +144,23 @@ fun FarmerOrderDetails(
                             textAlign = TextAlign.Center
                         )
                     }
+                    "COMPLETED" -> {
+                        Text(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            text = "Order Completed",
+                            color = Color.Green,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                     else -> {
-//                        OrderStatusUpdates(orderData = orderData)
+                        // Handle other statuses
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun FarmerOrderMilestones(
-    navController: NavController,
-    orderId: String
-) {
-    val orderViewModel: OrderViewModel = viewModel()
-    val allOrders by orderViewModel.orderData.observeAsState(emptyList())
-    val orderData: OrderData? = remember(orderId, allOrders) {
-        allOrders.find { it.orderId == orderId }
-    }
-
-    Log.d("FarmerOrderMilestones", "orderId: $orderId, orderData: $orderData")
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Milestones for Order $orderId",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-        orderData?.let {
-            OrderStatusUpdates(orderData = it)
-        } ?: run {
-            Text(text = "Order data not found")
         }
     }
 }
@@ -197,15 +177,9 @@ fun OrderDetailsCard(
     val farmerItemViewModel: FarmerItemViewModel = viewModel()
     var showCalamityDialog by remember { mutableStateOf(false) }
 
-    // Allowed statuses for displaying the calamity button
     val allowedStatuses = listOf(
-        "ACCEPTED",
-        "PLANTING",
-        "PLANTED",
-        "GROWING",
-        "READY_FOR_HARVEST",
-        "HARVESTING",
-        "HARVESTED"
+        "SOIL PREPARATION", "SEED SOWING", "GROWING", "PRE-HARVEST",
+        "HARVESTING", "POST-HARVEST", "PICKED UP BY COOP"
     )
 
     LaunchedEffect(Unit) {
@@ -217,14 +191,15 @@ fun OrderDetailsCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(16.dp)
             .semantics { testTag = "android:id/orderDetailsCard" },
-        shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent
+            containerColor = Color.White
         ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
     ) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
@@ -232,151 +207,112 @@ fun OrderDetailsCard(
                         colors = listOf(Green4, White1)
                     )
                 )
+                .padding(16.dp)
         ) {
-            Column {
-                DisplayOrderDetail("Order ID", orderData.orderId.substring(6, 10).uppercase())
-                DisplayOrderDetail("Item", product[0].name)
-                DisplayOrderDetail("Target Date", orderData.targetDate)
-                DisplayOrderDetail("Client Name", orderData.client)
-                DisplayOrderDetail("Address", "${orderData.street}, ${orderData.barangay}")
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Order ID: ${orderData.orderId.substring(6, 10).uppercase()}",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+                Text(
+                    text = orderData.status,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Gray
+                )
+            }
 
-                // Track Progress button
-                Button(
-                    onClick = {
-                        navController.navigate(Screen.FarmerOrderMilestones.createRoute(orderData.orderId))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Divider(color = Color.Gray, thickness = 1.dp)
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            DisplayOrderDetail("Item", product[0].name)
+            DisplayOrderDetail("Target Date", orderData.targetDate)
+            DisplayOrderDetail("Client Name", orderData.client)
+            DisplayOrderDetail("Address", "${orderData.street}, ${orderData.barangay}")
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                    navController.navigate(Screen.FarmerOrderMilestones.createRoute(orderData.orderId))
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4CAF50),
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Text(text = "Track Progress")
+            }
+
+            if (orderData.status in allowedStatuses) {
+                CalamityAffectedStatus(
+                    orderStatus = orderData.status,
+                    allowedStatuses = allowedStatuses,
+                    onNotifyClick = { showCalamityDialog = true }
+                )
+            }
+
+            if (showCalamityDialog) {
+                AlertDialog(
+                    onDismissRequest = { showCalamityDialog = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            orderViewModel.tagOrderAsCalamityAffected(orderData)
+                            showCalamityDialog = false
+                        }) {
+                            Text("Confirm")
+                        }
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50),
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .fillMaxWidth()
-                        .height(50.dp)
-                ) {
-                    Text(text = "Track Progress")
-                }
-
-                // Display calamity-related UI if status matches allowed statuses
-                if (orderData.status in allowedStatuses) {
-                    CalamityAffectedStatus(
-                        orderStatus = orderData.status,        // Pass the current order status
-                        allowedStatuses = allowedStatuses,     // Pass the allowed statuses list
-                        onNotifyClick = { showCalamityDialog = true }  // Lambda for the notify click action
-                    )
-                }
-
-                if (showCalamityDialog) {
-                    AlertDialog(
-                        onDismissRequest = { showCalamityDialog = false },
-                        confirmButton = {
-                            TextButton(onClick = {
-                                orderViewModel.tagOrderAsCalamityAffected(orderData)
-                                showCalamityDialog = false
-                            }) {
-                                Text("Confirm")
-                            }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { showCalamityDialog = false }) {
-                                Text("Cancel")
-                            }
-                        },
-                        title = { Text("Confirm Action") },
-                        text = { Text("Are you sure you want to tag this order as affected by calamity?") }
-                    )
-                }
-
-                if (orderData.status == "PENDING") {
-                    PendingStatusDialog(
-                        orderData,
-                        orderViewModel,
-                        navController
-                    )
-                }
-
-                if (orderData.status == "PARTIALLY_FULFILLED") {
-                    if (fulfilledByFarmer != null) {
-                        when (fulfilledByFarmer.status) {
-                            "ACCEPTED" -> {
-                                AcceptedStatusDialog(
-                                    orderData,
-                                    orderViewModel,
-                                    "partial",
-                                    orderData.orderData[0].type,
-                                    fulfilledByFarmer
-                                )
-                            }
-
-                            "PLANTING" -> {
-                                PlantingStatusDialog(
-                                    orderData,
-                                    orderViewModel,
-                                    "partial",
-                                    fulfilledByFarmer
-                                )
-                            }
-
-                            "HARVESTING" -> {
-                                HarvestingStatusDialog(
-                                    orderData,
-                                    orderViewModel,
-                                    "partial",
-                                    fulfilledByFarmer
-                                )
-                            }
-
-                            "HARVESTING_MEAT" -> {
-                                HarvestingMeatStatusDialog(
-                                    orderData,
-                                    orderViewModel,
-                                    "partial",
-                                    fulfilledByFarmer
-                                )
-                            }
-
-                            "DELIVERING" -> DeliveringStatusDialog(
-                                orderData,
-                                orderViewModel,
-                                "partial",
-                                fulfilledByFarmer
-                            )
-
-                            "COMPLETED" -> CompletedStatusDialog(
-                                orderData,
-                                orderViewModel,
-                                "partial",
-                                fulfilledByFarmer
-                            )
+                    dismissButton = {
+                        TextButton(onClick = { showCalamityDialog = false }) {
+                            Text("Cancel")
                         }
-                    }
-                } else {
-                    when (orderData.status) {
-                        "ACCEPTED" -> {
-                            AcceptedStatusDialog(
-                                orderData,
-                                orderViewModel,
-                                "full",
-                                orderData.orderData[0].type,
-                                fulfilledByFarmer
-                            )
-                        }
+                    },
+                    title = { Text("Confirm Action") },
+                    text = { Text("Are you sure you want to tag this order as affected by calamity?") }
+                )
+            }
 
-                        "PLANTING" -> {
+            if (orderData.status == "PENDING") {
+                PendingStatusDialog(
+                    orderData,
+                    orderViewModel,
+                    navController
+                )
+            }
+
+            if (orderData.status == "PARTIALLY_FULFILLED") {
+                if (fulfilledByFarmer != null) {
+                    when (fulfilledByFarmer.status) {
+
+                        "SEED SOWING" -> {
                             PlantingStatusDialog(
                                 orderData,
                                 orderViewModel,
-                                "full",
+                                "partial",
                                 fulfilledByFarmer
                             )
                         }
+
 
                         "HARVESTING" -> {
                             HarvestingStatusDialog(
                                 orderData,
                                 orderViewModel,
-                                "full",
+                                "partial",
                                 fulfilledByFarmer
                             )
                         }
@@ -385,24 +321,37 @@ fun OrderDetailsCard(
                             HarvestingMeatStatusDialog(
                                 orderData,
                                 orderViewModel,
-                                "full",
+                                "partial",
                                 fulfilledByFarmer
                             )
                         }
 
-                        "DELIVERING" -> DeliveringStatusDialog(
+                        "COMPLETED" -> CompletedStatusDialog(
                             orderData,
                             orderViewModel,
-                            "full",
+                            "partial",
                             fulfilledByFarmer
                         )
-                        "COMPLETED" -> CompletedStatusDialog(
+                    }
+                }
+            } else {
+                when (orderData.status) {
+
+                    "HARVESTING" -> {
+                        HarvestingStatusDialog(
                             orderData,
                             orderViewModel,
                             "full",
                             fulfilledByFarmer
                         )
                     }
+
+                    "COMPLETED" -> CompletedStatusDialog(
+                        orderData,
+                        orderViewModel,
+                        "full",
+                        fulfilledByFarmer
+                    )
                 }
             }
         }
@@ -417,14 +366,13 @@ fun DisplayOrderDetail(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp)
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        horizontalArrangement = Arrangement.Start
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = label,
-            fontSize = 15.sp,
-            color = Cocoa,
+            fontSize = 16.sp,
+            color = Color.Black,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .weight(1f)
@@ -435,8 +383,8 @@ fun DisplayOrderDetail(
         )
         Text(
             text = value,
-            fontSize = 15.sp,
-            color = Cocoa,
+            fontSize = 16.sp,
+            color = Color.Black,
             modifier = Modifier
                 .weight(1f)
                 .semantics { testTag = "android:id/deliveryAddressText" },

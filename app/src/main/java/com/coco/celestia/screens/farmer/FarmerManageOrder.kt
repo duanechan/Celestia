@@ -115,7 +115,7 @@ fun FarmerManageOrder(
         val coroutineScope = rememberCoroutineScope()
 
         TabRow(
-            selectedTabIndex = pagerState.pageCount,
+            selectedTabIndex = pagerState.currentPage,
             containerColor = Green4,
             contentColor = Green1,
             divider = {},
@@ -208,8 +208,8 @@ fun FarmerManageOrder(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         val statuses = listOf(
-                            "All", "Planting", "Planted", "Growing",
-                            "Ready to Harvest", "Harvesting", "Harvested", "Picked up by Coop"
+                            "All", "Soil Preparation", "Seed Sowing", "Growing",
+                            "Pre-Harvest", "Harvesting", "Post-Harvest", "Picked up by Coop"
                         )
 
                         statuses.forEach { status ->
@@ -235,6 +235,13 @@ fun FarmerManageOrder(
                 }
 
                 assignedProducts
+                    ?.filter { member ->
+                        if (tabName == "Completed") {
+                            member.assignedMember.any { it.status.equals("Completed", ignoreCase = true) }
+                        } else {
+                            member.assignedMember.any { !it.status.equals("Completed", ignoreCase = true) }
+                        }
+                    }
                     ?.filter { member ->
                         farmerStatus == "All" ||
                                 member.assignedMember.any { it.status.equals(farmerStatus, ignoreCase = true) }
@@ -275,12 +282,12 @@ fun DisplayRequestCard(
     val normalizedStatus = status.uppercase()
 
     val backgroundColor = when (normalizedStatus) {
-        "PLANTING" -> Green6
-        "PLANTED" -> Green7
+        "SOIL PREPARATION" -> Green6
+        "SEED SOWING" -> Green7
         "GROWING" -> Green9
-        "READY TO HARVEST" -> Green8
+        "PRE-HARVEST" -> Green8
         "HARVESTING" -> Green10
-        "HARVESTED" -> Green11
+        "POST-HARVEST" -> Green11
         "PICKED UP BY COOP" -> Green
         "COMPLETED" -> SageGreen.copy(alpha = 0.7f)
         "CALAMITY AFFECTED" -> SolidRed
@@ -291,12 +298,12 @@ fun DisplayRequestCard(
     }
 
     val iconPainter: Painter? = when (normalizedStatus) {
-        "PLANTING" -> painterResource(id = R.drawable.plant_hand)
-        "PLANTED" -> painterResource(id = R.drawable.plant)
+        "SOIL PREPARATION" -> painterResource(id = R.drawable.plant_hand)
+        "SEED SOWING" -> painterResource(id = R.drawable.plant)
         "GROWING" -> painterResource(id = R.drawable.planting)
-        "READY TO HARVEST" -> painterResource(id = R.drawable.harvest)
+        "PRE-HARVEST" -> painterResource(id = R.drawable.harvest)
         "HARVESTING" -> painterResource(id = R.drawable.harvest_basket)
-        "HARVESTED" -> painterResource(id = R.drawable.harvested)
+        "POST-HARVEST" -> painterResource(id = R.drawable.harvested)
         "PICKED UP BY COOP" -> painterResource(id = R.drawable.deliveryicon)
         "COMPLETED" -> painterResource(id = R.drawable.received)
         "CANCELLED" -> painterResource(id = R.drawable.cancelled)
@@ -647,8 +654,8 @@ fun DisplayUpdateStatus (
 ) {
     var status by remember { mutableStateOf("") }
     var statusExpanded by remember { mutableStateOf(false) }
-    val statusList = listOf("Planting","Planted", "Growing", "Ready to Harvest", "Harvesting",
-        "Harvested", "Picked Up by Coop", "Calamity-Affected", "Completed")
+    val statusList = listOf("Soil Preparation","Seed Sowing", "Growing", "Pre-Harvest", "Harvesting",
+        "Post-Harvest", "Picked Up by Coop", "Calamity-Affected", "Completed")
 
 
     AlertDialog(

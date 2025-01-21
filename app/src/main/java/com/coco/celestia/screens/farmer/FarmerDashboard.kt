@@ -193,8 +193,8 @@ fun FarmerDashboard(
 @Composable
 fun FarmerOrderOverview(orders: List<OrderData>) {
     val statuses = listOf(
-        "PLANTING", "PLANTED", "GROWING", "READY TO HARVEST",
-        "HARVESTING", "HARVESTED", "PICKED UP BY COOP",
+        "SOIL PREPARATION", "SEED SOWING", "GROWING", "PRE-HARVEST",
+        "HARVESTING", "POST-HARVEST", "PICKED UP BY COOP",
         "COMPLETED", "CALAMITY AFFECTED"
     )
 
@@ -203,12 +203,12 @@ fun FarmerOrderOverview(orders: List<OrderData>) {
     }
 
     val statusIcons = mapOf(
-        "PLANTING" to R.drawable.plant_hand,
-        "PLANTED" to R.drawable.plant,
+        "SOIL PREPARATION" to R.drawable.plant_hand,
+        "SEED SOWING" to R.drawable.plant,
         "GROWING" to R.drawable.planting,
-        "READY TO HARVEST" to R.drawable.harvest,
+        "PRE-HARVEST" to R.drawable.harvest,
         "HARVESTING" to R.drawable.harvest_basket,
-        "HARVESTED" to R.drawable.harvested,
+        "POST-HARVEST" to R.drawable.harvested,
         "PICKED UP BY COOP" to R.drawable.deliveryicon,
         "COMPLETED" to R.drawable.received,
         "CALAMITY AFFECTED" to R.drawable.calamity
