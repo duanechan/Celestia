@@ -166,6 +166,36 @@ fun FarmerOrderDetails(
 }
 
 @Composable
+fun FarmerOrderMilestones(
+    navController: NavController,
+    orderId: String
+) {
+    val orderViewModel: OrderViewModel = viewModel()
+    val allOrders by orderViewModel.orderData.observeAsState(emptyList())
+    val orderData: OrderData? = remember(orderId, allOrders) {
+        allOrders.find { it.orderId == orderId }
+    }
+    Log.d("FarmerOrderMilestones", "orderId: $orderId, orderData: $orderData")
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Milestones for Order $orderId",
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        orderData?.let {
+            OrderStatusUpdates(orderData = it)
+        } ?: run {
+            Text(text = "Order data not found")
+        }
+    }
+}
+
+@Composable
 fun OrderDetailsCard(
     orderData: OrderData,
     orderViewModel: OrderViewModel,
