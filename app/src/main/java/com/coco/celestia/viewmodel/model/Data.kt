@@ -112,7 +112,8 @@ data class AssignedMember(
     val name: String = "",
     val product: String = "",
     var quantity: Int = 0,
-    val status: String = ""
+    val status: String = "",
+    val farmerTrackRecord: List<TrackRecord> = emptyList()
 )
 
 data class TrackRecord(

@@ -2,7 +2,6 @@
 
 package com.coco.celestia.screens.farmer
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -25,7 +24,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,27 +38,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.viewmodel.model.OrderData
-import com.coco.celestia.viewmodel.model.UserData
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
@@ -69,11 +58,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.model.Constants
@@ -237,13 +223,6 @@ fun FarmerManageOrder(
 
                 assignedProducts
                     ?.filter { member ->
-                        if (tabName == "Completed") {
-                            member.assignedMember.any { it.status.equals("Completed", ignoreCase = true) }
-                        } else {
-                            member.assignedMember.any { !it.status.equals("Completed", ignoreCase = true) }
-                        }
-                    }
-                    ?.filter { member ->
                         farmerStatus == "All" ||
                                 member.assignedMember.any { it.status.equals(farmerStatus, ignoreCase = true) }
                     }
@@ -405,9 +384,12 @@ fun DisplayRequestDetails (
 
     var checked by remember { mutableStateOf(true) }
     var updateStatusDialog by remember { mutableStateOf(false) }
-    var description by remember { mutableStateOf("") }
 
     val trackRecord = remember { mutableStateListOf(*specialRequest?.trackRecord!!.toTypedArray()) }
+    val farmerTrackRecord = remember {
+        val farmer = specialRequest?.assignedMember?.find { it.email == farmerEmail }
+        mutableStateListOf(*(farmer?.farmerTrackRecord?.toTypedArray() ?: emptyArray()))
+    }
 
     Column(
         modifier = Modifier
@@ -437,7 +419,7 @@ fun DisplayRequestDetails (
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "$date"
+                        text = date
                     )
                 }
 
@@ -587,25 +569,6 @@ fun DisplayRequestDetails (
                 }
             }
 
-
-            OutlinedTextField(
-                value = description,
-                onValueChange = { description = it },
-                label = { Text("Update Progress") },
-                placeholder = { Text("Update the cooperative with your progress...") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.White,
-                    unfocusedContainerColor = Color.White,
-                    disabledContainerColor = Color.White,
-                    errorContainerColor = Color.White,
-                    focusedIndicatorColor = Green1,
-                    unfocusedIndicatorColor = Green4
-                )
-            )
-
             // Track Progress
             Button(
                 onClick = {
@@ -643,14 +606,18 @@ fun DisplayRequestDetails (
         if (specialRequest != null) {
             DisplayUpdateStatus(
                 product = product,
-                onConfirm = { status ->
+                onConfirm = { status, description ->
                     specialRequest.assignedMember.map { member ->
                         if (member.email == farmerEmail) {
                             val addTrack = TrackRecord(
                                 description = "Farmer ${member.name} status: $status",
                                 dateTime = formattedDateTime
                             )
-
+                            val addFarmerTrack = TrackRecord(
+                                description = "In Progress ($status): $description",
+                                dateTime = formattedDateTime
+                            )
+                            farmerTrackRecord.add(addFarmerTrack)
                             trackRecord.add(addTrack)
                         }
                     }
@@ -659,7 +626,10 @@ fun DisplayRequestDetails (
                         specialRequest.copy(
                             assignedMember = specialRequest.assignedMember.map { member ->
                                 if (member.email == farmerEmail && member.product == product) {
-                                    member.copy(status = status)
+                                    member.copy(
+                                        status = status,
+                                        farmerTrackRecord = farmerTrackRecord
+                                    )
                                 } else {
                                     member
                                 }
@@ -681,13 +651,14 @@ fun DisplayRequestDetails (
 @Composable
 fun DisplayUpdateStatus (
     product: String,
-    onConfirm: (String) -> Unit,
+    onConfirm: (String, String) -> Unit,
     onDismiss: () -> Unit
 ) {
     var status by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
     var statusExpanded by remember { mutableStateOf(false) }
     val statusList = listOf("Soil Preparation","Seed Sowing", "Growing", "Pre-Harvest", "Harvesting",
-        "Post-Harvest", "Picked Up by Coop", "Calamity-Affected", "Completed")
+        "Post-Harvest", "Picked Up by Coop", "Calamity-Affected")
 
 
     AlertDialog(
@@ -767,11 +738,32 @@ fun DisplayUpdateStatus (
                         }
                     }
                 }
+
+                if (status.isNotEmpty()) {
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        label = { Text("Update Progress") },
+                        placeholder = { Text("Update the cooperative with your progress...") },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            disabledContainerColor = Color.White,
+                            errorContainerColor = Color.White,
+                            focusedIndicatorColor = Green1,
+                            unfocusedIndicatorColor = Green4
+                        )
+                    )
+                }
             }
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(status) }
+                onClick = { onConfirm(status, description) }
             ) {
                 Text("Confirm")
             }
@@ -898,7 +890,7 @@ fun DisplayDetails (
                     modifier = Modifier
                 )
                 Text(
-                    text = "${specialRequest.targetDate}"
+                    text = specialRequest.targetDate
                 )
             }
 
@@ -914,7 +906,7 @@ fun DisplayDetails (
                     modifier = Modifier
                 )
                 Text(
-                    text = "${specialRequest.collectionMethod}",
+                    text = specialRequest.collectionMethod,
                 )
             }
             if (specialRequest.collectionMethod == Constants.COLLECTION_DELIVERY) {
