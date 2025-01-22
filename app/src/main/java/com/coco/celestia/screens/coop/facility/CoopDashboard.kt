@@ -1,5 +1,8 @@
 package com.coco.celestia.screens.coop.facility
 
+import android.net.Uri
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
@@ -9,24 +12,30 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -35,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,31 +52,58 @@ import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.OrderViewModel
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.window.Dialog
+import androidx.navigation.NavController
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
 import com.coco.celestia.R
+import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.service.ImageService
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.auth.FirebaseAuth
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun CoopDashboard(
     orderViewModel: OrderViewModel,
     productViewModel: ProductViewModel,
     facilityViewModel: FacilityViewModel,
+    userViewModel: UserViewModel,
+    navController: NavController
 ) {
+    val uid = FirebaseAuth.getInstance().uid.toString()
     val currentUserEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
     val currentFacility by facilityViewModel.facilitiesData.observeAsState(emptyList())
+    val userData by userViewModel.userData.observeAsState()
     val facilityState by facilityViewModel.facilityState.observeAsState(FacilityState.LOADING)
     val products by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
     val allOrders by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
 
+    val dateFormat = remember { SimpleDateFormat("EEEE, MMMM d yyyy", Locale.getDefault()) }
+    val today = dateFormat.format(Date())
+
+    val calendar = Calendar.getInstance()
+    val hour = calendar.get(Calendar.HOUR_OF_DAY)
+    val greeting = when (hour) {
+        in 0..11 -> "Good Morning"
+        in 12..17 -> "Good Afternoon"
+        else -> "Good Evening"
+    }
+
     LaunchedEffect(Unit) {
         facilityViewModel.fetchFacilities()
+        userViewModel.fetchUser(uid)
     }
 
     val userFacility = when (facilityState) {
@@ -111,6 +148,8 @@ fun CoopDashboard(
     val inactiveProducts = products.count { !it.isActive }
     val lowStockProducts = products.filter { it.quantity <= it.reorderPoint }
     var showLowStockDialog by remember { mutableStateOf(false) }
+    var showActiveProductsDialog by remember { mutableStateOf(false) }
+    var showInactiveProductsDialog by remember { mutableStateOf(false) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -128,13 +167,27 @@ fun CoopDashboard(
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
             ) {
-                Text(
-                    text = currentFacilityName.uppercase(),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = Color.Black,
-                    textAlign = TextAlign.Center
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    userFacility?.let { facility ->
+                        Icon(
+                            painter = painterResource(id = facility.icon),
+                            contentDescription = null,
+                            modifier = Modifier.size(25.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+
+                    Text(
+                        text = currentFacilityName.uppercase(),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
+                    )
+                }
 
                 if (facilityState is FacilityState.LOADING ||
                     productState is ProductState.LOADING ||
@@ -147,6 +200,35 @@ fun CoopDashboard(
                 }
             }
 
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .background(White1, shape = RoundedCornerShape(12.dp))
+                    .padding(16.dp)
+            ) {
+                Column {
+                    Text(
+                        text = today,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Normal,
+                        textAlign = TextAlign.Start,
+                        color = DarkGreen
+                    )
+
+                    userData?.let { user ->
+                        Text(
+                            text = "$greeting, ${user.firstname} ${user.lastname}!",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Start,
+                            color = DarkGreen,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
+            }
+
             Text(
                 text = "Items",
                 fontWeight = FontWeight.Medium,
@@ -155,8 +237,34 @@ fun CoopDashboard(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            ItemCard("Active Products", activeProducts.toString())
-            ItemCard("Inactive Products", inactiveProducts.toString())
+            ItemCard(
+                "Active Products",
+                activeProducts.toString(),
+                onClick = { showActiveProductsDialog = true }
+            )
+            ItemCard(
+                "Inactive Products",
+                inactiveProducts.toString(),
+                onClick = { showInactiveProductsDialog = true }
+            )
+
+            if (showActiveProductsDialog) {
+                ProductListDialog(
+                    title = "Active Products",
+                    products = products.filter { it.isActive },
+                    onDismiss = { showActiveProductsDialog = false },
+                    navController = navController
+                )
+            }
+
+            if (showInactiveProductsDialog) {
+                ProductListDialog(
+                    title = "Inactive Products",
+                    products = products.filter { !it.isActive },
+                    onDismiss = { showInactiveProductsDialog = false },
+                    navController = navController
+                )
+            }
 
             Text(
                 text = "Stock Alerts",
@@ -187,13 +295,13 @@ fun CoopDashboard(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            SalesActivityCard("Pending", pendingCount.toString(), R.drawable.review)
-            SalesActivityCard("Confirmed", confirmedCount.toString(), R.drawable.progress)
-            SalesActivityCard("To Deliver", toDeliverCount.toString(), R.drawable.progress)
-            SalesActivityCard("To Receive", toReceiveCount.toString(), R.drawable.progress)
-            SalesActivityCard("Completed", completedCount.toString(), R.drawable.progress)
-            SalesActivityCard("Cancelled", cancelledCount.toString(), R.drawable.cancelled)
-            SalesActivityCard("Return/Refund", returnRefundCount.toString(), R.drawable.cancelled)
+            OrderStatusCard("Pending", pendingCount.toString(), R.drawable.review)
+            OrderStatusCard("Confirmed", confirmedCount.toString(), R.drawable.progress)
+            OrderStatusCard("To Deliver", toDeliverCount.toString(), R.drawable.progress)
+            OrderStatusCard("To Receive", toReceiveCount.toString(), R.drawable.progress)
+            OrderStatusCard("Completed", completedCount.toString(), R.drawable.progress)
+            OrderStatusCard("Cancelled", cancelledCount.toString(), R.drawable.cancelled)
+            OrderStatusCard("Return/Refund", returnRefundCount.toString(), R.drawable.cancelled)
         }
     }
 }
@@ -205,25 +313,25 @@ fun LowStockDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(
-                onClick = onDismiss,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = Green1
-                )
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Close",
-                    fontWeight = FontWeight.Medium
+                    text = "Low Stock Alert",
+                    fontWeight = FontWeight.Bold,
+                    color = Green1
                 )
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Green1
+                    )
+                }
             }
-        },
-        title = {
-            Text(
-                text = "Low Stock Alert",
-                fontWeight = FontWeight.Bold,
-                color = Green1
-            )
         },
         text = {
             Column {
@@ -246,7 +354,8 @@ fun LowStockDialog(
                 }
             }
         },
-        containerColor = Green4,
+        confirmButton = {},
+        containerColor = White1,
         titleContentColor = Green1,
         iconContentColor = Green1,
         shape = RoundedCornerShape(8.dp)
@@ -334,7 +443,7 @@ fun ItemCard(label: String, count: String, onClick: () -> Unit = {}) {
 }
 
 @Composable
-fun SalesActivityCard(label: String, count: String, iconResId: Int) {
+fun OrderStatusCard (label: String, count: String, iconResId: Int) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -380,13 +489,147 @@ fun SalesActivityCard(label: String, count: String, iconResId: Int) {
                     fontSize = 14.sp,
                     color = Color.DarkGray
                 )
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
-                    contentDescription = "Arrow",
-                    tint = Color.Gray,
-                    modifier = Modifier.size(24.dp)
-                )
             }
+        }
+    }
+}
+
+@Composable
+fun ProductListDialog(
+    title: String,
+    products: List<ProductData>,
+    onDismiss: () -> Unit,
+    navController: NavController
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 500.dp),
+            colors = CardDefaults.cardColors(containerColor = White1),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = title,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
+                    IconButton(onClick = onDismiss) {
+                        Icon(Icons.Default.Close, "Close")
+                    }
+                }
+
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+                if (products.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No Products Found",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.Gray
+                        )
+                    }
+                } else {
+                    LazyColumn {
+                        items(products) { product ->
+                            ProductListItem(
+                                product = product,
+                                onClick = {
+                                    navController.navigate(Screen.CoopInventoryDetails.createRoute(product.productId))
+                                    onDismiss()
+                                }
+                            )
+                            if (product != products.last()) {
+                                Divider(modifier = Modifier.padding(vertical = 8.dp))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalCoilApi::class)
+@Composable
+private fun ProductListItem(
+    product: ProductData,
+    onClick: () -> Unit
+) {
+    var productImage by remember { mutableStateOf<Uri?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    DisposableEffect(product.productId) {
+        isLoading = true
+        ImageService.fetchProductImage(product.productId) { uri ->
+            productImage = uri
+            isLoading = false
+        }
+        onDispose { }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Card(
+            modifier = Modifier.size(60.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isLoading || productImage == null) {
+                    Text(
+                        text = "+ Add\nImage",
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                } else {
+                    Image(
+                        painter = rememberImagePainter(productImage),
+                        contentDescription = product.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+        }
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Text(
+                text = product.name,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = "${product.quantity} ${product.weightUnit}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
+            )
+            Text(
+                text = "₱${product.price}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray
+            )
         }
     }
 }
