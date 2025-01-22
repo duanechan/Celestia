@@ -37,6 +37,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
@@ -44,6 +45,7 @@ import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -204,54 +206,53 @@ fun SupportCenter() {
     var cancelReason by remember { mutableStateOf("") }
     var refundReason by remember { mutableStateOf("") }
 
-    Column(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .background(White1)
-            .clickable { isExpanded = !isExpanded } // Toggle card visibility on click
-            .padding(16.dp)
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(containerColor = White1),
+        elevation = CardDefaults.cardElevation(25.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Support Center",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Icon(
-                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                contentDescription = if (isExpanded) "Collapse" else "Expand"
-            )
-        }
-
-        if (isExpanded) {
-            Spacer(modifier = Modifier.height(5.dp))
-
-            // Card for Cancel Order
-            SupportCard(
-                title = "Cancel Order",
-                description = "Request to cancel your current order.",
-                onClick = { showCancelOrderDialog = true }
-            )
-
-            // Card for Request Refund/Return
-            SupportCard(
-                title = "Request Refund/Return",
-                description = "Request a refund or return for a delivered order.",
-                onClick = { showRefundDialog = true }
-            )
-
-            // Card for See BCFAC Contact Details
-            SupportCard(
-                title = "See BCFAC Contact Details",
-                description = "View contact details for the cooperative.",
-                onClick = { showContactDialog = true }
-            )
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(60.dp)
+                    .clickable { isExpanded = !isExpanded },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Support Center",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (isExpanded) "Collapse" else "Expand"
+                )
+            }
+            if (isExpanded) {
+                Spacer(modifier = Modifier.height(1.dp))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(15.dp)
+                ) {
+                    SupportCenterItemsCard(
+                        title = "Cancel Order",
+                        onClick = { showCancelOrderDialog = true }
+                    )
+                    SupportCenterItemsCard(
+                        title = "Request for Return/Refund",
+                        onClick = { showRefundDialog = true }
+                    )
+                    SupportCenterItemsCard(
+                        title = "Contact BCFAC",
+                        onClick = { showContactDialog = true },
+                        showDivider = false
+                    )
+                }
+            }
         }
     }
 
@@ -262,6 +263,7 @@ fun SupportCenter() {
             title = { Text(text = "Cancel Order") },
             text = {
                 Column {
+                    LocalTextStyle provides MaterialTheme.typography.bodyMedium.copy(fontFamily = mintsansFontFamily)
                     Text(text = "Are you sure you want to cancel your current order?")
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -279,14 +281,19 @@ fun SupportCenter() {
                     println("Cancellation reason: $cancelReason")
                     showCancelOrderDialog = false
                 }) {
-                    Text(text = "Submit")
+                    Text(text = "Submit",
+                        fontFamily = mintsansFontFamily,
+                        color = Green1)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showCancelOrderDialog = false }) {
-                    Text(text = "Cancel")
+                    Text(text = "Cancel",
+                        fontFamily = mintsansFontFamily,
+                        color = Green1)
                 }
-            }
+            },
+            containerColor = White1
         )
     }
 
@@ -297,13 +304,19 @@ fun SupportCenter() {
             title = { Text(text = "Request Refund/Return") },
             text = {
                 Column {
-                    Text(text = "Would you like to request a refund or return for your order?")
+                    Text(text = "Would you like to request a refund or return for your order?",
+                        fontFamily = mintsansFontFamily,
+                        color = Green1)
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = refundReason,
                         onValueChange = { refundReason = it },
-                        label = { Text("Reason for refund/return") },
-                        placeholder = { Text("Enter your reason here") },
+                        label = { Text("Reason for refund/return",
+                            fontFamily = mintsansFontFamily,
+                            color = Green1) },
+                        placeholder = { Text("Enter your reason here",
+                            fontFamily = mintsansFontFamily,
+                            color = Green1) },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -311,17 +324,22 @@ fun SupportCenter() {
             confirmButton = {
                 TextButton(onClick = {
                     // Handle confirm action with reason
-                    println("Refund/Return reason: $refundReason")
+                    println("Refund/Return reason: $refundReason", )
                     showRefundDialog = false
                 }) {
-                    Text(text = "Submit Request")
+                    Text(text = "Submit Request",
+                        fontFamily = mintsansFontFamily,
+                        color = Green1)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showRefundDialog = false }) {
-                    Text(text = "Cancel")
+                    Text(text = "Cancel",
+                        fontFamily = mintsansFontFamily,
+                        color = Green1)
                 }
-            }
+            },
+            containerColor = White1
         )
     }
 
@@ -329,8 +347,10 @@ fun SupportCenter() {
     if (showContactDialog) {
         AlertDialog(
             onDismissRequest = { showContactDialog = false },
-            title = { Text(text = "BCFAC Contact Details") },
+            title = { Text(text = "BCFAC Contact Details")
+                LocalTextStyle provides MaterialTheme.typography.bodyMedium.copy(fontFamily = mintsansFontFamily)},
             text = {
+                    LocalTextStyle provides MaterialTheme.typography.bodyMedium.copy(fontFamily = mintsansFontFamily)
                 Column {
                     Text(text = "Phone: +63 912 345 6789")
                     Text(text = "Email: support@bcfac.com")
@@ -339,36 +359,42 @@ fun SupportCenter() {
             },
             confirmButton = {
                 TextButton(onClick = { showContactDialog = false }) {
-                    Text(text = "Close")
+                    Text(text = "Close",
+                        fontFamily = mintsansFontFamily,
+                        color = Green1)
                 }
-            }
+            },
+            containerColor = White1
         )
     }
 }
 
 @Composable
-fun SupportCard(title: String, description: String, onClick: () -> Unit) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.elevatedCardElevation(4.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(5.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(8.dp)
+fun SupportCenterItemsCard(
+    title: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    showDivider: Boolean = true
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .padding(horizontal = 16.dp, vertical = 15.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+        }
+        if (showDivider) {
+            Divider(
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                thickness = 1.dp
             )
         }
     }
@@ -763,7 +789,7 @@ private fun ClientTimelineStep(
                     .size(12.dp)
                     .background(
                         color = when {
-                            isCurrent || isCompleted -> MaterialTheme.colorScheme.primary
+                            isCurrent || isCompleted -> Green2
                             else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                         },
                         shape = CircleShape
@@ -778,16 +804,26 @@ private fun ClientTimelineStep(
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(5.dp))
 
-            // Connecting line
             if (showLine) {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
+                val lineHeight = if (showInfo) {
+                    val additionalHeight = if (statusDescription.isNotEmpty() && dateTime.isNotEmpty()) {
+                        70.dp // Assume more content adds additional height
+                    } else {
+                        35.dp // Default height for minimal content
+                    }
+                    additionalHeight
+                } else {
+                    20.dp // Minimal height for no content
+                }
                 Box(
                     modifier = Modifier
                         .width(2.dp)
-                        .height(40.dp)
+                        .height(lineHeight)
                         .background(
-                            color = if (isCompleted) MaterialTheme.colorScheme.primary
+                            color = if (isCompleted) Green1
                             else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                         )
                 )
