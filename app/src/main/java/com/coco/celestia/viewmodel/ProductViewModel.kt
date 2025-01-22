@@ -5,13 +5,21 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.viewmodel.model.Constants
+import com.coco.celestia.viewmodel.model.PriceUpdate
 import com.coco.celestia.viewmodel.model.ProductData
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -33,6 +41,7 @@ class ProductViewModel : ViewModel() {
     private val _notes = MutableLiveData<String>()
     private val _from = MutableLiveData<String>()
 
+    val userViewModel: UserViewModel by lazy { UserViewModel() }
     val productData: LiveData<List<ProductData>> = _productData
     val productState: LiveData<ProductState> = _productState
     val productName: LiveData<String> = _productName
@@ -137,10 +146,19 @@ class ProductViewModel : ViewModel() {
 
                                 val isActive = child.child("isActive").getValue(Boolean::class.java) ?: true
                                 val dateAdded = child.child("dateAdded").getValue(String::class.java) ?: ""
-//                                val collectionMethod = child.child("collectionMethod").getValue(String::class.java)
-//                                    ?: Constants.COLLECTION_PICKUP
-//                                val paymentMethod = child.child("paymentMethod").getValue(String::class.java)
-//                                    ?: Constants.PAYMENT_CASH
+
+                                val priceHistory = child.child("priceHistory").children.mapNotNull { priceUpdate ->
+                                    try {
+                                        PriceUpdate(
+                                            price = priceUpdate.child("price").getValue(Double::class.java) ?: 0.0,
+                                            previousPrice = priceUpdate.child("previousPrice").getValue(Double::class.java) ?: 0.0,
+                                            dateTime = priceUpdate.child("dateTime").getValue(String::class.java) ?: "",
+                                            updatedBy = priceUpdate.child("updatedBy").getValue(String::class.java) ?: ""
+                                        )
+                                    } catch (e: Exception) {
+                                        null
+                                    }
+                                }
 
                                 ProductData(
                                     productId = id,
@@ -160,6 +178,7 @@ class ProductViewModel : ViewModel() {
                                     isInStore = isInStore,
                                     isActive = isActive,
                                     dateAdded = dateAdded,
+                                    priceHistory = priceHistory
                                 )
                             } else null
                         } catch (e: Exception) {
@@ -211,8 +230,6 @@ class ProductViewModel : ViewModel() {
 
                             val isActive = child.child("isActive").getValue(Boolean::class.java) ?: true
                             val dateAdded = child.child("dateAdded").getValue(String::class.java) ?: ""
-                            val collectionMethod = child.child("collectionMethod").getValue(String::class.java) ?: Constants.COLLECTION_PICKUP
-                            val paymentMethod = child.child("paymentMethod").getValue(String::class.java) ?: Constants.PAYMENT_CASH
 
                             ProductData(
                                 productId = productId,
@@ -231,9 +248,7 @@ class ProductViewModel : ViewModel() {
                                 weightUnit = weightUnit,
                                 isInStore = isInStore,
                                 isActive = isActive,
-                                dateAdded = dateAdded,
-//                                collectionMethod = collectionMethod,
-//                                paymentMethod = paymentMethod
+                                dateAdded = dateAdded
                             )
                         } catch (e: Exception) {
                             null
@@ -294,8 +309,6 @@ class ProductViewModel : ViewModel() {
                             }
 
                             val dateAdded = child.child("dateAdded").getValue(String::class.java) ?: ""
-//                            val collectionMethod = child.child("collectionMethod").getValue(String::class.java) ?: Constants.COLLECTION_PICKUP
-//                            val paymentMethod = child.child("paymentMethod").getValue(String::class.java) ?: Constants.PAYMENT_CASH
 
                             val product = ProductData(
                                 productId = productId,
@@ -314,9 +327,7 @@ class ProductViewModel : ViewModel() {
                                 weightUnit = weightUnit,
                                 isInStore = isInStore,
                                 isActive = isActive,
-                                dateAdded = dateAdded,
-//                                collectionMethod = collectionMethod,
-//                                paymentMethod = paymentMethod
+                                dateAdded = dateAdded
                             )
 
                             val matchesFilter = if (filterKeywords.isEmpty()) {
@@ -458,30 +469,6 @@ class ProductViewModel : ViewModel() {
         }
     }
 
-    fun updateProductPrice(productName: String, price: Double) {
-        viewModelScope.launch {
-            try {
-                val snapshot = database.get().await()
-                var productFound = false
-                for (product in snapshot.children) {
-                    val name = product.child("name").getValue(String::class.java)
-
-                    if (name == productName) {
-                        product.child("priceKg").ref.setValue(price).await()
-                        productFound = true
-                        break
-                    }
-                }
-                if (!productFound) {
-                    _productState.value = ProductState.ERROR("Product not found")
-                }
-            } catch (e: Exception) {
-                _productState.value =
-                    ProductState.ERROR(e.message ?: "Error updating product quantity")
-            }
-        }
-    }
-
     fun fetchFeaturedProducts() {
         viewModelScope.launch {
             _productState.value = ProductState.LOADING
@@ -524,20 +511,84 @@ class ProductViewModel : ViewModel() {
     fun updateProduct(product: ProductData) {
         viewModelScope.launch {
             _productState.value = ProductState.LOADING
-            val query = database.child(product.productId)
-            query.setValue(product)
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        _productState.value = ProductState.SUCCESS
-                    } else {
-                        _productState.value =
-                            ProductState.ERROR(task.exception?.message ?: "Unknown error")
+            val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
+            try {
+                userViewModel.fetchUser(currentUserId)
+
+                var attempts = 0
+                while (attempts < 10 && userViewModel.userState.value !is UserState.SUCCESS) {
+                    delay(100)
+                    attempts++
+                }
+
+                val userName = when (userViewModel.userState.value) {
+                    is UserState.SUCCESS -> {
+                        val userData = userViewModel.userData.value
+                        "${userData?.firstname} ${userData?.lastname}".trim()
                     }
+                    else -> "Unknown User"
                 }
-                .addOnFailureListener { exception ->
-                    _productState.value = ProductState.ERROR(exception.message ?: "Unknown error")
-                }
+
+                database.child(product.productId).addListenerForSingleValueEvent(object :
+                    ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        if (snapshot.exists()) {
+                            val existingProduct = snapshot.getValue(ProductData::class.java)
+                            existingProduct?.let {
+                                val existingPrice = it.price
+                                val newPrice = product.price
+
+                                if (existingPrice != newPrice) {
+                                    val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
+                                    val currentDateTime = LocalDateTime.now().format(formatter)
+
+                                    val newPriceUpdate = PriceUpdate(
+                                        price = newPrice,
+                                        previousPrice = existingPrice,
+                                        dateTime = currentDateTime,
+                                        updatedBy = userName
+                                    )
+
+                                    val existingHistory = it.priceHistory
+                                    val updatedHistory = existingHistory + newPriceUpdate
+
+                                    val productWithHistory = product.copy(
+                                        priceHistory = updatedHistory
+                                    )
+
+                                    updateProductWithHistory(productWithHistory)
+                                } else {
+                                    updateProductWithHistory(product)
+                                }
+                            }
+                        } else {
+                            updateProductWithHistory(product)
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        _productState.value = ProductState.ERROR(error.message)
+                    }
+                })
+            } catch (e: Exception) {
+                _productState.value = ProductState.ERROR(e.message ?: "Unknown error")
+            }
         }
+    }
+
+    private fun updateProductWithHistory(product: ProductData) {
+        database.child(product.productId).setValue(product)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    _productState.value = ProductState.SUCCESS
+                } else {
+                    _productState.value = ProductState.ERROR(task.exception?.message ?: "Unknown error")
+                }
+            }
+            .addOnFailureListener { exception ->
+                _productState.value = ProductState.ERROR(exception.message ?: "Unknown error")
+            }
     }
 
     fun updateActiveStatus(productId: String, isActive: Boolean) {

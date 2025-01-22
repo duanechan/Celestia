@@ -41,7 +41,7 @@ data class StatusUpdate(
     val status: String = "",
     val statusDescription: String = "",
     val dateTime: String = "",
-    val updatedBy: String = "" // Optional: track who made the update
+    val updatedBy: String = ""
 )
 
 data class OrderData(
@@ -136,6 +136,13 @@ data class VegetableData(
     val productId: String = ""
 )
 
+data class PriceUpdate(
+    val price: Double = 0.0,
+    val previousPrice: Double = 0.0,
+    val dateTime: String = "",
+    val updatedBy: String = ""
+)
+
 data class ProductData(
     val productId: String = "",
     val timestamp: String = "",
@@ -154,11 +161,12 @@ data class ProductData(
     val isInStore: Boolean = true,
     val isActive: Boolean = true,
     val dateAdded: String = "",
+    val priceHistory: List<PriceUpdate> = emptyList()
 ) {
     constructor() : this(
         "", "", "", "", "", 0, "", 0.0, "",
         0.0, 0.0, 0.0, 0.0, Constants.WEIGHT_GRAMS,
-        true, true, ""
+        true, true, "", emptyList()
     )
 }
 

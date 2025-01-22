@@ -51,12 +51,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
@@ -69,12 +71,16 @@ import com.coco.celestia.ui.theme.White1
 import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
+import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.VendorViewModel
 import com.coco.celestia.viewmodel.model.Constants
+import com.coco.celestia.viewmodel.model.PriceUpdate
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -115,6 +121,7 @@ fun AddProductForm(
     var productImage by remember { mutableStateOf<Uri?>(null) }
     var updatedProductImage by remember { mutableStateOf<Uri?>(null) }
     var isImageRequired by remember { mutableStateOf(false) }
+    val lifecycleScope = LocalLifecycleOwner.current.lifecycleScope
 
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
         updatedProductImage = it
@@ -492,7 +499,7 @@ fun AddProductForm(
 
                 if (productName.isNotEmpty() && quantity > 0 && price > 0.0) {
                     val currentDateTime = LocalDateTime.now()
-                    val dateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+                    val dateFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
                     val pidFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
                     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
                     val formattedDateTime = currentDateTime.format(dateFormatter)
@@ -506,69 +513,115 @@ fun AddProductForm(
                         "PID-$formattedPIDDate-$currentCount"
                     }
 
-                    val product = ProductData(
-                        productId = finalProductId,
-                        timestamp = formattedTime,
-                        name = productName,
-                        description = description,
-                        notes = notes,
-                        quantity = quantity,
-                        type = facilityName,
-                        price = price,
-                        vendor = vendor,
-                        totalPurchases = totalPurchases,
-                        totalQuantitySold = 0.0,
-                        committedStock = 0.0,
-                        reorderPoint = reorderPoint,
-                        weightUnit = weightUnit,
-                        isInStore = isInStore,
-                        isActive = true,
-                        dateAdded = formattedDateTime
-                    )
+                    val currentUserId = FirebaseAuth.getInstance().currentUser?.uid.toString()
 
-                    updatedProductImage?.let { uri ->
-                        ImageService.uploadProductPicture(finalProductId, uri) { success ->
-                            if (success) {
-                                if (isEditMode) {
+                    lifecycleScope.launch {
+                        try {
+                            userViewModel.fetchUser(currentUserId)
+
+                            var attempts = 0
+                            while (attempts < 10 && userViewModel.userState.value !is UserState.SUCCESS) {
+                                delay(100)
+                                attempts++
+                            }
+
+                            val userName = when (userViewModel.userState.value) {
+                                is UserState.SUCCESS -> {
+                                    val userData = userViewModel.userData.value
+                                    "${userData?.firstname} ${userData?.lastname}".trim()
+                                }
+                                else -> {
+                                    onEvent(Triple(ToastStatus.WARNING, "Could not fetch user details", System.currentTimeMillis()))
+                                    return@launch
+                                }
+                            }
+
+                            if (userName.isBlank()) {
+                                onEvent(Triple(ToastStatus.WARNING, "Invalid user details", System.currentTimeMillis()))
+                                return@launch
+                            }
+
+                            val initialPriceHistory = if (!isEditMode) {
+                                listOf(
+                                    PriceUpdate(
+                                        price = price,
+                                        previousPrice = 0.0,
+                                        dateTime = formattedDateTime,
+                                        updatedBy = userName
+                                    )
+                                )
+                            } else {
+                                emptyList()
+                            }
+
+                            val product = ProductData(
+                                productId = finalProductId,
+                                timestamp = formattedTime,
+                                name = productName,
+                                description = description,
+                                notes = notes,
+                                quantity = quantity,
+                                type = facilityName,
+                                price = price,
+                                vendor = vendor,
+                                totalPurchases = totalPurchases,
+                                totalQuantitySold = 0.0,
+                                committedStock = 0.0,
+                                reorderPoint = reorderPoint,
+                                weightUnit = weightUnit,
+                                isInStore = isInStore,
+                                isActive = true,
+                                dateAdded = formattedDateTime,
+                                priceHistory = initialPriceHistory
+                            )
+
+                            updatedProductImage?.let { uri ->
+                                ImageService.uploadProductPicture(finalProductId, uri) { success ->
+                                    if (success) {
+                                        if (isEditMode) {
+                                            productViewModel.updateProduct(product)
+                                            onEvent(Triple(ToastStatus.SUCCESSFUL, "Product updated successfully", System.currentTimeMillis()))
+                                        } else {
+                                            productViewModel.addProduct(product)
+                                            onEvent(Triple(ToastStatus.SUCCESSFUL, "Product added successfully", System.currentTimeMillis()))
+                                        }
+                                        onAddClick()
+
+                                        if (isInStore) {
+                                            navController.navigate(Screen.CoopInStoreProducts.route) {
+                                                popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                                            }
+                                        } else {
+                                            navController.navigate(Screen.CoopOnlineProducts.route) {
+                                                popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                                            }
+                                        }
+                                    } else {
+                                        onEvent(Triple(ToastStatus.FAILED, "Failed to upload image", System.currentTimeMillis()))
+                                    }
+                                }
+                            } ?: run {
+                                if (isEditMode && productImage != null) {
                                     productViewModel.updateProduct(product)
                                     onEvent(Triple(ToastStatus.SUCCESSFUL, "Product updated successfully", System.currentTimeMillis()))
-                                } else {
-                                    productViewModel.addProduct(product)
-                                    onEvent(Triple(ToastStatus.SUCCESSFUL, "Product added successfully", System.currentTimeMillis()))
-                                }
-                                onAddClick()
+                                    onAddClick()
 
-                                if (isInStore) {
-                                    navController.navigate(Screen.CoopInStoreProducts.route) {
-                                        popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                                    if (isInStore) {
+                                        navController.navigate(Screen.CoopInStoreProducts.route) {
+                                            popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                                        }
+                                    } else {
+                                        navController.navigate(Screen.CoopOnlineProducts.route) {
+                                            popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                                        }
                                     }
                                 } else {
-                                    navController.navigate(Screen.CoopOnlineProducts.route) {
-                                        popUpTo(Screen.AddProductInventory.route) { inclusive = true }
-                                    }
-                                }
-                            } else {
-                                onEvent(Triple(ToastStatus.FAILED, "Failed to upload image", System.currentTimeMillis()))
-                            }
-                        }
-                    } ?: run {
-                        if (isEditMode && productImage != null) {
-                            productViewModel.updateProduct(product)
-                            onEvent(Triple(ToastStatus.SUCCESSFUL, "Product updated successfully", System.currentTimeMillis()))
-                            onAddClick()
-
-                            if (isInStore) {
-                                navController.navigate(Screen.CoopInStoreProducts.route) {
-                                    popUpTo(Screen.AddProductInventory.route) { inclusive = true }
-                                }
-                            } else {
-                                navController.navigate(Screen.CoopOnlineProducts.route) {
-                                    popUpTo(Screen.AddProductInventory.route) { inclusive = true }
+                                    onEvent(Triple(ToastStatus.WARNING, "Product image is required", System.currentTimeMillis()))
+                                    isImageRequired = true
                                 }
                             }
-                        } else {
-                            onEvent(Triple(ToastStatus.WARNING, "Product image is required", System.currentTimeMillis()))
-                            isImageRequired = true
+                        } catch (e: Exception) {
+                            onEvent(Triple(ToastStatus.FAILED, "Failed to process request: ${e.message}", System.currentTimeMillis()))
                         }
                     }
                 } else {
@@ -606,8 +659,6 @@ fun CoopAddInventory(
     reorderPoint: Double,
     isInStore: Boolean,
     weightUnit: String,
-//    isDelivery: Boolean,
-//    isGcash: Boolean,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val uid = FirebaseAuth.getInstance().uid.toString()
@@ -620,6 +671,17 @@ fun CoopAddInventory(
     LaunchedEffect(Unit) {
         if (productName.isNotEmpty() && quantityAmount > 0) {
             productViewModel.fetchProduct(from)
+
+            // Create initial price history
+            val priceHistory = listOf(
+                PriceUpdate(
+                    price = price,
+                    previousPrice = 0.0,
+                    dateTime = formattedDateTime,
+                    updatedBy = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+                )
+            )
+
             val product = ProductData(
                 name = productName,
                 description = description,
@@ -633,8 +695,7 @@ fun CoopAddInventory(
                 weightUnit = weightUnit,
                 isInStore = isInStore,
                 dateAdded = formattedDateTime,
-//                collectionMethod = if (isDelivery) Constants.COLLECTION_DELIVERY else Constants.COLLECTION_PICKUP,
-//                paymentMethod = if (isGcash) Constants.PAYMENT_GCASH else Constants.PAYMENT_CASH
+                priceHistory = priceHistory
             )
 
             if ((productData?.get(0)?.quantity ?: 0) - product.quantity >= 0 ||

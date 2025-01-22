@@ -1,10 +1,13 @@
 package com.coco.celestia.screens.coop.facility
 
+import android.annotation.SuppressLint
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -31,7 +34,10 @@ import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.model.PriceUpdate
 import com.coco.celestia.viewmodel.model.ProductData
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
@@ -359,6 +365,9 @@ private fun ProductTabs(product: ProductData) {
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("DETAILS", "TRANSACTIONS", "PRICE HISTORY")
 
+    // Debug log to check product data
+    Log.d("ProductTabs", "Product: ${product.productId}, PriceHistory: ${product.priceHistory}")
+
     Column {
         TabRow(
             selectedTabIndex = selectedTab,
@@ -390,7 +399,7 @@ private fun ProductTabs(product: ProductData) {
         when (selectedTab) {
             0 -> Details(product)
             1 -> TransactionsTab()
-            2 -> HistoryTab()
+            2 -> HistoryTab(product)
         }
     }
 }
@@ -1047,30 +1056,57 @@ fun TransactionsCard() {
 }
 
 @Composable
-private fun HistoryTab() {
+private fun HistoryTab(product: ProductData) {
     Box(
-        modifier = Modifier.fillMaxSize().background(White2),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(White2),
         contentAlignment = Alignment.Center
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // Sample
-            items(3) { index ->
-                HistoryCard()
+        if (product.priceHistory.isNullOrEmpty()) {
+            Text(
+                text = "No price history available",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            val sortedHistory = remember(product.priceHistory) {
+                product.priceHistory.sortedWith(compareByDescending<PriceUpdate> { priceUpdate ->
+                    try {
+                        LocalDateTime.parse(
+                            priceUpdate.dateTime,
+                            DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
+                        )
+                    } catch (e: Exception) {
+                        LocalDateTime.MIN
+                    }
+                }.thenByDescending {
+                    if (it.previousPrice > 0.0) it.previousPrice else Double.MIN_VALUE
+                })
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(
+                    items = sortedHistory,
+                    key = { "${it.dateTime}_${it.price}_${it.previousPrice}" }
+                ) { priceUpdate ->
+                    HistoryCard(priceUpdate, product.weightUnit)
+                }
             }
         }
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
-fun HistoryCard() {
+fun HistoryCard(priceUpdate: PriceUpdate, weightUnit: String) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = White1),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(8.dp)
@@ -1080,39 +1116,50 @@ fun HistoryCard() {
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Header Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Column {
+                    Text(
+                        text = "PHP ${String.format("%.2f", priceUpdate.price)}",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (priceUpdate.previousPrice > 0.0) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Previous: PHP ${String.format("%.2f", priceUpdate.previousPrice)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                    }
+                }
                 Text(
-                    text = "Date",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Green1
-                )
-                Text(
-                    text = "Price per unit",
+                    text = "per ${weightUnit.lowercase()}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
+            Divider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // Quantity Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "January 8, 2025",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = priceUpdate.dateTime,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
                 Text(
-                    text = "PHP 23.00",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "Updated by: ${priceUpdate.updatedBy}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
             }
         }
