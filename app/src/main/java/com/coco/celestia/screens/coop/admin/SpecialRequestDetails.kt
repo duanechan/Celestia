@@ -75,8 +75,12 @@ import com.coco.celestia.viewmodel.model.AssignedMember
 import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.SpecialRequest
 import com.coco.celestia.viewmodel.model.TrackRecord
+import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
 
 @SuppressLint("MutableCollectionMutableState")
 @Composable
@@ -588,7 +592,7 @@ fun SpecialRequestDetails(
             },
             confirmButton = {
                 Button(
-                    onClick = {250
+                    onClick = {
                         memberEmpty = text.isEmpty()
                         productEmpty = product.isEmpty()
                         quantityEmpty = quantity == 0
@@ -608,12 +612,19 @@ fun SpecialRequestDetails(
                             if (existingMember != null) {
                                 existingMember.quantity += quantity
                             } else {
+                                val uuidPart = UUID.randomUUID().toString().take(6).uppercase()
+                                val timestamp = SimpleDateFormat("yyMMddHHmm", Locale.getDefault()).format(
+                                    Date()
+                                )
+                                val trackingID = "REQ-$timestamp-$uuidPart"
+
                                 val member = AssignedMember(
                                     email = email,
                                     specialRequestUID = request.specialRequestUID,
                                     name = name,
                                     product = product,
-                                    quantity = quantity
+                                    quantity = quantity,
+                                    trackingID = trackingID
                                 )
                                 assignedMember.add(member)
                             }

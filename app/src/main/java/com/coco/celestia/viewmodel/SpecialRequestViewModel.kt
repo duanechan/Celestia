@@ -5,10 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.service.NotificationService
+import com.coco.celestia.viewmodel.model.AssignedMember
 import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.NotificationType
 import com.coco.celestia.viewmodel.model.SpecialRequest
-import com.coco.celestia.viewmodel.model.StatusUpdate
 import com.coco.celestia.viewmodel.model.TrackRecord
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -29,8 +29,10 @@ sealed class SpecialReqState {
 class SpecialRequestViewModel : ViewModel() {
     private val database : DatabaseReference = FirebaseDatabase.getInstance().getReference("special_requests")
     private val _specialReqData = MutableLiveData<List<SpecialRequest>>()
+    private val _assignedData = MutableLiveData<AssignedMember?>()
     private val _specialReqState = MutableLiveData<SpecialReqState>()
     val specialReqData: LiveData<List<SpecialRequest>> = _specialReqData
+    val assignedData: LiveData<AssignedMember?> = _assignedData
     val specialReqState: LiveData<SpecialReqState> = _specialReqState
 
     private suspend fun notify(type: NotificationType, specialReq: SpecialRequest) {
@@ -209,6 +211,44 @@ class SpecialRequestViewModel : ViewModel() {
 
                     _specialReqData.value = assignedProduct
                     _specialReqState.value = if (assignedProduct.isEmpty()) SpecialReqState.EMPTY else SpecialReqState.SUCCESS
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    _specialReqState.value = SpecialReqState.ERROR(error.message)
+                }
+            })
+        }
+    }
+
+    fun fetchRequestByTrackingID(
+        farmerTrackingID: String
+    ) {
+        viewModelScope.launch {
+            database.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    var assignedMember: AssignedMember? = null
+
+                    for (userSnapshot in snapshot.children) {
+                        for (requestedSnapshot in userSnapshot.children) {
+                            val assignedMemberSnapshot = requestedSnapshot.child("assignedMember")
+
+                            for (memberSnapshot in assignedMemberSnapshot.children) {
+                                val trackID = memberSnapshot.child("trackingID").getValue(String::class.java)
+
+                                if (trackID == farmerTrackingID) {
+                                    assignedMember = memberSnapshot.getValue(AssignedMember::class.java)
+                                    break
+                                }
+                            }
+
+                            if (assignedMember != null) break
+                        }
+
+                        if (assignedMember != null) break
+                    }
+
+                    _assignedData.value = assignedMember
+                    _specialReqState.value = assignedMember?.let { SpecialReqState.SUCCESS } ?: SpecialReqState.EMPTY
                 }
 
                 override fun onCancelled(error: DatabaseError) {

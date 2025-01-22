@@ -68,6 +68,7 @@ import com.coco.celestia.screens.coop.facility.VendorDetailsScreen
 import com.coco.celestia.screens.coop.facility.Vendors
 import com.coco.celestia.screens.coop.facility.forms.CoopPurchaseForm
 import com.coco.celestia.screens.coop.facility.forms.SalesAddForm
+import com.coco.celestia.screens.farmer.DisplayFarmerProgressTracking
 import com.coco.celestia.screens.farmer.DisplayRequestDetails
 import com.coco.celestia.screens.farmer.FarmerDashboard
 import com.coco.celestia.screens.farmer.FarmerItems
@@ -276,10 +277,25 @@ fun NavGraph(
             val farmerEmail = backStackEntry.arguments?.getString("farmerEmail") ?: ""
             val product = backStackEntry.arguments?.getString("product") ?: ""
             DisplayRequestDetails(
+                navController,
                 specialRequestViewModel,
                 specialReqUID,
                 farmerEmail,
                 product
+            )
+        }
+
+        composable(
+            route = Screen.FarmerProgressTracking.route,
+            arguments = listOf(
+                navArgument("trackingID") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val trackingID = backStackEntry.arguments?.getString("trackingID") ?: ""
+            onNavigate("Progress Tracking")
+            DisplayFarmerProgressTracking(
+                trackingID,
+                specialRequestViewModel
             )
         }
 
