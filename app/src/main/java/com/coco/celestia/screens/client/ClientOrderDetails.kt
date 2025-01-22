@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -147,8 +148,6 @@ fun ClientOrderDetails(
                 Spacer(modifier = Modifier.height(16.dp))
 
 
-                //TODO: Support Center
-                SupportCenter()
 
                 // Order details with product list
                 OrderDetailsSection(
@@ -167,6 +166,9 @@ fun ClientOrderDetails(
                     orderData = currentOrder,
                     facilityData = FacilityData()
                 )
+
+                //TODO: Support Center
+                SupportCenter()
 
                 // Order status tracking
                 TrackOrderSection(
@@ -190,44 +192,42 @@ fun ClientOrderDetails(
 fun SupportCenter() {
     var isExpanded by remember { mutableStateOf(false) }
 
-    Column(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .background(White1)
-            .padding(16.dp)
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(containerColor = White1),
+        elevation = CardDefaults.cardElevation(25.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { isExpanded = !isExpanded }
-        ) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .height(40.dp)
+                    .clickable { isExpanded = !isExpanded },
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "Support Center",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = if (isExpanded) "Collapse" else "Expand"
                 )
             }
-        }
-
-        if (isExpanded) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                SupportCenterItemsCard("Cancel Order") // TODO: Handling of cancelled orders
-                SupportCenterItemsCard("Request for Return/Refund") // TODO: Display based on status
-                SupportCenterItemsCard("Contact BCFAC") // TODO: Add coop contact details
+            if (isExpanded) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(15.dp)
+                ) {
+                    SupportCenterItemsCard("Cancel Order") // TODO: Handling of cancelled orders
+                    SupportCenterItemsCard("Request for Return/Refund") // TODO: Display based on status
+                    SupportCenterItemsCard("Contact BCFAC") // TODO: Add coop contact details
+                }
             }
         }
     }
@@ -235,37 +235,30 @@ fun SupportCenter() {
 
 
 @Composable
-fun SupportCenterItemsCard(label: String){
-    Card(
-        modifier = Modifier
-            .fillMaxSize()
-            .clickable{true},
-//            .padding(vertical = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = White1),
-    ) {
+fun SupportCenterItemsCard(title: String, modifier: Modifier = Modifier) {
+    var isDropdownExpanded by remember { mutableStateOf(false) }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier
-                .padding(5.dp)
-                .fillMaxWidth(),
+            modifier = modifier
+                .fillMaxWidth()
+                .clickable { isDropdownExpanded = !isDropdownExpanded }
+                .padding(horizontal = 16.dp, vertical = 15.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = label,
-                fontSize = 14.sp,
-                color = Color.DarkGray
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Icon(
-                imageVector = Icons.Default.KeyboardArrowRight,
-                contentDescription = "Arrow",
-                tint = Color.Gray,
-                modifier = Modifier.size(24.dp)
+                imageVector = if (isDropdownExpanded) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowRight,
+                contentDescription = if (isDropdownExpanded) "Collapse" else "Expand",
+                tint = MaterialTheme.colorScheme.onSurface
             )
         }
         Divider(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
             thickness = 1.dp
         )
@@ -674,14 +667,24 @@ private fun ClientTimelineStep(
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(5.dp))
 
-            // Connecting line
             if (showLine) {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
+                val lineHeight = if (showInfo) {
+                    val additionalHeight = if (statusDescription.isNotEmpty() && dateTime.isNotEmpty()) {
+                        70.dp // Assume more content adds additional height
+                    } else {
+                        35.dp // Default height for minimal content
+                    }
+                    additionalHeight
+                } else {
+                    20.dp // Minimal height for no content
+                }
                 Box(
                     modifier = Modifier
                         .width(2.dp)
-                        .height(40.dp)
+                        .height(lineHeight)
                         .background(
                             color = if (isCompleted) MaterialTheme.colorScheme.primary
                             else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
