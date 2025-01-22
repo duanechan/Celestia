@@ -43,6 +43,7 @@ import com.coco.celestia.screens.client.OrderSummary
 import com.coco.celestia.screens.client.ProductCatalog
 import com.coco.celestia.screens.client.ProductDetailScreen
 import com.coco.celestia.screens.coop.AccessControlScreen
+import com.coco.celestia.screens.coop.ContactDeveloper
 import com.coco.celestia.screens.coop.FacilitySettingsScreen
 import com.coco.celestia.screens.coop.admin.AdminClients
 import com.coco.celestia.screens.coop.admin.AdminHome
@@ -359,6 +360,12 @@ fun NavGraph(
         composable(route = Screen.AccessControl.route) {
             onNavigate("Access Control")
             AccessControlScreen(userViewModel = userViewModel, facilityViewModel = facilityViewModel, currentUserEmail = userEmail, currentUserRole = userRole)
+        }
+        composable(route = Screen.ContactDeveloper.route) {
+            onNavigate("Contact Developer Team")
+            ContactDeveloper(
+                contactViewModel = contactViewModel
+            )
         }
         composable(route = Screen.PrivacyPolicy.route) {
             onNavigate("Privacy Policy")

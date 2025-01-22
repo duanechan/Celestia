@@ -197,6 +197,7 @@ data class TransactionData(
 )
 
 data class ContactData(
+    val contactId: String = "",
     val name: String = "",
     val contactNumber: Long = 0,
     val email: String = "",
