@@ -7,10 +7,26 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -35,8 +51,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.coco.celestia.BuildConfig
 import com.coco.celestia.R
@@ -45,14 +63,14 @@ import com.coco.celestia.screens.coop.facility.LoadingScreen
 import com.coco.celestia.screens.coop.facility.NoFacilityScreen
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
+import com.coco.celestia.viewmodel.ContactState
+import com.coco.celestia.viewmodel.ContactViewModel
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.ContactData
 import com.coco.celestia.viewmodel.model.FacilityData
-
-// TODO: Contact Developer Team UI
-// TODO: Configurations (admin side)
 
 @Composable
 fun Settings(navController: NavController, userRole: String) {
@@ -64,7 +82,6 @@ fun Settings(navController: NavController, userRole: String) {
             .background(White2)
             .padding(16.dp)
     ) {
-        // User Profile
         Text(
             text = "User Profile",
             color = Color.Gray
@@ -73,7 +90,6 @@ fun Settings(navController: NavController, userRole: String) {
             navController.navigate("profile")
         }
 
-        // Organization
         Text(
             text = "Organization",
             modifier = Modifier.padding(top = 16.dp),
@@ -86,25 +102,7 @@ fun Settings(navController: NavController, userRole: String) {
             navController.navigate(Screen.AccessControl.route)
         }
 
-        if (!userRole.startsWith("Coop", ignoreCase = true)) {
-            Text(
-                text = "Configurations",
-                modifier = Modifier.padding(top = 16.dp),
-                color = Color.Gray
-            )
-            SettingsItem(text = "Coop Admin", iconResId = R.drawable.admin) {
-                navController.navigate("coop_admin")
-            }
-            SettingsItem(text = "Coop Facility", iconResId = R.drawable.facility) {
-                navController.navigate("coop_facility")
-            }
-            SettingsItem(text = "Clients", iconResId = R.drawable.client) {
-                navController.navigate("clients")
-            }
-            SettingsItem(text = "Members", iconResId = R.drawable.members) {
-                navController.navigate("members")
-            }
-        } else {
+        if (userRole.startsWith("Coop", ignoreCase = true)) {
             Text(
                 text = "Configurations",
                 modifier = Modifier.padding(top = 16.dp),
@@ -115,7 +113,6 @@ fun Settings(navController: NavController, userRole: String) {
             }
         }
 
-        // Developer
         Text(
             text = "Developer",
             modifier = Modifier.padding(top = 16.dp),
@@ -125,10 +122,9 @@ fun Settings(navController: NavController, userRole: String) {
             navController.navigate(Screen.PrivacyPolicy.route)
         }
         SettingsItem(text = "Contact Developer Team", iconResId = R.drawable.phone) {
-            navController.navigate("contact_developer")
+            navController.navigate(Screen.ContactDeveloper.route)
         }
 
-        // App Version
         Text(
             text = "App Version $appVersion",
             modifier = Modifier.padding(top = 16.dp),
@@ -749,5 +745,400 @@ fun AccessControlScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ContactDeveloper(
+    contactViewModel: ContactViewModel
+) {
+    val contacts by contactViewModel.contactData.observeAsState(emptyList())
+    val state by contactViewModel.contactState.observeAsState(ContactState.LOADING)
+    val isAdmin by contactViewModel.isAdmin.observeAsState(false)
+    var showAddDialog by remember { mutableStateOf(false) }
+    var contactToEdit by remember { mutableStateOf<ContactData?>(null) }
+
+    LaunchedEffect(Unit) {
+        contactViewModel.checkUserRole()
+        contactViewModel.fetchContacts("developer,support")
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(White2)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            when (state) {
+                is ContactState.LOADING -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = Green1)
+                    }
+                }
+                is ContactState.SUCCESS -> {
+                    LazyColumn {
+                        items(contacts) { contact ->
+                            ContactCard(
+                                contact = contact,
+                                isAdmin = isAdmin,
+                                onEdit = { contactToEdit = it },
+                                onDelete = { contactToDelete ->
+                                    contactViewModel.deleteContact(contactToDelete.contactId)
+                                }
+                            )
+                        }
+                    }
+                }
+                is ContactState.EMPTY -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No developer contacts found",
+                            color = Color.Gray
+                        )
+                    }
+                }
+                is ContactState.ERROR -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = (state as ContactState.ERROR).message,
+                            color = Color.Red
+                        )
+                    }
+                }
+            }
+        }
+
+        if (isAdmin) {
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp),
+                containerColor = Green1,
+                contentColor = Color.White
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Contact",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+    }
+
+    if (showAddDialog) {
+        AddContactDialog(
+            onDismiss = { showAddDialog = false },
+            onConfirm = { contact ->
+                contactViewModel.addContact(contact)
+                showAddDialog = false
+            }
+        )
+    }
+
+    if (contactToEdit != null) {
+        AddContactDialog(
+            onDismiss = { contactToEdit = null },
+            onConfirm = { updatedContact ->
+                contactViewModel.updateContact(updatedContact.copy(contactId = contactToEdit!!.contactId))
+                contactToEdit = null
+            },
+            initialContact = contactToEdit
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddContactDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (ContactData) -> Unit,
+    initialContact: ContactData? = null
+) {
+    var name by remember { mutableStateOf(initialContact?.name ?: "") }
+    var contactNumber by remember { mutableStateOf(initialContact?.contactNumber?.toString() ?: "") }
+    var email by remember { mutableStateOf(initialContact?.email ?: "") }
+    var facebook by remember { mutableStateOf(initialContact?.facebook ?: "") }
+    var role by remember { mutableStateOf(initialContact?.role ?: "") }
+    var expanded by remember { mutableStateOf(false) }
+
+    val roles = listOf("Developer", "Support")
+    val isEditing = initialContact != null
+
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = White2
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = if (isEditing) "Edit Contact" else "Add New Contact",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = contactNumber,
+                    onValueChange = { contactNumber = it },
+                    label = { Text("Contact Number") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = facebook,
+                    onValueChange = { facebook = it },
+                    label = { Text("Facebook") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedTextField(
+                        value = role,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Role") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        roles.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    role = option
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            onConfirm(
+                                ContactData(
+                                    contactId = initialContact?.contactId ?: "",
+                                    name = name,
+                                    contactNumber = contactNumber.toLongOrNull() ?: 0,
+                                    email = email,
+                                    facebook = facebook,
+                                    role = role
+                                )
+                            )
+                        },
+                        enabled = name.isNotBlank() && contactNumber.isNotBlank() && role.isNotBlank()
+                    ) {
+                        Text(if (isEditing) "Update" else "Add")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ContactCard(
+    contact: ContactData,
+    isAdmin: Boolean,
+    onEdit: (ContactData) -> Unit,
+    onDelete: (ContactData) -> Unit
+) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Green4
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = contact.name,
+                        color = Green1,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = contact.role,
+                        color = Color.Gray,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
+
+                if (isAdmin) {
+                    Row(
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier.padding(start = 8.dp)
+                    ) {
+                        IconButton(
+                            onClick = { onEdit(contact) },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit",
+                                tint = Green1
+                            )
+                        }
+                        IconButton(
+                            onClick = { showDeleteDialog = true },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete",
+                                tint = Green1
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Phone,
+                    contentDescription = "Phone",
+                    modifier = Modifier.size(20.dp),
+                    tint = Green1
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(text = contact.contactNumber.toString())
+            }
+
+            if (contact.email.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Email,
+                        contentDescription = "Email",
+                        modifier = Modifier.size(20.dp),
+                        tint = Green1
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = contact.email)
+                }
+            }
+
+            if (contact.facebook.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.facebook),
+                        contentDescription = "Facebook",
+                        modifier = Modifier.size(20.dp),
+                        tint = Green1
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = contact.facebook)
+                }
+            }
+        }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete Contact") },
+            text = { Text("Are you sure you want to delete ${contact.name}?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDelete(contact)
+                        showDeleteDialog = false
+                    }
+                ) {
+                    Text("Delete", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
