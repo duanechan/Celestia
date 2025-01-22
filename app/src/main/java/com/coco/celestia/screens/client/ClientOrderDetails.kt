@@ -29,16 +29,19 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -146,10 +149,6 @@ fun ClientOrderDetails(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-
-                //TODO: Support Center
-                SupportCenter()
-
                 // Order details with product list
                 OrderDetailsSection(
                     orderData = currentOrder,
@@ -167,6 +166,11 @@ fun ClientOrderDetails(
                     orderData = currentOrder,
                     facilityData = FacilityData()
                 )
+
+                //TODO: Support Center
+                SupportCenter()
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Order status tracking
                 TrackOrderSection(
@@ -190,87 +194,156 @@ fun ClientOrderDetails(
 fun SupportCenter() {
     var isExpanded by remember { mutableStateOf(false) }
 
+    // Dialog state variables
+    var showCancelOrderDialog by remember { mutableStateOf(false) }
+    var showRefundDialog by remember { mutableStateOf(false) }
+    var showContactDialog by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .background(White1)
+            .clickable { isExpanded = !isExpanded } // Toggle card visibility on click
             .padding(16.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { isExpanded = !isExpanded }
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Support Center",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-
-                Icon(
-                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (isExpanded) "Collapse" else "Expand"
-                )
-            }
-        }
-
-        if (isExpanded) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-            ) {
-                SupportCenterItemsCard("Cancel Order") // TODO: Handling of cancelled orders
-                SupportCenterItemsCard("Request for Return/Refund") // TODO: Display based on status
-                SupportCenterItemsCard("Contact BCFAC") // TODO: Add coop contact details
-            }
-        }
-    }
-}
-
-
-@Composable
-fun SupportCenterItemsCard(label: String){
-    Card(
-        modifier = Modifier
-            .fillMaxSize()
-            .clickable{true},
-//            .padding(vertical = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = White1),
     ) {
         Row(
             modifier = Modifier
-                .padding(5.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = label,
-                fontSize = 14.sp,
-                color = Color.DarkGray
+                text = "Support Center",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground
             )
+
             Icon(
-                imageVector = Icons.Default.KeyboardArrowRight,
-                contentDescription = "Arrow",
-                tint = Color.Gray,
-                modifier = Modifier.size(24.dp)
+                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                contentDescription = if (isExpanded) "Collapse" else "Expand"
             )
         }
-        Divider(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-            thickness = 1.dp
+
+        if (isExpanded) {
+            Spacer(modifier = Modifier.height(5.dp))
+
+            // Card for Cancel Order
+            SupportCard(
+                title = "Cancel Order",
+                description = "Request to cancel your current order.",
+                onClick = { showCancelOrderDialog = true }
+            )
+
+            // Card for Request Refund/Return
+            SupportCard(
+                title = "Request Refund/Return",
+                description = "Request a refund or return for a delivered order.",
+                onClick = { showRefundDialog = true }
+            )
+
+            // Card for See BCFAC Contact Details
+            SupportCard(
+                title = "See BCFAC Contact Details",
+                description = "View contact details for the cooperative.",
+                onClick = { showContactDialog = true }
+            )
+        }
+    }
+
+    // Dialog for Cancel Order
+    if (showCancelOrderDialog) {
+        AlertDialog(
+            onDismissRequest = { showCancelOrderDialog = false },
+            title = { Text(text = "Cancel Order") },
+            text = { Text(text = "Are you sure you want to cancel your current order?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    // Handle confirm action
+                    showCancelOrderDialog = false
+                }) {
+                    Text(text = "Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelOrderDialog = false }) {
+                    Text(text = "No")
+                }
+            }
+        )
+    }
+
+    // Dialog for Request Refund/Return
+    if (showRefundDialog) {
+        AlertDialog(
+            onDismissRequest = { showRefundDialog = false },
+            title = { Text(text = "Request Refund/Return") },
+            text = { Text(text = "Would you like to request a refund or return for your order?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    // Handle confirm action
+                    showRefundDialog = false
+                }) {
+                    Text(text = "Submit Request")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRefundDialog = false }) {
+                    Text(text = "Cancel")
+                }
+            }
+        )
+    }
+
+    // Dialog for See BCFAC Contact Details
+    if (showContactDialog) {
+        AlertDialog(
+            onDismissRequest = { showContactDialog = false },
+            title = { Text(text = "BCFAC Contact Details") },
+            text = {
+                Column {
+                    Text(text = "Phone: +63 912 345 6789")
+                    Text(text = "Email: support@bcfac.com")
+                    Text(text = "Address: BCFAC Office, Baguio City")
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showContactDialog = false }) {
+                    Text(text = "Close")
+                }
+            }
         )
     }
 }
+
+@Composable
+fun SupportCard(title: String, description: String, onClick: () -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.elevatedCardElevation(4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(5.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxSize()
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
 
 @SuppressLint("DefaultLocale")
 @Composable
