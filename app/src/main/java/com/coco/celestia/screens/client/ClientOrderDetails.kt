@@ -38,6 +38,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
@@ -199,6 +200,10 @@ fun SupportCenter() {
     var showRefundDialog by remember { mutableStateOf(false) }
     var showContactDialog by remember { mutableStateOf(false) }
 
+    // State for cancellation and refund reasons
+    var cancelReason by remember { mutableStateOf("") }
+    var refundReason by remember { mutableStateOf("") }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -255,18 +260,31 @@ fun SupportCenter() {
         AlertDialog(
             onDismissRequest = { showCancelOrderDialog = false },
             title = { Text(text = "Cancel Order") },
-            text = { Text(text = "Are you sure you want to cancel your current order?") },
+            text = {
+                Column {
+                    Text(text = "Are you sure you want to cancel your current order?")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = cancelReason,
+                        onValueChange = { cancelReason = it },
+                        label = { Text("Reason for cancellation") },
+                        placeholder = { Text("Enter your reason here") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
             confirmButton = {
                 TextButton(onClick = {
-                    // Handle confirm action
+                    // Handle confirm action with reason
+                    println("Cancellation reason: $cancelReason")
                     showCancelOrderDialog = false
                 }) {
-                    Text(text = "Yes")
+                    Text(text = "Submit")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showCancelOrderDialog = false }) {
-                    Text(text = "No")
+                    Text(text = "Cancel")
                 }
             }
         )
@@ -277,10 +295,23 @@ fun SupportCenter() {
         AlertDialog(
             onDismissRequest = { showRefundDialog = false },
             title = { Text(text = "Request Refund/Return") },
-            text = { Text(text = "Would you like to request a refund or return for your order?") },
+            text = {
+                Column {
+                    Text(text = "Would you like to request a refund or return for your order?")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = refundReason,
+                        onValueChange = { refundReason = it },
+                        label = { Text("Reason for refund/return") },
+                        placeholder = { Text("Enter your reason here") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
             confirmButton = {
                 TextButton(onClick = {
-                    // Handle confirm action
+                    // Handle confirm action with reason
+                    println("Refund/Return reason: $refundReason")
                     showRefundDialog = false
                 }) {
                     Text(text = "Submit Request")
@@ -328,7 +359,6 @@ fun SupportCard(title: String, description: String, onClick: () -> Unit) {
         Column(
             modifier = Modifier
                 .padding(8.dp)
-                .fillMaxSize()
         ) {
             Text(
                 text = title,
@@ -343,6 +373,7 @@ fun SupportCard(title: String, description: String, onClick: () -> Unit) {
         }
     }
 }
+
 
 
 @SuppressLint("DefaultLocale")
