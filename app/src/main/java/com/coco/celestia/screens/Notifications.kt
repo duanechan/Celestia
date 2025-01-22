@@ -216,6 +216,13 @@ private fun navigateTo(
                 )
             )
         }
+        NotificationType.FarmerCalamityAffected -> {
+            navController.navigate(
+                Screen.AdminSpecialRequestsDetails.createRoute(
+                    (notification.details as SpecialRequest).specialRequestUID
+                )
+            )
+        }
 
         else -> {}
     }
@@ -250,12 +257,15 @@ private fun parseDetails(notification: Notification): String {
                         else -> "Unknown"
                     }
                 }
+                NotificationType.FarmerCalamityAffected -> {
+                    "${details.name}'s special request has been affected by a calamity."
+                }
                 else -> {
-                    "Test1"
+                    "Unknown Special Request Notification Type"
                 }
             }
         }
-        else -> "Unknown"
+        else -> details.toString()
     }
 }
 

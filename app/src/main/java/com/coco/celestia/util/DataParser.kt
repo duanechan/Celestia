@@ -89,6 +89,7 @@ object DataParser {
             "ClientOrderPlaced" -> NotificationType.ClientOrderPlaced
             "CoopSpecialRequestUpdated" -> NotificationType.CoopSpecialRequestUpdated
             "ClientSpecialRequest" -> NotificationType.ClientSpecialRequest
+            "FarmerCalamityAffected" -> NotificationType.FarmerCalamityAffected
             else -> NotificationType.Notice
         }
         val details: Any = when (type) {
@@ -96,7 +97,9 @@ object DataParser {
             NotificationType.OrderUpdated,
             NotificationType.ClientOrderPlaced -> parseOrderData(snapshot.child("details"))
             NotificationType.CoopSpecialRequestUpdated,
+            NotificationType.FarmerCalamityAffected,
             NotificationType.ClientSpecialRequest -> parseSpecialRequest(snapshot.child("details"))
+
         }
 
         return Notification(

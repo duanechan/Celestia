@@ -84,7 +84,6 @@ inline fun <reified BasketItem> BasketItem.toMap(): Map<String, Any?> =
 data class SpecialRequest(
     val subject: String = "",
     val description: String = "",
-    val products: List<ProductReq> = emptyList(),
     val targetDate: String = "",
     val collectionMethod: String = "",
     val additionalRequest: String = "",
@@ -96,9 +95,10 @@ data class SpecialRequest(
     val dateAccepted: String = "",
     val dateCompleted: String = "",
     val specialRequestUID: String = "",
+    val deliveryAddress: String = "",
+    val products: List<ProductReq> = emptyList(),
     val assignedMember: List<AssignedMember> = emptyList(),
     val trackRecord: List<TrackRecord> = emptyList(),
-    val deliveryAddress: String = ""
 )
 
 data class ProductReq(
@@ -278,7 +278,8 @@ enum class NotificationType {
     ClientOrderPlaced,
     ClientSpecialRequest,
     OrderUpdated,
-    CoopSpecialRequestUpdated
+    CoopSpecialRequestUpdated,
+    FarmerCalamityAffected
 }
 
 data class CalendarUIState(

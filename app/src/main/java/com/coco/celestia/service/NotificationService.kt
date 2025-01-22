@@ -78,6 +78,7 @@ object NotificationService {
                             NotificationType.OrderUpdated -> {
                                 "${it.firstname} ${it.lastname}" == (details as OrderData).client
                             }
+                            NotificationType.FarmerCalamityAffected,
                             NotificationType.ClientSpecialRequest -> {
                                 it.role == "Admin"
                             }
@@ -96,6 +97,7 @@ object NotificationService {
                                     else -> false
                                 }
                             }
+
                         }
                     }
                 continuation.resume(recipients)

@@ -1,10 +1,13 @@
 package com.coco.celestia.viewmodel
 
+import android.widget.GridLayout.Spec
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.service.NotificationService
+import com.coco.celestia.util.DataParser
 import com.coco.celestia.viewmodel.model.AssignedMember
 import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.NotificationType
@@ -35,7 +38,7 @@ class SpecialRequestViewModel : ViewModel() {
     val assignedData: LiveData<AssignedMember?> = _assignedData
     val specialReqState: LiveData<SpecialReqState> = _specialReqState
 
-    private suspend fun notify(type: NotificationType, specialReq: SpecialRequest) {
+    fun notify(type: NotificationType, specialReq: SpecialRequest) {
         val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
         val formattedDateTime = LocalDateTime.now().format(formatter)
 
@@ -46,6 +49,7 @@ class SpecialRequestViewModel : ViewModel() {
             message = when (type) {
                 NotificationType.ClientSpecialRequest -> "Special request from ${specialReq.name}: ${specialReq.subject}"
                 NotificationType.CoopSpecialRequestUpdated -> formatUpdateMessage(specialReq.trackRecord)
+                NotificationType.FarmerCalamityAffected -> "Your special request has been affected by a calamity."
                 NotificationType.ClientOrderPlaced,
                 NotificationType.OrderUpdated,
                 NotificationType.Notice -> "Coco"
@@ -53,11 +57,13 @@ class SpecialRequestViewModel : ViewModel() {
             type = type
         )
 
-        NotificationService.pushNotifications(
-            notification = notification,
-            onComplete = { },
-            onError = { }
-        )
+        viewModelScope.launch {
+            NotificationService.pushNotifications(
+                notification = notification,
+                onComplete = { },
+                onError = { }
+            )
+        }
     }
 
     private fun formatUpdateMessage(trackRecord: List<TrackRecord>): String {

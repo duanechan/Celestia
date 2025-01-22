@@ -60,10 +60,12 @@ import com.coco.celestia.ui.theme.Green4
 import com.coco.celestia.ui.theme.White2
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.model.Constants
+import com.coco.celestia.viewmodel.model.NotificationType
 import com.coco.celestia.viewmodel.model.SpecialRequest
 import com.coco.celestia.viewmodel.model.TrackRecord
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.coroutines.suspendCoroutine
 
 @Composable
 fun DisplayRequestDetails (
@@ -255,7 +257,7 @@ fun DisplayRequestDetails (
                 // Notify Unforeseen Circumstances
                 Button(
                     onClick = {
-                        // Handle "Notify Unforeseen Circumstances" action
+                        specialRequestViewModel.notify(NotificationType.FarmerCalamityAffected, specialRequest!!)
                     },
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
