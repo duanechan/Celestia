@@ -249,22 +249,6 @@ fun DisplayRequestCard(
     val status = assignedMember?.status ?: ""
     val normalizedStatus = status.uppercase()
 
-    val backgroundColor = when (normalizedStatus) {
-        "SOIL PREPARATION" -> Green6
-        "SEED SOWING" -> Green7
-        "GROWING" -> Green9
-        "PRE-HARVEST" -> Green8
-        "HARVESTING" -> Green10
-        "POST-HARVEST" -> Green11
-        "PICKED UP BY COOP" -> Green
-        "COMPLETED" -> SageGreen.copy(alpha = 0.7f)
-        "CALAMITY AFFECTED" -> SolidRed
-        "CANCELLED" -> Copper3
-        else -> {
-            Color.Gray
-        }
-    }
-
     val iconPainter: Painter? = when (normalizedStatus) {
         "SOIL PREPARATION" -> painterResource(id = R.drawable.plant_hand)
         "SEED SOWING" -> painterResource(id = R.drawable.plant)
@@ -308,30 +292,24 @@ fun DisplayRequestCard(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (status.isNotEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .background(backgroundColor, shape = RoundedCornerShape(16.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (iconPainter != null) {
-                            Icon(
-                                painter = iconPainter,
-                                contentDescription = status,
-                                modifier = Modifier.size(24.dp),
-                                tint = Cocoa
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = status.replace("_", " "),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Cocoa
+                    if (iconPainter != null) {
+                        Icon(
+                            painter = iconPainter,
+                            contentDescription = status,
+                            modifier = Modifier.size(24.dp),
+                            tint = Cocoa
                         )
                     }
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = status.replace("_", " "),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Cocoa
+                    )
                 }
             }
             Text(
