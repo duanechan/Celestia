@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,16 +29,20 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -147,8 +150,6 @@ fun ClientOrderDetails(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-
-
                 // Order details with product list
                 OrderDetailsSection(
                     orderData = currentOrder,
@@ -169,6 +170,8 @@ fun ClientOrderDetails(
 
                 //TODO: Support Center
                 SupportCenter()
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Order status tracking
                 TrackOrderSection(
@@ -192,78 +195,186 @@ fun ClientOrderDetails(
 fun SupportCenter() {
     var isExpanded by remember { mutableStateOf(false) }
 
-    Card(
+    // Dialog state variables
+    var showCancelOrderDialog by remember { mutableStateOf(false) }
+    var showRefundDialog by remember { mutableStateOf(false) }
+    var showContactDialog by remember { mutableStateOf(false) }
+
+    // State for cancellation and refund reasons
+    var cancelReason by remember { mutableStateOf("") }
+    var refundReason by remember { mutableStateOf("") }
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        colors = CardDefaults.cardColors(containerColor = White1),
-        elevation = CardDefaults.cardElevation(25.dp)
+            .background(White1)
+            .clickable { isExpanded = !isExpanded } // Toggle card visibility on click
+            .padding(16.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(40.dp)
-                    .clickable { isExpanded = !isExpanded },
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Support Center",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Icon(
-                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (isExpanded) "Collapse" else "Expand"
-                )
-            }
-            if (isExpanded) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(15.dp)
-                ) {
-                    SupportCenterItemsCard("Cancel Order") // TODO: Handling of cancelled orders
-                    SupportCenterItemsCard("Request for Return/Refund") // TODO: Display based on status
-                    SupportCenterItemsCard("Contact BCFAC") // TODO: Add coop contact details
-                }
-            }
-        }
-    }
-}
-
-
-@Composable
-fun SupportCenterItemsCard(title: String, modifier: Modifier = Modifier) {
-    var isDropdownExpanded by remember { mutableStateOf(false) }
-
-    Column(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .clickable { isDropdownExpanded = !isDropdownExpanded }
-                .padding(horizontal = 16.dp, vertical = 15.dp),
+            modifier = Modifier
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
+                text = "Support Center",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground
             )
+
             Icon(
-                imageVector = if (isDropdownExpanded) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowRight,
-                contentDescription = if (isDropdownExpanded) "Collapse" else "Expand",
-                tint = MaterialTheme.colorScheme.onSurface
+                imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                contentDescription = if (isExpanded) "Collapse" else "Expand"
             )
         }
-        Divider(
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-            thickness = 1.dp
+
+        if (isExpanded) {
+            Spacer(modifier = Modifier.height(5.dp))
+
+            // Card for Cancel Order
+            SupportCard(
+                title = "Cancel Order",
+                description = "Request to cancel your current order.",
+                onClick = { showCancelOrderDialog = true }
+            )
+
+            // Card for Request Refund/Return
+            SupportCard(
+                title = "Request Refund/Return",
+                description = "Request a refund or return for a delivered order.",
+                onClick = { showRefundDialog = true }
+            )
+
+            // Card for See BCFAC Contact Details
+            SupportCard(
+                title = "See BCFAC Contact Details",
+                description = "View contact details for the cooperative.",
+                onClick = { showContactDialog = true }
+            )
+        }
+    }
+
+    // Dialog for Cancel Order
+    if (showCancelOrderDialog) {
+        AlertDialog(
+            onDismissRequest = { showCancelOrderDialog = false },
+            title = { Text(text = "Cancel Order") },
+            text = {
+                Column {
+                    Text(text = "Are you sure you want to cancel your current order?")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = cancelReason,
+                        onValueChange = { cancelReason = it },
+                        label = { Text("Reason for cancellation") },
+                        placeholder = { Text("Enter your reason here") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    // Handle confirm action with reason
+                    println("Cancellation reason: $cancelReason")
+                    showCancelOrderDialog = false
+                }) {
+                    Text(text = "Submit")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelOrderDialog = false }) {
+                    Text(text = "Cancel")
+                }
+            }
+        )
+    }
+
+    // Dialog for Request Refund/Return
+    if (showRefundDialog) {
+        AlertDialog(
+            onDismissRequest = { showRefundDialog = false },
+            title = { Text(text = "Request Refund/Return") },
+            text = {
+                Column {
+                    Text(text = "Would you like to request a refund or return for your order?")
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = refundReason,
+                        onValueChange = { refundReason = it },
+                        label = { Text("Reason for refund/return") },
+                        placeholder = { Text("Enter your reason here") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    // Handle confirm action with reason
+                    println("Refund/Return reason: $refundReason")
+                    showRefundDialog = false
+                }) {
+                    Text(text = "Submit Request")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRefundDialog = false }) {
+                    Text(text = "Cancel")
+                }
+            }
+        )
+    }
+
+    // Dialog for See BCFAC Contact Details
+    if (showContactDialog) {
+        AlertDialog(
+            onDismissRequest = { showContactDialog = false },
+            title = { Text(text = "BCFAC Contact Details") },
+            text = {
+                Column {
+                    Text(text = "Phone: +63 912 345 6789")
+                    Text(text = "Email: support@bcfac.com")
+                    Text(text = "Address: BCFAC Office, Baguio City")
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showContactDialog = false }) {
+                    Text(text = "Close")
+                }
+            }
         )
     }
 }
+
+@Composable
+fun SupportCard(title: String, description: String, onClick: () -> Unit) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.elevatedCardElevation(4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(5.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(8.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -667,24 +778,14 @@ private fun ClientTimelineStep(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(5.dp))
 
+            // Connecting line
             if (showLine) {
-                Spacer(modifier = Modifier.height(2.dp))
-                val lineHeight = if (showInfo) {
-                    val additionalHeight = if (statusDescription.isNotEmpty() && dateTime.isNotEmpty()) {
-                        70.dp // Assume more content adds additional height
-                    } else {
-                        35.dp // Default height for minimal content
-                    }
-                    additionalHeight
-                } else {
-                    20.dp // Minimal height for no content
-                }
+                Spacer(modifier = Modifier.height(4.dp))
                 Box(
                     modifier = Modifier
                         .width(2.dp)
-                        .height(lineHeight)
+                        .height(40.dp)
                         .background(
                             color = if (isCompleted) MaterialTheme.colorScheme.primary
                             else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
