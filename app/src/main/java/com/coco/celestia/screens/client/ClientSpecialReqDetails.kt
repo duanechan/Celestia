@@ -6,16 +6,20 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.coco.celestia.R
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 
@@ -65,12 +69,32 @@ fun ClientSpecialReqDetails(
                             fontFamily = mintsansFontFamily
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Status: ${specialReq.status}",
-                            color = Green1,
-                            fontSize = 16.sp,
-                            fontFamily = mintsansFontFamily
-                        )
+                        Row {
+                            Text(
+                                text = "Status: ",
+                                color = Green1,
+                                fontSize = 16.sp,
+                                fontFamily = mintsansFontFamily,
+                                modifier = Modifier.padding(vertical = 10.dp)
+                            )
+
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Green1),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .wrapContentWidth()
+                                    .padding(horizontal = 2.dp, vertical = 5.dp)
+                            ) {
+                                Text(
+                                    text = "${specialReq.status}",
+                                    color = White1,
+                                    fontSize = 16.sp,
+                                    fontFamily = mintsansFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -159,7 +183,7 @@ fun ClientSpecialReqDetails(
                                     fontFamily = mintsansFontFamily
                                 )
                                 Text(
-                                    text = "${product.quantity}",
+                                    text = "${product.quantity} kg" ,
                                     color = Green1,
                                     fontFamily = mintsansFontFamily
                                 )
@@ -168,7 +192,6 @@ fun ClientSpecialReqDetails(
                     }
                 }
 
-                // Collection Method Card
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -184,11 +207,31 @@ fun ClientSpecialReqDetails(
                             fontFamily = mintsansFontFamily
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = specialReq.collectionMethod,
-                            color = Green1,
-                            fontFamily = mintsansFontFamily
-                        )
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Green1),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.wrapContentWidth()
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.wrapContentWidth()
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.delivery),
+                                    contentDescription = "Collection Method Icon",
+                                    tint = White1,
+                                    modifier = Modifier.size(24.dp).padding(start = 2.dp)
+                                )
+
+                                Text(
+                                    text = specialReq.collectionMethod,
+                                    color = Color.White,
+                                    fontFamily = mintsansFontFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                )
+                            }
+                        }
                     }
                 }
 

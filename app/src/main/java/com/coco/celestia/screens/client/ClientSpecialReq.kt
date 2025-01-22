@@ -5,6 +5,7 @@ package com.coco.celestia.screens.client
 import android.app.DatePickerDialog
 import android.net.Uri
 import android.widget.DatePicker
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -295,25 +296,26 @@ fun OrderCard(
             containerColor = White1
         )
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text(
-                text = order.subject,
-                fontWeight = FontWeight.Bold,
-                color = Green1,
-                fontSize = 16.sp,
-                fontFamily = mintsansFontFamily
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 100.dp) // Add padding to prevent text overlap with status
             ) {
+                Text(
+                    text = order.subject,
+                    fontWeight = FontWeight.Bold,
+                    color = Green1,
+                    fontSize = 20.sp,
+                    fontFamily = mintsansFontFamily
+                )
+
+                Spacer(modifier = Modifier.height(15.dp))
+
                 Text(
                     text = "Date Requested: ${order.dateRequested}",
                     color = Green1,
@@ -321,23 +323,35 @@ fun OrderCard(
                     fontFamily = mintsansFontFamily
                 )
 
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
-                    text = order.status,
-                    fontWeight = FontWeight.Bold,
+                    text = "Target Date: ${order.targetDate}",
                     color = Green1,
                     fontSize = 14.sp,
-                    fontFamily = mintsansFontFamily
+                    fontFamily = mintsansFontFamily,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Target Date: ${order.targetDate}",
-                color = Green1,
-                fontSize = 14.sp,
-                fontFamily = mintsansFontFamily
-            )
+            // Status badge on the right
+            Card(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd),
+                shape = RoundedCornerShape(8.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Green1
+                )
+            ) {
+                Text(
+                    text = order.status,
+                    fontWeight = FontWeight.Bold,
+                    color = White1,
+                    fontSize = 14.sp,
+                    fontFamily = mintsansFontFamily,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                )
+            }
         }
     }
 }
