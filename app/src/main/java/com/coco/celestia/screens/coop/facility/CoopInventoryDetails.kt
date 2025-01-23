@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
@@ -34,8 +35,11 @@ import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.TransactionState
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.PriceUpdate
 import com.coco.celestia.viewmodel.model.ProductData
+import com.coco.celestia.viewmodel.model.TransactionData
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -45,6 +49,7 @@ fun CoopInventoryDetails(
     navController: NavController,
     productName: String,
     productViewModel: ProductViewModel,
+    transactionViewModel: TransactionViewModel,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val productState by productViewModel.productState.observeAsState()
@@ -68,7 +73,7 @@ fun CoopInventoryDetails(
                         productViewModel = productViewModel,
                         onEvent = onEvent
                     )
-                    ProductTabs(product = productData.first())
+                    ProductTabs(product = productData.first(), transactionViewModel = transactionViewModel)
                 } else {
                     Box(
                         modifier = Modifier
@@ -361,7 +366,10 @@ private fun PriceInfoColumn(
 }
 
 @Composable
-private fun ProductTabs(product: ProductData) {
+private fun ProductTabs(
+    product: ProductData,
+    transactionViewModel: TransactionViewModel // Add ViewModel parameter
+) {
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("DETAILS", "TRANSACTIONS", "PRICE HISTORY")
 
@@ -398,7 +406,10 @@ private fun ProductTabs(product: ProductData) {
 
         when (selectedTab) {
             0 -> Details(product)
-            1 -> TransactionsTab()
+            1 -> TransactionsTab(
+                transactionViewModel = transactionViewModel,
+                productName = product.name // Pass the product name
+            )
             2 -> HistoryTab(product)
         }
     }
@@ -929,60 +940,73 @@ private fun PurchaseInfoSection(product: ProductData) {
             text = "PHP${product.totalPurchases}",
             style = MaterialTheme.typography.titleLarge
         )
-
-//        Spacer(modifier = Modifier.height(16.dp))
-
-//        Text(
-//            text = "Preferred Vendor",
-//            style = MaterialTheme.typography.bodyMedium,
-//            color = Color.Gray
-//        )
-//        Text(
-//            text = product.vendor,
-//            style = MaterialTheme.typography.bodyLarge
-//        )
     }
 }
 
 @Composable
-fun ProductDescriptionCard() {
-    Column(
-        modifier = Modifier.padding(horizontal = 16.dp)
-    ) {
-        Text(
-            text = "Description",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray
-        )
-        Text(
-            text = "50",
-            style = MaterialTheme.typography.titleLarge
-        )
-    }
-}
+fun TransactionsTab(
+    transactionViewModel: TransactionViewModel,
+    productName: String
+) {
+    val transactionState by transactionViewModel.transactionState.observeAsState(TransactionState.LOADING)
+    val transactionData by transactionViewModel.transactionData.observeAsState(hashMapOf())
 
-@Composable
-private fun TransactionsTab() {
+    LaunchedEffect(productName) {
+        transactionViewModel.fetchAllTransactions(filter = productName)
+    }
+
     Box(
-        modifier = Modifier.fillMaxSize().background(White2),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(White2),
         contentAlignment = Alignment.Center
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // Sample
-            items(3) { index ->
-                TransactionsCard()
+        when (val state = transactionState) {
+            TransactionState.LOADING -> {
+                CircularProgressIndicator()
+            }
+            is TransactionState.ERROR -> {
+                Text(
+                    text = state.message,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+            TransactionState.EMPTY -> {
+                Text(
+                    text = "No transactions found",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            TransactionState.SUCCESS -> {
+                val productTransactions = transactionData.values.flatten()
+                    .filter { it.productName == productName }
+
+                if (productTransactions.isEmpty()) {
+                    Text(
+                        text = "No transactions found",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(productTransactions) { transaction ->
+                            TransactionsCard(transaction)
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun TransactionsCard() {
+fun TransactionsCard(transaction: TransactionData) {
     Card(
         modifier = Modifier
             .fillMaxWidth(),
@@ -995,37 +1019,17 @@ fun TransactionsCard() {
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Header Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "SO Number / PO Number",
+                    text = transaction.transactionId,
                     style = MaterialTheme.typography.titleMedium,
                     color = Green1
                 )
                 Text(
-                    text = "Date of Sale/Purchase",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Quantity Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Price Per Unit: {put here}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "Total Amount",
+                    text = transaction.date,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1035,15 +1039,63 @@ fun TransactionsCard() {
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.size(20.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(
+                                id = if (transaction.type == "Online Sale") {
+                                    R.drawable.subtract
+                                } else {
+                                    R.drawable.addition
+                                }
+                            ),
+                            contentDescription = transaction.type,
+                            modifier = Modifier.size(
+                                if (transaction.type == "Online Sale") 14.dp else 16.dp
+                            ),
+                            contentScale = ContentScale.Fit,
+                            colorFilter = ColorFilter.tint(
+                                if (transaction.type == "Online Sale")
+                                    MaterialTheme.colorScheme.error
+                                else
+                                    Green2
+                            )
+                        )
+                    }
+                    Text(
+                        text = transaction.type,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Text(
+                    text = transaction.status,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = when (transaction.status) {
+                        "Completed" -> Green1
+                        "Failed" -> MaterialTheme.colorScheme.error
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Total Quantity:",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "+/- Quantity", //TODO: Pag Sales deducted ung quantity, pag Purchase added ung quantity
+                    text = transaction.productName,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1051,6 +1103,13 @@ fun TransactionsCard() {
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            if (transaction.description.isNotEmpty()) {
+                Text(
+                    text = transaction.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
