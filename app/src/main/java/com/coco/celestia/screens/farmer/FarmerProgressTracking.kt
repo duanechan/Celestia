@@ -3,10 +3,12 @@ package com.coco.celestia.screens.farmer
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,7 +28,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun DisplayFarmerProgressTracking (
+fun DisplayFarmerProgressTracking(
     trackingID: String,
     specialRequestViewModel: SpecialRequestViewModel
 ) {
@@ -36,22 +38,47 @@ fun DisplayFarmerProgressTracking (
         specialRequestViewModel.fetchRequestByTrackingID(trackingID)
     }
 
-    Column {
-        Text(assignedData?.name ?: "")
-        Text("Tracking No. ${assignedData?.trackingID}")
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp)
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Text(
+                    text = assignedData?.name ?: "Loading...",
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Tracking No. ${assignedData?.trackingID ?: ""}",
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         assignedData?.farmerTrackRecord
             ?.sortedByDescending { it.dateTime }
             ?.forEachIndexed { index, trackRecord ->
                 DisplayTrackOrder(
-                    trackRecord,
-                    index == assignedData!!.farmerTrackRecord.lastIndex
+                    record = trackRecord,
+                    isLastItem = index == assignedData!!.farmerTrackRecord.lastIndex
                 )
             }
     }
 }
 
 @Composable
-fun DisplayTrackOrder (
+fun DisplayTrackOrder(
     record: TrackRecord,
     isLastItem: Boolean
 ) {
@@ -62,14 +89,14 @@ fun DisplayTrackOrder (
     val date = dateTime.format(dateFormatter)
     val time = dateTime.format(timeFormatter)
 
-    Row (
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(80.dp)
-            .padding(start = 32.dp, end = 8.dp),
-        verticalAlignment = Alignment.Top
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column (
+        Column(
             horizontalAlignment = Alignment.End
         ) {
             Text(
@@ -85,7 +112,7 @@ fun DisplayTrackOrder (
             )
         }
 
-        Column (
+        Column(
             modifier = Modifier
                 .padding(horizontal = 8.dp)
         ) {
@@ -108,6 +135,7 @@ fun DisplayTrackOrder (
 
         Text(
             text = record.description,
+            modifier = Modifier.padding(start = 8.dp)
         )
     }
 }

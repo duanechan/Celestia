@@ -185,7 +185,7 @@ fun FarmerManageOrder(
                     ) {
                         val statuses = listOf(
                             "All", "Soil Preparation", "Seed Sowing", "Growing",
-                            "Pre-Harvest", "Harvesting", "Post-Harvest", "Picked up by Coop"
+                            "Pre-Harvest", "Harvesting", "Post-Harvest", "Picked up by Coop", "Calamity Affected"
                         )
 
                         statuses.forEach { status ->
