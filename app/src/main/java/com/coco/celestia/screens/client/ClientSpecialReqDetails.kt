@@ -212,10 +212,15 @@ fun ClientSpecialReqDetails(
                                 modifier = Modifier.wrapContentWidth()
                             ) {
                                 Icon(
-                                    painter = painterResource(id = R.drawable.delivery),
+                                    painter = painterResource(
+                                        id = if (specialReq.collectionMethod.equals("delivery", ignoreCase = true))
+                                            R.drawable.delivery else R.drawable.pickupclient
+                                    ),
                                     contentDescription = "Collection Method Icon",
                                     tint = Green1,
-                                    modifier = Modifier.size(24.dp).padding(start = 5.dp)
+                                    modifier = Modifier
+                                        .size(24.dp)
+                                        .padding(start = 5.dp)
                                 )
 
                                 Text(
