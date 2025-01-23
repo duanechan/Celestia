@@ -175,7 +175,6 @@ fun FarmerManageOrder(
                 }
 
                 if (page == 0) {
-                    // Filter section for "In Progress" tab
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -185,7 +184,8 @@ fun FarmerManageOrder(
                     ) {
                         val statuses = listOf(
                             "All", "Soil Preparation", "Seed Sowing", "Growing",
-                            "Pre-Harvest", "Harvesting", "Post-Harvest", "Picked up by Coop", "Calamity Affected"
+                            "Pre-Harvest", "Harvesting", "Post-Harvest",
+                            "Picked up by Coop", "Calamity Affected", "Cancelled"
                         )
 
                         statuses.forEach { status ->

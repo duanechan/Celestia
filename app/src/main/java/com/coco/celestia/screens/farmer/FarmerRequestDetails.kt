@@ -254,28 +254,28 @@ fun DisplayRequestDetails (
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-                // Notify Unforeseen Circumstances
-                Button(
-                    onClick = {
-                        specialRequestViewModel.notify(NotificationType.FarmerCalamityAffected, specialRequest!!)
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        contentColor = Color.White,
-                        containerColor = Green1
-                    ),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(56.dp)
-                ) {
-                    Text(
-                        text = "Notify Unforeseen Circumstances",
-                        color = Color.White,
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+//                // Notify Unforeseen Circumstances
+//                Button(
+//                    onClick = {
+//                        specialRequestViewModel.notify(NotificationType.FarmerCalamityAffected, specialRequest!!)
+//                    },
+//                    shape = RoundedCornerShape(12.dp),
+//                    colors = ButtonDefaults.buttonColors(
+//                        contentColor = Color.White,
+//                        containerColor = Green1
+//                    ),
+//                    modifier = Modifier
+//                        .weight(1f)
+//                        .height(56.dp)
+//                ) {
+//                    Text(
+//                        text = "Notify Unforeseen Circumstances",
+//                        color = Color.White,
+//                        fontSize = 12.sp,
+//                        textAlign = TextAlign.Center,
+//                        modifier = Modifier.fillMaxWidth()
+//                    )
+//                }
             }
 
             // Track Progress
@@ -354,7 +354,9 @@ fun DisplayRequestDetails (
 
                     updateStatusDialog = false
                 },
-                onDismiss = { updateStatusDialog = false}
+                onDismiss = { updateStatusDialog = false },
+                specialRequestViewModel = specialRequestViewModel,
+                specialRequest = specialRequest
             )
         }
     }
@@ -362,17 +364,23 @@ fun DisplayRequestDetails (
 
 //Changed Status to Milestone
 @Composable
-fun DisplayUpdateStatus (
+fun DisplayUpdateStatus(
     product: String,
     onConfirm: (String, String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    specialRequestViewModel: SpecialRequestViewModel,
+    specialRequest: SpecialRequest?
 ) {
     var status by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var statusExpanded by remember { mutableStateOf(false) }
-    val statusList = listOf("Soil Preparation","Seed Sowing", "Growing", "Pre-Harvest", "Harvesting",
-        "Post-Harvest", "Picked Up by Coop", "Calamity-Affected")
+    var showNotificationPopup by remember { mutableStateOf(false) }
 
+    val statusList = listOf(
+        "Soil Preparation", "Seed Sowing", "Growing",
+        "Pre-Harvest", "Harvesting", "Post-Harvest",
+        "Picked Up by Coop", "Calamity Affected"
+    )
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -436,7 +444,7 @@ fun DisplayUpdateStatus (
 
                     DropdownMenu(
                         expanded = statusExpanded,
-                        onDismissRequest = { statusExpanded = false}
+                        onDismissRequest = { statusExpanded = false }
                     ) {
                         statusList.forEach {
                             DropdownMenuItem(
@@ -444,9 +452,7 @@ fun DisplayUpdateStatus (
                                     status = it
                                     statusExpanded = false
                                 },
-                                text = {
-                                    Text(text = it)
-                                }
+                                text = { Text(text = it) }
                             )
                         }
                     }
@@ -472,6 +478,31 @@ fun DisplayUpdateStatus (
                         )
                     )
                 }
+
+                if (status == "Calamity Affected") {
+                    Button(
+                        onClick = {
+                            specialRequestViewModel.notify(NotificationType.FarmerCalamityAffected, specialRequest!!)
+                            showNotificationPopup = true // Show the popup
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            contentColor = Color.White,
+                            containerColor = Green1
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .padding(top = 16.dp)
+                    ) {
+                        Text(
+                            text = "Notify Unforeseen Circumstances",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
@@ -489,6 +520,21 @@ fun DisplayUpdateStatus (
             }
         }
     )
+
+    if (showNotificationPopup) {
+        AlertDialog(
+            onDismissRequest = { showNotificationPopup = false },
+            title = { Text("Notification Sent") },
+            text = { Text("The cooperative has been notified about unforeseen circumstances.") },
+            confirmButton = {
+                Button(
+                    onClick = { showNotificationPopup = false }
+                ) {
+                    Text("OK")
+                }
+            }
+        )
+    }
 }
 
 @Composable

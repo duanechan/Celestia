@@ -117,16 +117,6 @@ fun FarmerDashboard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-//                            Text(
-//                                text = "Orders Overview",
-//                                fontSize = 16.sp,
-//                                fontWeight = FontWeight.Bold,
-//                                color = DarkGreen
-//                            )
-//                            TextButton(
-//                                onClick = { showInSeasonDialog = true },
-//                                modifier = Modifier.padding(start = 8.dp)
-//                            ){}
                 }
                 FarmerOrderOverview(
                     orders = assignedProducts?.map { assigned ->
