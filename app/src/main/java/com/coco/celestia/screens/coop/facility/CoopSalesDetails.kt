@@ -423,6 +423,11 @@ fun OnlineSalesDetails(
                     style = MaterialTheme.typography.titleSmall
                 )
             }
+            Divider(
+                color = Green4,
+                thickness = 1.dp,
+                modifier = Modifier.padding(horizontal = 10.dp)
+            )
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -455,6 +460,11 @@ fun OnlineSalesDetails(
                     style = MaterialTheme.typography.titleSmall,
                 )
             }
+            Divider(
+                color = Green4,
+                thickness = 1.dp,
+                modifier = Modifier.padding(horizontal = 10.dp)
+            )
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -567,7 +577,6 @@ private fun TimelineStep(
     isCompleted: Boolean,
     showLine: Boolean
 ) {
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -580,6 +589,7 @@ private fun TimelineStep(
                 .wrapContentHeight()
                 .width(24.dp)
         ) {
+            // Status dot
             Box(
                 modifier = Modifier
                     .size(12.dp)
@@ -601,12 +611,23 @@ private fun TimelineStep(
                 }
             }
 
+            // Dynamic vertical connecting line
             if (showLine) {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(5.dp))
+                val lineHeight = if (showInfo) {
+                    val additionalHeight = if (statusDescription.isNotBlank() && dateTime.isNotBlank()) {
+                        60.dp
+                    } else {
+                        32.dp
+                    }
+                    additionalHeight
+                } else {
+                    24.dp
+                }
                 Box(
                     modifier = Modifier
                         .width(2.dp)
-                        .height(40.dp)
+                        .height(lineHeight)
                         .background(
                             color = if (isCompleted) Color(0xFF28403D)
                             else Color.Gray.copy(alpha = 0.3f)
@@ -617,6 +638,7 @@ private fun TimelineStep(
 
         Spacer(modifier = Modifier.width(12.dp))
 
+        // Status details
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -649,6 +671,7 @@ private fun TimelineStep(
         }
     }
 }
+
 
 @SuppressLint("DefaultLocale")
 @Composable
