@@ -25,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
@@ -1025,11 +1026,13 @@ fun TransactionsCard(transaction: TransactionData) {
             ) {
                 Text(
                     text = transaction.transactionId,
+                    fontSize = 12.sp,
                     style = MaterialTheme.typography.titleMedium,
                     color = Green1
                 )
                 Text(
                     text = transaction.date,
+                    fontSize = 12.sp,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

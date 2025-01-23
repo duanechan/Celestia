@@ -91,6 +91,7 @@ import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.PurchaseOrderViewModel
+import com.coco.celestia.viewmodel.ReportsViewModel
 import com.coco.celestia.viewmodel.SalesViewModel
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
@@ -123,6 +124,7 @@ fun NavGraph(
     salesViewModel: SalesViewModel = viewModel(),
     purchaseOrderViewModel: PurchaseOrderViewModel = viewModel(),
     vegetableViewModel: VegetableViewModel = viewModel(),
+    reportsViewModel: ReportsViewModel = viewModel(),
     onNavigate: (String) -> Unit,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit,
     modifier: Modifier
@@ -875,8 +877,6 @@ fun NavGraph(
                 reorderPoint = reorderPoint,
                 isInStore = isInStore,
                 weightUnit = weightUnit,
-//                isDelivery = isDelivery,
-//                isGcash = isGcash,
                 onEvent = { onEvent(it) }
             )
 
@@ -897,7 +897,12 @@ fun NavGraph(
             }
         }
         composable(Screen.CoopReports.route) {
-            CoopReports(navController)
+            onNavigate("Reports")
+            CoopReports(
+                navController = navController,
+                reportsViewModel = reportsViewModel,
+                transactionViewModel = transactionViewModel
+            )
         }
         composable(Screen.CoopPurchases.route) {
             onNavigate("Purchase Orders")

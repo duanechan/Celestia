@@ -78,7 +78,9 @@ sealed class Screen(val route: String) {
     data object CoopOrderDetails : Screen(route = "order_details/{orderId}") {
         fun createRoute(orderId: String) = "order_details/${Uri.encode(orderId)}"
     }
-    data object CoopReports: Screen( route = "coop_reports")
+    data object CoopReports : Screen("coop_reports/{facilityName}") {
+        fun createRoute(facilityName: String) = "coop_reports/$facilityName"
+    }
     data object CoopPurchases: Screen( route = "coop_purchases")
     data object CoopPurchaseForm : Screen("coop_purchase_form?draftId={draftId}&purchaseNumber={purchaseNumber}") {
         fun createRouteWithDraft(draftId: String) = "coop_purchase_form?draftId=$draftId"

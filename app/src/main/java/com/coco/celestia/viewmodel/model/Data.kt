@@ -332,3 +332,11 @@ data class OrderItem(
     val status: String,
     var totalActivities: Int
 )
+
+data class ReportData(
+    val reportType: String = "",
+    val dateRange: String = "",
+    val content: String = "",
+    val totalAmount: Double = 0.0,
+    val reportDate: String = LocalDate.now().toString()
+)
