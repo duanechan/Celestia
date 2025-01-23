@@ -337,7 +337,7 @@ fun OrderCard(
             // Status badge on the right
             Card(
                 modifier = Modifier
-                    .align(Alignment.CenterEnd),
+                    .align(Alignment.TopEnd),
                 shape = RoundedCornerShape(8.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = Green1

@@ -22,6 +22,8 @@ import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun ClientSpecialReqDetails(
@@ -70,14 +72,6 @@ fun ClientSpecialReqDetails(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Row {
-                            Text(
-                                text = "Status: ",
-                                color = Green1,
-                                fontSize = 16.sp,
-                                fontFamily = mintsansFontFamily,
-                                modifier = Modifier.padding(vertical = 10.dp)
-                            )
-
                             Card(
                                 colors = CardDefaults.cardColors(containerColor = Green1),
                                 shape = RoundedCornerShape(8.dp),
@@ -123,7 +117,8 @@ fun ClientSpecialReqDetails(
                         Text(
                             text = "Target Date: ${specialReq.targetDate}",
                             color = Green1,
-                            fontFamily = mintsansFontFamily
+                            fontFamily = mintsansFontFamily,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -208,7 +203,7 @@ fun ClientSpecialReqDetails(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Card(
-                            colors = CardDefaults.cardColors(containerColor = Green1),
+                            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.wrapContentWidth()
                         ) {
@@ -219,13 +214,13 @@ fun ClientSpecialReqDetails(
                                 Icon(
                                     painter = painterResource(id = R.drawable.delivery),
                                     contentDescription = "Collection Method Icon",
-                                    tint = White1,
-                                    modifier = Modifier.size(24.dp).padding(start = 2.dp)
+                                    tint = Green1,
+                                    modifier = Modifier.size(24.dp).padding(start = 5.dp)
                                 )
 
                                 Text(
                                     text = specialReq.collectionMethod,
-                                    color = Color.White,
+                                    color = Green1,
                                     fontFamily = mintsansFontFamily,
                                     fontWeight = FontWeight.Bold,
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
@@ -261,7 +256,6 @@ fun ClientSpecialReqDetails(
                     }
                 }
 
-                // Track Record Card
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -277,35 +271,70 @@ fun ClientSpecialReqDetails(
                             fontFamily = mintsansFontFamily
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        specialReq.trackRecord.forEach { record ->
+
+                        val sortedRecords = specialReq.trackRecord.sortedByDescending {
+                            SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).parse(it.dateTime)?.time ?: 0
+                        }
+                        val mostRecentDate = sortedRecords.firstOrNull()?.dateTime
+
+                        sortedRecords.forEach { record ->
+                            val isRecent = record.dateTime == mostRecentDate
+                            val textColor = if (isRecent) Green1 else Gray.copy(alpha = 0.6f)
+                            val dotColor = if (isRecent) Green2 else Gray.copy(alpha = 0.6f)
+                            val lineColor = if (isRecent) Green1 else Gray.copy(alpha = 0.6f)
+
                             Row(
-                                modifier = Modifier.padding(vertical = 4.dp),
-                                horizontalArrangement = Arrangement.Start
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.Top
                             ) {
-                                Box(
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
                                     modifier = Modifier
-                                        .size(15.dp)
-                                        .background(Green1, CircleShape)
-                                        .align(Alignment.CenterVertically)
-                                )
+                                        .wrapContentHeight()
+                                        .width(24.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(12.dp)
+                                            .background(
+                                                color = dotColor,
+                                                shape = CircleShape
+                                            )
+                                    )
+                                    if (sortedRecords.indexOf(record) < sortedRecords.size - 1) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .width(2.dp)
+                                                .height(33.dp)
+                                                .background(lineColor)
+                                        )
+                                    }
+                                }
 
-                                Spacer(modifier = Modifier.width(8.dp))
+                                Spacer(modifier = Modifier.width(12.dp))
 
-                                Column(modifier = Modifier.padding(start = 10.dp)) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
                                     Text(
                                         text = record.description,
-                                        color = Green1,
+                                        fontWeight = if (isRecent) FontWeight.Bold else FontWeight.Normal,
+                                        color = textColor,
                                         fontFamily = mintsansFontFamily
                                     )
+
                                     Text(
                                         text = record.dateTime,
                                         fontSize = 12.sp,
-                                        color = Green1.copy(alpha = 0.7f),
+                                        color = textColor,
                                         fontFamily = mintsansFontFamily
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
                         }
                     }
                 }
