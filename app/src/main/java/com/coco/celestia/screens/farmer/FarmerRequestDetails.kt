@@ -279,35 +279,37 @@ fun DisplayRequestDetails (
             }
 
             // Track Progress
-            Button(
-                onClick = {
-                    specialRequest?.assignedMember?.find { it.email == farmerEmail }?.trackingID?.let { trackingID ->
-                        navController.navigate(Screen.FarmerProgressTracking.createRoute(trackingID))
+            specialRequest?.assignedMember?.forEach { member ->
+                if (member.email == farmerEmail && member.farmerTrackRecord.isNotEmpty()) {
+                    Button(
+                        onClick = {
+                            navController.navigate(Screen.FarmerProgressTracking.createRoute(member.trackingID))
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            contentColor = Color.White,
+                            containerColor = Green1
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .padding(top = 16.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Track Progress")
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                painter = painterResource(id = R.drawable.deliveryicon),
+                                contentDescription = "Track Order Icon",
+                                modifier = Modifier.size(20.dp),
+                                tint = Color.White
+                            )
+                        }
                     }
-                },
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = Color.White,
-                    containerColor = Green1
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .padding(top = 16.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Track Progress")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Icon(
-                        painter = painterResource(id = R.drawable.deliveryicon),
-                        contentDescription = "Track Order Icon",
-                        modifier = Modifier.size(20.dp),
-                        tint = Color.White
-                    )
                 }
             }
         }

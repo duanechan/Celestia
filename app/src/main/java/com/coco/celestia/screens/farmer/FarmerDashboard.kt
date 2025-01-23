@@ -168,6 +168,7 @@ fun FarmerDashboard(
                     }
                 }
                 assignedProducts
+                    ?.filter { it.status == "In Progress" }
                     ?.filter { member ->
                         member.assignedMember.any { it.status.isEmpty() }
                     }
