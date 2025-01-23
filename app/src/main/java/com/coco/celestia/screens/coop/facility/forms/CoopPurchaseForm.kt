@@ -86,7 +86,9 @@ import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.Constants
+import com.coco.celestia.viewmodel.model.TransactionData
 import java.text.SimpleDateFormat
 import java.time.DayOfWeek
 import java.time.Month
@@ -95,9 +97,6 @@ import java.time.format.TextStyle
 import java.util.Calendar
 import java.util.Locale
 
-// TODO: Dropdown for accounts (idk what categories to put there)
-//  - Removed Fields: Accounts, Shipment Preference, Reference Number, Terms and Conditions, Statuses
-//  - Renamed: Expected Date -> dateOfPurchase
 
 @Composable
 fun CoopPurchaseForm(
@@ -105,8 +104,9 @@ fun CoopPurchaseForm(
     vendorViewModel: VendorViewModel,
     facilityViewModel: FacilityViewModel,
     productViewModel: ProductViewModel,
+    transactionViewModel: TransactionViewModel,
     facilityName: String,
-    currentEmail: String, // Add currentEmail parameter
+    currentEmail: String,
     onSuccess: () -> Unit,
     onCancel: () -> Unit,
     navController: NavController,
@@ -136,13 +136,11 @@ fun CoopPurchaseForm(
     var items by remember { mutableStateOf<List<PurchaseOrderItem>>(emptyList()) }
     var showAddItemDialog by remember { mutableStateOf(false) }
 
-    // Observe facilities data
     val facilities by facilityViewModel.facilitiesData.observeAsState(initial = emptyList())
     val userFacility = facilities.find { facility ->
         facility.emails.contains(currentEmail)
     }
 
-    // Observe products for stock information
     val products by productViewModel.productData.observeAsState(initial = emptyList())
     val currentStockMap = products.associate { it.name to it.quantity }
 
@@ -150,11 +148,9 @@ fun CoopPurchaseForm(
         facilityViewModel.fetchFacilities()
         vendorViewModel.fetchVendors(facilityName = facilityName)
 
-        // Generate purchase number for new purchase orders
         if (purchaseNumber == null && draftId == null) {
             val count = purchaseOrderViewModel.getPurchaseCount() + 1
             val currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
-            // Format: PO-20250112-001
             val newPurchaseNumber = "PO-$currentDate-${count.toString().padStart(3, '0')}"
             purchaseOrderData = purchaseOrderData.copy(purchaseNumber = newPurchaseNumber)
         }
@@ -299,7 +295,6 @@ fun CoopPurchaseForm(
                             )
                         }
 
-                        // Show "Save as Draft" button when not in edit mode
                         if (!isEdit) {
                             OutlinedButton(
                                 onClick = {
@@ -346,12 +341,21 @@ fun CoopPurchaseForm(
                                 showErrorMessages = true
                                 if (!hasErrors && validateForm()) {
                                     isLoading = true
+                                    val finalPurchaseOrder = purchaseOrderData.copy(
+                                        items = items,
+                                        savedAsDraft = false,
+                                        status = "completed"
+                                    )
+
                                     purchaseOrderViewModel.addPurchaseOrder(
-                                        purchaseOrder = purchaseOrderData.copy(
-                                            items = items,
-                                            savedAsDraft = false
-                                        ),
+                                        purchaseOrder = finalPurchaseOrder,
                                         onSuccess = {
+                                            recordPurchaseOrderTransactions(
+                                                transactionViewModel = transactionViewModel,
+                                                purchaseOrder = finalPurchaseOrder,
+                                                facilityName = facilityName
+                                            )
+
                                             isLoading = false
                                             onSuccess()
                                             navController.navigate(Screen.CoopPurchases.route) {
@@ -376,7 +380,6 @@ fun CoopPurchaseForm(
                         }
                     }
                 } else {
-                    // Show message if no facility is found for the user
                     Box(
                         modifier = Modifier.fillMaxWidth(),
                         contentAlignment = Alignment.Center
@@ -403,6 +406,30 @@ fun CoopPurchaseForm(
             productViewModel = productViewModel,
             currentEmail = currentEmail,
             currentStockMap = currentStockMap
+        )
+    }
+}
+
+fun recordPurchaseOrderTransactions(
+    transactionViewModel: TransactionViewModel,
+    purchaseOrder: PurchaseOrder,
+    facilityName: String
+) {
+    val vendorName = if (purchaseOrder.vendor.isBlank()) "Unknown Vendor" else purchaseOrder.vendor
+
+    purchaseOrder.items.forEach { item ->
+        val transaction = TransactionData(
+            transactionId = purchaseOrder.purchaseNumber,
+            type = "Purchased",
+            date = purchaseOrder.dateOfPurchase,
+            description = "Purchased ${item.quantity} units from $vendorName",
+            status = "Completed",
+            productName = item.itemName
+        )
+
+        transactionViewModel.recordTransaction(
+            uid = facilityName,
+            transaction = transaction
         )
     }
 }

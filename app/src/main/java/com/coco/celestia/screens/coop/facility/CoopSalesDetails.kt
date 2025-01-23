@@ -6,10 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -61,11 +59,17 @@ import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.SalesState
 import com.coco.celestia.viewmodel.SalesViewModel
+import com.coco.celestia.viewmodel.TransactionState
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.SalesData
 import com.coco.celestia.viewmodel.model.StatusUpdate
+import com.coco.celestia.viewmodel.model.TransactionData
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
+import java.util.Locale
 
 @Composable
 fun CoopSalesDetails(
@@ -73,7 +77,8 @@ fun CoopSalesDetails(
     userEmail: String,
     salesViewModel: SalesViewModel = viewModel(),
     orderViewModel: OrderViewModel = viewModel(),
-    facilityViewModel: FacilityViewModel = viewModel()
+    facilityViewModel: FacilityViewModel = viewModel(),
+    transactionViewModel: TransactionViewModel = viewModel()
 ) {
     val salesNumber = remember {
         navController.currentBackStackEntry?.arguments?.getString("salesNumber") ?: ""
@@ -92,6 +97,8 @@ fun CoopSalesDetails(
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
 
+    val transactionState by transactionViewModel.transactionState.observeAsState(TransactionState.LOADING)
+
     val userFacility = facilitiesData.find { facility ->
         facility.emails.contains(userEmail)
     }
@@ -102,8 +109,16 @@ fun CoopSalesDetails(
 
     LaunchedEffect(userFacility) {
         userFacility?.let { facility ->
-            salesViewModel.fetchSales(facility = facility.name)
-            orderViewModel.fetchAllOrders(filter = "", role = facility.name)
+            launch {
+                salesViewModel.fetchSales(facility = facility.name)
+            }
+            launch {
+                orderViewModel.fetchAllOrders(filter = "", role = facility.name)
+            }
+            launch {
+                val encodedEmail = encodeEmail(userEmail)
+                transactionViewModel.fetchTransactions(encodedEmail, "")
+            }
         }
     }
 
@@ -142,7 +157,8 @@ fun CoopSalesDetails(
             }
             else -> {
                 when {
-                    orderState == OrderState.LOADING || salesState == SalesState.LOADING -> {
+                    orderState == OrderState.LOADING ||
+                            salesState == SalesState.LOADING -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
@@ -166,12 +182,21 @@ fun CoopSalesDetails(
                             Text((salesState as SalesState.ERROR).message)
                         }
                     }
+                    transactionState is TransactionState.ERROR -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text((transactionState as TransactionState.ERROR).message)
+                        }
+                    }
                     else -> {
                         if (currentOrder != null) {
                             OnlineSalesDetails(
                                 order = currentOrder,
                                 navController = navController,
-                                viewModel = orderViewModel
+                                orderViewModel = orderViewModel,
+                                transactionViewModel = transactionViewModel
                             )
                         } else if (currentSale != null) {
                             InStoreSalesDetails(
@@ -198,7 +223,8 @@ fun CoopSalesDetails(
 fun OnlineSalesDetails(
     order: OrderData,
     navController: NavController,
-    viewModel: OrderViewModel
+    orderViewModel: OrderViewModel,
+    transactionViewModel: TransactionViewModel
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
@@ -210,7 +236,6 @@ fun OnlineSalesDetails(
             .background(CoopBackground)
             .verticalScroll(rememberScrollState())
     ) {
-        // Header Section
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -237,7 +262,6 @@ fun OnlineSalesDetails(
                 }
             }
 
-            // Dialog for Updating Order Status
             if (showDialog) {
                 AlertDialog(
                     onDismissRequest = { showDialog = false },
@@ -260,7 +284,14 @@ fun OnlineSalesDetails(
                     confirmButton = {
                         TextButton(
                             onClick = {
-                                viewModel.updateOrder(currentOrder)
+                                // Check if the status is being updated to "Completed"
+                                val previousStatus = order.status
+                                if (currentOrder.status == "Completed" && previousStatus != "Completed") {
+                                    // Record transaction for each product in the order
+                                    recordOrderTransaction(currentOrder, transactionViewModel)
+                                }
+
+                                orderViewModel.updateOrder(currentOrder)
                                 showDialog = false
                             }
                         ) {
@@ -322,7 +353,6 @@ fun OnlineSalesDetails(
             }
         }
 
-        // Product Order Details
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -655,6 +685,25 @@ fun UpdateStatusCard(
         "Cancelled"
     )
 
+    fun getAvailableStatuses(currentStatus: String): List<String> {
+        val currentIndex = statusOrder.indexOf(currentStatus)
+        if (currentIndex == -1) return emptyList()
+
+        if (currentStatus == "Cancelled" || currentStatus == "Completed") {
+            return emptyList()
+        }
+
+        val nextIndex = currentIndex + 1
+        if (nextIndex >= statusOrder.size - 1) {
+            return listOf("Completed")
+        }
+
+        return when (currentStatus) {
+            "Pending", "Confirmed" -> listOf(statusOrder[nextIndex], "Cancelled")
+            else -> listOf(statusOrder[nextIndex])
+        }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -685,12 +734,7 @@ fun UpdateStatusCard(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
-                    val currentIndex = statusOrder.indexOf(status)
-                    val availableStatuses = if (currentIndex >= 0) {
-                        statusOrder.filter { statusOrder.indexOf(it) >= currentIndex }
-                    } else {
-                        statusOrder
-                    }
+                    val availableStatuses = getAvailableStatuses(status)
 
                     availableStatuses.forEach { option ->
                         DropdownMenuItem(
@@ -773,8 +817,6 @@ fun UpdateStatusCard(
         }
     }
 }
-
-
 
 //INSTORE
 @Composable
@@ -1008,5 +1050,47 @@ private fun NotesCard(sale: SalesData){
                 }
             }
         }
+    }
+}
+
+fun encodeEmail(email: String): String {
+    return email.replace(".", ",")
+}
+
+fun formatDate(dateStr: String): String {
+    try {
+        val inputFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
+        val date = LocalDateTime.parse(dateStr, inputFormatter)
+        val outputFormatter = DateTimeFormatterBuilder()
+            .appendPattern("dd MMM yyyy")
+            .toFormatter(Locale.ENGLISH)
+
+        return date.format(outputFormatter)
+    } catch (e: Exception) {
+        return dateStr
+    }
+}
+
+fun recordOrderTransaction(
+    order: OrderData,
+    transactionViewModel: TransactionViewModel
+) {
+    val completionDate = order.statusHistory
+        .findLast { it.status == "Completed" }
+        ?.dateTime ?: order.orderDate
+
+    val formattedDate = formatDate(completionDate)
+
+    order.orderData.forEach { product ->
+        val transaction = TransactionData(
+            transactionId = order.orderId,
+            type = "Online Sale",
+            date = formattedDate,
+            description = "Completed order of ${product.quantity} ${product.weightUnit} of ${product.name}",
+            status = "COMPLETED",
+            productName = product.name
+        )
+        val encodedClient = encodeEmail(order.client)
+        transactionViewModel.recordTransaction(encodedClient, transaction)
     }
 }

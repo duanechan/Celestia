@@ -559,6 +559,7 @@ fun NavGraph(
                 navController = navController,
                 productName = productName,
                 productViewModel = productViewModel,
+                transactionViewModel = transactionViewModel,
                 onEvent = { onEvent(it) }
             )
         }
@@ -948,6 +949,7 @@ fun NavGraph(
                 vendorViewModel = vendorViewModel,
                 facilityViewModel = facilityViewModel,
                 productViewModel = productViewModel,
+                transactionViewModel = transactionViewModel,
                 facilityName = userFacility?.name ?: "",
                 draftId = draftId,
                 currentEmail = userEmail,
