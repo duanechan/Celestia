@@ -83,7 +83,7 @@ fun Notifications(
                         .clickable {
                             NotificationService.markAsRead(
                                 notification = notification,
-                                onComplete = { navigateTo(navController, user, role, notification) },
+                                onComplete = { NotificationService.navigateTo(navController, user, role, notification) },
                                 onError = { }
                             )
                         },
@@ -110,7 +110,7 @@ fun Notifications(
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(
-                                text = notification.message,
+                                text = notification.subject,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 fontFamily = mintsansFontFamily,
@@ -118,7 +118,7 @@ fun Notifications(
                             )
 
                             Text(
-                                text = parseDetails(notification),
+                                text = notification.message,
                                 fontSize = 14.sp,
                                 fontFamily = mintsansFontFamily,
                                 color = MaterialTheme.colorScheme.onBackground,
@@ -159,113 +159,6 @@ fun Notifications(
                 color = MaterialTheme.colorScheme.onBackground
             )
         }
-    }
-}
-
-private fun navigateTo(
-    navController: NavController,
-    user: UserData,
-    role: String,
-    notification: Notification
-) {
-    when (notification.type) {
-        NotificationType.ClientOrderPlaced -> {
-            navController.navigate(
-                Screen.CoopOrderDetails.createRoute(
-                    (notification.details as OrderData).orderId
-                )
-            )
-        }
-        NotificationType.CoopSpecialRequestUpdated -> {
-            notification.details as SpecialRequest
-            when (role) {
-                "Farmer" -> {
-                    val farmer = notification.details.assignedMember
-                        .find { it.email == user.email }
-                    navController.navigate(
-                        Screen.FarmerRequestCardDetails.createRoute(
-                            notification.details.specialRequestUID,
-                            farmer?.email.toString(),
-                            farmer?.product.toString()
-                        )
-                    )
-                }
-                "Client" -> {
-                    navController.navigate(
-                        Screen.ClientSpecialReqDetails.createRoute(
-                            notification.details.specialRequestUID
-                        )
-                    )
-                }
-                "Admin" -> {
-                    navController.navigate(
-                        Screen.AdminSpecialRequestsDetails.createRoute(
-                            notification.details.specialRequestUID
-                        )
-                    )
-                }
-                else -> {
-
-                }
-            }
-        }
-        NotificationType.ClientSpecialRequest -> {
-            navController.navigate(
-                Screen.AdminSpecialRequestsDetails.createRoute(
-                    (notification.details as SpecialRequest).specialRequestUID
-                )
-            )
-        }
-        NotificationType.FarmerCalamityAffected -> {
-            navController.navigate(
-                Screen.AdminSpecialRequestsDetails.createRoute(
-                    (notification.details as SpecialRequest).specialRequestUID
-                )
-            )
-        }
-
-        else -> {}
-    }
-}
-
-private fun parseDetails(notification: Notification): String {
-    return when (val details = notification.details) {
-        is OrderData -> {
-            var str = "${details.client} ordered ${details.orderData[0].quantity} Kg of ${details.orderData[0].name}"
-            if (details.orderData.size > 1) {
-                str += ", and ${details.orderData.size - 1} more..."
-            }
-            str
-        }
-        is SpecialRequest -> {
-            when (notification.type) {
-                NotificationType.ClientSpecialRequest -> {
-                    "From ${details.name}: ${details.description}"
-                }
-                NotificationType.CoopSpecialRequestUpdated -> {
-                    when {
-                        notification.message.contains("accepted", ignoreCase = true) -> {
-                            "Please wait for further updates."
-                        }
-                        notification.message.contains("assigned", ignoreCase = true) -> {
-                            "View Special Request ${details.specialRequestUID}"
-                        }
-                        notification.message.contains("update", ignoreCase = true) -> {
-                            "${(notification.details as SpecialRequest).trackRecord
-                                .maxByOrNull { it.dateTime }?.description}"
-                        }
-                        else -> "Unknown"
-                    }
-                }
-                NotificationType.FarmerCalamityAffected -> {
-                    "${details.name}'s special request has been affected by a calamity."
-                }
-                else -> {
-                    "Unknown Special Request Notification Type"
-                }
-            }
-        }
-        else -> details.toString()
     }
 }
 
