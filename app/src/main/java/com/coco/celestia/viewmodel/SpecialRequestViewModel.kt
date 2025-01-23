@@ -43,14 +43,15 @@ class SpecialRequestViewModel : ViewModel() {
             timestamp = formattedDateTime,
             sender = specialReq.name,
             details = specialReq,
-            message = when (type) {
+            subject = when (type) {
                 NotificationType.ClientSpecialRequest -> "Special request from ${specialReq.name}: ${specialReq.subject}"
-                NotificationType.CoopSpecialRequestUpdated -> formatUpdateMessage(specialReq.trackRecord)
+                NotificationType.CoopSpecialRequestUpdated -> formatSubject(specialReq.trackRecord)
                 NotificationType.FarmerCalamityAffected -> "Your special request has been affected by a calamity."
                 NotificationType.ClientOrderPlaced,
                 NotificationType.OrderUpdated,
                 NotificationType.Notice -> "Coco"
             },
+            message = NotificationService.parseDetails(type, specialReq),
             type = type
         )
 
@@ -63,7 +64,7 @@ class SpecialRequestViewModel : ViewModel() {
         }
     }
 
-    private fun formatUpdateMessage(trackRecord: List<TrackRecord>): String {
+    private fun formatSubject(trackRecord: List<TrackRecord>): String {
         val description = trackRecord.maxByOrNull { it.dateTime }?.description.toString()
         return when {
             description.contains("accepted", ignoreCase = true) -> "Your special request has been accepted!"
@@ -157,7 +158,16 @@ class SpecialRequestViewModel : ViewModel() {
                                 if (requestUid == specialReq.specialRequestUID) {
                                     request.ref.setValue(specialReq)
                                         .addOnSuccessListener {
-                                            viewModelScope.launch { notify(NotificationType.CoopSpecialRequestUpdated, specialReq) }
+                                            viewModelScope.launch {
+                                                notify(
+                                                    if (specialReq.status == "Calamity-Affected") {
+                                                        NotificationType.FarmerCalamityAffected
+                                                    } else {
+                                                        NotificationType.CoopSpecialRequestUpdated
+                                                    },
+                                                    specialReq
+                                                )
+                                            }
                                             _specialReqState.value = SpecialReqState.SUCCESS
                                         }
                                         .addOnFailureListener { exception ->

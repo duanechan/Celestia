@@ -1,5 +1,8 @@
 package com.coco.celestia.service
 
+import android.widget.GridLayout.Spec
+import androidx.navigation.NavController
+import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.util.DataParser
 import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.NotificationType
@@ -14,6 +17,7 @@ import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import org.apache.commons.math3.geometry.partitioning.BSPTreeVisitor.Order
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -186,5 +190,143 @@ object NotificationService {
                 }
                 override fun onCancelled(error: DatabaseError) { onError(error.message) }
             })
+    }
+
+
+     fun navigateTo(
+        navController: NavController,
+        user: UserData,
+        role: String,
+        notification: Notification
+    ) {
+        when (notification.type) {
+            NotificationType.ClientOrderPlaced -> {
+                navController.navigate(
+                    Screen.CoopOrderDetails.createRoute(
+                        (notification.details as OrderData).orderId
+                    )
+                )
+            }
+            NotificationType.CoopSpecialRequestUpdated -> {
+                notification.details as SpecialRequest
+                when (role) {
+                    "Farmer" -> {
+                        val farmer = notification.details.assignedMember
+                            .find { it.email == user.email }
+                        navController.navigate(
+                            Screen.FarmerRequestCardDetails.createRoute(
+                                notification.details.specialRequestUID,
+                                farmer?.email.toString(),
+                                farmer?.product.toString()
+                            )
+                        )
+                    }
+                    "Client" -> {
+                        navController.navigate(
+                            Screen.ClientSpecialReqDetails.createRoute(
+                                notification.details.specialRequestUID
+                            )
+                        )
+                    }
+                    "Admin" -> {
+                        navController.navigate(
+                            Screen.AdminSpecialRequestsDetails.createRoute(
+                                notification.details.specialRequestUID
+                            )
+                        )
+                    }
+                    else -> {
+
+                    }
+                }
+            }
+            NotificationType.ClientSpecialRequest -> {
+                navController.navigate(
+                    Screen.AdminSpecialRequestsDetails.createRoute(
+                        (notification.details as SpecialRequest).specialRequestUID
+                    )
+                )
+            }
+            NotificationType.FarmerCalamityAffected -> {
+                navController.navigate(
+                    Screen.AdminSpecialRequestsDetails.createRoute(
+                        (notification.details as SpecialRequest).specialRequestUID
+                    )
+                )
+            }
+
+            else -> {}
+        }
+    }
+
+    fun parseDetails(type: NotificationType, details: Any): String {
+        return when (type) {
+            NotificationType.OrderUpdated,
+            NotificationType.Notice -> "Announcement:"
+            NotificationType.ClientOrderPlaced -> {
+                var str = "${(details as OrderData).client} ordered ${details.orderData[0].quantity} Kg of ${details.orderData[0].name}"
+                if (details.orderData.size > 1) {
+                    str += ", and ${details.orderData.size - 1} more..."
+                }
+                str
+            }
+            NotificationType.ClientSpecialRequest -> (details as SpecialRequest).description
+            NotificationType.CoopSpecialRequestUpdated -> {
+                val record = (details as SpecialRequest).trackRecord.maxByOrNull { it.dateTime }
+                record?.let {
+                    when {
+                        it.description.contains("Accepted", ignoreCase = true) -> {
+                            "Please wait for further updates."
+                        }
+                        it.description.contains("Assigned", ignoreCase = true) -> {
+                            "View Special Request ${details.specialRequestUID}"
+                        }
+
+                        else -> it.description
+                    }
+                }.toString()
+            }
+            NotificationType.FarmerCalamityAffected -> {
+                "${(details as SpecialRequest).name}'s special request has been affected by a calamity."
+            }
+        }
+//        return when (details) {
+//            is OrderData -> {
+//                var str = "${details.client} ordered ${details.orderData[0].quantity} Kg of ${details.orderData[0].name}"
+//                if (details.orderData.size > 1) {
+//                    str += ", and ${details.orderData.size - 1} more..."
+//                }
+//                str
+//            }
+//            is SpecialRequest -> {
+//                when (type) {
+//                    NotificationType.ClientSpecialRequest -> {
+//                        "From ${details.name}: ${details.description}"
+//                    }
+//                    NotificationType.CoopSpecialRequestUpdated -> {
+//                        when {
+//                            notification.message.contains("accepted", ignoreCase = true) -> {
+//                                "Please wait for further updates."
+//                            }
+//                            notification.message.contains("assigned", ignoreCase = true) -> {
+//                                "View Special Request ${details.specialRequestUID}"
+//                            }
+//                            notification.message.contains("update", ignoreCase = true) -> {
+//                                "${(notification.details as SpecialRequest).trackRecord
+//                                    .maxByOrNull { it.dateTime }?.description}"
+//                            }
+//                            else -> "Unknown"
+//                        }
+//                    }
+//                    NotificationType.FarmerCalamityAffected -> {
+//                        "${details.name}'s special request has been affected by a calamity."
+//                    }
+//                    else -> {
+//                        "Unknown Special Request Notification Type"
+//                    }
+//                }
+//            }
+//            else -> details.toString()
+//        }
     }
 }

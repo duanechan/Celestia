@@ -265,12 +265,13 @@ data class SalesData(
 )
 
 data class Notification(
+    val hasRead: Boolean = false,
     val timestamp: String = "",
     val sender: String = "",
-    val details: Any = Any(),
+    val subject: String = "",
     val message: String = "",
-    val hasRead: Boolean = false,
-    val type: NotificationType = NotificationType.Notice
+    val type: NotificationType = NotificationType.Notice,
+    val details: Any = Any(),
 )
 
 enum class NotificationType {

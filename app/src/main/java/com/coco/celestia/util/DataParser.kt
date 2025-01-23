@@ -105,6 +105,7 @@ object DataParser {
         return Notification(
             timestamp = snapshot.child("timestamp").getValue(String::class.java) ?: "",
             sender = snapshot.child("sender").getValue(String::class.java) ?: "",
+            subject = snapshot.child("subject").getValue(String::class.java) ?: "",
             message = snapshot.child("message").getValue(String::class.java) ?: "",
             details = details,
             type = type,
