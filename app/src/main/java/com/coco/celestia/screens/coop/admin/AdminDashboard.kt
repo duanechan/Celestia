@@ -44,6 +44,7 @@ import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
+import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.FacilityData
 
@@ -52,9 +53,15 @@ fun AdminHome(
     navController: NavController,
     facilityViewModel: FacilityViewModel,
     userViewModel: UserViewModel,
+    specialRequestViewModel: SpecialRequestViewModel,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     var currentView by remember { mutableStateOf("Dashboard") }
+    val requests by specialRequestViewModel.specialReqData.observeAsState()
+
+    LaunchedEffect(Unit) {
+        specialRequestViewModel.fetchSpecialRequests("", "", true)
+    }
 
     Column(
         modifier = Modifier
@@ -115,10 +122,34 @@ fun AdminHome(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
                 ) {
-                    SpecialRequestCard(title = "Pending", count = "0", onClick = { })
-                    SpecialRequestCard(title = "In Progress", count = "0", onClick = { })
-                    SpecialRequestCard(title = "Cancelled", count = "0", onClick = { })
-                    SpecialRequestCard(title = "Turned Down", count = "0", onClick = { })
+                    SpecialRequestCard(
+                        title = "To Review",
+                        count = requests?.count { it.status == "To Review"}.toString(),
+                        onClick = {
+                            navController.navigate(Screen.AdminSpecialRequests.createRoute("To Review"))
+                        }
+                    )
+                    SpecialRequestCard(
+                        title = "In Progress",
+                        count = requests?.count { it.status == "In Progress"}.toString(),
+                        onClick = {
+                            navController.navigate(Screen.AdminSpecialRequests.createRoute("In Progress"))
+                        }
+                    )
+                    SpecialRequestCard(
+                        title = "Cancelled",
+                        count = requests?.count { it.status == "Cancelled"}.toString(),
+                        onClick = {
+                            navController.navigate(Screen.AdminSpecialRequests.createRoute("Cancelled"))
+                        }
+                    )
+                    SpecialRequestCard(
+                        title = "Turned Down",
+                        count = requests?.count { it.status == "Turned Down"}.toString(),
+                        onClick = {
+                            navController.navigate(Screen.AdminSpecialRequests.createRoute("Turned Down"))
+                        }
+                    )
                 }
             }
             "Add Facility" -> {
@@ -497,7 +528,7 @@ fun IconPicker(
 @Composable
 fun SpecialRequestCard(title: String, count: String, onClick: () -> Unit) {
     val imageRes = when (title) {
-        "Pending" -> R.drawable.preparing
+        "To Review" -> R.drawable.preparing
         "In Progress" -> R.drawable.progress
         "Cancelled" -> R.drawable.cancelled
         "Turned Down" -> R.drawable.cancel

@@ -62,8 +62,7 @@ fun FarmerDashboard(
     LaunchedEffect(Unit) {
         userViewModel.fetchUser(uid)
         specialRequestViewModel.fetchAssignedProducts(
-            farmerData?.email ?: "",
-            "In Progress"
+            farmerData?.email ?: ""
         )
     }
 

@@ -346,6 +346,7 @@ fun NavGraph(
                 navController = navController,
                 facilityViewModel = facilityViewModel,
                 userViewModel = userViewModel,
+                specialRequestViewModel = specialRequestViewModel,
                 onEvent = { onEvent(it) })
         }
 

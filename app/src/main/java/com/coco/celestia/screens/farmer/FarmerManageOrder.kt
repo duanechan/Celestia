@@ -1,4 +1,6 @@
-@file:OptIn(ExperimentalFoundationApi::class, ExperimentalFoundationApi::class)
+@file:OptIn(ExperimentalFoundationApi::class, ExperimentalFoundationApi::class,
+    ExperimentalFoundationApi::class
+)
 
 package com.coco.celestia.screens.farmer
 
@@ -71,11 +73,10 @@ fun FarmerManageOrder(
     var tabName by remember { mutableStateOf("In Progress") }
     var farmerStatus by remember { mutableStateOf("All") }
 
-    LaunchedEffect(tabName) {
+    LaunchedEffect(Unit) {
         userViewModel.fetchUser(uid)
         specialRequestViewModel.fetchAssignedProducts(
-            userData?.email ?: "",
-            tabName
+            userData?.email ?: ""
         )
     }
 
@@ -210,9 +211,10 @@ fun FarmerManageOrder(
                 }
 
                 assignedProducts
+                    ?.filter { it.status == tabName }
                     ?.filter { member ->
                         farmerStatus == "All" ||
-                                member.assignedMember.any { it.status.equals(farmerStatus, ignoreCase = true) }
+                                member.assignedMember.any { it.status.equals(farmerStatus, ignoreCase = true)}
                     }
                     ?.filter { member ->
                         searchQuery.isEmpty() ||

@@ -187,7 +187,7 @@ fun SpecialRequestDetails(
             )
         }
         // Toggle Button
-        if (request.status != "To Review") {
+        if (request.status == "In Progress" || request.status == "Completed") {
             Row (
                 modifier = Modifier
                     .padding(horizontal = 8.dp),
@@ -222,7 +222,7 @@ fun SpecialRequestDetails(
             )
         }
 
-        if (request.status != "To Review") {
+        if (request.status == "In Progress" || request.status == "Completed") {
             if (request.assignedMember.isEmpty()) {
                 AssignAMember(
                     assignedMember,
@@ -288,7 +288,9 @@ fun SpecialRequestDetails(
                     }
                 }
             }
-        } else {
+        }
+
+        if (request.status == "In Progress" || request.status == "Completed") {
             // Track Order and Update Order
             if (request.trackRecord.isNotEmpty()) {
                 Row (

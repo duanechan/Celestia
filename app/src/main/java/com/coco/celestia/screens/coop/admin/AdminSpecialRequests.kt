@@ -49,6 +49,10 @@ fun AdminSpecialRequests(
     val keywords by remember { mutableStateOf(status) }
     var orderBy by remember { mutableStateOf("") }
     var ascending by remember { mutableStateOf(true) }
+    var expanded by remember { mutableStateOf(false) }
+
+    val statusList = listOf("To Review", "In Progress", "Cancelled", "Turned Down")
+    val filteredList = statusList.filterNot { it == status }
 
     LaunchedEffect(keywords, orderBy, ascending) {
         orderBy = if (status == "To Review") {
@@ -83,11 +87,34 @@ fun AdminSpecialRequests(
                         }
                 )
                 Spacer(modifier = Modifier.width(12.dp))
-                Icon(
-                    painter = painterResource(R.drawable.filter2),
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
+                Box {
+                    Box (
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clickable { expanded = true }
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.filter2),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(20.dp)
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        filteredList.forEach { status ->
+                            DropdownMenuItem(
+                                text = { Text(status) },
+                                onClick = {
+                                    navController.navigate(Screen.AdminSpecialRequests.createRoute(status))
+                                }
+                            )
+                        }
+                    }
+                }
             }
         }
 

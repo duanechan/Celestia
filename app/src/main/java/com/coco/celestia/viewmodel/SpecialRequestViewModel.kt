@@ -1,13 +1,10 @@
 package com.coco.celestia.viewmodel
 
-import android.widget.GridLayout.Spec
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.service.NotificationService
-import com.coco.celestia.util.DataParser
 import com.coco.celestia.viewmodel.model.AssignedMember
 import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.NotificationType
@@ -188,8 +185,7 @@ class SpecialRequestViewModel : ViewModel() {
     }
 
     fun fetchAssignedProducts(
-        farmerEmail: String,
-        statusFilter: String
+        farmerEmail: String
     ) {
         viewModelScope.launch {
             database.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -198,9 +194,6 @@ class SpecialRequestViewModel : ViewModel() {
                     for (userSnapshot in snapshot.children) {
                         for (requestedSnapshot in userSnapshot.children) {
                             val assignedMemberSnapshot = requestedSnapshot.child("assignedMember")
-
-                            val status = requestedSnapshot.child("status").getValue(String::class.java)
-                            if (status != statusFilter) continue
 
                             for (memberSnapshot in assignedMemberSnapshot.children) {
                                 val email = memberSnapshot.child("email").getValue(String::class.java)
