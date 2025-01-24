@@ -51,6 +51,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.coco.celestia.screens.coop.facility.encodeEmail
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -59,13 +60,18 @@ import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.SalesViewModel
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.SalesData
+import com.coco.celestia.viewmodel.model.TransactionData
+import java.time.LocalDate
+import java.time.format.DateTimeFormatterBuilder
 
 @Composable
 fun SalesAddForm(
     viewModel: SalesViewModel,
     productViewModel: ProductViewModel,
+    transactionViewModel: TransactionViewModel,
     facilityName: String,
     userRole: String,
     onSuccess: () -> Unit,
@@ -92,7 +98,6 @@ fun SalesAddForm(
     val products by productViewModel.productData.observeAsState(emptyList())
     val productState by productViewModel.productState.observeAsState(ProductState.LOADING)
 
-    // Calculate total based on quantity and selected product's price
     val total = remember(salesData.quantity, selectedProduct) {
         if (selectedProduct != null && salesData.quantity > 0) {
             salesData.quantity * selectedProduct!!.price
@@ -102,7 +107,6 @@ fun SalesAddForm(
     LaunchedEffect(Unit) {
         productViewModel.fetchProducts("", userRole)
 
-        // Generate sales number for new sales
         if (!isEditMode) {
             val count = viewModel.getSalesCount() + 1
             val currentDate = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
@@ -180,6 +184,12 @@ fun SalesAddForm(
                     viewModel.updateSale(
                         salesData,
                         onSuccess = {
+                            recordSaleTransaction(
+                                sale = salesData,
+                                productId = selectedProduct?.productId ?: "",
+                                transactionViewModel = transactionViewModel,
+                                productViewModel = productViewModel  // Pass product view model
+                            )
                             isLoading = false
                             onSuccess()
                         },
@@ -192,6 +202,12 @@ fun SalesAddForm(
                     viewModel.addSale(
                         salesData,
                         onSuccess = {
+                            recordSaleTransaction(
+                                sale = salesData,
+                                productId = selectedProduct?.productId ?: "",
+                                transactionViewModel = transactionViewModel,
+                                productViewModel = productViewModel  // Pass product view model
+                            )
                             isLoading = false
                             onSuccess()
                         },
@@ -206,6 +222,37 @@ fun SalesAddForm(
         onCancel = onCancel,
         modifier = modifier
     )
+}
+
+fun recordSaleTransaction(
+    sale: SalesData,
+    productId: String,
+    transactionViewModel: TransactionViewModel,
+    productViewModel: ProductViewModel
+) {
+    val formattedDate = try {
+        val inputDate = LocalDate.parse(sale.date).atStartOfDay()
+        val outputFormatter = DateTimeFormatterBuilder()
+            .appendPattern("dd MMM yyyy")
+            .toFormatter(Locale.ENGLISH)
+        inputDate.format(outputFormatter)
+    } catch (e: Exception) {
+        sale.date
+    }
+
+    val transaction = TransactionData(
+        transactionId = sale.salesNumber,
+        type = "In-Store Sale",
+        date = formattedDate,
+        description = "Sale of ${sale.quantity} ${sale.weightUnit} of ${sale.productName}",
+        status = "COMPLETED",
+        productName = sale.productName,
+        productId = productId
+    )
+
+    val encodedFacility = encodeEmail(sale.facility)
+    transactionViewModel.recordTransaction(encodedFacility, transaction)
+    productViewModel.updateProductQuantity(sale.productName, -sale.quantity)
 }
 
 fun validateSalesForm(
@@ -276,6 +323,7 @@ fun SalesFormContent(
     val filteredProducts = remember(searchQuery, products) {
         products.filter { product ->
             product.isInStore &&
+                    product.isActive &&
                     (searchQuery.isEmpty() || product.name.contains(searchQuery, ignoreCase = true))
         }
     }

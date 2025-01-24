@@ -193,7 +193,8 @@ data class TransactionData(
     val date: String = "",
     val description: String = "",
     val status: String = "",
-    val productName: String = ""
+    val productName: String = "",
+    val productId: String = ""
 )
 
 data class ContactData(

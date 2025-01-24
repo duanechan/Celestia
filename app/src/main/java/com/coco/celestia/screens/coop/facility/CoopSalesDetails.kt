@@ -1111,7 +1111,8 @@ fun recordOrderTransaction(
             date = formattedDate,
             description = "Completed order of ${product.quantity} ${product.weightUnit} of ${product.name}",
             status = "COMPLETED",
-            productName = product.name
+            productName = product.name,
+            productId = product.productId
         )
         val encodedClient = encodeEmail(order.client)
         transactionViewModel.recordTransaction(encodedClient, transaction)

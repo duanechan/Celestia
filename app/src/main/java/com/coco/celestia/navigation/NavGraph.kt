@@ -666,6 +666,7 @@ fun NavGraph(
             SalesAddForm(
                 viewModel = salesViewModel,
                 productViewModel = productViewModel,
+                transactionViewModel = transactionViewModel,
                 facilityName = userFacility?.name ?: "",
                 userRole = userRole,
                 onSuccess = { navController.navigateUp() },
@@ -689,6 +690,7 @@ fun NavGraph(
                 facilityName = userFacility?.name ?: "",
                 userRole = userRole,
                 salesNumber = salesId,
+                transactionViewModel = transactionViewModel,
                 onSuccess = { navController.navigateUp() },
                 onCancel = { navController.navigateUp() }
             )

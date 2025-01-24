@@ -369,7 +369,7 @@ private fun PriceInfoColumn(
 @Composable
 private fun ProductTabs(
     product: ProductData,
-    transactionViewModel: TransactionViewModel // Add ViewModel parameter
+    transactionViewModel: TransactionViewModel
 ) {
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("DETAILS", "TRANSACTIONS", "PRICE HISTORY")
@@ -409,7 +409,7 @@ private fun ProductTabs(
             0 -> Details(product)
             1 -> TransactionsTab(
                 transactionViewModel = transactionViewModel,
-                productName = product.name // Pass the product name
+                productId = product.productId
             )
             2 -> HistoryTab(product)
         }
@@ -947,13 +947,13 @@ private fun PurchaseInfoSection(product: ProductData) {
 @Composable
 fun TransactionsTab(
     transactionViewModel: TransactionViewModel,
-    productName: String
+    productId: String
 ) {
     val transactionState by transactionViewModel.transactionState.observeAsState(TransactionState.LOADING)
     val transactionData by transactionViewModel.transactionData.observeAsState(hashMapOf())
 
-    LaunchedEffect(productName) {
-        transactionViewModel.fetchAllTransactions(filter = productName)
+    LaunchedEffect(productId) {
+        transactionViewModel.fetchAllTransactions(filter = productId)
     }
 
     Box(
@@ -981,7 +981,7 @@ fun TransactionsTab(
             }
             TransactionState.SUCCESS -> {
                 val productTransactions = transactionData.values.flatten()
-                    .filter { it.productName == productName }
+                    .filter { it.productId == productId }
 
                 if (productTransactions.isEmpty()) {
                     Text(
@@ -1055,22 +1055,24 @@ fun TransactionsCard(transaction: TransactionData) {
                     ) {
                         Image(
                             painter = painterResource(
-                                id = if (transaction.type == "Online Sale") {
-                                    R.drawable.subtract
-                                } else {
-                                    R.drawable.addition
+                                id = when (transaction.type) {
+                                    "Online Sale", "In-Store Sale" -> R.drawable.subtract
+                                    else -> R.drawable.addition
                                 }
                             ),
                             contentDescription = transaction.type,
                             modifier = Modifier.size(
-                                if (transaction.type == "Online Sale") 14.dp else 16.dp
+                                when (transaction.type) {
+                                    "Online Sale", "In-Store Sale" -> 14.dp
+                                    else -> 16.dp
+                                }
                             ),
                             contentScale = ContentScale.Fit,
                             colorFilter = ColorFilter.tint(
-                                if (transaction.type == "Online Sale")
-                                    MaterialTheme.colorScheme.error
-                                else
-                                    Green2
+                                when (transaction.type) {
+                                    "Online Sale", "In-Store Sale" -> MaterialTheme.colorScheme.error
+                                    else -> Green2
+                                }
                             )
                         )
                     }
@@ -1084,7 +1086,7 @@ fun TransactionsCard(transaction: TransactionData) {
                     text = transaction.status,
                     style = MaterialTheme.typography.bodyMedium,
                     color = when (transaction.status) {
-                        "Completed" -> Green1
+                        "Completed", "COMPLETED" -> Green1
                         "Failed" -> MaterialTheme.colorScheme.error
                         else -> MaterialTheme.colorScheme.onSurfaceVariant
                     }
