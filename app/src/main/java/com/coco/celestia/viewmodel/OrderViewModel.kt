@@ -6,8 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.service.NotificationService
 import com.coco.celestia.util.DataParser
-import com.coco.celestia.viewmodel.model.Constants
-import com.coco.celestia.viewmodel.model.FullFilledBy
 import com.coco.celestia.viewmodel.model.MostOrdered
 import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.NotificationType
@@ -19,9 +17,14 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlin.reflect.full.memberProperties
 
 sealed class OrderState {
@@ -171,15 +174,12 @@ class OrderViewModel : ViewModel() {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val filterKeywords = filter.split(",").map { it.trim() }
                     val facilityName = role.replace("Coop", "")
-
-                    // No need to group by orderId and type since they're now combined in the orderId
                     val ordersMap = mutableMapOf<String, OrderData>()
 
                     snapshot.children.forEach { userSnapshot ->
                         userSnapshot.children.forEach { orderSnapshot ->
                             val order = DataParser.parseOrderData(orderSnapshot)
                             if (order != null) {
-                                // Extract facility type from orderId (format: OID-FACILITYNAME-TIMESTAMP)
                                 val orderIdParts = order.orderId.split("-")
                                 val orderFacilityType = if (orderIdParts.size >= 3) orderIdParts[1] else ""
 
@@ -204,7 +204,6 @@ class OrderViewModel : ViewModel() {
                                 }
 
                                 if (shouldInclude) {
-                                    // Use just the orderId as the key since it now includes the facility type
                                     ordersMap[order.orderId] = order
                                 }
                             }
@@ -270,17 +269,30 @@ class OrderViewModel : ViewModel() {
                 statusHistory = listOf(initialStatus)
             )
 
-            val query = database.child(uid).push()
-            query.setValue(orderWithTimestamp)
-                .addOnSuccessListener {
-                    viewModelScope.launch {
-                        notify(NotificationType.ClientOrderPlaced, orderWithTimestamp)
+            try {
+                updateProductStock(order.orderData, "Pending")
+
+                val query = database.child(uid).push()
+                query.setValue(orderWithTimestamp)
+                    .addOnSuccessListener {
+                        viewModelScope.launch {
+                            notify(NotificationType.ClientOrderPlaced, orderWithTimestamp)
+                            _orderState.value = OrderState.SUCCESS
+                        }
                     }
-                    _orderState.value = OrderState.SUCCESS
-                }
-                .addOnFailureListener { exception ->
-                    _orderState.value = OrderState.ERROR(exception.message ?: "Unknown error")
-                }
+                    .addOnFailureListener { exception ->
+                        viewModelScope.launch {
+                            _orderState.value = OrderState.ERROR(exception.message ?: "Unknown error")
+                            try {
+                                updateProductStock(order.orderData, "Cancelled")
+                            } catch (e: Exception) {
+                                _orderState.value = OrderState.ERROR("Failed to rollback stock changes")
+                            }
+                        }
+                    }
+            } catch (e: Exception) {
+                _orderState.value = OrderState.ERROR(e.message ?: "Failed to update product stock")
+            }
         }
     }
 
@@ -296,95 +308,177 @@ class OrderViewModel : ViewModel() {
         viewModelScope.launch {
             _orderState.value = OrderState.LOADING
 
-            database.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (snapshot.exists()) {
-                        for (user in snapshot.children) {
-                            for (order in user.children) {
-                                val orderId = order.child("orderId").getValue(String::class.java)
-                                if (orderId == updatedOrderData.orderId) {
-                                    val existingHistory = order.child("statusHistory").children.mapNotNull {
-                                        it.getValue(StatusUpdate::class.java)
-                                    }
+            try {
+                database.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        if (snapshot.exists()) {
+                            var orderFound = false
 
-                                    val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
-                                    val currentDateTime = LocalDateTime.now().format(formatter)
+                            for (user in snapshot.children) {
+                                for (order in user.children) {
+                                    val orderId = order.child("orderId").getValue(String::class.java)
+                                    if (orderId == updatedOrderData.orderId) {
+                                        orderFound = true
+                                        val existingHistory = order.child("statusHistory").children.mapNotNull {
+                                            it.getValue(StatusUpdate::class.java)
+                                        }
 
-                                    val newStatusUpdate = StatusUpdate(
-                                        status = updatedOrderData.status,
-                                        statusDescription = if (updatedOrderData.statusDescription.isNullOrBlank()) {
-                                            getDefaultStatusDescription(updatedOrderData.status)
-                                        } else {
-                                            updatedOrderData.statusDescription
-                                        },
-                                        dateTime = currentDateTime
-                                    )
+                                        val previousStatus = existingHistory.lastOrNull()?.status ?: ""
 
-                                    val updatedHistory = existingHistory + newStatusUpdate
-
-                                    val orderWithHistory = updatedOrderData.copy(
-                                        statusHistory = updatedHistory
-                                    )
-
-                                    order.ref.setValue(orderWithHistory)
-                                        .addOnSuccessListener {
-                                            if (updatedOrderData.status == "Completed") {
-                                                viewModelScope.launch {
-                                                    updateProductStock(updatedOrderData.orderData)
+                                        viewModelScope.launch {
+                                            try {
+                                                if (previousStatus != updatedOrderData.status) {
+                                                    when (updatedOrderData.status) {
+                                                        "Pending" -> {
+                                                            if (previousStatus.isEmpty()) {
+                                                                updateProductStock(updatedOrderData.orderData, "Pending")
+                                                            }
+                                                        }
+                                                        "Completed" -> {
+                                                            updateProductStock(updatedOrderData.orderData, "Completed")
+                                                        }
+                                                        "Cancelled" -> {
+                                                            updateProductStock(updatedOrderData.orderData, "Cancelled")
+                                                        }
+                                                    }
                                                 }
-                                            }
-                                            _orderState.value = OrderState.SUCCESS
-                                        }
-                                        .addOnFailureListener { exception ->
-                                            _orderState.value = OrderState.ERROR(exception.message ?: "Unknown error")
-                                        }
-                                    break
-                                }
-                            }
-                        }
-                    } else {
-                        _orderState.value = OrderState.EMPTY
-                    }
-                }
 
-                override fun onCancelled(error: DatabaseError) {
-                    _orderState.value = OrderState.ERROR(error.message)
-                }
-            })
+                                                val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
+                                                val currentDateTime = LocalDateTime.now().format(formatter)
+
+                                                val newStatusUpdate = StatusUpdate(
+                                                    status = updatedOrderData.status,
+                                                    statusDescription = if (updatedOrderData.statusDescription.isNullOrBlank()) {
+                                                        getDefaultStatusDescription(updatedOrderData.status)
+                                                    } else {
+                                                        updatedOrderData.statusDescription
+                                                    },
+                                                    dateTime = currentDateTime
+                                                )
+
+                                                val updatedHistory = existingHistory + newStatusUpdate
+                                                val orderWithHistory = updatedOrderData.copy(
+                                                    statusHistory = updatedHistory
+                                                )
+
+                                                order.ref.setValue(orderWithHistory)
+                                                    .addOnSuccessListener {
+                                                        viewModelScope.launch {
+                                                            _orderState.value = OrderState.SUCCESS
+                                                        }
+                                                    }
+                                                    .addOnFailureListener { exception ->
+                                                        viewModelScope.launch {
+                                                            _orderState.value = OrderState.ERROR(
+                                                                exception.message ?: "Unknown error updating order"
+                                                            )
+                                                        }
+                                                    }
+                                            } catch (e: Exception) {
+                                                _orderState.value = OrderState.ERROR(
+                                                    e.message ?: "Error updating order and stock"
+                                                )
+                                            }
+                                        }
+                                        break
+                                    }
+                                }
+                                if (orderFound) break
+                            }
+
+                            if (!orderFound) {
+                                _orderState.value = OrderState.ERROR("Order not found")
+                            }
+                        } else {
+                            _orderState.value = OrderState.EMPTY
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        viewModelScope.launch {
+                            _orderState.value = OrderState.ERROR(error.message)
+                        }
+                    }
+                })
+            } catch (e: Exception) {
+                _orderState.value = OrderState.ERROR(e.message ?: "Unknown error")
+            }
         }
     }
 
-    private fun updateProductStock(orderData: List<ProductData>) {
+    private suspend fun updateProductStock(orderData: List<ProductData>, status: String) {
         try {
             orderData.forEach { product ->
-                productsRef.child(product.productId)
-                    .get()
-                    .addOnSuccessListener { snapshot ->
-                        if (snapshot.exists()) {
-                            val currentProduct = snapshot.getValue(ProductData::class.java)
-                            currentProduct?.let {
-                                val newQuantity = it.quantity - product.quantity
-                                val newTotalQuantitySold = it.totalQuantitySold + product.quantity
-                                val updates = hashMapOf<String, Any>(
-                                    "quantity" to newQuantity,
-                                    "totalQuantitySold" to newTotalQuantitySold
-                                )
+                withContext(Dispatchers.IO) {
+                    suspendCancellableCoroutine { continuation ->
+                        val stockRef = productsRef.child(product.productId)
 
-                                productsRef.child(product.productId)
-                                    .updateChildren(updates)
-                                    .addOnFailureListener { error ->
-                                        _orderState.value = OrderState.ERROR(
-                                            "Failed to update product ${product.name}: ${error.message}"
+                        stockRef.get()
+                            .addOnSuccessListener { snapshot ->
+                                if (snapshot.exists()) {
+                                    val currentProduct = snapshot.getValue(ProductData::class.java)
+                                    currentProduct?.let { current ->
+                                        val updates = when (status) {
+                                            "Pending" -> {
+                                                mapOf(
+                                                    "quantity" to (current.quantity - product.quantity),
+                                                    "committedStock" to (current.committedStock + product.quantity)
+                                                )
+                                            }
+                                            "Completed" -> {
+                                                mapOf(
+                                                    "committedStock" to (current.committedStock - product.quantity),
+                                                    "totalQuantitySold" to (current.totalQuantitySold + product.quantity)
+                                                )
+                                            }
+                                            "Cancelled" -> {
+                                                mapOf(
+                                                    "quantity" to (current.quantity + product.quantity),
+                                                    "committedStock" to (current.committedStock - product.quantity)
+                                                )
+                                            }
+                                            else -> null
+                                        }
+
+                                        updates?.let { stockUpdates ->
+                                            stockRef.updateChildren(stockUpdates)
+                                                .addOnSuccessListener {
+                                                    if (continuation.isActive) {
+                                                        continuation.resume(Unit)
+                                                    }
+                                                }
+                                                .addOnFailureListener { error ->
+                                                    if (continuation.isActive) {
+                                                        continuation.resumeWithException(
+                                                            Exception("Failed to update product ${product.name}: ${error.message}")
+                                                        )
+                                                    }
+                                                }
+                                        } ?: continuation.resume(Unit)
+                                    } ?: run {
+                                        if (continuation.isActive) {
+                                            continuation.resumeWithException(
+                                                Exception("Product data is null for ${product.name}")
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    if (continuation.isActive) {
+                                        continuation.resumeWithException(
+                                            Exception("Product not found: ${product.name}")
                                         )
                                     }
+                                }
                             }
-                        }
+                            .addOnFailureListener { error ->
+                                if (continuation.isActive) {
+                                    continuation.resumeWithException(
+                                        Exception("Failed to fetch product ${product.name}: ${error.message}")
+                                    )
+                                }
+                            }
                     }
-                    .addOnFailureListener { error ->
-                        _orderState.value = OrderState.ERROR(
-                            "Failed to fetch product ${product.name}: ${error.message}"
-                        )
-                    }
+                }
             }
         } catch (e: Exception) {
             _orderState.value = OrderState.ERROR(e.message ?: "Failed to update product quantities")

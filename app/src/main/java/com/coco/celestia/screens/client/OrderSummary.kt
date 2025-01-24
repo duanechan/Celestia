@@ -65,6 +65,7 @@ import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.FacilityData
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
+import com.coco.celestia.viewmodel.model.StatusUpdate
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDateTime
@@ -176,12 +177,23 @@ fun OrderSummary(
                                 val methods = facilityMethods[facilityName] ?: Pair("", "")
                                 val formattedOrderId = "OID-${facilityName.uppercase()}-$currentDateTime"
 
+                                val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
+                                val formattedDisplayDate = LocalDateTime.now().format(formatter)
+
+                                val initialStatus = StatusUpdate(
+                                    status = "Pending",
+                                    statusDescription = "Your order is being reviewed",
+                                    dateTime = formattedDisplayDate
+                                )
+
                                 orderViewModel.placeOrder(
                                     uid = uid,
                                     order = OrderData(
                                         orderId = formattedOrderId,
                                         orderDate = formattedDateTime,
                                         status = "Pending",
+                                        statusDescription = "Your order is being reviewed",
+                                        statusHistory = listOf(initialStatus),
                                         orderData = facilityItems.map {
                                             ProductData(
                                                 productId = it.productId,
@@ -189,7 +201,8 @@ fun OrderSummary(
                                                 quantity = it.quantity,
                                                 price = it.price,
                                                 timestamp = it.timestamp,
-                                                type = it.productType
+                                                type = it.productType,
+                                                committedStock = 0.0
                                             )
                                         },
                                         client = "${userData.firstname} ${userData.lastname}",
