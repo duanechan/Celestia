@@ -183,9 +183,9 @@ fun FarmerDashboard(
 @Composable
 fun FarmerOrderOverview(orders: List<OrderData>) {
     val statuses = listOf(
-        "SOIL PREPARATION", "SEED SOWING", "GROWING", "PRE-HARVEST",
-        "HARVESTING", "POST-HARVEST", "PICKED UP BY COOP",
-        "COMPLETED", "CALAMITY AFFECTED"
+        "Soil Preparation", "Seed Sowing", "Growing", "Pre-Harvest",
+        "Harvesting", "Post-Harvest", "Picked Up By Coop",
+        "Completed", "Calamity Affected"
     )
 
     val statusCounts = statuses.associateWith { status ->
@@ -193,16 +193,15 @@ fun FarmerOrderOverview(orders: List<OrderData>) {
     }
 
     val statusIcons = mapOf(
-        "SOIL PREPARATION" to R.drawable.plant_hand,
-        "SEED SOWING" to R.drawable.plant,
-        "GROWING" to R.drawable.planting,
-        "PRE-HARVEST" to R.drawable.harvest,
-        "HARVESTING" to R.drawable.harvest_basket,
-        "POST-HARVEST" to R.drawable.harvested,
-        "PICKED UP BY COOP" to R.drawable.deliveryicon,
-        "COMPLETED" to R.drawable.received,
-        "CALAMITY AFFECTED" to R.drawable.calamity
-//        "CANCELLED" to R.drawable.cancelled
+        "Soil Preparation" to R.drawable.plant_hand,
+        "Seed Sowing" to R.drawable.plant,
+        "Growing" to R.drawable.planting,
+        "Pre-Harvest" to R.drawable.harvest,
+        "Harvesting" to R.drawable.harvest_basket,
+        "Post-Harvest" to R.drawable.harvested,
+        "Picked Up By Coop" to R.drawable.deliveryicon,
+        "Completed" to R.drawable.received,
+        "Calamity Affected" to R.drawable.calamity
     )
 
     Column(
@@ -251,14 +250,16 @@ fun FarmerOrderOverview(orders: List<OrderData>) {
 fun StatusBox(status: String, count: Int, icon: Any, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .size(110.dp)
+            .size(140.dp)
             .clip(RoundedCornerShape(8.dp))
             .background(White2)
             .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp)),
         contentAlignment = Alignment.Center
     ) {
-        Box(
-            contentAlignment = Alignment.Center
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxSize().padding(8.dp)
         ) {
             when (icon) {
                 is Int -> {
@@ -266,8 +267,8 @@ fun StatusBox(status: String, count: Int, icon: Any, modifier: Modifier = Modifi
                         painter = painterResource(id = icon),
                         contentDescription = "$status Icon",
                         modifier = Modifier
-                            .size(50.dp)
-                            .alpha(0.4f),
+                            .size(48.dp)
+                            .align(Alignment.CenterHorizontally),
                         tint = DarkGreen
                     )
                 }
@@ -276,8 +277,8 @@ fun StatusBox(status: String, count: Int, icon: Any, modifier: Modifier = Modifi
                         imageVector = icon,
                         contentDescription = "$status Icon",
                         modifier = Modifier
-                            .size(50.dp)
-                            .alpha(0.4f),
+                            .size(48.dp)
+                            .align(Alignment.CenterHorizontally),
                         tint = DarkGreen
                     )
                 }
@@ -286,31 +287,26 @@ fun StatusBox(status: String, count: Int, icon: Any, modifier: Modifier = Modifi
                         imageVector = Icons.Default.Info,
                         contentDescription = "Default Icon",
                         modifier = Modifier
-                            .size(50.dp)
-                            .alpha(0.4f),
+                            .size(48.dp)
+                            .align(Alignment.CenterHorizontally),
                         tint = DarkGreen
                     )
                 }
             }
+
             Text(
                 text = "$count",
-                fontSize = 24.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                modifier = Modifier.padding(8.dp)
+                color = Color.Black
             )
-        }
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(top = 60.dp)
-        ) {
-            Spacer(modifier = Modifier.height(8.dp))
+
             Text(
                 text = status,
                 fontSize = 12.sp,
                 color = Color.Gray,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier.wrapContentWidth()
             )
         }
     }
