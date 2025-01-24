@@ -44,38 +44,50 @@ class TransactionViewModel : ViewModel() {
         }
     }
 
-    fun fetchAllTransactions(filter: String = "") {
+    fun fetchAllTransactions(filter: String = "", facilityName: String? = null) {
         viewModelScope.launch {
             _transactionState.value = TransactionState.LOADING
             database.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val filterKeywords = filter.split(",").map { it.trim() }
                     val transactionMap = hashMapOf<String, List<TransactionData>>()
+
                     snapshot.children.forEach { userSnapshot ->
                         val userId = userSnapshot.key.toString()
                         val transactions = userSnapshot.children.mapNotNull { transactionSnapshot ->
                             transactionSnapshot.getValue(TransactionData::class.java)
                         }.filter { transaction ->
-                            val matchesFilter = filterKeywords.any { keyword ->
-                                transaction::class.memberProperties.any { property ->
-                                    val value = property.getter.call(transaction)?.toString() ?: ""
-                                    value.contains(keyword, ignoreCase = true)
+                            val matchesFacility = facilityName == null || transaction.facilityName == facilityName
+                            val matchesFilter = if (filter.isEmpty()) {
+                                true
+                            } else {
+                                filterKeywords.any { keyword ->
+                                    transaction::class.memberProperties.any { property ->
+                                        val value = property.getter.call(transaction)?.toString() ?: ""
+                                        value.contains(keyword, ignoreCase = true)
+                                    }
                                 }
                             }
-                            matchesFilter
+
+                            matchesFacility && matchesFilter
                         }
+
                         if (transactions.isNotEmpty()) {
                             transactionMap[userId] = transactions
                         }
                     }
+
                     _transactionData.value = transactionMap
-                    _transactionState.value = if (transactionMap.isEmpty()) TransactionState.EMPTY  else TransactionState.SUCCESS
+                    _transactionState.value = if (transactionMap.isEmpty()) {
+                        TransactionState.EMPTY
+                    } else {
+                        TransactionState.SUCCESS
+                    }
                 }
 
                 override fun onCancelled(error: DatabaseError) {
                     _transactionState.value = TransactionState.ERROR(error.message)
                 }
-
             })
         }
     }

@@ -425,7 +425,8 @@ fun recordPurchaseOrderTransactions(
             description = "Purchased ${item.quantity} units from $vendorName",
             status = "COMPLETED",
             productName = item.itemName,
-            productId = item.productId
+            productId = item.productId,
+            facilityName = facilityName
         )
 
         transactionViewModel.recordTransaction(

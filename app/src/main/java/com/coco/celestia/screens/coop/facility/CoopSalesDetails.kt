@@ -194,6 +194,7 @@ fun CoopSalesDetails(
                         if (currentOrder != null) {
                             OnlineSalesDetails(
                                 order = currentOrder,
+                                facilityName = userFacility.name,
                                 navController = navController,
                                 orderViewModel = orderViewModel,
                                 transactionViewModel = transactionViewModel
@@ -224,7 +225,8 @@ fun OnlineSalesDetails(
     order: OrderData,
     navController: NavController,
     orderViewModel: OrderViewModel,
-    transactionViewModel: TransactionViewModel
+    transactionViewModel: TransactionViewModel,
+    facilityName: String
 ) {
     var showDialog by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
@@ -288,7 +290,7 @@ fun OnlineSalesDetails(
                                 val previousStatus = order.status
                                 if (currentOrder.status == "Completed" && previousStatus != "Completed") {
                                     // Record transaction for each product in the order
-                                    recordOrderTransaction(currentOrder, transactionViewModel)
+                                    recordOrderTransaction(currentOrder, facilityName, transactionViewModel)
                                 }
 
                                 orderViewModel.updateOrder(currentOrder)
@@ -1096,6 +1098,7 @@ fun formatDate(dateStr: String): String {
 
 fun recordOrderTransaction(
     order: OrderData,
+    facilityName: String,
     transactionViewModel: TransactionViewModel
 ) {
     val completionDate = order.statusHistory
@@ -1112,7 +1115,8 @@ fun recordOrderTransaction(
             description = "Completed order of ${product.quantity} ${product.weightUnit} of ${product.name}",
             status = "COMPLETED",
             productName = product.name,
-            productId = product.productId
+            productId = product.productId,
+            facilityName = facilityName
         )
         val encodedClient = encodeEmail(order.client)
         transactionViewModel.recordTransaction(encodedClient, transaction)

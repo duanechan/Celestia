@@ -488,42 +488,6 @@ fun NavGraph(
             }
 
         }
-//        composable(route = Screen.AdminAddProduct.route) {
-//            onNavigate("Add Product")
-//            LaunchedEffect(Unit) {
-//                productViewModel.updateProductName("")
-//                productType = ""
-//                productPrice = ""
-//            }
-//
-//            AdminAddProduct(
-//                productPrice = productPrice,
-//                productName = productName,
-//                onUpdatedProductImage = { updatedProductImage = it },
-//                onProductNameChanged = { productViewModel.updateProductName(it) },
-//                onTypeSelected = { productType = it },
-//                onPriceChanged = { productPrice = it },
-//                onToastEvent = { onEvent(it) }
-//            )
-//        }
-//        composable(route = Screen.AdminConfirmAddProduct.route) {
-//            onNavigate("Add Product")
-//            if (productName.isNotEmpty() && productType.isNotEmpty() && productPrice.isNotEmpty()) {
-//                ConfirmAddProduct(
-//                    navController = navController,
-//                    productViewModel = productViewModel,
-//                    transactionViewModel = transactionViewModel,
-//                    productName = productName,
-//                    productType = productType,
-//                    productPrice = productPrice,
-//                    updatedProductImage = updatedProductImage,
-//                    onToastEvent = { onEvent(it) }
-//                )
-//            } else {
-//                onEvent(Triple(ToastStatus.WARNING, "All Fields must be filled", System.currentTimeMillis()))
-//                navController.navigate(Screen.AdminAddProduct.route)
-//            }
-//        }
         composable(route = Screen.Coop.route) {
             onNavigate("Dashboard")
             CoopDashboard(
@@ -902,8 +866,10 @@ fun NavGraph(
             onNavigate("Reports")
             CoopReports(
                 navController = navController,
+                currentEmail = userEmail,
                 reportsViewModel = reportsViewModel,
-                transactionViewModel = transactionViewModel
+                transactionViewModel = transactionViewModel,
+                facilityViewModel = facilityViewModel
             )
         }
         composable(Screen.CoopPurchases.route) {
@@ -1101,12 +1067,6 @@ fun NavGraph(
                 )
             }
         }
-
-//        composable(Screen.FarmerNotification.route) {
-//            FarmerNotification()
-//        }
-
-
         composable(route = Screen.Profile.route) {
             onNavigate("Profile")
             Profile(
@@ -1117,19 +1077,6 @@ fun NavGraph(
                 onProfileUpdateEvent = { event -> onEvent(event) }
             )
         }
-//        composable(
-//            route = Screen.ClientOrderDetails.route,
-//            arguments = listOf(
-//                navArgument("orderId") { type = NavType.StringType }
-//            )
-//        ) { backStackEntry ->
-//            val orderId = backStackEntry.arguments?.getString("orderId")
-//            onNavigate("")
-//            orderId?.let {
-//                ClientOrderDetails(navController, it)
-//            }
-//        }
-
         composable(
             route = Screen.ProductDetails.route,
             arguments = listOf(navArgument("productId") { type = NavType.StringType })
@@ -1228,7 +1175,7 @@ fun NavGraph(
                 navController = navController,
                 userViewModel = userViewModel,
                 orderViewModel = orderViewModel,
-                facilityViewModel = facilityViewModel,  // Add this
+                facilityViewModel = facilityViewModel,
                 items = items,
                 onEvent = { onEvent(it) }
             )

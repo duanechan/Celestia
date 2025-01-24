@@ -187,8 +187,9 @@ fun SalesAddForm(
                             recordSaleTransaction(
                                 sale = salesData,
                                 productId = selectedProduct?.productId ?: "",
+                                facilityName = facilityName,
                                 transactionViewModel = transactionViewModel,
-                                productViewModel = productViewModel  // Pass product view model
+                                productViewModel = productViewModel
                             )
                             isLoading = false
                             onSuccess()
@@ -205,8 +206,9 @@ fun SalesAddForm(
                             recordSaleTransaction(
                                 sale = salesData,
                                 productId = selectedProduct?.productId ?: "",
+                                facilityName = facilityName,
                                 transactionViewModel = transactionViewModel,
-                                productViewModel = productViewModel  // Pass product view model
+                                productViewModel = productViewModel
                             )
                             isLoading = false
                             onSuccess()
@@ -227,6 +229,7 @@ fun SalesAddForm(
 fun recordSaleTransaction(
     sale: SalesData,
     productId: String,
+    facilityName: String,
     transactionViewModel: TransactionViewModel,
     productViewModel: ProductViewModel
 ) {
@@ -247,7 +250,8 @@ fun recordSaleTransaction(
         description = "Sale of ${sale.quantity} ${sale.weightUnit} of ${sale.productName}",
         status = "COMPLETED",
         productName = sale.productName,
-        productId = productId
+        productId = productId,
+        facilityName = facilityName
     )
 
     val encodedFacility = encodeEmail(sale.facility)
