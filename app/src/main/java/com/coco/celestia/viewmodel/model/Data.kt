@@ -99,6 +99,7 @@ data class SpecialRequest(
     val products: List<ProductReq> = emptyList(),
     val assignedMember: List<AssignedMember> = emptyList(),
     val trackRecord: List<TrackRecord> = emptyList(),
+    val attachments: List<String> = emptyList()
 )
 
 data class ProductReq(

@@ -5,6 +5,7 @@ package com.coco.celestia.screens.client
 import android.app.DatePickerDialog
 import android.net.Uri
 import android.widget.DatePicker
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -78,6 +79,8 @@ import com.coco.celestia.viewmodel.VegetableViewModel
 import com.coco.celestia.viewmodel.model.Constants
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.runtime.mutableFloatStateOf
+import com.coco.celestia.service.AttachFileService
 import com.coco.celestia.viewmodel.model.ProductReq
 import com.coco.celestia.viewmodel.model.ProductReqValidation
 import com.coco.celestia.viewmodel.model.SpecialRequest
@@ -380,6 +383,7 @@ fun AddSpecialReq(
     val currentDateTime = LocalDateTime.now()
     val formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
     val formattedDateTime = currentDateTime.format(formatter)
+    val specialRequestUID = remember { "SR-${UUID.randomUUID()}" }
 
     val parsedDateTme = LocalDateTime.parse(formattedDateTime, formatter)
     val updatedDateTime = parsedDateTme.plusSeconds(1)
@@ -391,6 +395,8 @@ fun AddSpecialReq(
     var collectionMethodEmpty by remember { mutableStateOf(false) }
 
     var selectedFiles by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var isUploading by remember { mutableStateOf(false) }
+    var uploadProgress by remember { mutableFloatStateOf(0f) }
 
 
     LaunchedEffect(Unit) {
@@ -406,7 +412,7 @@ fun AddSpecialReq(
             .padding(8.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Row (
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 4.dp),
@@ -429,7 +435,7 @@ fun AddSpecialReq(
 
         OutlinedTextField(
             value = subject,
-            onValueChange = { subject = it},
+            onValueChange = { subject = it },
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
@@ -444,14 +450,14 @@ fun AddSpecialReq(
 
         OutlinedTextField(
             value = description,
-            onValueChange = { description = it},
+            onValueChange = { description = it },
             maxLines = 5,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 4.dp)
         )
 
-        Row (
+        Row(
             modifier = Modifier
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -474,7 +480,7 @@ fun AddSpecialReq(
         }
 
         productRows.forEachIndexed { index, productRow ->
-            Row (
+            Row(
                 modifier = Modifier
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -483,7 +489,8 @@ fun AddSpecialReq(
                     suggestions = vegetableList,
                     onSuggestionClick = { selectedProduct ->
                         productRows[index] = productRow.copy(name = selectedProduct)
-                        productEmpty[index] = productEmpty[index].copy(name = selectedProduct.isEmpty())
+                        productEmpty[index] =
+                            productEmpty[index].copy(name = selectedProduct.isEmpty())
                     },
                     modifier = Modifier
                         .padding(vertical = 4.dp)
@@ -497,7 +504,8 @@ fun AddSpecialReq(
                         val newIntValue = newValue.toIntOrNull()
                         if (newIntValue != null) {
                             productRows[index] = productRow.copy(quantity = newIntValue)
-                            productEmpty[index] = productEmpty[index].copy(quantity = newIntValue <= 0)
+                            productEmpty[index] =
+                                productEmpty[index].copy(quantity = newIntValue <= 0)
                         }
                     },
                     label = { Text("Enter Quantity") },
@@ -508,7 +516,7 @@ fun AddSpecialReq(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 if (productRows.size > 1) {
-                    Icon (
+                    Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = null,
                         modifier = Modifier
@@ -558,7 +566,7 @@ fun AddSpecialReq(
             Text(text = "Add Product")
         }
 
-        Row (
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 4.dp),
@@ -593,7 +601,8 @@ fun AddSpecialReq(
                         DatePickerDialog(
                             context,
                             { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
-                                val formattedDate = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
+                                val formattedDate =
+                                    SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
                                 calendar.set(year, month, dayOfMonth)
                                 targetDate = formattedDate.format(calendar.time)
                             },
@@ -613,7 +622,7 @@ fun AddSpecialReq(
                 .padding(vertical = 4.dp)
         )
 
-        Row (
+        Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
             RadioButton(
@@ -626,7 +635,7 @@ fun AddSpecialReq(
             Text(Constants.COLLECTION_PICKUP)
         }
 
-        Row (
+        Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
             RadioButton(
@@ -657,7 +666,7 @@ fun AddSpecialReq(
         )
         OutlinedTextField(
             value = additional,
-            onValueChange = { additional = it},
+            onValueChange = { additional = it },
             maxLines = 5,
             modifier = Modifier
                 .fillMaxWidth()
@@ -670,86 +679,26 @@ fun AddSpecialReq(
             modifier = Modifier.padding(vertical = 4.dp)
         )
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            colors = CardDefaults.cardColors(containerColor = White1),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                // Show selected files
-                selectedFiles.forEach { uri ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowForward,
-                                contentDescription = "File",
-                                tint = Green1
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = uri.lastPathSegment ?: "File",
-                                color = Green1,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        IconButton(
-                            onClick = {
-                                selectedFiles = selectedFiles.filter { it != uri }
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Remove file",
-                                tint = Green1
-                            )
-                        }
-                    }
+        FileAttachment(
+            requestId = specialRequestUID,
+            selectedFiles = selectedFiles,
+            onFilesSelected = { files -> selectedFiles = files },
+            isUploading = isUploading,
+            uploadProgress = uploadProgress,
+            onUploadComplete = { success ->
+                isUploading = false
+                if (!success) {
+                    Toast.makeText(
+                        context,
+                        "Failed to upload attachments",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
-
-                // Add file button
-                Button(
-                    onClick = {
-                        // Launch file picker
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Green4,
-                        contentColor = Green1
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Attach file"
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Attach Files")
-                    }
-                }
+            },
+            onRemoveFile = { uri ->
+                selectedFiles = selectedFiles.filter { it != uri }
             }
-        }
+        )
 
         Button(
             onClick = {
@@ -757,7 +706,7 @@ fun AddSpecialReq(
                 targetDateEmpty = targetDate.isEmpty()
                 collectionMethodEmpty = collectionMethod.isEmpty()
 
-                productEmpty.forEachIndexed{ index, _ ->
+                productEmpty.forEachIndexed { index, _ ->
                     productEmpty[index] = ProductReqValidation(
                         productRows[index].name.isEmpty(),
                         productRows[index].quantity <= 0
@@ -765,40 +714,105 @@ fun AddSpecialReq(
                 }
 
                 if (!subjectEmpty && !targetDateEmpty && !collectionMethodEmpty &&
-                    productEmpty.all { !it.name && !it.quantity }) {
-                    val orderPlaced = TrackRecord (
-                        description = "Order Request is placed.",
-                        dateTime = formattedDateTime
-                    )
+                    productEmpty.all { !it.name && !it.quantity }
+                ) {
 
-                    val orderReview = TrackRecord(
-                        description = "Order Request is being reviewed.",
-                        dateTime = plusOneDateTime
-                    )
-                    trackRecord.add(orderPlaced)
-                    trackRecord.add(orderReview)
+                    val specialRequestUID = "SR-${UUID.randomUUID()}"
 
-                    val specialReq = SpecialRequest (
-                        subject = subject,
-                        description = description,
-                        products = productRows,
-                        targetDate = targetDate,
-                        collectionMethod = collectionMethod,
-                        additionalRequest = additional,
-                        email = userData?.email.toString(),
-                        uid = uid,
-                        status = "To Review",
-                        name = "${userData?.firstname} ${userData?.lastname}",
-                        dateRequested = formattedDateTime,
-                        specialRequestUID = "SR-${UUID.randomUUID()}",
-                        trackRecord = trackRecord,
-                    )
+                    if (selectedFiles.isNotEmpty()) {
+                        isUploading = true
+                        val fileList = selectedFiles.map { uri ->
+                            uri to AttachFileService.getFileName(uri)
+                        }
 
-                    specialRequestViewModel.addSpecialRequest(
-                        uid,
-                        specialReq
-                    )
-                    navController.navigate(Screen.ClientSpecialReq.route)
+                        AttachFileService.uploadMultipleAttachments(
+                            requestId = specialRequestUID,
+                            files = fileList,
+                            onProgress = { progress ->
+                                uploadProgress = progress
+                            }
+                        ) { success ->
+                            isUploading = false
+                            if (success) {
+                                val orderPlaced = TrackRecord(
+                                    description = "Order Request is placed.",
+                                    dateTime = formattedDateTime
+                                )
+
+                                val orderReview = TrackRecord(
+                                    description = "Order Request is being reviewed.",
+                                    dateTime = plusOneDateTime
+                                )
+                                trackRecord.add(orderPlaced)
+                                trackRecord.add(orderReview)
+
+                                val specialReq = SpecialRequest(
+                                    subject = subject,
+                                    description = description,
+                                    products = productRows,
+                                    targetDate = targetDate,
+                                    collectionMethod = collectionMethod,
+                                    additionalRequest = additional,
+                                    email = userData?.email.toString(),
+                                    uid = uid,
+                                    status = "To Review",
+                                    name = "${userData?.firstname} ${userData?.lastname}",
+                                    dateRequested = formattedDateTime,
+                                    specialRequestUID = specialRequestUID,
+                                    trackRecord = trackRecord,
+                                    attachments = fileList.map { it.second }
+                                )
+
+                                specialRequestViewModel.addSpecialRequest(
+                                    uid,
+                                    specialReq
+                                )
+                                navController.navigate(Screen.ClientSpecialReq.route)
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Failed to upload attachments",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    } else {
+                        // Submit without attachments
+                        val orderPlaced = TrackRecord(
+                            description = "Order Request is placed.",
+                            dateTime = formattedDateTime
+                        )
+
+                        val orderReview = TrackRecord(
+                            description = "Order Request is being reviewed.",
+                            dateTime = plusOneDateTime
+                        )
+                        trackRecord.add(orderPlaced)
+                        trackRecord.add(orderReview)
+
+                        val specialReq = SpecialRequest(
+                            subject = subject,
+                            description = description,
+                            products = productRows,
+                            targetDate = targetDate,
+                            collectionMethod = collectionMethod,
+                            additionalRequest = additional,
+                            email = userData?.email.toString(),
+                            uid = uid,
+                            status = "To Review",
+                            name = "${userData?.firstname} ${userData?.lastname}",
+                            dateRequested = formattedDateTime,
+                            specialRequestUID = specialRequestUID,
+                            trackRecord = trackRecord,
+                            attachments = emptyList()
+                        )
+
+                        specialRequestViewModel.addSpecialRequest(
+                            uid,
+                            specialReq
+                        )
+                        navController.navigate(Screen.ClientSpecialReq.route)
+                    }
                 }
             },
             colors = ButtonDefaults.buttonColors(
@@ -808,9 +822,17 @@ fun AddSpecialReq(
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp)
+                .padding(8.dp),
+            enabled = !isUploading
         ) {
-            Text(text = "Submit Request")
+            if (isUploading) {
+                CircularProgressIndicator(
+                    color = Green1,
+                    modifier = Modifier.size(24.dp)
+                )
+            } else {
+                Text(text = "Submit Request")
+            }
         }
     }
 }

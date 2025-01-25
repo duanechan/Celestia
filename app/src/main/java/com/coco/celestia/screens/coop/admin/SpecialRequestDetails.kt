@@ -1119,11 +1119,11 @@ fun UpdateStatusDialog (
 fun DisplayRequestDetails(
     request: SpecialRequest
 ) {
-    Column (
+    Column(
         modifier = Modifier
             .fillMaxWidth()
     ) {
-        Row (
+        Row(
             modifier = Modifier
                 .padding(8.dp)
         ) {
@@ -1149,7 +1149,7 @@ fun DisplayRequestDetails(
             modifier = Modifier.padding(8.dp)
         )
 
-        Row (
+        Row(
             modifier = Modifier
                 .padding(8.dp)
         ) {
@@ -1182,7 +1182,7 @@ fun DisplayRequestDetails(
                 .padding(8.dp)
         )
 
-        Column (
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp)
@@ -1202,11 +1202,11 @@ fun DisplayRequestDetails(
             )
 
             request.products.forEachIndexed { index, product ->
-                Row (
+                Row(
                     modifier = Modifier
                         .padding(horizontal = 14.dp)
                         .padding(2.dp)
-                ){
+                ) {
                     Text(
                         text = "${index + 1}. ${product.name}: ${product.quantity} kg"
                     )
@@ -1234,7 +1234,6 @@ fun DisplayRequestDetails(
                         .padding(horizontal = 12.dp)
                         .padding(top = 12.dp, bottom = 4.dp)
                 )
-
             } else {
                 Text(
                     text = "Pick Up Location:",
@@ -1263,7 +1262,11 @@ fun DisplayRequestDetails(
                 modifier = Modifier
                     .padding(horizontal = 14.dp)
                     .padding(2.dp)
-                    .padding(bottom = 6.dp)
+            )
+
+            DisplayAttachments(
+                requestId = request.specialRequestUID,
+                modifier = Modifier.padding(horizontal = 2.dp, vertical = 8.dp)
             )
         }
     }
