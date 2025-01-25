@@ -78,7 +78,6 @@ fun EditUser(
             Column(
                 modifier = Modifier.semantics { testTag = "android:id/EditUserForm" }
             ) {
-                // Email Field
                 OutlinedTextField(
                     value = updatedEmail,
                     onValueChange = { updatedEmail = it },
@@ -89,68 +88,69 @@ fun EditUser(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Facility/Role Dropdown
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded },
-                    modifier = Modifier.semantics { testTag = "android:id/EditUserRoleDropdownBox" }
-                ) {
-                    OutlinedTextField(
-                        readOnly = true,
-                        value = updatedRole.removePrefix("Coop"),
-                        onValueChange = {},
-                        trailingIcon = {
-                            ExposedDropdownMenuDefaults.TrailingIcon(expanded)
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor()
-                            .semantics { testTag = "android:id/EditUserRoleField" }
-                    )
+                if (userData.role.startsWith("Coop")) {
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded },
+                        modifier = Modifier.semantics { testTag = "android:id/EditUserRoleDropdownBox" }
+                    ) {
+                        OutlinedTextField(
+                            readOnly = true,
+                            value = updatedRole.removePrefix("Coop"),
+                            onValueChange = {},
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor()
+                                .semantics { testTag = "android:id/EditUserRoleField" }
+                        )
 
-                    when (facilityState) {
-                        is FacilityState.LOADING -> {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                CircularProgressIndicator()
-                            }
-                        }
-                        is FacilityState.SUCCESS -> {
-                            ExposedDropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false },
-                                modifier = Modifier.semantics { testTag = "android:id/EditUserRoleMenu" }
-                            ) {
-                                facilitiesData.forEach { facility ->
-                                    DropdownMenuItem(
-                                        text = { Text(facility.name) },
-                                        onClick = {
-                                            updatedRole = "Coop${facility.name}"
-                                            expanded = false
-                                        },
-                                        modifier = Modifier.semantics {
-                                            testTag = "android:id/EditUserRoleItem_${facility.name}"
-                                        }
-                                    )
+                        when (facilityState) {
+                            is FacilityState.LOADING -> {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
                                 }
                             }
-                        }
-                        is FacilityState.EMPTY -> {
-                            Text(
-                                text = "No facilities available",
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
-                        is FacilityState.ERROR -> {
-                            Text(
-                                text = (facilityState as FacilityState.ERROR).message,
-                                color = Color.Red,
-                                modifier = Modifier.padding(16.dp)
-                            )
+                            is FacilityState.SUCCESS -> {
+                                ExposedDropdownMenu(
+                                    expanded = expanded,
+                                    onDismissRequest = { expanded = false },
+                                    modifier = Modifier.semantics { testTag = "android:id/EditUserRoleMenu" }
+                                ) {
+                                    facilitiesData.forEach { facility ->
+                                        DropdownMenuItem(
+                                            text = { Text(facility.name) },
+                                            onClick = {
+                                                updatedRole = "Coop${facility.name}"
+                                                expanded = false
+                                            },
+                                            modifier = Modifier.semantics {
+                                                testTag = "android:id/EditUserRoleItem_${facility.name}"
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                            is FacilityState.EMPTY -> {
+                                Text(
+                                    text = "No facilities available",
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            }
+                            is FacilityState.ERROR -> {
+                                Text(
+                                    text = (facilityState as FacilityState.ERROR).message,
+                                    color = Color.Red,
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -171,52 +171,78 @@ fun EditUser(
                     userData.let { user ->
                         userViewModel.getUserUidByEmail(user.email) { uid ->
                             if (uid != null) {
-                                // Update facility emails first
-                                facilityViewModel.updateFacilityEmails(
-                                    oldRole = user.role,
-                                    newRole = updatedRole,
-                                    userEmail = updatedEmail,
-                                    onSuccess = {
-                                        // Then update user data
-                                        userViewModel.updateUser(
-                                            uid,
-                                            user.copy(
-                                                email = updatedEmail,
-                                                role = updatedRole
+                                val newRole = if (user.role == "Farmer") user.role else updatedRole
+
+                                if (user.role.startsWith("Coop")) {
+                                    facilityViewModel.updateFacilityEmails(
+                                        oldRole = user.role,
+                                        newRole = newRole,
+                                        userEmail = updatedEmail,
+                                        onSuccess = {
+                                            userViewModel.updateUser(
+                                                uid,
+                                                user.copy(
+                                                    email = updatedEmail,
+                                                    role = newRole
+                                                )
+                                            )
+
+                                            if (user.email != updatedEmail) {
+                                                transactionViewModel.recordTransaction(
+                                                    uid = FirebaseAuth.getInstance().uid.toString(),
+                                                    transaction = TransactionData(
+                                                        transactionId = "Transaction-${UUID.randomUUID()}",
+                                                        type = "User_Updated",
+                                                        date = formattedDateTime,
+                                                        description = "User ${user.firstname}'s email updated to $updatedEmail"
+                                                    )
+                                                )
+                                            }
+
+                                            if (user.role != newRole) {
+                                                transactionViewModel.recordTransaction(
+                                                    uid = FirebaseAuth.getInstance().uid.toString(),
+                                                    transaction = TransactionData(
+                                                        transactionId = "Transaction-${UUID.randomUUID()}",
+                                                        type = "User_Updated",
+                                                        date = formattedDateTime,
+                                                        description = "${user.firstname} ${user.lastname}'s facility updated to ${newRole.removePrefix("Coop")}"
+                                                    )
+                                                )
+                                            }
+
+                                            isUpdating = false
+                                            onDismiss()
+                                        },
+                                        onError = { error ->
+                                            isUpdating = false
+                                            Toast.makeText(content, error, Toast.LENGTH_SHORT).show()
+                                        }
+                                    )
+                                } else {
+                                    userViewModel.updateUser(
+                                        uid,
+                                        user.copy(
+                                            email = updatedEmail,
+                                            role = newRole
+                                        )
+                                    )
+
+                                    if (user.email != updatedEmail) {
+                                        transactionViewModel.recordTransaction(
+                                            uid = FirebaseAuth.getInstance().uid.toString(),
+                                            transaction = TransactionData(
+                                                transactionId = "Transaction-${UUID.randomUUID()}",
+                                                type = "User_Updated",
+                                                date = formattedDateTime,
+                                                description = "User ${user.firstname}'s email updated to $updatedEmail"
                                             )
                                         )
-
-                                        // Record transactions
-                                        if (user.email != updatedEmail) {
-                                            transactionViewModel.recordTransaction(
-                                                uid = FirebaseAuth.getInstance().uid.toString(),
-                                                transaction = TransactionData(
-                                                    transactionId = "Transaction-${UUID.randomUUID()}",
-                                                    type = "User_Updated",
-                                                    date = formattedDateTime,
-                                                    description = "User ${user.firstname}'s email updated to $updatedEmail"
-                                                )
-                                            )
-                                        }
-                                        if (user.role != updatedRole) {
-                                            transactionViewModel.recordTransaction(
-                                                uid = FirebaseAuth.getInstance().uid.toString(),
-                                                transaction = TransactionData(
-                                                    transactionId = "Transaction-${UUID.randomUUID()}",
-                                                    type = "User_Updated",
-                                                    date = formattedDateTime,
-                                                    description = "${user.firstname} ${user.lastname}'s facility updated to ${updatedRole.removePrefix("Coop")}"
-                                                )
-                                            )
-                                        }
-                                        isUpdating = false
-                                        onDismiss()
-                                    },
-                                    onError = { error ->
-                                        isUpdating = false
-                                        Toast.makeText(content, error, Toast.LENGTH_SHORT).show()
                                     }
-                                )
+
+                                    isUpdating = false
+                                    onDismiss()
+                                }
                             } else {
                                 isUpdating = false
                                 Toast.makeText(content, "User not found", Toast.LENGTH_SHORT).show()

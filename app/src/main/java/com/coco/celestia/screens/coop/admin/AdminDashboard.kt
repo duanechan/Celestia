@@ -225,7 +225,8 @@ fun FacilityCard(facility: FacilityData) {
     Card(
         modifier = Modifier
             .padding(4.dp)
-            .size(100.dp)
+            .size(100.dp),
+        colors = CardDefaults.cardColors(containerColor = Green4)
     ) {
         Box(
             modifier = Modifier
@@ -238,6 +239,7 @@ fun FacilityCard(facility: FacilityData) {
             ) {
                 Icon(
                     painter = painterResource(id = facility.icon),
+                    tint = Green1,
                     contentDescription = null,
                     modifier = Modifier.size(25.dp)
                 )

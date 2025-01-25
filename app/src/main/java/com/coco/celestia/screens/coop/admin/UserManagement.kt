@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,14 +20,23 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -64,6 +74,9 @@ fun AdminUserManagement(
 ) {
     var text by remember { mutableStateOf("") }
     var selectedUser by remember { mutableStateOf(UserData()) }
+    var selectedTab by remember { mutableStateOf(0) }
+    var filterExpanded by remember { mutableStateOf(false) }
+    var selectedFacility by remember { mutableStateOf<String?>(null) }
     val usersData by userViewModel.usersData.observeAsState(emptyList())
     val userState by userViewModel.userState.observeAsState(UserState.LOADING)
     val facilitiesData by facilityViewModel.facilitiesData.observeAsState(initial = emptyList())
@@ -71,9 +84,21 @@ fun AdminUserManagement(
 
     val facilityRoles = facilitiesData.map { "Coop${it.name}" }
     val filteredUsers = usersData.filter { user ->
-        user.role.startsWith("Coop") &&
-                facilityRoles.contains(user.role) &&
-                "${user.firstname} ${user.lastname}".contains(text, ignoreCase = true)
+        when (selectedTab) {
+            0 -> {
+                val matchesSearch = "${user.firstname} ${user.lastname}".contains(text, ignoreCase = true)
+                val matchesFacility = selectedFacility?.let { facility ->
+                    user.role == "Coop$facility"
+                } ?: true
+                user.role.startsWith("Coop") &&
+                        facilityRoles.contains(user.role) &&
+                        matchesSearch &&
+                        matchesFacility
+            }
+            1 -> user.role == "Farmer" &&
+                    "${user.firstname} ${user.lastname}".contains(text, ignoreCase = true)
+            else -> false
+        }
     }
 
     LaunchedEffect(refreshTrigger) {
@@ -94,7 +119,8 @@ fun AdminUserManagement(
                     .fillMaxWidth()
                     .background(Green4)
                     .padding(5.dp, 0.dp, 0.dp, 0.dp),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 SearchBar(
                     query = text,
@@ -111,20 +137,23 @@ fun AdminUserManagement(
                         )
                     },
                     modifier = Modifier
-                        .width(screenWidth * 0.75f)
+                        .width(screenWidth * 0.60f)
+                        .height(50.dp)
                         .offset(y = (-12).dp)
                         .semantics { testTag = "android:id/searchBar" }
                 ) {}
 
-                Spacer(modifier = Modifier.width(5.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Button(
                     onClick = {
                         navController.navigate(Screen.AdminUserManagementAuditLogs.route)
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Green2),
+                    contentPadding = PaddingValues(8.dp),
                     modifier = Modifier
                         .padding(top = 25.dp)
+                        .height(36.dp)
                         .semantics { testTag = "android:id/auditLogsButton" }
                 ) {
                     Icon(
@@ -132,22 +161,130 @@ fun AdminUserManagement(
                         tint = Color.White,
                         contentDescription = "Audit Logs",
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(20.dp)
                             .semantics { testTag = "android:id/auditLogIcon" }
                     )
                 }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                if (selectedTab == 0) {
+                    Box {
+                        Button(
+                            onClick = { filterExpanded = true },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Green2
+                            ),
+                            contentPadding = PaddingValues(8.dp),
+                            modifier = Modifier
+                                .padding(top = 25.dp)
+                                .height(36.dp)
+                                .semantics { testTag = "android:id/filterButton" }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.List,
+                                contentDescription = "Filter",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = filterExpanded,
+                            onDismissRequest = { filterExpanded = false },
+                            modifier = Modifier
+                                .background(Color.White)
+                                .width(200.dp)
+                                .semantics { testTag = "android:id/filterMenu" }
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "All Facilities",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Green1
+                                    )
+                                },
+                                onClick = {
+                                    selectedFacility = null
+                                    filterExpanded = false
+                                }
+                            )
+                            Divider(color = Green4.copy(alpha = 0.2f))
+                            facilitiesData.forEach { facility ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            facility.name,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Green1
+                                        )
+                                    },
+                                    onClick = {
+                                        selectedFacility = facility.name
+                                        filterExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            TabRow(
+                selectedTabIndex = selectedTab,
+                containerColor = Green4,
+                contentColor = Green1,
+                indicator = { tabPositions ->
+                    TabRowDefaults.Indicator(
+                        modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                        color = Green2,
+                        height = 3.dp
+                    )
+                }
+            ) {
+                Tab(
+                    selected = selectedTab == 0,
+                    onClick = { selectedTab = 0 },
+                    text = {
+                        Text(
+                            "Coop Members",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal
+                            )
+                        )
+                    },
+                    modifier = Modifier.semantics { testTag = "android:id/coopMembersTab" }
+                )
+                Tab(
+                    selected = selectedTab == 1,
+                    onClick = {
+                        selectedTab = 1
+                        selectedFacility = null
+                    },
+                    text = {
+                        Text(
+                            "Farmer Members",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal
+                            )
+                        )
+                    },
+                    modifier = Modifier.semantics { testTag = "android:id/farmerMembersTab" }
+                )
             }
         }
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 100.dp),
+                .padding(top = 140.dp),
             contentAlignment = Alignment.TopCenter
         ) {
             UserTable(
                 users = filteredUsers,
                 userViewModel = userViewModel,
+                selectedTab = selectedTab,
                 modifier = Modifier
                     .fillMaxWidth()
                     .semantics { testTag = "android:id/userTable" },
@@ -177,15 +314,11 @@ fun AdminUserManagement(
 fun UserTable(
     users: List<UserData>,
     userViewModel: UserViewModel,
+    selectedTab: Int,
     modifier: Modifier,
     onEditUserClick: (UserData) -> Unit
 ) {
-    val usersData by userViewModel.usersData.observeAsState(initial = emptyList())
     val userState by userViewModel.userState.observeAsState(initial = UserState.LOADING)
-
-    LaunchedEffect(users) {
-        userViewModel.fetchUsers()
-    }
 
     LazyColumn(
         modifier = modifier.fillMaxWidth()
@@ -198,7 +331,6 @@ fun UserTable(
                     .padding(13.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Spacer(modifier = Modifier.width(15.dp))
                 Text(
                     text = "NAME",
                     modifier = Modifier
@@ -211,7 +343,7 @@ fun UserTable(
                     color = Green1
                 )
                 Text(
-                    text = "FACILITY",
+                    text = if (selectedTab == 0) "FACILITY" else "ROLE",
                     modifier = Modifier
                         .weight(2f)
                         .fillMaxWidth()
@@ -267,7 +399,7 @@ fun UserTable(
                             color = Green1
                         )
                         Text(
-                            text = user.role.removePrefix("Coop"),
+                            text = if (user.role == "Farmer") "Farmer" else user.role.removePrefix("Coop"),
                             modifier = Modifier
                                 .weight(2f)
                                 .fillMaxWidth()
@@ -303,7 +435,7 @@ fun UserTable(
                             .padding(16.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("No facility users found")
+                        Text("No users found")
                     }
                 }
             }
