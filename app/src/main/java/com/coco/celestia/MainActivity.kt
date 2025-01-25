@@ -373,13 +373,17 @@ fun App() {
                                                     .padding(8.dp)
                                             ) {
                                                 Icon(
-                                                    imageVector = when (label) {
-                                                        "Products" -> Icons.Default.List
-                                                        "Sales" -> Icons.Default.ShoppingCart
-                                                        "Purchases" -> Icons.Default.ShoppingCart
-                                                        else -> Icons.Default.List
+                                                    painter = when (label) {
+                                                        "Products" -> painterResource(id = R.drawable.productlist)
+                                                        "Sales" -> painterResource(id = R.drawable.sales)
+                                                        "Purchases" -> painterResource(id = R.drawable.purchases)
+                                                        else -> painterResource(id = R.drawable.help)
                                                     },
                                                     contentDescription = null,
+                                                    modifier = Modifier.then(
+                                                        if (label == "Purchases") Modifier.size(25.dp)
+                                                        else Modifier.size(24.dp)
+                                                    ),
                                                     tint = if (currentDestination == route) Green1 else Color.Gray
                                                 )
                                                 Spacer(modifier = Modifier.width(12.dp))
