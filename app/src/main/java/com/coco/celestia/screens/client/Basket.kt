@@ -13,12 +13,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -47,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -102,7 +106,12 @@ fun BasketScreen(
             UserState.EMAIL_SENT_SUCCESS,
             is UserState.LOGIN_SUCCESS,
             UserState.REGISTER_SUCCESS,
-            is UserState.ERROR -> BasketError(message = (userState as UserState.ERROR).message ?: "Unknown error")
+            is UserState.ERROR -> BasketError(
+                message = (userState as UserState.ERROR).message ?: "Unknown error",
+                onBrowseProducts = {
+                    navController.navigate(Screen.ProductCatalog.createRoute(role = "Client"))
+                }
+            )
             UserState.LOADING -> BasketLoading()
             UserState.SUCCESS -> {
                 if (userData.basket.isNotEmpty()) {
@@ -126,10 +135,17 @@ fun BasketScreen(
                                 )
                             }
                         },
+                        onBrowseMore = {
+                            navController.navigate(Screen.ProductCatalog.createRoute(role = "Client"))
+                        },
                         onRemove = { onEvent(it) }
                     )
                 } else {
-                    BasketEmpty()
+                    BasketEmpty(
+                        onBrowseProducts = {
+                            navController.navigate(Screen.ProductCatalog.createRoute(role = "Client"))
+                        }
+                    )
                 }
             }
         }
@@ -142,6 +158,7 @@ fun Basket(
     items: List<BasketItem>,
     checkoutItems: SnapshotStateList<BasketItem>,
     onCheckout: (SnapshotStateList<BasketItem>) -> Unit,
+    onBrowseMore: () -> Unit,
     onRemove: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     val productViewModel: ProductViewModel = viewModel()
@@ -260,7 +277,8 @@ fun Basket(
 
         BasketActions(
             totalPrice = checkoutItems.sumOf { it.price },
-            onCheckout = { onCheckout(checkoutItems) }
+            onCheckout = { onCheckout(checkoutItems) },
+            onBrowseMore = onBrowseMore
         )
     }
 
@@ -561,34 +579,67 @@ fun BasketItemCard(
 @Composable
 fun BasketActions(
     totalPrice: Double,
-    onCheckout: () -> Unit
+    onCheckout: () -> Unit,
+    onBrowseMore: () -> Unit
 ) {
-    //Total
-    Card(
-        modifier = Modifier.fillMaxSize(),
-        colors = CardDefaults.cardColors(containerColor = Green4)
-    ){
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ){
-            Text(
-                text = "Total: PHP $totalPrice",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Button(
-                onClick = { onCheckout() },
-                colors = ButtonDefaults.buttonColors(containerColor = White1),
-                elevation = ButtonDefaults.elevatedButtonElevation(4.dp),
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Green4)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Button(
+                    onClick = onBrowseMore,
+                    colors = ButtonDefaults.buttonColors(containerColor = White1),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add More Products",
+                        tint = Green1
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Add More Products",
+                        color = Green1
+                    )
+                }
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Green4)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Checkout",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = Color.Black
+                    text = "Total: PHP $totalPrice",
+                    style = MaterialTheme.typography.titleMedium
                 )
+                Button(
+                    onClick = { onCheckout() },
+                    colors = ButtonDefaults.buttonColors(containerColor = Green1),
+                    elevation = ButtonDefaults.elevatedButtonElevation(4.dp),
+                ) {
+                    Text(
+                        text = "Checkout",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = White1
+                    )
+                }
             }
         }
     }
@@ -600,11 +651,85 @@ fun BasketLoading() {
 }
 
 @Composable
-fun BasketEmpty() {
-    Text(text = "Basket is empty.")
+fun BasketEmpty(onBrowseProducts: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.shopping_basket),
+            contentDescription = "Empty Basket",
+            colorFilter = ColorFilter.tint(Green1),
+            modifier = Modifier.size(64.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Your basket is empty",
+            style = MaterialTheme.typography.titleLarge,
+            color = Green1
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Add some products to get started",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Green1
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = onBrowseProducts,
+            colors = ButtonDefaults.buttonColors(containerColor = Green1)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.shopping_basket),
+                contentDescription = "Browse Products",
+                colorFilter = ColorFilter.tint(White1),
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Browse Products",
+                color = White1
+            )
+        }
+    }
 }
 
 @Composable
-fun BasketError(message: String) {
-    Text(text = "Error: $message")
+fun BasketError(message: String, onBrowseProducts: () -> Unit) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Icon(
+            imageVector = Icons.Default.Info,
+            contentDescription = "Error",
+            tint = Green1,
+            modifier = Modifier.size(64.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Error: $message",
+            style = MaterialTheme.typography.titleMedium,
+            color = Green1
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = onBrowseProducts,
+            colors = ButtonDefaults.buttonColors(containerColor = Green1)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.shopping_basket),
+                contentDescription = "Browse Products",
+                colorFilter = ColorFilter.tint(White1),
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Browse Products",
+                color = White1
+            )
+        }
+    }
 }

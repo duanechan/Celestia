@@ -461,8 +461,6 @@ fun ClientCollectionMethod(
     facilityData: FacilityData?,
     onUpdate: (String) -> Unit
 ) {
-    var selectedMethod by remember { mutableStateOf(orderData.collectionMethod) }
-
     val enabledMethods = mutableListOf<Pair<String, String>>()
     if (!facilityData?.pickupLocation.isNullOrEmpty()) {
         enabledMethods.add(Constants.COLLECTION_PICKUP to facilityData!!.pickupLocation)
@@ -472,6 +470,12 @@ fun ClientCollectionMethod(
     }
 
     if (enabledMethods.isEmpty()) return
+
+    LaunchedEffect(enabledMethods) {
+        if (enabledMethods.size == 1) {
+            onUpdate(enabledMethods[0].first)
+        }
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -515,44 +519,65 @@ fun ClientCollectionMethod(
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    enabledMethods.forEach { (method, description) ->
-                        Row(
+                    if (enabledMethods.size == 1) {
+                        val (method, description) = enabledMethods[0]
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable {
-                                    selectedMethod = method
-                                    onUpdate(selectedMethod)
-                                }
-                                .padding(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(8.dp)
                         ) {
-                            RadioButton(
-                                selected = selectedMethod == method,
-                                onClick = {
-                                    selectedMethod = method
-                                    onUpdate(selectedMethod)
-                                },
-                                colors = RadioButtonDefaults.colors(selectedColor = Green1)
+                            Text(
+                                text = method,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Green1
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(
-                                    text = method,
-                                    style = MaterialTheme.typography.bodyMedium
+                            Text(
+                                text = description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                        }
+                    } else {
+                        var selectedMethod by remember { mutableStateOf(orderData.collectionMethod) }
+                        enabledMethods.forEach { (method, description) ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        selectedMethod = method
+                                        onUpdate(selectedMethod)
+                                    }
+                                    .padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = selectedMethod == method,
+                                    onClick = {
+                                        selectedMethod = method
+                                        onUpdate(selectedMethod)
+                                    },
+                                    colors = RadioButtonDefaults.colors(selectedColor = Green1)
                                 )
-                                Text(
-                                    text = description,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = method,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Text(
+                                        text = description,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.Gray
+                                    )
+                                }
+                            }
+                            if (method != enabledMethods.last().first) {
+                                Divider(
+                                    color = Color.LightGray,
+                                    thickness = 1.dp,
+                                    modifier = Modifier.padding(vertical = 8.dp)
                                 )
                             }
-                        }
-                        if (method != enabledMethods.last().first) {
-                            Divider(
-                                color = Color.LightGray,
-                                thickness = 1.dp,
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
                         }
                     }
                 }
@@ -567,8 +592,6 @@ fun ClientPaymentMethod(
     facilityData: FacilityData?,
     onUpdate: (String) -> Unit
 ) {
-    var selectedMethod by remember { mutableStateOf(orderData.paymentMethod) }
-
     val enabledMethods = mutableListOf<Pair<String, String>>()
     if (!facilityData?.cashInstructions.isNullOrEmpty()) {
         enabledMethods.add(Constants.PAYMENT_CASH to facilityData!!.cashInstructions)
@@ -578,6 +601,12 @@ fun ClientPaymentMethod(
     }
 
     if (enabledMethods.isEmpty()) return
+
+    LaunchedEffect(enabledMethods) {
+        if (enabledMethods.size == 1) {
+            onUpdate(enabledMethods[0].first)
+        }
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -621,44 +650,65 @@ fun ClientPaymentMethod(
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
-                    enabledMethods.forEach { (method, description) ->
-                        Row(
+                    if (enabledMethods.size == 1) {
+                        val (method, description) = enabledMethods[0]
+                        Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable {
-                                    selectedMethod = method
-                                    onUpdate(selectedMethod)
-                                }
-                                .padding(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(8.dp)
                         ) {
-                            RadioButton(
-                                selected = selectedMethod == method,
-                                onClick = {
-                                    selectedMethod = method
-                                    onUpdate(selectedMethod)
-                                },
-                                colors = RadioButtonDefaults.colors(selectedColor = Green1)
+                            Text(
+                                text = method,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Green1
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Column {
-                                Text(
-                                    text = method,
-                                    style = MaterialTheme.typography.bodyMedium
+                            Text(
+                                text = description,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray
+                            )
+                        }
+                    } else {
+                        var selectedMethod by remember { mutableStateOf(orderData.paymentMethod) }
+                        enabledMethods.forEach { (method, description) ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        selectedMethod = method
+                                        onUpdate(selectedMethod)
+                                    }
+                                    .padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = selectedMethod == method,
+                                    onClick = {
+                                        selectedMethod = method
+                                        onUpdate(selectedMethod)
+                                    },
+                                    colors = RadioButtonDefaults.colors(selectedColor = Green1)
                                 )
-                                Text(
-                                    text = description,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = method,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Text(
+                                        text = description,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.Gray
+                                    )
+                                }
+                            }
+                            if (method != enabledMethods.last().first) {
+                                Divider(
+                                    color = Color.LightGray,
+                                    thickness = 1.dp,
+                                    modifier = Modifier.padding(vertical = 8.dp)
                                 )
                             }
-                        }
-                        if (method != enabledMethods.last().first) {
-                            Divider(
-                                color = Color.LightGray,
-                                thickness = 1.dp,
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
                         }
                     }
                 }
