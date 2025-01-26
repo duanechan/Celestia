@@ -2,6 +2,9 @@ package com.coco.celestia.screens.client
 
 import android.annotation.SuppressLint
 import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,14 +28,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -43,8 +52,10 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,13 +63,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.coco.celestia.R
+import com.coco.celestia.service.AttachFileService
 import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.OrderState
@@ -69,6 +83,10 @@ import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.StatusUpdate
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun ClientOrderDetails(
@@ -163,14 +181,17 @@ fun ClientOrderDetails(
                     facilityData = FacilityData()
                 )
 
-                //TODO: Support Center
-                SupportCenter()
+                SupportCenter(
+                    orderData = currentOrder,
+                    orderViewModel = viewModel
+                )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Order status tracking
                 TrackOrderSection(
-                    orderData = currentOrder
+                    orderData = currentOrder,
+                    orderViewModel = viewModel
                 )
             }
         }
@@ -187,17 +208,33 @@ fun ClientOrderDetails(
 }
 
 @Composable
-fun SupportCenter() {
+fun SupportCenter(
+    orderData: OrderData,
+    orderViewModel: OrderViewModel
+) {
     var isExpanded by remember { mutableStateOf(false) }
-
-    // Dialog state variables
     var showCancelOrderDialog by remember { mutableStateOf(false) }
     var showRefundDialog by remember { mutableStateOf(false) }
     var showContactDialog by remember { mutableStateOf(false) }
 
-    // State for cancellation and refund reasons
+    // File upload states
+    var selectedFiles by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var isUploading by remember { mutableStateOf(false) }
+    var uploadProgress by remember { mutableFloatStateOf(0f) }
+
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
     var cancelReason by remember { mutableStateOf("") }
     var refundReason by remember { mutableStateOf("") }
+
+    fun handleOrderCancellation(reason: String) {
+        val updatedOrder = orderData.copy(
+            status = "Cancelled",
+            statusDescription = reason
+        )
+        orderViewModel.updateOrder(updatedOrder)
+    }
 
     Card(
         modifier = Modifier
@@ -233,14 +270,20 @@ fun SupportCenter() {
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(15.dp)
                 ) {
-                    SupportCenterItemsCard(
-                        title = "Cancel Order",
-                        onClick = { showCancelOrderDialog = true }
-                    )
-                    SupportCenterItemsCard(
-                        title = "Request for Return/Refund",
-                        onClick = { showRefundDialog = true }
-                    )
+                    if (orderData.status == "Pending" || orderData.status == "Confirmed") {
+                        SupportCenterItemsCard(
+                            title = "Cancel Order",
+                            onClick = { showCancelOrderDialog = true }
+                        )
+                    }
+
+                    if (orderData.status == "Completed") {
+                        SupportCenterItemsCard(
+                            title = "Request for Return/Refund",
+                            onClick = { showRefundDialog = true }
+                        )
+                    }
+
                     SupportCenterItemsCard(
                         title = "Contact BCFAC",
                         onClick = { showContactDialog = true },
@@ -251,10 +294,13 @@ fun SupportCenter() {
         }
     }
 
-    // Dialog for Cancel Order
+    // Cancel Order Dialog
     if (showCancelOrderDialog) {
         AlertDialog(
-            onDismissRequest = { showCancelOrderDialog = false },
+            onDismissRequest = {
+                showCancelOrderDialog = false
+                cancelReason = ""
+            },
             title = { Text(text = "Cancel Order") },
             text = {
                 Column {
@@ -271,67 +317,278 @@ fun SupportCenter() {
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
-                    // Handle confirm action with reason
-                    println("Cancellation reason: $cancelReason")
-                    showCancelOrderDialog = false
-                }) {
-                    Text(text = "Submit",
+                TextButton(
+                    onClick = {
+                        if (cancelReason.isNotBlank()) {
+                            handleOrderCancellation(cancelReason)
+                            showCancelOrderDialog = false
+                            cancelReason = ""
+                        }
+                    },
+                    enabled = cancelReason.isNotBlank()
+                ) {
+                    Text(
+                        text = "Submit",
                         fontFamily = mintsansFontFamily,
-                        color = Green1)
+                        color = if (cancelReason.isNotBlank()) Green1 else Green1.copy(alpha = 0.5f)
+                    )
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showCancelOrderDialog = false }) {
-                    Text(text = "Cancel",
+                TextButton(onClick = {
+                    showCancelOrderDialog = false
+                    cancelReason = ""
+                }) {
+                    Text(
+                        text = "Cancel",
                         fontFamily = mintsansFontFamily,
-                        color = Green1)
+                        color = Green1
+                    )
                 }
             },
             containerColor = White1
         )
     }
 
-    // Dialog for Request Refund/Return
+    // Refund/Return Dialog
     if (showRefundDialog) {
         AlertDialog(
-            onDismissRequest = { showRefundDialog = false },
+            onDismissRequest = {
+                showRefundDialog = false
+                refundReason = ""
+                selectedFiles = emptyList()
+                isUploading = false
+            },
             title = { Text(text = "Request Refund/Return") },
             text = {
-                Column {
-                    Text(text = "Would you like to request a refund or return for your order?",
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "Would you like to request a refund or return for your order?",
                         fontFamily = mintsansFontFamily,
-                        color = Green1)
-                    Spacer(modifier = Modifier.height(8.dp))
+                        color = Green1
+                    )
+
                     OutlinedTextField(
                         value = refundReason,
                         onValueChange = { refundReason = it },
-                        label = { Text("Reason for refund/return",
-                            fontFamily = mintsansFontFamily,
-                            color = Green1) },
-                        placeholder = { Text("Enter your reason here",
-                            fontFamily = mintsansFontFamily,
-                            color = Green1) },
+                        label = { Text("Reason for refund/return") },
+                        placeholder = { Text("Enter your reason here") },
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Upload Proof for Refund (Images only)",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    val launcher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.GetMultipleContents()
+                    ) { uris: List<Uri>? ->
+                        uris?.let { newUris ->
+                            if (newUris.size + selectedFiles.size > 5) {
+                                Toast.makeText(
+                                    context,
+                                    "Maximum 5 images allowed",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@let
+                            }
+
+                            val imageUris = newUris.filter { uri ->
+                                val type = context.contentResolver.getType(uri)
+                                type?.startsWith("image/") == true
+                            }
+
+                            if (imageUris.size < newUris.size) {
+                                Toast.makeText(
+                                    context,
+                                    "Only image files are allowed",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+
+                            if (imageUris.isNotEmpty()) {
+                                val oversizedFiles = imageUris.filter { uri ->
+                                    context.contentResolver.openInputStream(uri)?.use {
+                                        it.available() > 5 * 1024 * 1024 // 5MB
+                                    } ?: false
+                                }
+
+                                if (oversizedFiles.isNotEmpty()) {
+                                    Toast.makeText(
+                                        context,
+                                        "Some images exceed 5MB limit",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@let
+                                }
+
+                                selectedFiles = (selectedFiles + imageUris).distinct()
+                            }
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
+                    ) {
+                        selectedFiles.forEach { uri ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Green1.copy(alpha = 0.1f))
+                                    .padding(8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.image),
+                                        contentDescription = "Image",
+                                        tint = Green1,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = uri.lastPathSegment ?: "Image",
+                                        color = Green1,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                                IconButton(
+                                    onClick = {
+                                        selectedFiles = selectedFiles.filter { it != uri }
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Remove",
+                                        tint = Green1
+                                    )
+                                }
+                            }
+                        }
+
+                        if (selectedFiles.size < 5) {
+                            Button(
+                                onClick = { launcher.launch("image/*") },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Green4,
+                                    contentColor = Green1
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Add Image"
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Add Image")
+                                }
+                            }
+                        }
+
+                        Text(
+                            text = "Max 5 images, 5MB each",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        if (isUploading) {
+                            LinearProgressIndicator(
+                                progress = uploadProgress,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                            )
+                        }
+                    }
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
-                    // Handle confirm action with reason
-                    println("Refund/Return reason: $refundReason", )
-                    showRefundDialog = false
-                }) {
-                    Text(text = "Submit Request",
-                        fontFamily = mintsansFontFamily,
-                        color = Green1)
+                TextButton(
+                    onClick = {
+                        if (refundReason.isBlank()) {
+                            Toast.makeText(
+                                context,
+                                "Please provide a reason for the refund",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@TextButton
+                        }
+
+                        isUploading = true
+                        scope.launch {
+                            handleRefundRequest(
+                                orderData = orderData,
+                                reason = refundReason,
+                                selectedFiles = selectedFiles,
+                                orderViewModel = orderViewModel,
+                                onProgress = { progress ->
+                                    uploadProgress = progress
+                                },
+                                onSuccess = {
+                                    isUploading = false
+                                    showRefundDialog = false
+                                    selectedFiles = emptyList()
+                                    refundReason = ""
+                                },
+                                onError = { error ->
+                                    isUploading = false
+                                    Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        }
+                    },
+                    enabled = !isUploading && refundReason.isNotBlank()
+                ) {
+                    if (isUploading) {
+                        CircularProgressIndicator(
+                            color = Green1,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else {
+                        Text(
+                            text = "Submit Request",
+                            fontFamily = mintsansFontFamily,
+                            color = if (refundReason.isNotBlank()) Green1 else Green1.copy(alpha = 0.5f)
+                        )
+                    }
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showRefundDialog = false }) {
-                    Text(text = "Cancel",
+                TextButton(
+                    onClick = {
+                        showRefundDialog = false
+                        refundReason = ""
+                        selectedFiles = emptyList()
+                        isUploading = false
+                    },
+                    enabled = !isUploading
+                ) {
+                    Text(
+                        text = "Cancel",
                         fontFamily = mintsansFontFamily,
-                        color = Green1)
+                        color = Green1
+                    )
                 }
             },
             containerColor = White1
@@ -394,6 +651,49 @@ fun SupportCenterItemsCard(
                 thickness = 1.dp
             )
         }
+    }
+}
+
+fun handleRefundRequest(
+    orderData: OrderData,
+    reason: String,
+    selectedFiles: List<Uri>,
+    orderViewModel: OrderViewModel,
+    onProgress: (Float) -> Unit,
+    onSuccess: () -> Unit,
+    onError: (String) -> Unit
+) {
+    if (selectedFiles.isNotEmpty()) {
+        val fileList = selectedFiles.map { uri ->
+            uri to AttachFileService.getFileName(uri)
+        }
+
+        AttachFileService.uploadMultipleAttachments(
+            requestId = orderData.orderId,
+            files = fileList,
+            onProgress = { progress ->
+                onProgress(progress)
+            }
+        ) { success ->
+            if (success) {
+                val updatedOrder = orderData.copy(
+                    status = "Refund Requested",
+                    statusDescription = reason,
+                    attachments = fileList.map { it.second },
+                    statusHistory = orderData.statusHistory + StatusUpdate(
+                        status = "Refund Requested",
+                        statusDescription = reason,
+                        dateTime = getCurrentDateTime()
+                    )
+                )
+                orderViewModel.updateOrder(updatedOrder)
+                onSuccess()
+            } else {
+                onError("Failed to upload images")
+            }
+        }
+    } else {
+        onError("Please attach proof for refund request")
     }
 }
 
@@ -746,7 +1046,17 @@ fun ClientDetailsPaymentMethod(
 }
 
 @Composable
-fun TrackOrderSection(orderData: OrderData) {
+fun TrackOrderSection(
+    orderData: OrderData,
+    orderViewModel: OrderViewModel
+) {
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    var selectedFiles by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var isUploading by remember { mutableStateOf(false) }
+    var uploadProgress by remember { mutableFloatStateOf(0f) }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -766,6 +1076,21 @@ fun TrackOrderSection(orderData: OrderData) {
                 fontWeight = FontWeight.Bold,
                 fontFamily = mintsansFontFamily
             )
+
+            if (orderData.status == "To Receive") {
+                Button(
+                    onClick = { showConfirmDialog = true },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Green1
+                    ),
+                    modifier = Modifier.padding(start = 8.dp)
+                ) {
+                    Text(
+                        text = "Received Order",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -774,9 +1099,285 @@ fun TrackOrderSection(orderData: OrderData) {
             status = orderData.status,
             statusDescription = orderData.statusDescription,
             dateTime = orderData.orderDate,
-            statusHistory = orderData.statusHistory
+            statusHistory = orderData.statusHistory,
+            collectionMethod = orderData.collectionMethod
         )
+
+        if (showConfirmDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    showConfirmDialog = false
+                    selectedFiles = emptyList()
+                },
+                title = {
+                    Text(
+                        text = "Confirm Order Received"
+                    )
+                },
+                text = {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = if (orderData.paymentMethod == "CASH")
+                                "Please confirm that you have paid this order."
+                            else
+                                "Please confirm that you have received your order."
+                        )
+
+                        if (orderData.collectionMethod == "PICKUP") {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "Upload Proof of Pickup",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            val launcher = rememberLauncherForActivityResult(
+                                contract = ActivityResultContracts.GetMultipleContents()
+                            ) { uris: List<Uri>? ->
+                                uris?.let { newUris ->
+                                    if (newUris.size + selectedFiles.size > 5) {
+                                        Toast.makeText(
+                                            context,
+                                            "Maximum 5 images allowed",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        return@let
+                                    }
+
+                                    val imageUris = newUris.filter { uri ->
+                                        val type = context.contentResolver.getType(uri)
+                                        type?.startsWith("image/") == true
+                                    }
+
+                                    if (imageUris.size < newUris.size) {
+                                        Toast.makeText(
+                                            context,
+                                            "Only image files are allowed",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+
+                                    if (imageUris.isNotEmpty()) {
+                                        val oversizedFiles = imageUris.filter { uri ->
+                                            context.contentResolver.openInputStream(uri)?.use {
+                                                it.available() > 5 * 1024 * 1024 // 5MB
+                                            } ?: false
+                                        }
+
+                                        if (oversizedFiles.isNotEmpty()) {
+                                            Toast.makeText(
+                                                context,
+                                                "Some images exceed 5MB limit",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            return@let
+                                        }
+
+                                        selectedFiles = (selectedFiles + imageUris).distinct()
+                                    }
+                                }
+                            }
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp)
+                            ) {
+                                selectedFiles.forEach { uri ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(Green1.copy(alpha = 0.1f))
+                                            .padding(8.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.image),
+                                                contentDescription = "Image",
+                                                tint = Green1,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(
+                                                text = uri.lastPathSegment ?: "Image",
+                                                color = Green1,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
+                                        IconButton(
+                                            onClick = {
+                                                selectedFiles = selectedFiles.filter { it != uri }
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Remove",
+                                                tint = Green1
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (selectedFiles.size < 5) {
+                                    Button(
+                                        onClick = { launcher.launch("image/*") },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Green4,
+                                            contentColor = Green1
+                                        ),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp)
+                                    ) {
+                                        Row(
+                                            horizontalArrangement = Arrangement.Center,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Add,
+                                                contentDescription = "Add Image"
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text("Add Image")
+                                        }
+                                    }
+                                }
+
+                                Text(
+                                    text = "Max 5 images, 5MB each",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+
+                                if (isUploading) {
+                                    LinearProgressIndicator(
+                                        progress = uploadProgress,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            if (orderData.collectionMethod == "PICKUP" && selectedFiles.isEmpty()) {
+                                Toast.makeText(
+                                    context,
+                                    "Please attach proof of receipt",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@TextButton
+                            }
+
+                            val completionMessage = if (orderData.paymentMethod == "CASH")
+                                "Order received and paid in cash"
+                            else
+                                "Order received"
+
+                            if (selectedFiles.isNotEmpty()) {
+                                isUploading = true
+                                val fileList = selectedFiles.map { uri ->
+                                    uri to AttachFileService.getFileName(uri)
+                                }
+
+                                scope.launch {
+                                    AttachFileService.uploadMultipleAttachments(
+                                        requestId = orderData.orderId,
+                                        files = fileList,
+                                        onProgress = { progress ->
+                                            uploadProgress = progress
+                                        }
+                                    ) { success ->
+                                        isUploading = false
+                                        if (success) {
+                                            val updatedOrder = orderData.copy(
+                                                status = "Completed",
+                                                statusDescription = completionMessage,
+                                                attachments = fileList.map { it.second },
+                                                statusHistory = orderData.statusHistory + StatusUpdate(
+                                                    status = "Completed",
+                                                    statusDescription = completionMessage,
+                                                    dateTime = getCurrentDateTime()
+                                                )
+                                            )
+                                            orderViewModel.updateOrder(updatedOrder)
+                                            showConfirmDialog = false
+                                            selectedFiles = emptyList()
+                                        } else {
+                                            Toast.makeText(
+                                                context,
+                                                "Failed to upload images",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }
+                                }
+                            } else {
+                                val updatedOrder = orderData.copy(
+                                    status = "Completed",
+                                    statusDescription = completionMessage,
+                                    statusHistory = orderData.statusHistory + StatusUpdate(
+                                        status = "Completed",
+                                        statusDescription = completionMessage,
+                                        dateTime = getCurrentDateTime()
+                                    )
+                                )
+                                orderViewModel.updateOrder(updatedOrder)
+                                showConfirmDialog = false
+                            }
+                        },
+                        enabled = !isUploading
+                    ) {
+                        if (isUploading) {
+                            CircularProgressIndicator(
+                                color = Green1,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        } else {
+                            Text(
+                                text = if (orderData.paymentMethod == "CASH")
+                                    "Confirm Payment"
+                                else
+                                    "Confirm Receipt"
+                            )
+                        }
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showConfirmDialog = false
+                            selectedFiles = emptyList()
+                        },
+                        enabled = !isUploading
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
     }
+}
+
+fun getCurrentDateTime(): String {
+    val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+    return sdf.format(Date())
 }
 
 @Composable
@@ -784,15 +1385,25 @@ fun ClientOrderStatus(
     status: String,
     statusDescription: String,
     dateTime: String,
-    statusHistory: List<StatusUpdate> = emptyList()
+    statusHistory: List<StatusUpdate> = emptyList(),
+    collectionMethod: String // Add collection method parameter
 ) {
-    val allStatuses = listOf(
-        "Pending",
-        "Confirmed",
-        "To Deliver",
-        "To Receive",
-        "Completed"
-    )
+    val allStatuses = if (collectionMethod == "PICKUP") {
+        listOf(
+            "Pending",
+            "Confirmed",
+            "To Receive",
+            "Completed"
+        )
+    } else {
+        listOf(
+            "Pending",
+            "Confirmed",
+            "To Deliver",
+            "To Receive",
+            "Completed"
+        )
+    }
 
     val currentIndex = allStatuses.indexOf(status)
 

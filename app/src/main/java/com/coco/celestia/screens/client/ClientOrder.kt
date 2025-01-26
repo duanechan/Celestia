@@ -45,7 +45,6 @@ import androidx.navigation.NavController
 import com.coco.celestia.screens.coop.facility.ItemCard
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
-import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.OrderData
@@ -57,9 +56,7 @@ fun ClientOrder(
     orderViewModel: OrderViewModel,
     userViewModel: UserViewModel,
 ) {
-    val userData by userViewModel.userData.observeAsState()
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
-    val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
     val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
 
     var searchText by remember { mutableStateOf("") }
@@ -71,7 +68,9 @@ fun ClientOrder(
         "To Receive",
         "Completed",
         "Cancelled",
-        "Return/Refund"
+        "Refund Requested",
+        "Refund Approved",
+        "Refund Rejected",
     )
     var selectedTabIndex by remember { mutableStateOf(0) }
 
@@ -169,8 +168,10 @@ fun ClientOrder(
                     .padding(horizontal = 2.dp)
             ) {
                 val filteredOrders = orderData.filter { order ->
-                    order.status.equals(filters[selectedTabIndex], ignoreCase = true) &&
-                            (searchText.isEmpty() || order.toString().contains(searchText, ignoreCase = true))
+                    when (selectedTabIndex) {
+                        filters.indexOf("Return/Refund") -> order.status in listOf("Refund Requested", "Refund Approved", "Refund Rejected")
+                        else -> order.status.equals(filters[selectedTabIndex], ignoreCase = true)
+                    } && (searchText.isEmpty() || order.toString().contains(searchText, ignoreCase = true))
                 }
 
                 if (filteredOrders.isEmpty()) {
@@ -271,6 +272,12 @@ fun OrderCard(
                     text = order.status,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
+                    color = when (order.status) {
+                        "Refund Requested" -> Yellow4
+                        "Refund Approved" -> Green1
+                        "Refund Rejected" -> Cinnabar
+                        else -> MaterialTheme.colorScheme.onSurface
+                    },
                     fontFamily = mintsansFontFamily
                 )
             }

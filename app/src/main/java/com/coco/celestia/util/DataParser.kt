@@ -54,7 +54,10 @@ object DataParser {
             partialQuantity = snapshot.child("partialQuantity").getValue(Int::class.java) ?: 0,
             fulfilled = snapshot.child("fulfilled").getValue(Int::class.java) ?: 0,
             collectionMethod = snapshot.child("collectionMethod").getValue(String::class.java) ?: "",
-            paymentMethod = snapshot.child("paymentMethod").getValue(String::class.java) ?: ""
+            paymentMethod = snapshot.child("paymentMethod").getValue(String::class.java) ?: "",
+            attachments = snapshot.child("attachments").children
+                .mapNotNull { it.getValue(String::class.java) },
+            gcashPaymentId = snapshot.child("gcashPaymentId").getValue(String::class.java) ?: ""
         )
     }
     

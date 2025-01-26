@@ -426,8 +426,10 @@ private fun OnlineSalesContentUI(
         OrderItem("To Deliver", 0),
         OrderItem("To Receive", 0),
         OrderItem("Completed", 0),
-        OrderItem("Cancelled", 0),
-        OrderItem("Return/Refund", 0)
+        OrderItem("Refund Requested", 0),
+        OrderItem("Refund Approved", 0),
+        OrderItem("Refund Rejected", 0),
+        OrderItem("Cancelled", 0)
     )
 
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
@@ -643,7 +645,10 @@ private fun OnlineSalesContentUI(
                         // Filter and sort orders
                         val filteredAndSortedOrders = facilityOrders
                             .filter { order ->
-                                order.status == selectedOrderStatus &&
+                                when (selectedOrderStatus) {
+                                    "Return/Refund" -> order.status in listOf("Refund Requested", "Refund Approved", "Refund Rejected")
+                                    else -> order.status == selectedOrderStatus
+                                } &&
                                         (searchQuery.isBlank() || listOf(
                                             order.orderId,
                                             order.status,

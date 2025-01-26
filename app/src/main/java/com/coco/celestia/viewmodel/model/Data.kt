@@ -61,7 +61,9 @@ data class OrderData(
     val fulfilled: Int = 0,
     val collectionMethod: String = "",
     val paymentMethod: String = "",
-    val statusHistory: List<StatusUpdate> = emptyList()
+    val statusHistory: List<StatusUpdate> = emptyList(),
+    val attachments: List<String> = emptyList(),
+    val gcashPaymentId: String = ""
 )
 
 @Serializable

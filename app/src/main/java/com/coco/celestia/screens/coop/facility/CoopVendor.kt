@@ -133,12 +133,14 @@ fun Vendors(
                         Column(
                             modifier = modifier
                                 .fillMaxSize()
+                                .background(White2)
                                 .padding(paddingValues)
                         ) {
                             OutlinedTextField(
                                 value = searchQuery,
                                 onValueChange = { searchQuery = it },
-                                label = { Text("Search Vendors") },
+                                label = { Text("Search Vendors", fontWeight = FontWeight.Bold,
+                                    fontFamily = mintsansFontFamily) },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(top = 5.dp, bottom = 16.dp, start = 16.dp, end = 16.dp),
@@ -168,7 +170,9 @@ fun Vendors(
                                         text = {
                                             Text(
                                                 title,
-                                                color = if (selectedTabIndex == index) Green1 else Color.Gray
+                                                color = if (selectedTabIndex == index) Green1 else Color.Gray,
+                                                fontWeight = FontWeight.Bold,
+                                                fontFamily = mintsansFontFamily
                                             )
                                         }
                                     )

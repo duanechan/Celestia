@@ -1,6 +1,12 @@
 package com.coco.celestia.screens.coop.facility
 
 import android.annotation.SuppressLint
+import android.net.Uri
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -8,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,11 +23,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
@@ -34,6 +46,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -43,15 +56,32 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
+import coil.size.Scale
+import com.coco.celestia.R
+import com.coco.celestia.screens.client.FileAttachment
+import com.coco.celestia.screens.coop.admin.DisplayAttachments
+import com.coco.celestia.service.AttachFileService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
@@ -231,9 +261,16 @@ fun OnlineSalesDetails(
     var showDialog by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
     var currentOrder by remember { mutableStateOf(order) }
+    var selectedFiles by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var isUploading by remember { mutableStateOf(false) }
+    var uploadProgress by remember { mutableFloatStateOf(0f) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
-    // Check if the order status is final (Rejected or Cancelled)
-    val isStatusFinal = currentOrder.status == "Rejected" || currentOrder.status == "Cancelled"
+    // Keep track of which states should prevent further updates
+    val isStatusFinal = currentOrder.status == "Rejected" ||
+            currentOrder.status == "Cancelled" ||
+            currentOrder.status == "Completed"
 
     Column(
         modifier = Modifier
@@ -255,11 +292,17 @@ fun OnlineSalesDetails(
                 Text(
                     text = currentOrder.client,
                     style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
                 Box {
                     Button(
-                        onClick = { showDialog = true },
+                        onClick = {
+                            if (!isStatusFinal) {
+                                showDialog = true
+                            }
+                        },
                         enabled = !isStatusFinal,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Green1,
@@ -268,49 +311,265 @@ fun OnlineSalesDetails(
                     ) {
                         Text(
                             text = "Update Status",
-                            color = if (isStatusFinal) Color.LightGray else Color.White
+                            color = if (isStatusFinal) Color.LightGray else Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                     }
                 }
             }
 
-            if (showDialog) {
+            if (showDialog && !isStatusFinal) {
                 AlertDialog(
                     onDismissRequest = { showDialog = false },
                     title = { Text(text = "Update Order Status") },
                     text = {
-                        UpdateStatusCard(
-                            status = currentOrder.status,
-                            statusDescription = currentOrder.statusDescription,
-                            dateTime = currentOrder.orderDate,
-                            statusHistory = currentOrder.statusHistory,
-                            onStatusUpdate = { newStatus, newDescription, newHistory ->
-                                currentOrder = currentOrder.copy(
-                                    status = newStatus,
-                                    statusDescription = newDescription,
-                                    statusHistory = newHistory
+                        Column {
+                            UpdateStatusCard(
+                                status = currentOrder.status,
+                                statusDescription = currentOrder.statusDescription,
+                                dateTime = currentOrder.orderDate,
+                                collectionMethod = currentOrder.collectionMethod,
+                                statusHistory = currentOrder.statusHistory,
+                                onStatusUpdate = { newStatus, newDescription, newHistory ->
+                                    currentOrder = currentOrder.copy(
+                                        status = newStatus,
+                                        statusDescription = newDescription,
+                                        statusHistory = newHistory
+                                    )
+                                }
+                            )
+
+                            if (currentOrder.status == "To Receive" &&
+                                order.status == "To Deliver" &&
+                                currentOrder.collectionMethod == "DELIVERY"
+                            ) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "Upload Proof of Delivery (Images only)",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = mintsansFontFamily
                                 )
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                val launcher = rememberLauncherForActivityResult(
+                                    contract = ActivityResultContracts.GetMultipleContents()
+                                ) { uris: List<Uri>? ->
+                                    uris?.let { newUris ->
+                                        if (newUris.size + selectedFiles.size > 5) {
+                                            Toast.makeText(
+                                                context,
+                                                "Maximum 5 images allowed",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            return@let
+                                        }
+
+                                        val imageUris = newUris.filter { uri ->
+                                            val type = context.contentResolver.getType(uri)
+                                            type?.startsWith("image/") == true
+                                        }
+
+                                        if (imageUris.size < newUris.size) {
+                                            Toast.makeText(
+                                                context,
+                                                "Only image files are allowed",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+
+                                        if (imageUris.isNotEmpty()) {
+                                            val oversizedFiles = imageUris.filter { uri ->
+                                                context.contentResolver.openInputStream(uri)?.use {
+                                                    it.available() > 5 * 1024 * 1024 // 5MB
+                                                } ?: false
+                                            }
+
+                                            if (oversizedFiles.isNotEmpty()) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Some images exceed 5MB limit",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                return@let
+                                            }
+
+                                            selectedFiles = (selectedFiles + imageUris).distinct()
+                                        }
+                                    }
+                                }
+
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(8.dp)
+                                ) {
+                                    selectedFiles.forEach { uri ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 4.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Green1.copy(alpha = 0.1f))
+                                                .padding(8.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(id = R.drawable.image),
+                                                    contentDescription = "Image",
+                                                    tint = Green1,
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text(
+                                                    text = uri.lastPathSegment ?: "Image",
+                                                    color = Green1,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+                                            IconButton(
+                                                onClick = {
+                                                    selectedFiles = selectedFiles.filter { it != uri }
+                                                }
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Close,
+                                                    contentDescription = "Remove",
+                                                    tint = Green1
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    if (selectedFiles.size < 5) {
+                                        Button(
+                                            onClick = { launcher.launch("image/*") },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Green4,
+                                                contentColor = Green1
+                                            ),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 8.dp)
+                                        ) {
+                                            Row(
+                                                horizontalArrangement = Arrangement.Center,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Add,
+                                                    contentDescription = "Add Image"
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text("Add Image")
+                                            }
+                                        }
+                                    }
+
+                                    Text(
+                                        text = "Max 5 images, 5MB each",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+
+                                    if (isUploading) {
+                                        LinearProgressIndicator(
+                                            progress = uploadProgress,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 8.dp)
+                                        )
+                                    }
+                                }
                             }
-                        )
+                        }
                     },
                     confirmButton = {
                         TextButton(
                             onClick = {
+                                if (currentOrder.status == "To Receive" &&
+                                    order.status == "To Deliver" &&
+                                    currentOrder.collectionMethod == "DELIVERY" &&
+                                    selectedFiles.isEmpty()
+                                ) {
+                                    Toast.makeText(
+                                        context,
+                                        "Please attach proof of delivery",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@TextButton
+                                }
+
                                 val previousStatus = order.status
                                 if (currentOrder.status == "Completed" && previousStatus != "Completed") {
                                     recordOrderTransaction(currentOrder, facilityName, transactionViewModel)
                                 }
-                                orderViewModel.updateOrder(currentOrder)
-                                showDialog = false
-                            }
+
+                                if (selectedFiles.isNotEmpty()) {
+                                    isUploading = true
+                                    val fileList = selectedFiles.map { uri ->
+                                        uri to AttachFileService.getFileName(uri)
+                                    }
+
+                                    scope.launch {
+                                        AttachFileService.uploadMultipleAttachments(
+                                            requestId = currentOrder.orderId,
+                                            files = fileList,
+                                            onProgress = { progress ->
+                                                uploadProgress = progress
+                                            }
+                                        ) { success ->
+                                            isUploading = false
+                                            if (success) {
+                                                // Create list of attachment filenames
+                                                val newAttachments = fileList.map { it.second }
+
+                                                // Update the order with new attachments
+                                                val updatedOrder = currentOrder.copy(
+                                                    attachments = currentOrder.attachments + newAttachments  // Append new attachments to existing ones
+                                                )
+                                                Log.d("OnlineSalesDetails", "Updating order with attachments: ${updatedOrder.attachments.joinToString()}")
+                                                orderViewModel.updateOrder(updatedOrder)
+                                                showDialog = false
+                                            } else {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Failed to upload images",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    orderViewModel.updateOrder(currentOrder)
+                                    showDialog = false
+                                }
+                            },
+                            enabled = !isUploading
                         ) {
-                            Text(text = "Save")
+                            if (isUploading) {
+                                CircularProgressIndicator(
+                                    color = Green1,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            } else {
+                                Text(text = "Save")
+                            }
                         }
                     },
                     dismissButton = {
                         TextButton(
                             onClick = {
                                 currentOrder = order
+                                selectedFiles = emptyList()
                                 showDialog = false
                             }
                         ) {
@@ -328,13 +587,15 @@ fun OnlineSalesDetails(
                 Text(
                     text = currentOrder.orderId,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontFamily = mintsansFontFamily
                 )
 
                 Text(
                     text = currentOrder.orderDate,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -357,7 +618,9 @@ fun OnlineSalesDetails(
                 Text(
                     text = "Details",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
             }
         }
@@ -380,7 +643,9 @@ fun OnlineSalesDetails(
                     Text(
                         text = "Items (${currentOrder.orderData.size})",
                         style = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily
                     )
                     Divider(color = Green4, thickness = 1.dp)
                 }
@@ -407,7 +672,9 @@ fun OnlineSalesDetails(
                     Divider(color = Green4, thickness = 1.dp)
                     Text(
                         text = "Total: PHP ${currentOrder.orderData.sumOf { it.price }}",
-                        style = MaterialTheme.typography.titleMedium
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily
                     )
                 }
             }
@@ -429,7 +696,9 @@ fun OnlineSalesDetails(
             ) {
                 Text(
                     text = "Collection Method",
-                    style = MaterialTheme.typography.titleSmall
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
             }
             Divider(
@@ -445,7 +714,9 @@ fun OnlineSalesDetails(
             ) {
                 Text(
                     text = currentOrder.collectionMethod,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
             }
         }
@@ -467,6 +738,8 @@ fun OnlineSalesDetails(
                 Text(
                     text = "Payment Method",
                     style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
             }
             Divider(
@@ -482,7 +755,9 @@ fun OnlineSalesDetails(
             ) {
                 Text(
                     text = currentOrder.paymentMethod,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
             }
         }
@@ -492,6 +767,7 @@ fun OnlineSalesDetails(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(White1)
+                .clip(RoundedCornerShape(topStart = 35.dp, topEnd = 35.dp))
                 .padding(16.dp)
         ) {
             Row(
@@ -502,7 +778,9 @@ fun OnlineSalesDetails(
                 Text(
                     text = "Track Order",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -510,7 +788,22 @@ fun OnlineSalesDetails(
                 status = currentOrder.status,
                 statusDescription = currentOrder.statusDescription,
                 dateTime = currentOrder.orderDate,
-                statusHistory = currentOrder.statusHistory
+                statusHistory = currentOrder.statusHistory,
+                orderId = currentOrder.orderId,
+                paymentMethod = currentOrder.paymentMethod,
+                gcashPaymentId = currentOrder.gcashPaymentId,
+                collectionMethod = currentOrder.collectionMethod,
+                attachments = currentOrder.attachments,
+                onRefundAction = { isApproved, newStatus ->
+                    val updatedOrder = order.copy(
+                        status = newStatus,
+                        statusDescription = if (isApproved)
+                            "Refund request has been approved"
+                        else
+                            "Refund request has been rejected"
+                    )
+                    orderViewModel.updateOrder(updatedOrder)
+                }
             )
         }
     }
@@ -521,21 +814,29 @@ fun OrderStatus(
     status: String,
     statusDescription: String,
     dateTime: String,
-    statusHistory: List<StatusUpdate> = emptyList()
+    statusHistory: List<StatusUpdate> = emptyList(),
+    orderId: String,
+    paymentMethod: String,
+    gcashPaymentId: String,
+    collectionMethod: String = "",
+    attachments: List<String> = emptyList(),
+    onRefundAction: (Boolean, String) -> Unit = { _, _ -> }
 ) {
     val allStatuses = listOf(
         "Pending",
         "Confirmed",
-        "Rejected",
         "To Deliver",
         "To Receive",
-        "Completed"
+        "Completed",
+        "Refund Requested",
+        "Refund Approved",
+        "Refund Rejected"
     )
 
     val actualPath = buildList {
         add("Pending")
         statusHistory.forEach { update ->
-            if (!contains(update.status)) {
+            if (!contains(update.status) && allStatuses.contains(update.status)) {
                 add(update.status)
             }
         }
@@ -570,22 +871,137 @@ fun OrderStatus(
                 showInfo = true,
                 isCurrent = isCurrent,
                 isCompleted = isPast,
-                showLine = index < actualPath.lastIndex
+                showLine = index < actualPath.lastIndex,
+                orderId = orderId,
+                paymentMethod = paymentMethod,
+                gcashPaymentId = gcashPaymentId,
+                collectionMethod = collectionMethod,
+                attachments = attachments,
+                onRefundAction = onRefundAction
             )
         }
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
-private fun TimelineStep(
+fun TimelineStep(
     status: String,
     statusDescription: String,
     dateTime: String,
     showInfo: Boolean,
     isCurrent: Boolean,
     isCompleted: Boolean,
-    showLine: Boolean
+    showLine: Boolean,
+    orderId: String,
+    paymentMethod: String,
+    gcashPaymentId: String,
+    collectionMethod: String = "",
+    attachments: List<String> = emptyList(),
+    onRefundAction: (Boolean, String) -> Unit = { _, _ -> }
 ) {
+    var selectedImageUrl by remember { mutableStateOf<Uri?>(null) }
+    var showRefundActionDialog by remember { mutableStateOf(false) }
+    var refundActionReason by remember { mutableStateOf("") }
+    var isApproving by remember { mutableStateOf(false) }
+
+    // Image preview dialog
+    if (selectedImageUrl != null) {
+        Dialog(
+            onDismissRequest = { selectedImageUrl = null },
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.White)
+            ) {
+                Image(
+                    painter = rememberImagePainter(
+                        data = selectedImageUrl,
+                        builder = {
+                            crossfade(true)
+                            scale(Scale.FIT)
+                        }
+                    ),
+                    contentDescription = "Full size image",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit
+                )
+
+                IconButton(
+                    onClick = { selectedImageUrl = null },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .size(32.dp)
+                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+    }
+
+    // Refund Action Dialog
+    if (showRefundActionDialog) {
+        AlertDialog(
+            onDismissRequest = { showRefundActionDialog = false },
+            title = {
+                Text(
+                    text = if (isApproving) "Approve Refund" else "Reject Refund",
+                    fontFamily = mintsansFontFamily
+                )
+            },
+            text = {
+                Text(
+                    text = if (isApproving)
+                        "Are you sure you want to approve this refund request?"
+                    else
+                        "Are you sure you want to reject this refund request?",
+                    fontFamily = mintsansFontFamily
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val newStatus = if (isApproving) "Refund Approved" else "Refund Rejected"
+                        onRefundAction(isApproving, newStatus)
+                        showRefundActionDialog = false
+                    }
+                ) {
+                    Text(
+                        text = "Confirm",
+                        fontFamily = mintsansFontFamily,
+                        color = Green1
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showRefundActionDialog = false }
+                ) {
+                    Text(
+                        text = "Cancel",
+                        fontFamily = mintsansFontFamily,
+                        color = Green1
+                    )
+                }
+            },
+            containerColor = White1
+        )
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -598,13 +1014,12 @@ private fun TimelineStep(
                 .wrapContentHeight()
                 .width(24.dp)
         ) {
-            // Status dot
             Box(
                 modifier = Modifier
                     .size(12.dp)
                     .background(
                         color = when {
-                            isCurrent || isCompleted -> Color(0xFF28403D)
+                            isCurrent || isCompleted -> Green1
                             else -> Color.Gray.copy(alpha = 0.3f)
                         },
                         shape = CircleShape
@@ -620,16 +1035,17 @@ private fun TimelineStep(
                 }
             }
 
-            // Dynamic vertical connecting line
             if (showLine) {
                 Spacer(modifier = Modifier.height(5.dp))
                 val lineHeight = if (showInfo) {
-                    val additionalHeight = if (statusDescription.isNotBlank() && dateTime.isNotBlank()) {
-                        60.dp
-                    } else {
-                        32.dp
+                    when {
+                        status == "Pending" && paymentMethod == "GCASH" -> 160.dp
+                        status == "To Receive" -> 160.dp
+                        status == "Refund Requested" -> 200.dp
+                        status == "Completed" && collectionMethod == "PICKUP" && attachments.isNotEmpty() -> 160.dp
+                        statusDescription.isNotBlank() && dateTime.isNotBlank() -> 60.dp
+                        else -> 32.dp
                     }
-                    additionalHeight
                 } else {
                     24.dp
                 }
@@ -638,7 +1054,7 @@ private fun TimelineStep(
                         .width(2.dp)
                         .height(lineHeight)
                         .background(
-                            color = if (isCompleted) Color(0xFF28403D)
+                            color = if (isCompleted) Green1
                             else Color.Gray.copy(alpha = 0.3f)
                         )
                 )
@@ -651,30 +1067,167 @@ private fun TimelineStep(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            // Status text
             Text(
                 text = status,
                 style = MaterialTheme.typography.bodyMedium,
                 color = when {
-                    isCurrent -> Color(0xFF28403D)
-                    isCompleted -> Color(0xFF28403D)
+                    isCurrent -> Green1
+                    isCompleted -> Green1
                     else -> Color.Gray
-                }
+                },
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily
             )
 
-            if (showInfo && statusDescription.isNotBlank()) {
-                Text(
-                    text = statusDescription,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
-                )
-            }
+            if (showInfo) {
+                if (statusDescription.isNotBlank()) {
+                    Text(
+                        text = statusDescription,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray,
+                        fontFamily = mintsansFontFamily
+                    )
+                }
 
-            if (showInfo && dateTime.isNotBlank()) {
-                Text(
-                    text = dateTime,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
+                if (dateTime.isNotBlank()) {
+                    Text(
+                        text = dateTime,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray,
+                        fontFamily = mintsansFontFamily
+                    )
+                }
+
+                when (status) {
+                    "Pending" -> {
+                        if (paymentMethod == "GCASH") {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "GCash Payment Receipt:",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.Gray,
+                                fontFamily = mintsansFontFamily
+                            )
+                            DisplayAttachments(
+                                requestId = gcashPaymentId,
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                showTitle = false
+                            )
+                        }
+                    }
+                    "To Receive" -> {
+                        if (collectionMethod == "DELIVERY") {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Proof of Delivery:",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.Gray,
+                                fontFamily = mintsansFontFamily
+                            )
+                            DisplayAttachments(
+                                requestId = orderId,
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                showTitle = false
+                            )
+                        } else if (collectionMethod == "PICKUP" && attachments.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Proof of Pickup:",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.Gray,
+                                fontFamily = mintsansFontFamily
+                            )
+                            DisplayAttachments(
+                                requestId = orderId,
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                showTitle = false
+                            )
+                        }
+                    }
+                    "Refund Requested" -> {
+                        if (isCurrent) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            if (attachments.isNotEmpty()) {
+                                Text(
+                                    text = "Attached Images:",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Gray,
+                                    fontFamily = mintsansFontFamily
+                                )
+                                DisplayAttachments(
+                                    requestId = orderId,
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    showTitle = false
+                                )
+                            }
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Button(
+                                    onClick = {
+                                        isApproving = true
+                                        showRefundActionDialog = true
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Green1
+                                    ),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = "Approve Refund",
+                                        fontFamily = mintsansFontFamily
+                                    )
+                                }
+                                Button(
+                                    onClick = {
+                                        isApproving = false
+                                        showRefundActionDialog = true
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Cinnabar
+                                    ),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = "Reject Refund",
+                                        fontFamily = mintsansFontFamily
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    "Refund Approved", "Refund Rejected" -> {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = if (status == "Refund Approved")
+                                "Refund has been approved"
+                            else
+                                "Refund has been rejected",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (status == "Refund Approved") Green1 else Cinnabar,
+                            fontFamily = mintsansFontFamily
+                        )
+
+                        if (attachments.isNotEmpty()) {
+                            Text(
+                                text = "Refund Request Images:",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.Gray,
+                                fontFamily = mintsansFontFamily
+                            )
+                            DisplayAttachments(
+                                requestId = orderId,
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                showTitle = false
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -685,6 +1238,7 @@ fun UpdateStatusCard(
     status: String,
     statusDescription: String,
     dateTime: String,
+    collectionMethod: String,
     statusHistory: List<StatusUpdate> = emptyList(),
     onStatusUpdate: (String, String, List<StatusUpdate>) -> Unit = { _, _, _ -> }
 ) {
@@ -702,17 +1256,22 @@ fun UpdateStatusCard(
         "Rejected" to "Your order has been rejected.",
         "To Deliver" to "Your order is to be handed to courier.",
         "To Receive" to "Your order is ready to be picked up/ has been shipped by courier.",
-        "Completed" to "Your order has been completed.",
-        "Cancelled" to "Your order has been cancelled."
+        "Cancelled" to "Your order has been cancelled.",
+        "Completed" to "Your order has been completed."
     )
 
     fun getAvailableStatuses(currentStatus: String): List<String> {
         return when (currentStatus) {
             "Pending" -> listOf("Confirmed", "Rejected")
-            "Confirmed" -> listOf("To Deliver", "Cancelled")
+            "Confirmed" -> {
+                if (collectionMethod.equals("PICKUP", ignoreCase = true)) {
+                    listOf("To Receive", "Cancelled")
+                } else {
+                    listOf("To Deliver", "Cancelled")
+                }
+            }
             "To Deliver" -> listOf("To Receive")
-            "To Receive" -> listOf("Completed")
-            "Completed", "Cancelled", "Rejected" -> emptyList()
+            "To Receive", "Completed", "Cancelled", "Rejected" -> emptyList()
             else -> emptyList()
         }
     }
@@ -734,12 +1293,13 @@ fun UpdateStatusCard(
                     onValueChange = {},
                     label = { Text("Status") },
                     readOnly = true,
+                    enabled = true,  // Enable the status field
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
                         Icon(
                             imageVector = Icons.Default.ArrowDropDown,
                             contentDescription = "Dropdown",
-                            modifier = Modifier.clickable { expanded = true }
+                            modifier = Modifier.clickable { expanded = true }  // Enable clicking
                         )
                     }
                 )
@@ -748,7 +1308,6 @@ fun UpdateStatusCard(
                     onDismissRequest = { expanded = false }
                 ) {
                     val availableStatuses = getAvailableStatuses(status)
-
                     availableStatuses.forEach { option ->
                         DropdownMenuItem(
                             text = { Text(option) },
@@ -767,7 +1326,8 @@ fun UpdateStatusCard(
 
                                 val updatedHistory = statusHistory + newUpdate
                                 onStatusUpdate(option, statusDescriptionValue, updatedHistory)
-                            }
+                            },
+                            enabled = true
                         )
                     }
                 }
@@ -790,37 +1350,15 @@ fun UpdateStatusCard(
                 },
                 label = { Text("Description") },
                 readOnly = false,
-                modifier = Modifier.fillMaxWidth(),
-                trailingIcon = {
-                    if (isEditingDescription) {
-                        IconButton(
-                            onClick = {
-                                isEditingDescription = false
-                                statusDescriptionValue = statusOptions[statusValue] ?: ""
-
-                                val newUpdate = StatusUpdate(
-                                    status = statusValue,
-                                    statusDescription = statusDescriptionValue,
-                                    dateTime = currentDateTime
-                                )
-
-                                val updatedHistory = statusHistory + newUpdate
-                                onStatusUpdate(statusValue, statusDescriptionValue, updatedHistory)
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Refresh,
-                                contentDescription = "Reset to default"
-                            )
-                        }
-                    }
-                }
+                enabled = true,
+                modifier = Modifier.fillMaxWidth()
             )
 
             OutlinedTextField(
                 value = currentDateTime,
                 onValueChange = { },
                 readOnly = true,
+                enabled = false,
                 label = { Text("Date and Time") },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -851,7 +1389,9 @@ fun InStoreSalesDetails(sale: SalesData, navController: NavController) {
                 Text(
                     text = sale.productName,
                     style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
                 Icon(
                     Icons.Default.MoreVert,
@@ -868,13 +1408,15 @@ fun InStoreSalesDetails(sale: SalesData, navController: NavController) {
                 Text(
                     text = sale.salesNumber,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontFamily = mintsansFontFamily
                 )
 
                 Text(
                     text = sale.date,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -917,7 +1459,9 @@ fun InStoreSalesDetails(sale: SalesData, navController: NavController) {
             Text(
                 text = "Details",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily
             )
         }
         InStoreDetailsCard(sale = sale)
@@ -951,12 +1495,15 @@ private fun InStoreDetailsCard(sale: SalesData) {
                     Text(
                         text = "Sale",
                         style = MaterialTheme.typography.titleMedium,
-                        color = Green1
+                        color = Green1,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily
                     )
                     Text(
                         text = sale.date,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = mintsansFontFamily
                     )
                 }
 
@@ -970,23 +1517,29 @@ private fun InStoreDetailsCard(sale: SalesData) {
                     Column {
                         Text(
                             text = "QTY x Price",
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = mintsansFontFamily
                         )
                         Text(
                             text = "${sale.quantity} x PHP${String.format("%.2f", sale.price)}",
                             style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                     }
                     Column {
                         Text(
                             text = "Total",
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = mintsansFontFamily
                         )
                         Text(
                             text = "PHP${String.format("%.2f", sale.quantity * sale.price)}",
                             style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                     }
                 }
@@ -1006,17 +1559,22 @@ private fun InStorePriceInfoColumn(
         Text(
             text = title,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Bold,
+            fontFamily = mintsansFontFamily
         )
         Text(
             text = "PHP${String.format("%.2f", price)}",
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.Bold,
+            fontFamily = mintsansFontFamily
         )
         Text(
             text = "per $weightUnit",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontFamily = mintsansFontFamily
         )
     }
 }
@@ -1043,7 +1601,9 @@ private fun NotesCard(sale: SalesData){
                 Text(
                     text = "Notes",
                     style = MaterialTheme.typography.titleMedium,
-                    color = Green1
+                    color = Green1,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
                 Divider(color = Green4, thickness = 1.dp)
 
@@ -1054,7 +1614,9 @@ private fun NotesCard(sale: SalesData){
                     Column {
                         Text(
                             text = "Display notes here",
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                     }
                 }

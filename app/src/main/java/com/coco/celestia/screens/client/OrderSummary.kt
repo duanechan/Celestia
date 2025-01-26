@@ -1,6 +1,10 @@
 package com.coco.celestia.screens.client
 
 import android.net.Uri
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,17 +23,24 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,14 +48,17 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -53,6 +67,7 @@ import com.coco.celestia.R
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.coop.admin.EmptyOrders
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.service.AttachFileService
 import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green4
@@ -68,6 +83,7 @@ import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.StatusUpdate
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
@@ -93,6 +109,10 @@ fun OrderSummary(
 
     val facilityMethods = remember(groupedItems) {
         mutableStateMapOf<String, Pair<String, String>>()
+    }
+
+    val paymentRequestId = remember {
+        "GCASH-PAYMENT-${UUID.randomUUID()}"
     }
 
     LaunchedEffect(Unit) {
@@ -138,7 +158,8 @@ fun OrderSummary(
                             )
                         },
                         collectionMethod = facilityMethods[facilityName]?.first ?: "",
-                        paymentMethod = facilityMethods[facilityName]?.second ?: ""
+                        paymentMethod = facilityMethods[facilityName]?.second ?: "",
+                        gcashPaymentId = paymentRequestId
                     )
 
                     item {
@@ -157,6 +178,7 @@ fun OrderSummary(
                     item {
                         ClientPaymentMethod(
                             orderData = tempOrderData,
+                            orderViewModel = orderViewModel,
                             facilityData = facilityData,
                             onUpdate = { method ->
                                 facilityMethods[facilityName] = Pair(
@@ -207,7 +229,8 @@ fun OrderSummary(
                                         },
                                         client = "${userData.firstname} ${userData.lastname}",
                                         collectionMethod = methods.first,
-                                        paymentMethod = methods.second
+                                        paymentMethod = methods.second,
+                                        gcashPaymentId = paymentRequestId
                                     )
                                 )
                             }
@@ -589,9 +612,17 @@ fun ClientCollectionMethod(
 @Composable
 fun ClientPaymentMethod(
     orderData: OrderData,
+    orderViewModel: OrderViewModel,
     facilityData: FacilityData?,
     onUpdate: (String) -> Unit
 ) {
+    var selectedFiles by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var isUploading by remember { mutableStateOf(false) }
+    var uploadProgress by remember { mutableStateOf(0f) }
+    var showUploadDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
     val enabledMethods = mutableListOf<Pair<String, String>>()
     if (!facilityData?.cashInstructions.isNullOrEmpty()) {
         enabledMethods.add(Constants.PAYMENT_CASH to facilityData!!.cashInstructions)
@@ -667,39 +698,70 @@ fun ClientPaymentMethod(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color.Gray
                             )
+                            if (method == Constants.PAYMENT_GCASH) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Button(
+                                    onClick = { showUploadDialog = true },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Green1
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("Upload GCash Receipt")
+                                }
+                            }
                         }
                     } else {
                         var selectedMethod by remember { mutableStateOf(orderData.paymentMethod) }
                         enabledMethods.forEach { (method, description) ->
-                            Row(
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable {
-                                        selectedMethod = method
-                                        onUpdate(selectedMethod)
-                                    }
-                                    .padding(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                    .padding(8.dp)
                             ) {
-                                RadioButton(
-                                    selected = selectedMethod == method,
-                                    onClick = {
-                                        selectedMethod = method
-                                        onUpdate(selectedMethod)
-                                    },
-                                    colors = RadioButtonDefaults.colors(selectedColor = Green1)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Column {
-                                    Text(
-                                        text = method,
-                                        style = MaterialTheme.typography.bodyMedium
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            selectedMethod = method
+                                            onUpdate(selectedMethod)
+                                        },
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    RadioButton(
+                                        selected = selectedMethod == method,
+                                        onClick = {
+                                            selectedMethod = method
+                                            onUpdate(selectedMethod)
+                                        },
+                                        colors = RadioButtonDefaults.colors(selectedColor = Green1)
                                     )
-                                    Text(
-                                        text = description,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color.Gray
-                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column {
+                                        Text(
+                                            text = method,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        Text(
+                                            text = description,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color.Gray
+                                        )
+                                    }
+                                }
+
+                                if (method == Constants.PAYMENT_GCASH &&
+                                    selectedMethod == method) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Button(
+                                        onClick = { showUploadDialog = true },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Green1
+                                        ),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("Upload GCash Receipt")
+                                    }
                                 }
                             }
                             if (method != enabledMethods.last().first) {
@@ -714,6 +776,232 @@ fun ClientPaymentMethod(
                 }
             }
         }
+    }
+
+    if (showUploadDialog) {
+        AlertDialog(
+            onDismissRequest = { showUploadDialog = false },
+            title = { Text("Upload GCash Payment Receipt") },
+            text = {
+                Column {
+                    val launcher = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.GetMultipleContents()
+                    ) { uris: List<Uri>? ->
+                        uris?.let { newUris ->
+                            if (newUris.size + selectedFiles.size > 1) {
+                                Toast.makeText(
+                                    context,
+                                    "Only one receipt image allowed",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@let
+                            }
+
+                            val imageUris = newUris.filter { uri ->
+                                val type = context.contentResolver.getType(uri)
+                                type?.startsWith("image/") == true
+                            }
+
+                            if (imageUris.isEmpty()) {
+                                Toast.makeText(
+                                    context,
+                                    "Please select an image file",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@let
+                            }
+
+                            val oversizedFiles = imageUris.filter { uri ->
+                                context.contentResolver.openInputStream(uri)?.use {
+                                    it.available() > 5 * 1024 * 1024 // 5MB
+                                } ?: false
+                            }
+
+                            if (oversizedFiles.isNotEmpty()) {
+                                Toast.makeText(
+                                    context,
+                                    "Image exceeds 5MB limit",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@let
+                            }
+
+                            selectedFiles = imageUris
+                        }
+                    }
+
+                    selectedFiles.forEach { uri ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Green1.copy(alpha = 0.1f))
+                                .padding(8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.image),
+                                    contentDescription = "Receipt",
+                                    tint = Green1,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Payment Receipt",
+                                    color = Green1,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            IconButton(
+                                onClick = { selectedFiles = emptyList() }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Remove",
+                                    tint = Green1
+                                )
+                            }
+                        }
+                    }
+
+                    if (selectedFiles.isEmpty()) {
+                        Button(
+                            onClick = { launcher.launch("image/*") },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Green4,
+                                contentColor = Green1
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Add Receipt"
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Upload Receipt")
+                            }
+                        }
+                    }
+
+                    Text(
+                        text = "Please upload GCash payment receipt (max 5MB)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    if (isUploading) {
+                        LinearProgressIndicator(
+                            progress = uploadProgress,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (selectedFiles.isEmpty()) {
+                            Toast.makeText(
+                                context,
+                                "Please upload payment receipt",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@TextButton
+                        }
+
+                        isUploading = true
+                        try {
+                            val fileList = selectedFiles.map { uri ->
+                                val timestamp = System.currentTimeMillis()
+                                uri to AttachFileService.getFileName(uri)
+                            }
+
+                            scope.launch {
+                                AttachFileService.uploadMultipleAttachments(
+                                    requestId = orderData.gcashPaymentId,
+                                    files = fileList,
+                                    onProgress = { progress ->
+                                        uploadProgress = progress
+                                    }
+                                ) { success ->
+                                    if (success) {
+                                        val updatedOrder = orderData.copy(
+                                            statusDescription = "Payment proof submitted, waiting for confirmation",
+                                            statusHistory = orderData.statusHistory + StatusUpdate(
+                                                status = "Pending",
+                                                statusDescription = "Payment proof submitted, waiting for confirmation",
+                                                dateTime = getCurrentDateTime()
+                                            ),
+                                            attachments = fileList.map { it.second },
+                                            gcashPaymentId = orderData.gcashPaymentId
+                                        )
+                                        Log.d("GcashPayment", "Updating order with existing gcashPaymentId: ${orderData.gcashPaymentId}")
+                                        orderViewModel.updateOrder(updatedOrder)
+                                        isUploading = false
+                                        showUploadDialog = false
+
+                                        Toast.makeText(
+                                            context,
+                                            "Payment proof submitted successfully",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    } else {
+                                        isUploading = false
+                                        Toast.makeText(
+                                            context,
+                                            "Failed to upload receipt",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            isUploading = false
+                            Toast.makeText(
+                                context,
+                                "Error processing files: ${e.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    },
+                    enabled = !isUploading
+                ) {
+                    if (isUploading) {
+                        CircularProgressIndicator(
+                            color = Green1,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else {
+                        Text("Submit Payment")
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        selectedFiles = emptyList()
+                        showUploadDialog = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 

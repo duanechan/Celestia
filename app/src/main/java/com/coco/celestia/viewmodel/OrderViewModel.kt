@@ -262,11 +262,13 @@ class OrderViewModel : ViewModel() {
                 updatedBy = ""
             )
 
+            // Preserve existing gcashPaymentId if it exists
             val orderWithTimestamp = order.copy(
                 orderDate = formattedDisplayDate,
                 timestamp = timestamp,
                 statusDescription = statusDescription,
-                statusHistory = listOf(initialStatus)
+                statusHistory = listOf(initialStatus),
+                gcashPaymentId = order.gcashPaymentId.ifEmpty { "" }  // Preserve existing gcashPaymentId
             )
 
             try {
@@ -358,7 +360,8 @@ class OrderViewModel : ViewModel() {
 
                                                 val updatedHistory = existingHistory + newStatusUpdate
                                                 val orderWithHistory = updatedOrderData.copy(
-                                                    statusHistory = updatedHistory
+                                                    statusHistory = updatedHistory,
+                                                    gcashPaymentId = updatedOrderData.gcashPaymentId
                                                 )
 
                                                 order.ref.setValue(orderWithHistory)
@@ -495,90 +498,6 @@ class OrderViewModel : ViewModel() {
             "Cancelled" -> "Your order has been cancelled."
             "Return/Refund" -> "Your order is being processed for return/refund."
             else -> "Status updated to $status"
-        }
-    }
-
-    fun cancelOrder(orderId: String) {
-        viewModelScope.launch {
-            _orderState.value = OrderState.LOADING
-            database.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (snapshot.exists()) {
-                        for (user in snapshot.children) {
-                            var found = false
-                            val orders = user.children
-                            for (order in orders) {
-                                val currentOrderId =
-                                    order.child("orderId").getValue(String::class.java)
-                                if (currentOrderId == orderId) {
-                                    order.ref.child("status").setValue("CANCELLED")
-                                        .addOnSuccessListener {
-                                            _orderState.value = OrderState.SUCCESS
-                                        }
-                                        .addOnFailureListener { exception ->
-                                            _orderState.value = OrderState.ERROR(
-                                                exception.message ?: "Unknown error"
-                                            )
-                                        }
-                                    found = true
-                                    break
-                                }
-                            }
-                            if (found) {
-                                break
-                            }
-                        }
-                    } else {
-                        _orderState.value = OrderState.EMPTY
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    _orderState.value = OrderState.ERROR(error.message)
-                }
-            })
-        }
-    }
-
-    fun markOrderReceived(orderId: String) {
-        viewModelScope.launch {
-            _orderState.value = OrderState.LOADING
-            database.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (snapshot.exists()) {
-                        for (user in snapshot.children) {
-                            var found = false
-                            val orders = user.children
-                            for (order in orders) {
-                                val currentOrderId =
-                                    order.child("orderId").getValue(String::class.java)
-                                if (currentOrderId == orderId) {
-                                    order.ref.child("status").setValue("RECEIVED")
-                                        .addOnSuccessListener {
-                                            _orderState.value = OrderState.SUCCESS
-                                        }
-                                        .addOnFailureListener { exception ->
-                                            _orderState.value = OrderState.ERROR(
-                                                exception.message ?: "Unknown error"
-                                            )
-                                        }
-                                    found = true
-                                    break
-                                }
-                            }
-                            if (found) {
-                                break
-                            }
-                        }
-                    } else {
-                        _orderState.value = OrderState.EMPTY
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    _orderState.value = OrderState.ERROR(error.message)
-                }
-            })
         }
     }
 

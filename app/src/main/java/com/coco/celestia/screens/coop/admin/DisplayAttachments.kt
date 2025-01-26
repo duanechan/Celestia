@@ -40,7 +40,8 @@ import com.coco.celestia.ui.theme.*
 @Composable
 fun DisplayAttachments(
     requestId: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showTitle: Boolean = true
 ) {
     var attachments by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
@@ -57,11 +58,13 @@ fun DisplayAttachments(
             .fillMaxWidth()
             .padding(horizontal = 12.dp)
     ) {
-        Text(
-            text = "Attachments:",
-            modifier = Modifier
-                .padding(top = 12.dp, bottom = 4.dp)
-        )
+        if (showTitle) {
+            Text(
+                text = "Attachments:",
+                modifier = Modifier
+                    .padding(top = 12.dp, bottom = 4.dp)
+            )
+        }
 
         if (isLoading) {
             CircularProgressIndicator(
@@ -91,7 +94,9 @@ fun AttachmentItem(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val fileName = uri.lastPathSegment ?: "File"
+    val fileName = uri.lastPathSegment?.let { path ->
+        path.split("/").lastOrNull() ?: "File"
+    } ?: "File"
 
     Row(
         modifier = modifier
@@ -122,14 +127,14 @@ fun AttachmentItem(
             painter = painterResource(id = R.drawable.attachfile),
             contentDescription = "Attachment",
             modifier = Modifier.size(24.dp),
-            colorFilter = ColorFilter.tint(Green4)
+            colorFilter = ColorFilter.tint(Green1)
         )
 
         Spacer(modifier = Modifier.width(8.dp))
 
         Text(
             text = fileName,
-            color = Green4,
+            color = Green1,
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
