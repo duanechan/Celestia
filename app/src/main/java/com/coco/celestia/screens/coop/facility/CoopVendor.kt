@@ -52,6 +52,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.screens.`object`.Screen
@@ -88,7 +89,7 @@ fun Vendors(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CoopBackground)
+            .background(White2)
     ) {
         when (facilityState) {
             is FacilityState.LOADING -> {
@@ -259,7 +260,7 @@ private fun VendorItem(
             .fillMaxWidth()
             .padding(top = 16.dp, bottom = 5.dp, start = 16.dp, end = 16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = White1
+            containerColor = Green4
         )
     ) {
         Column(
@@ -280,14 +281,17 @@ private fun VendorItem(
                         style = MaterialTheme.typography.titleMedium,
                         color = Green1,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily
                     )
                     Text(
                         text = vendor.email,
                         style = MaterialTheme.typography.bodyMedium,
                         color = Green1,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        fontFamily = mintsansFontFamily
                     )
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -317,7 +321,9 @@ private fun VendorItem(
                                 MaterialTheme.colorScheme.primary
                             else
                                 MaterialTheme.colorScheme.error,
-                            modifier = Modifier.alpha(if (animateStatus) 0.7f else 1f)
+                            modifier = Modifier.alpha(if (animateStatus) 0.7f else 1f),
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                     }
                 }
@@ -354,7 +360,6 @@ fun VendorDetailsScreen(
                                 onNavigateUp()
                             },
                             onError = {
-                                // Could add a snackbar here to show the error
                                 showDeleteDialog = false
                             }
                         )

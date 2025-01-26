@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -213,7 +214,8 @@ fun CoopDashboard(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Normal,
                         textAlign = TextAlign.Start,
-                        color = DarkGreen
+                        color = DarkGreen,
+                        fontFamily = mintsansFontFamily
                     )
 
                     userData?.let { user ->
@@ -223,7 +225,8 @@ fun CoopDashboard(
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Start,
                             color = DarkGreen,
-                            modifier = Modifier.padding(top = 8.dp)
+                            modifier = Modifier.padding(top = 8.dp),
+                            fontFamily = mintsansFontFamily
                         )
                     }
                 }
@@ -231,8 +234,9 @@ fun CoopDashboard(
 
             Text(
                 text = "Items",
-                fontWeight = FontWeight.Medium,
                 fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily,
                 color = Green1,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
@@ -268,8 +272,9 @@ fun CoopDashboard(
 
             Text(
                 text = "Stock Alerts",
-                fontWeight = FontWeight.Medium,
                 fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily,
                 color = Green1,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
@@ -289,9 +294,10 @@ fun CoopDashboard(
 
             Text(
                 text = "Order Statuses",
-                fontWeight = FontWeight.Medium,
                 fontSize = 16.sp,
                 color = Green1,
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
@@ -322,7 +328,8 @@ fun LowStockDialog(
                 Text(
                     text = "Low Stock Alert",
                     fontWeight = FontWeight.Bold,
-                    color = Green1
+                    color = Green1,
+                    fontFamily = mintsansFontFamily
                 )
                 IconButton(onClick = onDismiss) {
                     Icon(
@@ -334,23 +341,35 @@ fun LowStockDialog(
             }
         },
         text = {
-            Column {
-                if (products.isNotEmpty()) {
-                    products.forEach { product ->
-                        LowStockCard(
-                            label = product.name,
-                            reorderPoint = "Reorder Point: ${product.reorderPoint}",
-                            currentStock = "Current Stock: ${product.quantity}"
-                        )
+            Box(
+                modifier = Modifier
+                    .height(300.dp) // Fixed height
+                    .fillMaxWidth()
+            ) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (products.isNotEmpty()) {
+                        items(products) { product ->
+                            LowStockCard(
+                                label = product.name,
+                                reorderPoint = "Reorder Point: ${product.reorderPoint}",
+                                currentStock = "Current Stock: ${product.quantity}"
+                            )
+                        }
+                    } else {
+                        item {
+                            Text(
+                                text = "No low stock products available.",
+                                fontSize = 14.sp,
+                                fontFamily = mintsansFontFamily,
+                                color = Color.Gray,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(vertical = 16.dp)
+                            )
+                        }
                     }
-                } else {
-                    Text(
-                        text = "No low stock products available.",
-                        fontSize = 14.sp,
-                        color = Color.Gray,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(vertical = 16.dp)
-                    )
                 }
             }
         },
@@ -384,7 +403,8 @@ fun LowStockCard(label: String, reorderPoint: String, currentStock: String) {
                     text = label,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.DarkGray
+                    color = Color.DarkGray,
+                    fontFamily = mintsansFontFamily
                 )
                 Spacer(modifier = Modifier.size(8.dp))
                 Text(
@@ -395,7 +415,9 @@ fun LowStockCard(label: String, reorderPoint: String, currentStock: String) {
                 Text(
                     text = currentStock,
                     fontSize = 14.sp,
-                    color = if (currentStock.contains("0")) Cinnabar else Color.Gray
+                    color = if (currentStock.contains("0")) Cinnabar else Color.Gray,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
             }
         }
@@ -423,13 +445,17 @@ fun ItemCard(label: String, count: String, onClick: () -> Unit = {}) {
             Text(
                 text = label,
                 fontSize = 14.sp,
-                color = Color.DarkGray
+                color = Color.DarkGray,
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = count,
                     fontSize = 14.sp,
-                    color = Color.DarkGray
+                    color = Color.DarkGray,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowRight,
@@ -478,7 +504,9 @@ fun OrderStatusCard (label: String, count: String, iconResId: Int) {
                     text = label,
                     fontSize = 14.sp,
                     color = Color.DarkGray,
-                    modifier = Modifier.padding(start = 12.dp)
+                    modifier = Modifier.padding(start = 12.dp),
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
             }
             Row(
@@ -487,7 +515,9 @@ fun OrderStatusCard (label: String, count: String, iconResId: Int) {
                 Text(
                     text = count,
                     fontSize = 14.sp,
-                    color = Color.DarkGray
+                    color = Color.DarkGray,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
             }
         }
@@ -518,7 +548,8 @@ fun ProductListDialog(
                     Text(
                         text = title,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
+                        fontSize = 16.sp,
+                        fontFamily = mintsansFontFamily
                     )
                     IconButton(onClick = onDismiss) {
                         Icon(Icons.Default.Close, "Close")
@@ -537,7 +568,8 @@ fun ProductListDialog(
                         Text(
                             text = "No Products Found",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = Color.Gray
+                            color = Color.Gray,
+                            fontFamily = mintsansFontFamily
                         )
                     }
                 } else {

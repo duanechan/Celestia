@@ -31,6 +31,7 @@ import com.coco.celestia.viewmodel.ReportsViewModel
 import com.coco.celestia.viewmodel.TransactionState
 import com.coco.celestia.viewmodel.TransactionViewModel
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.ContextCompat
 import com.coco.celestia.screens.`object`.Screen
@@ -107,7 +108,7 @@ fun CoopReports(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CoopBackground)
+            .background(White2)
     ) {
         when (facilityState) {
             FacilityState.LOADING -> {
@@ -259,7 +260,7 @@ fun CoopReports(
                                 .fillMaxWidth()
                                 .padding(bottom = 16.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = White1
+                                containerColor = Green4
                             )
                         ) {
                             Column(
@@ -267,12 +268,15 @@ fun CoopReports(
                             ) {
                                 Text(
                                     text = "Current Facility",
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = mintsansFontFamily
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
                                     text = userFacility.name,
-                                    style = MaterialTheme.typography.bodyLarge
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontFamily = mintsansFontFamily
                                 )
                             }
                         }
@@ -283,7 +287,7 @@ fun CoopReports(
                                 .fillMaxWidth()
                                 .padding(bottom = 16.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = White1
+                                containerColor = Green4
                             )
                         ) {
                             Column(
@@ -291,7 +295,9 @@ fun CoopReports(
                             ) {
                                 Text(
                                     text = "Report Type",
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = mintsansFontFamily
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 reportTypes.forEach { type ->
@@ -303,7 +309,7 @@ fun CoopReports(
                                             selected = selectedReportType == type,
                                             onClick = { selectedReportType = type }
                                         )
-                                        Text(type)
+                                        Text(text = type, fontFamily = mintsansFontFamily)
                                     }
                                 }
                             }
@@ -315,7 +321,7 @@ fun CoopReports(
                                 .fillMaxWidth()
                                 .padding(bottom = 16.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = White1
+                                containerColor = Green4
                             )
                         ) {
                             Column(
@@ -323,7 +329,9 @@ fun CoopReports(
                             ) {
                                 Text(
                                     text = "Report Period",
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = mintsansFontFamily
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 periods.forEach { period ->
@@ -335,7 +343,7 @@ fun CoopReports(
                                             selected = selectedPeriod == period,
                                             onClick = { selectedPeriod = period }
                                         )
-                                        Text(period)
+                                        Text(text = period, fontFamily = mintsansFontFamily)
                                     }
                                 }
                             }
@@ -348,7 +356,7 @@ fun CoopReports(
                                 .padding(bottom = 16.dp)
                                 .clickable { showTransactionsDialog = true },
                             colors = CardDefaults.cardColors(
-                                containerColor = White1
+                                containerColor = Green4
                             )
                         ) {
                             Row(
@@ -361,7 +369,9 @@ fun CoopReports(
                                 Text(
                                     text = "View Report Summary",
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = mintsansFontFamily
                                 )
                                 Icon(
                                     imageVector = Icons.Default.KeyboardArrowRight,

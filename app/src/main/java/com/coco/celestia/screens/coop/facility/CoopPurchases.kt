@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,6 +20,7 @@ import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -58,7 +58,7 @@ fun CoopPurchases(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CoopBackground)
+            .background(White2)
     ) {
         when (facilityState) {
             is FacilityState.LOADING -> {
@@ -292,7 +292,7 @@ fun PurchaseOrderCard(
         onClick = onClick,
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = White1
+            containerColor = Green4
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp
@@ -310,12 +310,16 @@ fun PurchaseOrderCard(
                 Text(
                     text = purchaseOrder.vendor.ifBlank { "No Vendor Yet" },
                     style = MaterialTheme.typography.titleMedium,
-                    color = Green1
+                    color = Green1,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
                 Text(
                     text = "PHP${calculateTotalAmount(purchaseOrder.items)}",
                     style = MaterialTheme.typography.titleMedium,
-                    color = Green1
+                    color = Green1,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -328,7 +332,8 @@ fun PurchaseOrderCard(
                 Text(
                     text = "${purchaseOrder.dateAdded} • ${purchaseOrder.purchaseNumber}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -339,16 +344,11 @@ fun PurchaseOrderCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-//                Text(
-//                    text = "Reference #: ${purchaseOrder.referenceNumber}",
-//                    style = MaterialTheme.typography.bodySmall,
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant
-//                )
-
                 Text(
                     text = "Date of Purchase: ${purchaseOrder.dateOfPurchase}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily = mintsansFontFamily
                 )
             }
         }
@@ -393,7 +393,8 @@ fun PurchaseOrderDetailsScreen(
                         Text(
                             text = (purchaseOrderState as PurchaseOrderState.ERROR).message,
                             color = MaterialTheme.colorScheme.error,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            fontFamily = mintsansFontFamily
                         )
                         Button(
                             onClick = onNavigateUp,
@@ -589,7 +590,9 @@ fun PurchaseDetails(
                 Text(
                     text = purchaseOrder.purchaseNumber,
                     style = MaterialTheme.typography.titleLarge,
-                    color = Green1
+                    color = Green1,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
 
                 Box {
@@ -644,14 +647,17 @@ fun PurchaseDetails(
                 style = MaterialTheme.typography.titleLarge,
                 color = Green1,
                 textDecoration = TextDecoration.Underline,
-                modifier = Modifier.padding(top = 16.dp)
+                modifier = Modifier.padding(top = 16.dp),
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily
             )
 
             Text(
                 text = "Vendor",
                 style = MaterialTheme.typography.titleSmall,
                 color = Green1,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = 8.dp),
+                fontFamily = mintsansFontFamily
             )
 
 //            Text(
@@ -665,13 +671,17 @@ fun PurchaseDetails(
                 text = "Total Amount",
                 style = MaterialTheme.typography.titleMedium,
                 color = Green1,
-                modifier = Modifier.padding(top = 16.dp)
+                modifier = Modifier.padding(top = 16.dp),
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily
             )
 
             Text(
                 text = "PHP${calculateTotalAmount(purchaseOrder.items)}",
                 style = MaterialTheme.typography.headlineMedium,
-                color = Green1
+                color = Green1,
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily
             )
 
             // Order Date Row
@@ -684,12 +694,14 @@ fun PurchaseDetails(
                 Text(
                     text = "Date Added",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Green1
+                    color = Green1,
+                    fontFamily = mintsansFontFamily
                 )
                 Text(
                     text = purchaseOrder.dateAdded,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Green1
+                    color = Green1,
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -703,12 +715,14 @@ fun PurchaseDetails(
                 Text(
                     text = "Date of Purchase",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Green1
+                    color = Green1,
+                    fontFamily = mintsansFontFamily
                 )
                 Text(
                     text = purchaseOrder.dateOfPurchase,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Green1
+                    color = Green1,
+                    fontFamily = mintsansFontFamily
                 )
             }
         }
@@ -725,7 +739,9 @@ fun PurchaseDetails(
             Text(
                 text = "Details",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily
             )
         }
 
@@ -760,7 +776,9 @@ private fun Details(purchaseOrder: PurchaseOrder) {
                     Text(
                         text = "Items",
                         style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        modifier = Modifier.padding(bottom = 8.dp),
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily
                     )
                     Divider(modifier = Modifier.padding(vertical = 16.dp), color = Green4)
                     purchaseOrder.items.forEach { item ->
@@ -777,11 +795,14 @@ private fun Details(purchaseOrder: PurchaseOrder) {
                     ) {
                         Text(
                             text = "Sub Total",
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontFamily = mintsansFontFamily
                         )
                         Text(
                             text = "PHP${calculateTotalAmount(purchaseOrder.items)}",
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                     }
                     Row(
@@ -790,11 +811,14 @@ private fun Details(purchaseOrder: PurchaseOrder) {
                     ) {
                         Text(
                             text = "Total",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                         Text(
                             text = "PHP${calculateTotalAmount(purchaseOrder.items)}",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            fontFamily = mintsansFontFamily
                         )
                     }
                 }
@@ -820,17 +844,21 @@ private fun ItemRow(item: PurchaseOrderItem) {
             Column {
                 Text(
                     text = item.itemName,
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
                 Text(
                     text = "${item.quantity} x PHP${String.format("%.2f", item.rate)}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily = mintsansFontFamily
                 )
             }
             Text(
                 text = "PHP${String.format("%,.2f", item.quantity * item.rate)}",
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                fontFamily = mintsansFontFamily
             )
         }
     }

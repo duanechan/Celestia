@@ -1,7 +1,5 @@
 package com.coco.celestia.screens.client
 
-import android.net.Uri
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,10 +26,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -41,23 +39,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import coil.annotation.ExperimentalCoilApi
-import coil.compose.rememberImagePainter
-import com.coco.celestia.R
 import com.coco.celestia.screens.coop.facility.ItemCard
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.OrderData
-import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -228,6 +219,9 @@ fun OrderCard(
     index: String,
     navController: NavController
 ) {
+    val showAllItems = order.orderData.size <= 2
+    val displayItems = if (showAllItems) order.orderData else order.orderData.take(2)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -242,37 +236,42 @@ fun OrderCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            // Order ID and Date
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Order ID: $index",
+                    text = index,
                     style = MaterialTheme.typography.titleMedium,
-                    color = Green1
+                    color = Green1,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
                 Text(
                     text = order.orderDate,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    color = Color.Gray,
+                    fontFamily = mintsansFontFamily
                 )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Order Status and Item Count
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = "Items: ${order.orderData.size}",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
                 Text(
                     text = order.status,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -282,9 +281,24 @@ fun OrderCard(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            // Items in the Order
-            order.orderData.forEach { product ->
+            displayItems.forEach { product ->
                 ItemCard(product)
+            }
+
+            if (!showAllItems) {
+                TextButton(
+                    onClick = {
+                        navController.navigate(Screen.ClientOrderDetails.createRoute(order.orderId))
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "See All",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Green1,
+                        fontFamily = mintsansFontFamily
+                    )
+                }
             }
 
             Divider(
@@ -300,12 +314,16 @@ fun OrderCard(
                 Text(
                     text = order.collectionMethod,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
                 Text(
                     text = order.paymentMethod,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -317,7 +335,8 @@ fun OrderCard(
                     text = "Total: PHP ${order.orderData.sumOf { it.price }}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Green1
+                    color = Green1,
+                    fontFamily = mintsansFontFamily
                 )
             }
         }

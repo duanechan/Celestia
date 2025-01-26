@@ -1,7 +1,7 @@
 package com.coco.celestia.screens.coop.facility
 
+import android.net.Uri
 import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -29,7 +29,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -41,14 +40,13 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -57,8 +55,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -67,14 +65,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
-import com.coco.celestia.viewmodel.model.FacilityData
 import com.coco.celestia.viewmodel.model.ProductData
 
 @Composable
@@ -600,86 +600,140 @@ fun NoFacilityScreen() {
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun ProductCard(
     product: ProductData,
     onClick: () -> Unit
 ) {
+    var productImage by remember { mutableStateOf<Uri?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+
+    DisposableEffect(product.productId) {
+        isLoading = true
+        ImageService.fetchProductImage(product.productId) { uri ->
+            productImage = uri
+            isLoading = false
+        }
+        onDispose { }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .semantics { testTag = "android:id/ProductCard" },
         colors = CardDefaults.cardColors(
-            containerColor = White1
+            containerColor = Green4
         )
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Product Image Card
+            Card(
+                modifier = Modifier.size(60.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White)
             ) {
-                Text(
-                    text = product.name.split(" ").joinToString(" ") {
-                        it.lowercase().replaceFirstChar { char -> char.uppercase() }
-                    },
-                    color = Green1,
-                    modifier = Modifier.semantics { testTag = "android:id/ProductName" }
-                )
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (product.isActive) Green4 else Color.Red.copy(alpha = 0.1f)
-                        ),
-                        modifier = Modifier.semantics { testTag = "android:id/ProductStatus" }
-                    ) {
+                    if (isLoading || productImage == null) {
                         Text(
-                            text = if (product.isActive) "Active" else "Inactive",
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            color = if (product.isActive) Green1 else Color.Red
+                            text = "+ Add\nImage",
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodySmall
                         )
-                    }
-
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = White1
-                        ),
-                        border = BorderStroke(
-                            width = 1.dp,
-                            color = Green2
-                        ),
-                        modifier = Modifier.semantics { testTag = "android:id/ProductLocation" }
-                    ) {
-                        Text(
-                            text = if (product.isInStore) "In-Store" else "Online",
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            color = Green2
+                    } else {
+                        Image(
+                            painter = rememberImagePainter(productImage),
+                            contentDescription = product.name,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
                         )
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Quantity: ${product.quantity} ${product.weightUnit.lowercase()}",
-                color = Green1,
-                modifier = Modifier.semantics { testTag = "android:id/ProductQuantity" }
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "Price: ₱${product.price}",
-                color = Green1,
-                modifier = Modifier.semantics { testTag = "android:id/ProductPrice" }
-            )
+
+            // Product Details Column
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = product.name.split(" ").joinToString(" ") {
+                            it.lowercase().replaceFirstChar { char -> char.uppercase() }
+                        },
+                        color = Green1,
+                        modifier = Modifier.semantics { testTag = "android:id/ProductName" },
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily
+                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (product.isActive) Green3.copy(alpha = 0.5f) else Color.Red.copy(alpha = 0.1f)
+                            ),
+                            modifier = Modifier.semantics { testTag = "android:id/ProductStatus" }
+                        ) {
+                            Text(
+                                text = if (product.isActive) "Active" else "Inactive",
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                color = if (product.isActive) Green1 else Color.Red,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = mintsansFontFamily
+                            )
+                        }
+
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = White1
+                            ),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = Green2
+                            ),
+                            modifier = Modifier.semantics { testTag = "android:id/ProductLocation" }
+                        ) {
+                            Text(
+                                text = if (product.isInStore) "In-Store" else "Online",
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                color = Green2,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = mintsansFontFamily
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "${product.quantity} ${product.weightUnit.lowercase()}",
+                    color = Green1,
+                    modifier = Modifier.semantics { testTag = "android:id/ProductQuantity" },
+                    fontFamily = mintsansFontFamily
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "₱${product.price}",
+                    color = Green1,
+                    modifier = Modifier.semantics { testTag = "android:id/ProductPrice" },
+                    fontFamily = mintsansFontFamily
+                )
+            }
         }
     }
 }

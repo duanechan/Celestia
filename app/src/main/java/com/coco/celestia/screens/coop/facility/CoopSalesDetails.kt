@@ -232,6 +232,9 @@ fun OnlineSalesDetails(
     var expanded by remember { mutableStateOf(false) }
     var currentOrder by remember { mutableStateOf(order) }
 
+    // Check if the order status is final (Rejected or Cancelled)
+    val isStatusFinal = currentOrder.status == "Rejected" || currentOrder.status == "Cancelled"
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -257,9 +260,16 @@ fun OnlineSalesDetails(
                 Box {
                     Button(
                         onClick = { showDialog = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = Green1)
+                        enabled = !isStatusFinal,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Green1,
+                            disabledContainerColor = Color.Gray
+                        )
                     ) {
-                        Text("Update Status")
+                        Text(
+                            text = "Update Status",
+                            color = if (isStatusFinal) Color.LightGray else Color.White
+                        )
                     }
                 }
             }
@@ -286,13 +296,10 @@ fun OnlineSalesDetails(
                     confirmButton = {
                         TextButton(
                             onClick = {
-                                // Check if the status is being updated to "Completed"
                                 val previousStatus = order.status
                                 if (currentOrder.status == "Completed" && previousStatus != "Completed") {
-                                    // Record transaction for each product in the order
                                     recordOrderTransaction(currentOrder, facilityName, transactionViewModel)
                                 }
-
                                 orderViewModel.updateOrder(currentOrder)
                                 showDialog = false
                             }
@@ -519,52 +526,52 @@ fun OrderStatus(
     val allStatuses = listOf(
         "Pending",
         "Confirmed",
+        "Rejected",
         "To Deliver",
         "To Receive",
         "Completed"
     )
 
-    val currentIndex = allStatuses.indexOfFirst { it.equals(status, ignoreCase = true) }
+    val actualPath = buildList {
+        add("Pending")
+        statusHistory.forEach { update ->
+            if (!contains(update.status)) {
+                add(update.status)
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        allStatuses.forEachIndexed { index, currentStatus ->
-            val isCurrent = index == currentIndex
-            val isPast = index < currentIndex
+        actualPath.forEachIndexed { index, currentStatus ->
+            val isCurrent = currentStatus == status
+            val isPast = actualPath.indexOf(currentStatus) < actualPath.indexOf(status)
 
-            val statusUpdate = when {
-                isCurrent -> {
-                    statusHistory.findLast { it.status.equals(currentStatus, ignoreCase = true) }
-                        ?: StatusUpdate(
-                            status = status,
-                            statusDescription = statusDescription,
-                            dateTime = dateTime,
-                            updatedBy = ""
-                        )
-                }
-                isPast -> statusHistory.findLast {
-                    it.status.equals(currentStatus, ignoreCase = true)
-                }
-                else -> null
-            }
+            val statusUpdate = statusHistory.findLast { it.status.equals(currentStatus, ignoreCase = true) }
+                ?: if (isCurrent) {
+                    StatusUpdate(
+                        status = status,
+                        statusDescription = statusDescription,
+                        dateTime = dateTime,
+                        updatedBy = ""
+                    )
+                } else null
 
-            if (isCurrent || isPast) {
-                TimelineStep(
-                    status = currentStatus,
-                    statusDescription = when {
-                        isCurrent && statusUpdate?.statusDescription.isNullOrBlank() -> statusDescription
-                        else -> statusUpdate?.statusDescription ?: ""
-                    },
-                    dateTime = statusUpdate?.dateTime ?: dateTime,
-                    showInfo = true,
-                    isCurrent = isCurrent,
-                    isCompleted = isPast,
-                    showLine = index < allStatuses.lastIndex
-                )
-            }
+            TimelineStep(
+                status = currentStatus,
+                statusDescription = when {
+                    isCurrent && statusUpdate?.statusDescription.isNullOrBlank() -> statusDescription
+                    else -> statusUpdate?.statusDescription ?: ""
+                },
+                dateTime = statusUpdate?.dateTime ?: dateTime,
+                showInfo = true,
+                isCurrent = isCurrent,
+                isCompleted = isPast,
+                showLine = index < actualPath.lastIndex
+            )
         }
     }
 }
@@ -640,7 +647,6 @@ private fun TimelineStep(
 
         Spacer(modifier = Modifier.width(12.dp))
 
-        // Status details
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -674,8 +680,6 @@ private fun TimelineStep(
     }
 }
 
-
-@SuppressLint("DefaultLocale")
 @Composable
 fun UpdateStatusCard(
     status: String,
@@ -695,37 +699,21 @@ fun UpdateStatusCard(
     val statusOptions = mapOf(
         "Pending" to "Your order is pending confirmation.",
         "Confirmed" to "Your order has been confirmed.",
+        "Rejected" to "Your order has been rejected.",
         "To Deliver" to "Your order is to be handed to courier.",
         "To Receive" to "Your order is ready to be picked up/ has been shipped by courier.",
         "Completed" to "Your order has been completed.",
-        "Cancelled" to "Your order has been cancelled.",
-    )
-
-    val statusOrder = listOf(
-        "Pending",
-        "Confirmed",
-        "To Deliver",
-        "To Receive",
-        "Completed",
-        "Cancelled"
+        "Cancelled" to "Your order has been cancelled."
     )
 
     fun getAvailableStatuses(currentStatus: String): List<String> {
-        val currentIndex = statusOrder.indexOf(currentStatus)
-        if (currentIndex == -1) return emptyList()
-
-        if (currentStatus == "Cancelled" || currentStatus == "Completed") {
-            return emptyList()
-        }
-
-        val nextIndex = currentIndex + 1
-        if (nextIndex >= statusOrder.size - 1) {
-            return listOf("Completed")
-        }
-
         return when (currentStatus) {
-            "Pending", "Confirmed" -> listOf(statusOrder[nextIndex], "Cancelled")
-            else -> listOf(statusOrder[nextIndex])
+            "Pending" -> listOf("Confirmed", "Rejected")
+            "Confirmed" -> listOf("To Deliver", "Cancelled")
+            "To Deliver" -> listOf("To Receive")
+            "To Receive" -> listOf("Completed")
+            "Completed", "Cancelled", "Rejected" -> emptyList()
+            else -> emptyList()
         }
     }
 
@@ -778,7 +766,6 @@ fun UpdateStatusCard(
                                 )
 
                                 val updatedHistory = statusHistory + newUpdate
-
                                 onStatusUpdate(option, statusDescriptionValue, updatedHistory)
                             }
                         )
@@ -799,7 +786,6 @@ fun UpdateStatusCard(
                     )
 
                     val updatedHistory = statusHistory + newUpdate
-
                     onStatusUpdate(statusValue, newValue, updatedHistory)
                 },
                 label = { Text("Description") },
@@ -819,7 +805,6 @@ fun UpdateStatusCard(
                                 )
 
                                 val updatedHistory = statusHistory + newUpdate
-
                                 onStatusUpdate(statusValue, statusDescriptionValue, updatedHistory)
                             }
                         ) {

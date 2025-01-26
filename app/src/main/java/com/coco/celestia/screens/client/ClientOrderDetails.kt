@@ -25,27 +25,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,12 +48,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -225,7 +218,9 @@ fun SupportCenter() {
                 Text(
                     text = "Support Center",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
@@ -388,7 +383,9 @@ fun SupportCenterItemsCard(
             Text(
                 text = title,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily,
+                color = Green1
             )
         }
         if (showDivider) {
@@ -400,117 +397,133 @@ fun SupportCenterItemsCard(
     }
 }
 
-
-
 @SuppressLint("DefaultLocale")
 @Composable
 fun OrderDetailsSection(
     orderData: OrderData,
     facilityData: FacilityData
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        colors = CardDefaults.cardColors(containerColor = White1)
+    Column(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        // Separate card for OrderHeader
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            colors = CardDefaults.cardColors(containerColor = White1)
         ) {
             OrderHeader(orderData)
+        }
 
+        // Card for order details
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            colors = CardDefaults.cardColors(containerColor = White1)
+        ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(
-                    text = "Items (${orderData.orderData.size})",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-                Divider(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-                    thickness = 1.dp
-                )
-            }
-
-            // Scrollable section for products
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 320.dp) // Fixed height for exactly 2 items
-            ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                        .padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    items(orderData.orderData) { product ->
-                        ClientItemCard(product)
+                    Text(
+                        text = "Items (${orderData.orderData.size})",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily,
+                        modifier = Modifier.padding(top = 16.dp),
+                        color = Green1
+                    )
+                    Divider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                        thickness = 1.dp
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 320.dp)
+                ) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        items(orderData.orderData) { product ->
+                            ClientItemCard(product)
+                        }
                     }
                 }
-            }
 
-            // Total Amount
-            val totalAmount = orderData.orderData.sumOf { it.price * it.quantity }
-            Text(
-                text = "Total: PHP ${String.format("%.2f", totalAmount)}",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            )
+                val totalAmount = orderData.orderData.sumOf { it.price * it.quantity }
+                Text(
+                    text = "Total: PHP ${String.format("%.2f", totalAmount)}",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    fontFamily = mintsansFontFamily,
+                    fontWeight = FontWeight.Bold,
+                    color = Green1
+                )
+            }
         }
     }
 }
-
-
-
 
 @Composable
 private fun OrderHeader(orderData: OrderData) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(16.dp)
     ) {
-        // Order ID and Order Date Layout
-        Column(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Order ID: ${orderData.orderId}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = orderData.orderDate,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.End,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                )
-            }
+        val containerColor = when (orderData.status.lowercase()) {
+            "cancelled" -> Cinnabar
+            "completed" -> Green2
+            else -> Green1
         }
 
-        Divider(
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-            thickness = 1.dp,
-            modifier = Modifier.padding(top = 8.dp)
+        Text(
+            text = orderData.status,
+            style = MaterialTheme.typography.titleMedium,
+            color = White1,
+            fontFamily = mintsansFontFamily,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .background(
+                    color = containerColor,
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = orderData.orderId,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontFamily = mintsansFontFamily,
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
+
+        Text(
+            text = orderData.orderDate,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontFamily = mintsansFontFamily,
+            modifier = Modifier.padding(top = 4.dp)
         )
     }
 }
@@ -538,7 +551,7 @@ fun ClientItemCard(product: ProductData) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp),
+                .padding(16.dp),
             colors = CardDefaults.cardColors(containerColor = White2)
         ) {
             Column(
@@ -586,15 +599,22 @@ fun ClientItemCard(product: ProductData) {
                     ) {
                         Text(
                             text = product.name,
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily,
+                            color = Green1
                         )
                         Text(
                             text = "${product.quantity} ${product.weightUnit.lowercase()} x PHP ${String.format("%.2f", product.price)}",
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = mintsansFontFamily,
+                            color = Green1
                         )
                         Text(
                             text = "PHP ${String.format("%.2f", product.price * product.quantity)}",
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = mintsansFontFamily,
+                            color = Green1
                         )
                     }
                 }
@@ -617,18 +637,39 @@ fun ClientDetailsCollectionMethod(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
                 text = "Collection Method",
-                style = MaterialTheme.typography.titleMedium
+                color = Green1,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily
             )
 
-            Text(
-                text = orderData.collectionMethod,
-                style = MaterialTheme.typography.bodyMedium
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Image(
+                    painter = when (orderData.collectionMethod) {
+                        Constants.COLLECTION_PICKUP -> painterResource(id = R.drawable.pickup)
+                        Constants.COLLECTION_DELIVERY -> painterResource(id = R.drawable.delivery)
+                        else -> painterResource(id = R.drawable.warning)
+                    },
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    colorFilter = ColorFilter.tint(Green1)
+                )
+
+                Text(
+                    text = orderData.collectionMethod,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontSize = 16.sp,
+                    fontFamily = mintsansFontFamily
+                )
+            }
 
             Text(
                 text = when (orderData.collectionMethod) {
@@ -643,9 +684,11 @@ fun ClientDetailsCollectionMethod(
     }
 }
 
-
 @Composable
-fun ClientDetailsPaymentMethod(orderData: OrderData, facilityData: FacilityData) {
+fun ClientDetailsPaymentMethod(
+    orderData: OrderData,
+    facilityData: FacilityData
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -655,18 +698,39 @@ fun ClientDetailsPaymentMethod(orderData: OrderData, facilityData: FacilityData)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
                 text = "Payment Method",
-                style = MaterialTheme.typography.titleMedium
+                color = Green1,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily
             )
 
-            Text(
-                text = orderData.paymentMethod,
-                style = MaterialTheme.typography.bodyMedium
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Image(
+                    painter = when (orderData.paymentMethod) {
+                        Constants.PAYMENT_CASH -> painterResource(id = R.drawable.cash)
+                        Constants.PAYMENT_GCASH -> painterResource(id = R.drawable.gcash)
+                        else -> painterResource(id = R.drawable.warning)
+                    },
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    colorFilter = ColorFilter.tint(Green1)
+                )
+
+                Text(
+                    text = orderData.paymentMethod,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontSize = 16.sp,
+                    fontFamily = mintsansFontFamily
+                )
+            }
 
             Text(
                 text = when (orderData.paymentMethod) {
@@ -681,12 +745,12 @@ fun ClientDetailsPaymentMethod(orderData: OrderData, facilityData: FacilityData)
     }
 }
 
-
 @Composable
 fun TrackOrderSection(orderData: OrderData) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(topStart = 35.dp, topEnd = 35.dp))
             .background(White1)
             .padding(16.dp)
     ) {
@@ -698,7 +762,9 @@ fun TrackOrderSection(orderData: OrderData) {
             Text(
                 text = "Track Order",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground
+                color = Green1,
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily
             )
         }
 
@@ -708,7 +774,7 @@ fun TrackOrderSection(orderData: OrderData) {
             status = orderData.status,
             statusDescription = orderData.statusDescription,
             dateTime = orderData.orderDate,
-            statusHistory = orderData.statusHistory ?: emptyList()
+            statusHistory = orderData.statusHistory
         )
     }
 }
@@ -840,11 +906,9 @@ private fun ClientTimelineStep(
             Text(
                 text = status,
                 style = MaterialTheme.typography.bodyMedium,
-                color = when {
-                    isCurrent -> MaterialTheme.colorScheme.primary
-                    isCompleted -> MaterialTheme.colorScheme.primary
-                    else -> MaterialTheme.colorScheme.onSurfaceVariant
-                }
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily,
+                color = Green1
             )
 
             if (showInfo && statusDescription.isNotEmpty()) {
@@ -859,7 +923,8 @@ private fun ClientTimelineStep(
                 Text(
                     text = dateTime,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily = mintsansFontFamily
                 )
             }
         }

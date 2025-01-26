@@ -37,9 +37,7 @@ import coil.compose.rememberImagePainter
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.ImageService
-import com.coco.celestia.ui.theme.Green1
-import com.coco.celestia.ui.theme.White1
-import com.coco.celestia.ui.theme.mintsansFontFamily
+import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.OrderState
@@ -168,6 +166,7 @@ private fun InStoreSalesContentUI(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(White2)
                 .padding(16.dp)
         ) {
             Row(
@@ -346,7 +345,7 @@ private fun SalesCard(
                     .clickable {
                         navController.navigate(Screen.CoopSalesDetails.createRoute(sale.salesNumber))
                     },
-                colors = CardDefaults.cardColors(containerColor = White1)
+                colors = CardDefaults.cardColors(containerColor = Green4)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp)
@@ -358,11 +357,14 @@ private fun SalesCard(
                         Text(
                             text = "${sale.productName} (${sale.salesNumber})",
                             style = MaterialTheme.typography.titleMedium,
-                            color = Green1
+                            color = Green1,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                         Text(
                             text = sale.date,
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = mintsansFontFamily
                         )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
@@ -372,23 +374,28 @@ private fun SalesCard(
                     ) {
                         Text(
                             text = "${sale.quantity} ${sale.weightUnit}",
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = mintsansFontFamily
                         )
                         Text(
                             text = "₱${sale.price}",
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     if (sale.notes.isNotBlank()) {
                         Text(
-                            text = "Notes: ${sale.notes}",
-                            style = MaterialTheme.typography.bodyMedium
+                            text = sale.notes,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = mintsansFontFamily
                         )
                     } else {
                         Text(
                             text = "No note provided",
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = mintsansFontFamily
                         )
                     }
                 }
@@ -423,8 +430,6 @@ private fun OnlineSalesContentUI(
         OrderItem("Return/Refund", 0)
     )
 
-    val salesState by viewModel.salesState.observeAsState(SalesState.LOADING)
-    val salesData by viewModel.salesData.observeAsState(emptyList())
     val orderData by orderViewModel.orderData.observeAsState(emptyList())
     val orderState by orderViewModel.orderState.observeAsState(OrderState.LOADING)
 
@@ -440,13 +445,12 @@ private fun OnlineSalesContentUI(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp)
     ) {
         // Tabs
         Row(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
+                .background(Green4)
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             tabs.forEach { tab ->
@@ -456,6 +460,8 @@ private fun OnlineSalesContentUI(
                 ) {
                     TextButton(
                         onClick = { selectedTab = tab },
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(0.dp),
                         colors = ButtonDefaults.textButtonColors(
                             contentColor = if (selectedTab == tab) Green1
                             else MaterialTheme.colorScheme.onSurfaceVariant
@@ -478,7 +484,7 @@ private fun OnlineSalesContentUI(
                                 .fillMaxWidth()
                                 .height(2.dp)
                                 .background(
-                                    color = Green1,
+                                    color = White1,
                                     shape = RoundedCornerShape(1.dp)
                                 )
                         )
@@ -487,340 +493,355 @@ private fun OnlineSalesContentUI(
             }
         }
 
-        // Tab Content
-        when (selectedTab) {
-            "Orders" -> {
-                // Update status counters
-                statuses.forEach { order ->
-                    order.totalActivities = facilityOrders.count { it.status == order.status }
-                }
+        // Box wrapper for all content after tabs
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(White2)
+                .padding(horizontal = 16.dp)
+        ) {
+            // Tab Content
+            when (selectedTab) {
+                "Orders" -> {
+                    Column {
+                        // Update status counters
+                        statuses.forEach { order ->
+                            order.totalActivities = facilityOrders.count { it.status == order.status }
+                        }
 
-                // Status filters
-                LazyRow(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(statuses) { statusItem ->
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Button(
-                                onClick = { selectedOrderStatus = statusItem.status },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (selectedOrderStatus == statusItem.status)
-                                        White1
-                                    else
-                                        MaterialTheme.colorScheme.surface,
-                                    contentColor = if (selectedOrderStatus == statusItem.status)
-                                        MaterialTheme.colorScheme.onSurface
-                                    else
-                                        MaterialTheme.colorScheme.onSurfaceVariant
+                        // Status filters
+                        LazyRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(statuses) { statusItem ->
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Button(
+                                        onClick = { selectedOrderStatus = statusItem.status },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (selectedOrderStatus == statusItem.status)
+                                                Green4
+                                            else
+                                                MaterialTheme.colorScheme.surface,
+                                            contentColor = if (selectedOrderStatus == statusItem.status)
+                                                MaterialTheme.colorScheme.onSurface
+                                            else
+                                                MaterialTheme.colorScheme.onSurfaceVariant
+                                        ),
+                                        modifier = Modifier
+                                            .padding(4.dp)
+                                            .height(40.dp)
+                                    ) {
+                                        Text(
+                                            text = "${statusItem.status} (${statusItem.totalActivities})",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            fontFamily = mintsansFontFamily
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // Search and Sort
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 8.dp)
+                                    .height(48.dp),
+                                placeholder = { Text("Search orders...") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "Search",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                },
+                                trailingIcon = if (searchQuery.isNotEmpty()) {
+                                    {
+                                        IconButton(onClick = { searchQuery = "" }) {
+                                            Icon(
+                                                Icons.Default.Clear,
+                                                contentDescription = "Clear search",
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                } else null,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    cursorColor = Green1,
+                                    focusedBorderColor = Green1,
+                                    unfocusedBorderColor = Green1
                                 ),
-                                modifier = Modifier
-                                    .padding(4.dp)
-                                    .height(40.dp)
-                            ) {
-                                Text(
-                                    text = "${statusItem.status} (${statusItem.totalActivities})",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // Search and Sort
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 8.dp)
-                            .height(48.dp),
-                        placeholder = { Text("Search orders...") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                shape = RoundedCornerShape(8.dp),
+                                singleLine = true
                             )
-                        },
-                        trailingIcon = if (searchQuery.isNotEmpty()) {
-                            {
-                                IconButton(onClick = { searchQuery = "" }) {
-                                    Icon(
-                                        Icons.Default.Clear,
-                                        contentDescription = "Clear search",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+
+                            Box {
+                                IconButton(
+                                    onClick = { showSortDropdown = !showSortDropdown },
+                                    modifier = Modifier
+                                        .background(White1, CircleShape)
+                                        .size(48.dp)
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.sort),
+                                        contentDescription = "Sort",
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .padding(4.dp)
+                                    )
+                                }
+
+                                DropdownMenu(
+                                    expanded = showSortDropdown,
+                                    onDismissRequest = { showSortDropdown = false },
+                                    modifier = Modifier.background(White1)
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("Newest First") },
+                                        onClick = {
+                                            sortOption = "Newest First"
+                                            showSortDropdown = false
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Oldest First") },
+                                        onClick = {
+                                            sortOption = "Oldest First"
+                                            showSortDropdown = false
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("A-Z") },
+                                        onClick = {
+                                            sortOption = "A-Z"
+                                            showSortDropdown = false
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Z-A") },
+                                        onClick = {
+                                            sortOption = "Z-A"
+                                            showSortDropdown = false
+                                        }
                                     )
                                 }
                             }
-                        } else null,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            cursorColor = Green1,
-                            focusedBorderColor = Green1,
-                            unfocusedBorderColor = Green1
-                        ),
-                        shape = RoundedCornerShape(8.dp),
-                        singleLine = true
-                    )
-
-                    Box {
-                        IconButton(
-                            onClick = { showSortDropdown = !showSortDropdown },
-                            modifier = Modifier
-                                .background(White1, CircleShape)
-                                .size(48.dp)
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.sort),
-                                contentDescription = "Sort",
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .padding(4.dp)
-                            )
                         }
 
-                        DropdownMenu(
-                            expanded = showSortDropdown,
-                            onDismissRequest = { showSortDropdown = false },
-                            modifier = Modifier.background(White1)
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Newest First") },
-                                onClick = {
-                                    sortOption = "Newest First"
-                                    showSortDropdown = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Oldest First") },
-                                onClick = {
-                                    sortOption = "Oldest First"
-                                    showSortDropdown = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("A-Z") },
-                                onClick = {
-                                    sortOption = "A-Z"
-                                    showSortDropdown = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Z-A") },
-                                onClick = {
-                                    sortOption = "Z-A"
-                                    showSortDropdown = false
-                                }
-                            )
-                        }
-                    }
-                }
-
-                // Filter and sort orders
-                val filteredAndSortedOrders = facilityOrders
-                    .filter { order ->
-                        order.status == selectedOrderStatus &&
-                                (searchQuery.isBlank() || listOf(
-                                    order.orderId,
-                                    order.status,
-                                    order.collectionMethod,
-                                    order.paymentMethod
-                                ).any { field -> field.contains(searchQuery, ignoreCase = true) }
-                                        || order.orderData.any { product ->
-                                    listOf(
-                                        product.name,
-                                        product.price.toString(),
-                                        product.quantity.toString()
-                                    ).any { field -> field.contains(searchQuery, ignoreCase = true) }
-                                })
-                    }
-                    .sortedWith(
-                        when (sortOption) {
-                            "A-Z" -> compareBy { it.orderId }
-                            "Z-A" -> compareByDescending { it.orderId }
-                            "Newest First" -> compareByDescending { it.timestamp }
-                            "Oldest First" -> compareBy { it.timestamp }
-                            else -> compareByDescending { it.timestamp }
-                        }
-                    )
-
-                if (filteredAndSortedOrders.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 32.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ShoppingCart,
-                                contentDescription = "No Orders",
-                                modifier = Modifier.size(48.dp),
-                                tint = Green1
-                            )
-                            Text(
-                                text = "No orders found",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontFamily = mintsansFontFamily,
-                                color = Green1,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                } else {
-                    OrdersCard(
-                        filteredOrders = filteredAndSortedOrders,
-                        navController = navController,
-                        facilityName = facilityName
-                    )
-                }
-            }
-
-            "Sales" -> {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 8.dp)
-                            .height(48.dp),
-                        placeholder = { Text("Search sales...") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        },
-                        trailingIcon = if (searchQuery.isNotEmpty()) {
-                            {
-                                IconButton(onClick = { searchQuery = "" }) {
-                                    Icon(
-                                        Icons.Default.Clear,
-                                        contentDescription = "Clear search",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                        // Filter and sort orders
+                        val filteredAndSortedOrders = facilityOrders
+                            .filter { order ->
+                                order.status == selectedOrderStatus &&
+                                        (searchQuery.isBlank() || listOf(
+                                            order.orderId,
+                                            order.status,
+                                            order.collectionMethod,
+                                            order.paymentMethod
+                                        ).any { field -> field.contains(searchQuery, ignoreCase = true) }
+                                                || order.orderData.any { product ->
+                                            listOf(
+                                                product.name,
+                                                product.price.toString(),
+                                                product.quantity.toString()
+                                            ).any { field -> field.contains(searchQuery, ignoreCase = true) }
+                                        })
                             }
-                        } else null,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            cursorColor = Green1,
-                            focusedBorderColor = Green1,
-                            unfocusedBorderColor = Green1
-                        ),
-                        shape = RoundedCornerShape(8.dp),
-                        singleLine = true
-                    )
-
-                    Box {
-                        IconButton(
-                            onClick = { showSortDropdown = !showSortDropdown },
-                            modifier = Modifier
-                                .background(White1, CircleShape)
-                                .size(48.dp)
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.sort),
-                                contentDescription = "Sort",
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .padding(4.dp)
-                            )
-                        }
-
-                        DropdownMenu(
-                            expanded = showSortDropdown,
-                            onDismissRequest = { showSortDropdown = false },
-                            modifier = Modifier.background(White1)
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Newest First") },
-                                onClick = {
-                                    sortOption = "Newest First"
-                                    showSortDropdown = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Oldest First") },
-                                onClick = {
-                                    sortOption = "Oldest First"
-                                    showSortDropdown = false
-                                }
-                            )
-                        }
-                    }
-                }
-
-                when (orderState) {
-                    OrderState.LOADING -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = Green1)
-                        }
-                    }
-                    OrderState.EMPTY -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("No orders found")
-                        }
-                    }
-                    is OrderState.ERROR -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text((orderState as OrderState.ERROR).message)
-                        }
-                    }
-                    OrderState.SUCCESS -> {
-                        val completedOrders = facilityOrders
-                            .filter { order -> order.status == "Completed" }
                             .sortedWith(
                                 when (sortOption) {
+                                    "A-Z" -> compareBy { it.orderId }
+                                    "Z-A" -> compareByDescending { it.orderId }
                                     "Newest First" -> compareByDescending { it.timestamp }
                                     "Oldest First" -> compareBy { it.timestamp }
                                     else -> compareByDescending { it.timestamp }
                                 }
                             )
 
-                        if (completedOrders.isEmpty()) {
+                        if (filteredAndSortedOrders.isEmpty()) {
                             Box(
-                                modifier = Modifier.fillMaxSize(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 32.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = "No completed orders found",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ShoppingCart,
+                                        contentDescription = "No Orders",
+                                        modifier = Modifier.size(48.dp),
+                                        tint = Green1
+                                    )
+                                    Text(
+                                        text = "No orders found",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontFamily = mintsansFontFamily,
+                                        color = Green1,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
                         } else {
                             OrdersCard(
-                                filteredOrders = completedOrders,
+                                filteredOrders = filteredAndSortedOrders,
                                 navController = navController,
                                 facilityName = facilityName
                             )
+                        }
+                    }
+                }
+
+                "Sales" -> {
+                    Column {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 8.dp)
+                                    .height(48.dp),
+                                placeholder = { Text("Search sales...") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "Search",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                },
+                                trailingIcon = if (searchQuery.isNotEmpty()) {
+                                    {
+                                        IconButton(onClick = { searchQuery = "" }) {
+                                            Icon(
+                                                Icons.Default.Clear,
+                                                contentDescription = "Clear search",
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                } else null,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    cursorColor = Green1,
+                                    focusedBorderColor = Green1,
+                                    unfocusedBorderColor = Green1
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                singleLine = true
+                            )
+
+                            Box {
+                                IconButton(
+                                    onClick = { showSortDropdown = !showSortDropdown },
+                                    modifier = Modifier
+                                        .background(White1, CircleShape)
+                                        .size(48.dp)
+                                ) {
+                                    Image(
+                                        painter = painterResource(id = R.drawable.sort),
+                                        contentDescription = "Sort",
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .padding(4.dp)
+                                    )
+                                }
+
+                                DropdownMenu(
+                                    expanded = showSortDropdown,
+                                    onDismissRequest = { showSortDropdown = false },
+                                    modifier = Modifier.background(White1)
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("Newest First") },
+                                        onClick = {
+                                            sortOption = "Newest First"
+                                            showSortDropdown = false
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Oldest First") },
+                                        onClick = {
+                                            sortOption = "Oldest First"
+                                            showSortDropdown = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        when (orderState) {
+                            OrderState.LOADING -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(color = Green1)
+                                }
+                            }
+                            OrderState.EMPTY -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("No orders found")
+                                }
+                            }
+                            is OrderState.ERROR -> {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text((orderState as OrderState.ERROR).message)
+                                }
+                            }
+                            OrderState.SUCCESS -> {
+                                val completedOrders = facilityOrders
+                                    .filter { order -> order.status == "Completed" }
+                                    .sortedWith(
+                                        when (sortOption) {
+                                            "Newest First" -> compareByDescending { it.timestamp }
+                                            "Oldest First" -> compareBy { it.timestamp }
+                                            else -> compareByDescending { it.timestamp }
+                                        }
+                                    )
+
+                                if (completedOrders.isEmpty()) {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = "No completed orders found",
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                } else {
+                                    OrdersCard(
+                                        filteredOrders = completedOrders,
+                                        navController = navController,
+                                        facilityName = facilityName
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -866,8 +887,9 @@ fun OrderStatusesCard(
     facilityName: String,
     modifier: Modifier = Modifier
 ) {
-    // Get items for this facility
     val facilityItems = order.orderData.filter { it.type == facilityName }
+    val showAllItems = facilityItems.size <= 2
+    val displayItems = if (showAllItems) facilityItems else facilityItems.take(2)
 
     Card(
         modifier = modifier
@@ -876,7 +898,7 @@ fun OrderStatusesCard(
             .clickable {
                 navController.navigate(Screen.CoopOrderDetails.createRoute(orderId = order.orderId))
             },
-        colors = CardDefaults.cardColors(containerColor = White1)
+        colors = CardDefaults.cardColors(containerColor = Green4)
     ) {
         Column(
             modifier = Modifier.padding(12.dp)
@@ -890,11 +912,15 @@ fun OrderStatusesCard(
                     text = order.orderId,
                     fontSize = 13.sp,
                     style = MaterialTheme.typography.titleMedium,
-                    color = Green1
+                    color = Green1,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
                 Text(
                     text = order.orderDate,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontSize = 12.sp,
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -905,7 +931,9 @@ fun OrderStatusesCard(
                 Text(
                     text = order.client,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    color = Green1,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
                 Spacer(modifier = Modifier.height(4.dp))
             }
@@ -917,11 +945,15 @@ fun OrderStatusesCard(
             ) {
                 Text(
                     text = "Items: ${facilityItems.size}",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
                 Text(
                     text = order.status,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -931,7 +963,7 @@ fun OrderStatusesCard(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            facilityItems.forEach { item ->
+            displayItems.forEach { item ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -979,17 +1011,37 @@ fun OrderStatusesCard(
                     ) {
                         Text(
                             text = item.name,
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                         Text(
                             text = "${item.quantity} ${item.weightUnit}",
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = mintsansFontFamily
                         )
                         Text(
                             text = "PHP ${item.price}",
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = mintsansFontFamily
                         )
                     }
+                }
+            }
+
+            if (!showAllItems) {
+                TextButton(
+                    onClick = {
+                        navController.navigate(Screen.CoopOrderDetails.createRoute(orderId = order.orderId))
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "See All",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Green1,
+                        fontFamily = mintsansFontFamily
+                    )
                 }
             }
 
@@ -1006,7 +1058,8 @@ fun OrderStatusesCard(
             ){
                 Text(
                     text = order.collectionMethod,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -1017,11 +1070,13 @@ fun OrderStatusesCard(
             ){
                 Text(
                     text = "${order.paymentMethod} * Unpaid",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontFamily = mintsansFontFamily
                 )
                 Text(
                     text = "PHP ${facilityItems.sumOf { it.price }}",
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    fontFamily = mintsansFontFamily
                 )
             }
         }
@@ -1082,15 +1137,20 @@ fun ItemCard(item: ProductData) {
         ) {
             Text(
                 text = item.name,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily,
+                color = Green1
             )
             Text(
                 text = "${item.quantity} ${item.weightUnit}",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                fontFamily = mintsansFontFamily
             )
             Text(
                 text = "PHP ${item.price}",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                fontFamily = mintsansFontFamily
             )
         }
     }
