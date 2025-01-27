@@ -663,37 +663,49 @@ fun handleRefundRequest(
     onSuccess: () -> Unit,
     onError: (String) -> Unit
 ) {
-    if (selectedFiles.isNotEmpty()) {
-        val fileList = selectedFiles.map { uri ->
-            uri to AttachFileService.getFileName(uri)
-        }
-
-        AttachFileService.uploadMultipleAttachments(
-            requestId = orderData.orderId,
-            files = fileList,
-            onProgress = { progress ->
-                onProgress(progress)
+    try {
+        if (selectedFiles.isNotEmpty()) {
+            val fileList = selectedFiles.map { uri ->
+                uri to AttachFileService.getFileName(uri)
             }
-        ) { success ->
-            if (success) {
-                val updatedOrder = orderData.copy(
-                    status = "Refund Requested",
-                    statusDescription = reason,
-                    attachments = fileList.map { it.second },
-                    statusHistory = orderData.statusHistory + StatusUpdate(
+
+            val success = AttachFileService.uploadMultipleAttachments(
+                requestId = "${orderData.orderId}_refund",
+                files = fileList,
+                onProgress = onProgress
+            ) { success ->
+                if (success) {
+                    val updatedOrder = orderData.copy(
                         status = "Refund Requested",
                         statusDescription = reason,
-                        dateTime = getCurrentDateTime()
+                        attachments = fileList.map { it.second },
+                        statusHistory = orderData.statusHistory + StatusUpdate(
+                            status = "Refund Requested",
+                            statusDescription = reason,
+                            dateTime = getCurrentDateTime()
+                        )
                     )
-                )
-                orderViewModel.updateOrder(updatedOrder)
-                onSuccess()
-            } else {
-                onError("Failed to upload images")
+                    orderViewModel.updateOrder(updatedOrder)
+                    onSuccess()
+                } else {
+                    onError("Failed to upload attachments")
+                }
             }
+        } else {
+            val updatedOrder = orderData.copy(
+                status = "Refund Requested",
+                statusDescription = reason,
+                statusHistory = orderData.statusHistory + StatusUpdate(
+                    status = "Refund Requested",
+                    statusDescription = reason,
+                    dateTime = getCurrentDateTime()
+                )
+            )
+            orderViewModel.updateOrder(updatedOrder)
+            onSuccess()
         }
-    } else {
-        onError("Please attach proof for refund request")
+    } catch (e: Exception) {
+        onError(e.message ?: "An error occurred while processing your refund request")
     }
 }
 
@@ -1298,7 +1310,7 @@ fun TrackOrderSection(
 
                                 scope.launch {
                                     AttachFileService.uploadMultipleAttachments(
-                                        requestId = orderData.orderId,
+                                        requestId = "${orderData.orderId}_pickup",
                                         files = fileList,
                                         onProgress = { progress ->
                                             uploadProgress = progress

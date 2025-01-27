@@ -1042,7 +1042,7 @@ fun TimelineStep(
                         status == "Pending" && paymentMethod == "GCASH" -> 160.dp
                         status == "To Receive" -> 160.dp
                         status == "Refund Requested" -> 200.dp
-                        status == "Completed" && collectionMethod == "PICKUP" && attachments.isNotEmpty() -> 160.dp
+                        status == "Completed" && attachments.isNotEmpty() -> 160.dp
                         statusDescription.isNotBlank() && dateTime.isNotBlank() -> 60.dp
                         else -> 32.dp
                     }
@@ -1116,11 +1116,12 @@ fun TimelineStep(
                             )
                         }
                     }
+
                     "To Receive" -> {
-                        if (collectionMethod == "DELIVERY") {
+                        if (collectionMethod == "DELIVERY" || collectionMethod == "PICKUP") {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Proof of Delivery:",
+                                text = if (collectionMethod == "DELIVERY") "Proof of Delivery:" else "Proof of Pickup:",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.Gray,
                                 fontFamily = mintsansFontFamily
@@ -1128,40 +1129,30 @@ fun TimelineStep(
                             DisplayAttachments(
                                 requestId = orderId,
                                 modifier = Modifier.padding(vertical = 8.dp),
-                                showTitle = false
-                            )
-                        } else if (collectionMethod == "PICKUP" && attachments.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Proof of Pickup:",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.Gray,
-                                fontFamily = mintsansFontFamily
-                            )
-                            DisplayAttachments(
-                                requestId = orderId,
-                                modifier = Modifier.padding(vertical = 8.dp),
-                                showTitle = false
+                                showTitle = false,
+                                attachmentType = if (collectionMethod == "PICKUP") "pickup" else "general"
                             )
                         }
                     }
-                    "Refund Requested" -> {
-                        if (isCurrent) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            if (attachments.isNotEmpty()) {
-                                Text(
-                                    text = "Attached Images:",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.Gray,
-                                    fontFamily = mintsansFontFamily
-                                )
-                                DisplayAttachments(
-                                    requestId = orderId,
-                                    modifier = Modifier.padding(vertical = 8.dp),
-                                    showTitle = false
-                                )
-                            }
 
+                    "Refund Requested" -> {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        if (attachments.isNotEmpty()) {
+                            Text(
+                                text = "Attached Images:",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.Gray,
+                                fontFamily = mintsansFontFamily
+                            )
+                            DisplayAttachments(
+                                requestId = orderId,
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                showTitle = false,
+                                attachmentType = "refund"
+                            )
+                        }
+
+                        if (isCurrent) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -1201,6 +1192,7 @@ fun TimelineStep(
                             }
                         }
                     }
+
                     "Refund Approved", "Refund Rejected" -> {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
@@ -1212,20 +1204,6 @@ fun TimelineStep(
                             color = if (status == "Refund Approved") Green1 else Cinnabar,
                             fontFamily = mintsansFontFamily
                         )
-
-                        if (attachments.isNotEmpty()) {
-                            Text(
-                                text = "Refund Request Images:",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.Gray,
-                                fontFamily = mintsansFontFamily
-                            )
-                            DisplayAttachments(
-                                requestId = orderId,
-                                modifier = Modifier.padding(vertical = 8.dp),
-                                showTitle = false
-                            )
-                        }
                     }
                 }
             }

@@ -41,13 +41,20 @@ import com.coco.celestia.ui.theme.*
 fun DisplayAttachments(
     requestId: String,
     modifier: Modifier = Modifier,
-    showTitle: Boolean = true
+    showTitle: Boolean = true,
+    attachmentType: String = "general"
 ) {
     var attachments by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
 
-    LaunchedEffect(requestId) {
-        AttachFileService.fetchAttachments(requestId) { uris ->
+    val suffixedRequestId = when (attachmentType) {
+        "pickup" -> "${requestId}_pickup"
+        "refund" -> "${requestId}_refund"
+        else -> requestId
+    }
+
+    LaunchedEffect(suffixedRequestId) {
+        AttachFileService.fetchAttachments(suffixedRequestId) { uris ->
             attachments = uris
             isLoading = false
         }
