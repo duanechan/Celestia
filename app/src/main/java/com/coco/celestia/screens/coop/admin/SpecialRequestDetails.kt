@@ -59,6 +59,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -254,6 +255,32 @@ fun SpecialRequestDetails(
                 DisplayAssignedMembers(
                     request
                 )
+            }
+        }
+
+        if (request.status == "In Progress") {
+            request.assignedMember.forEach { member ->
+                if (member.status == "Delivering to Coop") {
+                    Button(
+                        onClick = {
+                            // update remaining quantity, set delivered quantity to 0
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            contentColor = Color.White,
+                            containerColor = Green1
+                        ),
+                        modifier = Modifier
+                            .height(52.dp)
+                    ) {
+                        Text(
+                            text = "Receive ${member.product} from ${member.name}",
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
             }
         }
         // Accept/ Decline

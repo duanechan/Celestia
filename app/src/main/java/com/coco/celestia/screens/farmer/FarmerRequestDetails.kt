@@ -36,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,7 +66,6 @@ import com.coco.celestia.viewmodel.model.SpecialRequest
 import com.coco.celestia.viewmodel.model.TrackRecord
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.coroutines.suspendCoroutine
 
 @Composable
 fun DisplayRequestDetails (
@@ -81,6 +81,7 @@ fun DisplayRequestDetails (
 
     val specialRequests by specialRequestViewModel.specialReqData.observeAsState()
     val specialRequest = specialRequests?.find { it.specialRequestUID == specialRequestUID }
+    var requiredQuantity by remember { mutableStateOf(0) }
 
     val inputFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
     val dateTime = LocalDateTime.parse(specialRequest?.dateRequested ?: "", inputFormatter)
@@ -191,7 +192,7 @@ fun DisplayRequestDetails (
 
         specialRequest?.assignedMember?.forEach { member ->
             if (member.email == farmerEmail && member.product == product) {
-                Row(
+                Column (
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp)
@@ -202,23 +203,50 @@ fun DisplayRequestDetails (
                             width = 2.dp,
                             color = Green4,
                             shape = RoundedCornerShape(12.dp)
-                        ),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        )
                 ) {
-                    Text(
-                        text = member.product,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .padding(16.dp)
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = member.product,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .padding(16.dp)
+                        )
 
-                    Text(
-                        text = "${member.quantity}kg",
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .padding(16.dp)
-                    )
+                        Text(
+                            text = "${member.quantity}kg",
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .padding(16.dp)
+                        )
+                    }
+
+                    val delivered = member.remainingQuantity - member.deliveredQuantity
+                    if (delivered != 0) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Quantity Delivered",
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier
+                                    .padding(16.dp)
+                            )
+
+                            Text(
+                                text = "${delivered}kg",
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier
+                                    .padding(16.dp)
+                            )
+                        }
+                    }
                 }
+
             }
         }
 
@@ -234,25 +262,49 @@ fun DisplayRequestDetails (
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Assign Milestone
-                Button(
-                    onClick = {
-                        updateStatusDialog = true
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        contentColor = Color.White,
-                        containerColor = Green1
-                    ),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(56.dp)
-                ) {
-                    Text(
-                        text = "Assign Milestone",
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                specialRequest?.assignedMember?.forEach { member ->
+                    if (member.status != "Delivering to Coop") {
+                        Button(
+                            onClick = {
+                                updateStatusDialog = true
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                contentColor = Color.White,
+                                containerColor = Green1
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(56.dp)
+                        ) {
+                            Text(
+                                text = "Assign Milestone",
+                                color = Color.White,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    } else {
+                        Button(
+                            onClick = { },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                contentColor = Color.White,
+                                disabledContainerColor = Green1
+                            ),
+                            enabled = false,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(56.dp)
+                        ) {
+                            Text(
+                                text = "Waiting for Coop to Receive the Products",
+                                color = Color.White,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
                 }
 //                // Notify Unforeseen Circumstances
 //                Button(
@@ -317,9 +369,14 @@ fun DisplayRequestDetails (
 
     if (updateStatusDialog) {
         if (specialRequest != null) {
+            specialRequest.assignedMember.map { member ->
+                if (member.email == farmerEmail && member.product == product) {
+                    requiredQuantity = member.remainingQuantity
+                }
+            }
             DisplayUpdateStatus(
                 product = product,
-                onConfirm = { status, description ->
+                onConfirm = { status, description, quantity ->
                     specialRequest.assignedMember.map { member ->
                         if (member.email == farmerEmail) {
                             val addTrack = TrackRecord(
@@ -341,7 +398,8 @@ fun DisplayRequestDetails (
                                 if (member.email == farmerEmail && member.product == product) {
                                     member.copy(
                                         status = status,
-                                        farmerTrackRecord = farmerTrackRecord
+                                        farmerTrackRecord = farmerTrackRecord,
+                                        deliveredQuantity = quantity
                                     )
                                 } else {
                                     member
@@ -356,7 +414,8 @@ fun DisplayRequestDetails (
                 },
                 onDismiss = { updateStatusDialog = false },
                 specialRequestViewModel = specialRequestViewModel,
-                specialRequest = specialRequest
+                specialRequest = specialRequest,
+                requiredQuantity = requiredQuantity
             )
         }
     }
@@ -366,20 +425,24 @@ fun DisplayRequestDetails (
 @Composable
 fun DisplayUpdateStatus(
     product: String,
-    onConfirm: (String, String) -> Unit,
+    requiredQuantity: Int,
+    onConfirm: (String, String, Int) -> Unit,
     onDismiss: () -> Unit,
     specialRequestViewModel: SpecialRequestViewModel,
     specialRequest: SpecialRequest?
 ) {
     var status by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
+    var quantity by remember { mutableIntStateOf(0) }
     var statusExpanded by remember { mutableStateOf(false) }
     var showNotificationPopup by remember { mutableStateOf(false) }
+    var quantityExceeded by remember { mutableStateOf(false) }
+    var emptyMilestone by remember { mutableStateOf(false) }
 
     val statusList = listOf(
         "Soil Preparation", "Seed Sowing", "Growing",
         "Pre-Harvest", "Harvesting", "Post-Harvest",
-        "Picked Up by Coop", "Calamity Affected"
+        "Delivering to Coop", "Calamity Affected"
     )
 
     AlertDialog(
@@ -390,6 +453,7 @@ fun DisplayUpdateStatus(
                 TextField(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(vertical = 4.dp)
                         .border(
                             width = 2.dp,
                             color = Green2,
@@ -408,10 +472,19 @@ fun DisplayUpdateStatus(
                 )
 
                 if (product.isNotEmpty()) {
+                    if (emptyMilestone) {
+                        Text(
+                            text = "Milestone Empty!",
+                            color = Color.Red,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.align(Alignment.End)
+                        )
+                    }
+
                     TextField(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 8.dp)
+                            .padding(vertical = 4.dp)
                             .border(
                                 width = 2.dp,
                                 color = Green2,
@@ -458,6 +531,36 @@ fun DisplayUpdateStatus(
                     }
                 }
 
+                if (status == "Delivering to Coop") {
+                    if (quantityExceeded) {
+                        Text(
+                            text = "Quantity Exceeded!",
+                            color = Color.Red,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.align(Alignment.End)
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = if (quantity == 0) "" else quantity.toString(),
+                        onValueChange = { quantity = it.toIntOrNull() ?: 0 },
+                        label = { Text("Quantity to Deliver") },
+                        placeholder = { Text("Enter Quantity") },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            disabledContainerColor = Color.White,
+                            errorContainerColor = Color.White,
+                            focusedIndicatorColor = Green1,
+                            unfocusedIndicatorColor = Green4
+                        )
+                    )
+                }
+
                 if (status.isNotEmpty()) {
                     OutlinedTextField(
                         value = description,
@@ -467,7 +570,7 @@ fun DisplayUpdateStatus(
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 16.dp),
+                            .padding(vertical = 4.dp),
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color.White,
                             unfocusedContainerColor = Color.White,
@@ -507,7 +610,14 @@ fun DisplayUpdateStatus(
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(status, description) }
+                onClick = {
+                    emptyMilestone = status.isEmpty()
+                    quantityExceeded = quantity > requiredQuantity
+
+                    if (!quantityExceeded && !emptyMilestone) {
+                        onConfirm(status, description, quantity)
+                    }
+                }
             ) {
                 Text("Confirm")
             }

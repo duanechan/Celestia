@@ -7,7 +7,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -16,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -160,7 +158,9 @@ fun FarmerDashboard(
                 assignedProducts
                     ?.filter { it.status == "In Progress" }
                     ?.filter { member ->
-                        member.assignedMember.any { it.status.isEmpty() }
+                        member.assignedMember.any {
+                            it.email == farmerData?.email && it.status.isEmpty()
+                        }
                     }
                     ?.sortedByDescending { assigned ->
                         assigned.trackRecord
@@ -184,7 +184,7 @@ fun FarmerDashboard(
 fun FarmerOrderOverview(orders: List<OrderData>) {
     val statuses = listOf(
         "Soil Preparation", "Seed Sowing", "Growing", "Pre-Harvest",
-        "Harvesting", "Post-Harvest", "Picked Up By Coop",
+        "Harvesting", "Post-Harvest", "Delivering to Coop",
         "Completed", "Calamity Affected"
     )
 
@@ -199,7 +199,7 @@ fun FarmerOrderOverview(orders: List<OrderData>) {
         "Pre-Harvest" to R.drawable.harvest,
         "Harvesting" to R.drawable.harvest_basket,
         "Post-Harvest" to R.drawable.harvested,
-        "Picked Up By Coop" to R.drawable.deliveryicon,
+        "Delivering to Coop" to R.drawable.deliveryicon,
         "Completed" to R.drawable.received,
         "Calamity Affected" to R.drawable.calamity
     )

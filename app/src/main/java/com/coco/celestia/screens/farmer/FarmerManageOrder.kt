@@ -11,7 +11,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -185,7 +184,7 @@ fun FarmerManageOrder(
                         val statuses = listOf(
                             "All", "Soil Preparation", "Seed Sowing", "Growing",
                             "Pre-Harvest", "Harvesting", "Post-Harvest",
-                            "Picked up by Coop", "Calamity Affected", "Cancelled"
+                            "Delivering to Coop", "Calamity Affected", "Cancelled"
                         )
 
                         statuses.forEach { status ->
@@ -258,7 +257,7 @@ fun DisplayRequestCard(
         "PRE-HARVEST" -> painterResource(id = R.drawable.harvest)
         "HARVESTING" -> painterResource(id = R.drawable.harvest_basket)
         "POST-HARVEST" -> painterResource(id = R.drawable.harvested)
-        "PICKED UP BY COOP" -> painterResource(id = R.drawable.deliveryicon)
+        "DELIVERING TO COOP" -> painterResource(id = R.drawable.deliveryicon)
         "COMPLETED" -> painterResource(id = R.drawable.received)
         "CANCELLED" -> painterResource(id = R.drawable.cancelled)
         "CALAMITY AFFECTED" -> painterResource(id = R.drawable.calamity)
