@@ -54,6 +54,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.VendorState
@@ -61,6 +62,9 @@ import com.coco.celestia.viewmodel.VendorViewModel
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
+import com.coco.celestia.viewmodel.TransactionState
+import com.coco.celestia.viewmodel.TransactionViewModel
+import com.coco.celestia.viewmodel.model.TransactionData
 import kotlinx.coroutines.delay
 
 @Composable
@@ -342,7 +346,8 @@ fun VendorDetailsScreen(
     viewModel: VendorViewModel,
     onNavigateUp: () -> Unit,
     modifier: Modifier = Modifier,
-    navController: NavController
+    navController: NavController,
+    transactionViewModel: TransactionViewModel
 ) {
     val vendorState by viewModel.vendorState.observeAsState()
     val vendorData by viewModel.vendorData.observeAsState(emptyList())
@@ -383,7 +388,7 @@ fun VendorDetailsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(CoopBackground)
+            .background(White2)
     ) {
         when (vendorState) {
             is VendorState.LOADING -> {
@@ -412,7 +417,8 @@ fun VendorDetailsScreen(
                         viewModel = viewModel,
                         onShowDeleteDialog = { showDeleteDialog = true },
                         modifier = modifier,
-                        navController = navController
+                        navController = navController,
+                        transactionViewModel = transactionViewModel
                     )
                 } else {
                     Box(
@@ -465,17 +471,18 @@ private fun VendorDetailContent(
     viewModel: VendorViewModel,
     onShowDeleteDialog: () -> Unit,
     modifier: Modifier = Modifier,
-    navController: NavController
+    navController: NavController,
+    transactionViewModel: TransactionViewModel
 ) {
     Column(
         modifier = modifier.fillMaxSize()
     ) {
         var selectedTab by remember { mutableIntStateOf(0) }
-        val tabs = listOf("DETAILS", "TRANSACTIONS", "HISTORY")
+        val tabs = listOf("DETAILS", "TRANSACTIONS")
 
         TabRow(
             selectedTabIndex = selectedTab,
-            containerColor = Color.Transparent,
+            containerColor = Green4,
             contentColor = Green1,
             indicator = { tabPositions ->
                 Box(
@@ -493,7 +500,7 @@ private fun VendorDetailContent(
                     text = {
                         Text(
                             text = title,
-                            color = if (selectedTab == index) Green1 else Color.Gray
+                            color = Green1
                         )
                     }
                 )
@@ -507,8 +514,10 @@ private fun VendorDetailContent(
                 onShowDeleteDialog = onShowDeleteDialog,
                 navController = navController
             )
-            1 -> TransactionsTab()
-            2 -> CommentsHistoryTab()
+            1 -> VendorTransactionsTab(
+                transactionViewModel = transactionViewModel,
+                vendorName = "${vendor.firstName} ${vendor.lastName}"
+            )
         }
     }
 }
@@ -586,7 +595,9 @@ private fun VendorDetailsTab(
                         Text(
                             text = "${currentVendor.firstName} ${currentVendor.lastName}",
                             style = MaterialTheme.typography.titleLarge,
-                            color = Green1
+                            color = Green1,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
 
                         Spacer(modifier = Modifier.height(4.dp))
@@ -614,7 +625,9 @@ private fun VendorDetailsTab(
                                 color = if (currentVendor.isActive)
                                     MaterialTheme.colorScheme.primary
                                 else
-                                    MaterialTheme.colorScheme.error
+                                    MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = mintsansFontFamily
                             )
                         }
                     }
@@ -741,7 +754,9 @@ private fun VendorDetailsTab(
                     Text(
                         text = "More Information",
                         style = MaterialTheme.typography.titleMedium,
-                        color = Green1
+                        color = Green1,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily
                     )
                     IconButton(onClick = { isExpanded = !isExpanded }) {
                         Icon(
@@ -764,14 +779,17 @@ private fun VendorDetailsTab(
                             text = "Remarks",
                             style = MaterialTheme.typography.titleSmall,
                             color = Green1,
-                            modifier = Modifier.padding(vertical = 4.dp)
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
 
                         Text(
                             text = currentVendor.remarks.ifEmpty { "No remarks available" },
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            modifier = Modifier.padding(bottom = 8.dp),
+                            fontFamily = mintsansFontFamily
                         )
                     }
                 }
@@ -805,33 +823,173 @@ private fun InfoRow(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily
             )
             Text(
                 text = value,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                fontFamily = mintsansFontFamily
             )
         }
     }
 }
 
 @Composable
-private fun TransactionsTab() {
+fun VendorTransactionsTab(
+    transactionViewModel: TransactionViewModel,
+    vendorName: String
+) {
+    val transactionState by transactionViewModel.transactionState.observeAsState(TransactionState.LOADING)
+    val transactionData by transactionViewModel.transactionData.observeAsState(hashMapOf())
+
+    LaunchedEffect(Unit) {
+        transactionViewModel.fetchAllTransactions(filter = vendorName)
+    }
+
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
-        Text("Transactions Coming Soon")
+        when (val state = transactionState) {
+            TransactionState.LOADING -> {
+                CircularProgressIndicator()
+            }
+            is TransactionState.ERROR -> {
+                Text(
+                    text = state.message,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+            TransactionState.EMPTY -> {
+                Text(
+                    text = "No purchase transactions found",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            TransactionState.SUCCESS -> {
+                val purchaseTransactions = transactionData.values.flatten()
+                    .filter { it.type == "Purchased" && it.vendorName == vendorName }
+
+                if (purchaseTransactions.isEmpty()) {
+                    Text(
+                        text = "No purchase transactions found",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(purchaseTransactions) { transaction ->
+                            TransactionCard(transaction)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun CommentsHistoryTab() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+fun TransactionCard(transaction: TransactionData) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = White1
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(8.dp)
     ) {
-        Text("Comments & History Coming Soon")
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = transaction.transactionId,
+                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Green1,
+                    fontFamily = mintsansFontFamily
+                )
+                Text(
+                    text = transaction.date,
+                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily = mintsansFontFamily
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.size(20.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = "Purchase",
+                            tint = Green1
+                        )
+                    }
+                    Text(
+                        text = "Purchase",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Green1
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = transaction.productName,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Green1,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily
+                    )
+                }
+            }
+
+            if (transaction.description.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = transaction.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily = mintsansFontFamily
+                )
+            }
+        }
     }
 }

@@ -200,7 +200,8 @@ data class TransactionData(
     val status: String = "",
     val productName: String = "",
     val productId: String = "",
-    val facilityName: String = ""
+    val facilityName: String = "",
+    val vendorName: String = ""
 )
 
 data class ContactData(

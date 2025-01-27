@@ -33,6 +33,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
@@ -81,12 +83,14 @@ import coil.size.Scale
 import com.coco.celestia.R
 import com.coco.celestia.screens.client.FileAttachment
 import com.coco.celestia.screens.coop.admin.DisplayAttachments
+import com.coco.celestia.screens.coop.facility.forms.SalesAddForm
 import com.coco.celestia.service.AttachFileService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.SalesState
 import com.coco.celestia.viewmodel.SalesViewModel
 import com.coco.celestia.viewmodel.TransactionState
@@ -108,7 +112,8 @@ fun CoopSalesDetails(
     salesViewModel: SalesViewModel = viewModel(),
     orderViewModel: OrderViewModel = viewModel(),
     facilityViewModel: FacilityViewModel = viewModel(),
-    transactionViewModel: TransactionViewModel = viewModel()
+    transactionViewModel: TransactionViewModel = viewModel(),
+    productViewModel: ProductViewModel = viewModel()
 ) {
     val salesNumber = remember {
         navController.currentBackStackEntry?.arguments?.getString("salesNumber") ?: ""
@@ -153,7 +158,7 @@ fun CoopSalesDetails(
     }
 
     val currentSale = salesData.find { it.salesNumber == salesNumber }
-    val currentOrder = orderData.find { it.orderId == orderId}
+    val currentOrder = orderData.find { it.orderId == orderId }
 
     Box(
         modifier = Modifier
@@ -162,63 +167,28 @@ fun CoopSalesDetails(
     ) {
         when {
             facilityState is FacilityState.LOADING -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = Green1)
-                }
+                LoadingIndicator()
             }
             facilityState is FacilityState.ERROR -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text((facilityState as FacilityState.ERROR).message)
-                }
+                ErrorMessage(message = (facilityState as FacilityState.ERROR).message)
             }
             userFacility == null -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("No facility found for user")
-                }
+                ErrorMessage(message = "No facility found for user")
             }
             else -> {
                 when {
                     orderState == OrderState.LOADING ||
                             salesState == SalesState.LOADING -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = Green1)
-                        }
+                        LoadingIndicator()
                     }
                     orderState is OrderState.ERROR -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text((orderState as OrderState.ERROR).message)
-                        }
+                        ErrorMessage(message = (orderState as OrderState.ERROR).message)
                     }
                     salesState is SalesState.ERROR -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text((salesState as SalesState.ERROR).message)
-                        }
+                        ErrorMessage(message = (salesState as SalesState.ERROR).message)
                     }
                     transactionState is TransactionState.ERROR -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text((transactionState as TransactionState.ERROR).message)
-                        }
+                        ErrorMessage(message = (transactionState as TransactionState.ERROR).message)
                     }
                     else -> {
                         if (currentOrder != null) {
@@ -232,20 +202,46 @@ fun CoopSalesDetails(
                         } else if (currentSale != null) {
                             InStoreSalesDetails(
                                 sale = currentSale,
-                                navController = navController
+                                navController = navController,
+                                viewModel = salesViewModel,
+                                productViewModel = productViewModel,
+                                transactionViewModel = transactionViewModel,
+                                facilityName = userFacility.name,
+                                userRole = userFacility.name
                             )
                         } else {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text("Order/Sale not found")
-                            }
+                            ErrorMessage(message = "Order/Sale not found")
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun LoadingIndicator() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator(color = Green1)
+    }
+}
+
+@Composable
+private fun ErrorMessage(message: String) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyLarge,
+            fontFamily = mintsansFontFamily,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
 
@@ -1346,7 +1342,132 @@ fun UpdateStatusCard(
 
 //INSTORE
 @Composable
-fun InStoreSalesDetails(sale: SalesData, navController: NavController) {
+fun InStoreSalesDetails(
+    sale: SalesData,
+    navController: NavController,
+    viewModel: SalesViewModel,
+    productViewModel: ProductViewModel,
+    transactionViewModel: TransactionViewModel,
+    facilityName: String,
+    userRole: String
+) {
+    var showMenu by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showEditForm by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    if (showEditForm) {
+        SalesAddForm(
+            viewModel = viewModel,
+            productViewModel = productViewModel,
+            transactionViewModel = transactionViewModel,
+            facilityName = facilityName,
+            userRole = userRole,
+            onSuccess = {
+                showEditForm = false
+                navController.popBackStack()
+            },
+            onCancel = { showEditForm = false },
+            salesNumber = sale.salesNumber
+        )
+        return
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = {
+                Text(
+                    text = "Delete Sale Record",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontFamily = mintsansFontFamily
+                )
+            },
+            text = {
+                Text(
+                    text = "Are you sure you want to delete this sale record? This action cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontFamily = mintsansFontFamily
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        isLoading = true
+                        viewModel.deleteSale(
+                            salesId = sale.salesNumber,
+                            onSuccess = {
+                                isLoading = false
+                                showDeleteDialog = false
+                                navController.popBackStack()
+                            },
+                            onError = { error ->
+                                isLoading = false
+                                showDeleteDialog = false
+                                errorMessage = error
+                            }
+                        )
+                    },
+                    enabled = !isLoading,
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = Green1,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "Delete",
+                            fontFamily = mintsansFontFamily
+                        )
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteDialog = false },
+                    enabled = !isLoading
+                ) {
+                    Text(
+                        text = "Cancel",
+                        fontFamily = mintsansFontFamily
+                    )
+                }
+            }
+        )
+    }
+
+    if (errorMessage != null) {
+        AlertDialog(
+            onDismissRequest = { errorMessage = null },
+            title = {
+                Text(
+                    text = "Error",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontFamily = mintsansFontFamily
+                )
+            },
+            text = {
+                Text(
+                    text = errorMessage ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontFamily = mintsansFontFamily
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { errorMessage = null }) {
+                    Text(
+                        text = "OK",
+                        fontFamily = mintsansFontFamily
+                    )
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -1371,11 +1492,59 @@ fun InStoreSalesDetails(sale: SalesData, navController: NavController) {
                     fontWeight = FontWeight.Bold,
                     fontFamily = mintsansFontFamily
                 )
-                Icon(
-                    Icons.Default.MoreVert,
-                    contentDescription = "More options",
-                    tint = Green1
-                )
+                Box {
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = "More options",
+                            tint = Green1
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = "Edit",
+                                    fontFamily = mintsansFontFamily
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                showEditForm = true
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Edit,
+                                    contentDescription = "Edit sale",
+                                    tint = Green1
+                                )
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = "Delete",
+                                    color = Green1,
+                                    fontFamily = mintsansFontFamily
+                                )
+                            },
+                            onClick = {
+                                showMenu = false
+                                showDeleteDialog = true
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Delete sale",
+                                    tint = Green1
+                                )
+                            }
+                        )
+                    }
+                }
             }
 
             Row(
@@ -1403,24 +1572,13 @@ fun InStoreSalesDetails(sale: SalesData, navController: NavController) {
             //Product Details
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.Start
             ) {
                 InStorePriceInfoColumn(
                     title = "Selling Price",
                     price = sale.price,
                     weightUnit = sale.weightUnit
                 )
-                Card(
-                    modifier = Modifier.size(100.dp),
-                    colors = CardDefaults.cardColors(containerColor = Green4)
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("+ Add\nImage", textAlign = TextAlign.Center)
-                    }
-                }
             }
         }
 

@@ -25,6 +25,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.annotation.ExperimentalCoilApi
@@ -38,6 +39,8 @@ import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.TransactionState
 import com.coco.celestia.viewmodel.TransactionViewModel
+import com.coco.celestia.viewmodel.model.Constants
+import com.coco.celestia.viewmodel.model.FacilityData
 import com.coco.celestia.viewmodel.model.PriceUpdate
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.TransactionData
@@ -170,7 +173,9 @@ private fun ProductHeader(
                         ) else it.toString()
                     } },
                     style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
 
                 Box {
@@ -248,13 +253,16 @@ private fun ProductHeader(
                 Text(
                     text = product.productId,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
 
                 Text(
                     text = product.timestamp,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -356,12 +364,16 @@ private fun PriceInfoColumn(
         Text(
             text = "PHP${price.format(2)}",
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.Bold,
+            fontFamily = mintsansFontFamily
         )
         Text(
             text = "per ${weightUnit.lowercase()}",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.Bold,
+            fontFamily = mintsansFontFamily
         )
     }
 }
@@ -374,7 +386,6 @@ private fun ProductTabs(
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("DETAILS", "TRANSACTIONS", "PRICE HISTORY")
 
-    // Debug log to check product data
     Log.d("ProductTabs", "Product: ${product.productId}, PriceHistory: ${product.priceHistory}")
 
     Column {
@@ -398,7 +409,10 @@ private fun ProductTabs(
                     text = {
                         Text(
                             text = title,
-                            color = if (selectedTab == index) Green1 else Color.Gray
+                            color = if (selectedTab == index) Green1 else Color.Gray,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                     }
                 )
@@ -455,7 +469,9 @@ private fun Details(product: ProductData) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Description",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                     }
 
@@ -466,7 +482,8 @@ private fun Details(product: ProductData) {
                         Text(
                             text = product.description,
                             style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontFamily = mintsansFontFamily
                         )
                     }
                 }
@@ -495,7 +512,9 @@ private fun Details(product: ProductData) {
                         Text(
                             text = "Stock Summary",
                             style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                     }
 
@@ -527,11 +546,13 @@ private fun Details(product: ProductData) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "Stock Status",
-                                style = MaterialTheme.typography.titleMedium
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = mintsansFontFamily
                             )
                         }
 
-                        StockStatusGrid()
+                        StockStatusGrid(product)
                     }
                 }
             }
@@ -566,12 +587,15 @@ private fun Details(product: ProductData) {
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = "Collection Method",
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = mintsansFontFamily
                                 )
                             }
                             Text(
                                 text = "Available In",
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontFamily = mintsansFontFamily
                             )
                         }
 
@@ -582,11 +606,14 @@ private fun Details(product: ProductData) {
                         ) {
                             Text(
                                 text = "Pick Up",
-                                style = MaterialTheme.typography.titleMedium
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = mintsansFontFamily
                             )
                             Text(
-                                text = "Pick Up Location here",
-                                style = MaterialTheme.typography.bodyMedium
+                                text = "Pick Up Location here", //TODO: PLACEHOLDER
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontFamily = mintsansFontFamily
                             )
                         }
 
@@ -598,11 +625,14 @@ private fun Details(product: ProductData) {
                         ) {
                             Text(
                                 text = "Delivery",
-                                style = MaterialTheme.typography.titleMedium
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = mintsansFontFamily
                             )
                             Text(
-                                text = "Couriers here or etc",
-                                style = MaterialTheme.typography.bodyMedium
+                                text = "Couriers here or etc", //TODO: PLACEHOLDER
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontFamily = mintsansFontFamily
                             )
                         }
 
@@ -640,12 +670,15 @@ private fun Details(product: ProductData) {
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = "Payment Method",
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = mintsansFontFamily
                                 )
                             }
                             Text(
                                 text = "Available In",
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontFamily = mintsansFontFamily
                             )
                         }
 
@@ -656,11 +689,14 @@ private fun Details(product: ProductData) {
                         ) {
                             Text(
                                 text = "Cash",
-                                style = MaterialTheme.typography.titleMedium
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = mintsansFontFamily
                             )
                             Text(
-                                text = "Instruction here or blank",
-                                style = MaterialTheme.typography.bodyMedium
+                                text = "Instruction here or blank", //TODO: PLACEHOLDER
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontFamily = mintsansFontFamily
                             )
                         }
 
@@ -672,11 +708,14 @@ private fun Details(product: ProductData) {
                         ) {
                             Text(
                                 text = "G-Cash",
-                                style = MaterialTheme.typography.titleMedium
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = mintsansFontFamily
                             )
                             Text(
-                                text = "G-Cash Number/s here",
-                                style = MaterialTheme.typography.bodyMedium
+                                text = "G-Cash Number/s here", //TODO: PLACEHOLDER
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontFamily = mintsansFontFamily
                             )
                         }
 
@@ -706,7 +745,9 @@ private fun Details(product: ProductData) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Sales & Purchase Information",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                     }
 
@@ -755,7 +796,9 @@ private fun Details(product: ProductData) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Notes",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                     }
 
@@ -766,7 +809,8 @@ private fun Details(product: ProductData) {
                         Text(
                             text = product.notes,
                             style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontFamily = mintsansFontFamily
                         )
                     }
                 }
@@ -780,6 +824,103 @@ private fun Details(product: ProductData) {
     }
 }
 
+// TODO: USE THESE LATER
+@Composable
+private fun CollectionMethodCard(facilityData: FacilityData) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        if (facilityData.isPickupEnabled) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = Constants.COLLECTION_PICKUP,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
+                )
+                Text(
+                    text = facilityData.pickupLocation,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontFamily = mintsansFontFamily
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        if (facilityData.isDeliveryEnabled) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = Constants.COLLECTION_DELIVERY,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
+                )
+                Text(
+                    text = facilityData.deliveryDetails,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontFamily = mintsansFontFamily
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PaymentMethodCard(facilityData: FacilityData) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        if (facilityData.isCashEnabled) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = Constants.PAYMENT_CASH,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
+                )
+                Text(
+                    text = facilityData.cashInstructions,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontFamily = mintsansFontFamily
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        if (facilityData.isGcashEnabled) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = Constants.PAYMENT_GCASH,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
+                )
+                Text(
+                    text = facilityData.gcashNumbers,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontFamily = mintsansFontFamily
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun StockSummaryTable(product: ProductData) {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -787,14 +928,9 @@ private fun StockSummaryTable(product: ProductData) {
             value = product.quantity.toString(),
             unit = product.weightUnit.lowercase()
         )
-//        StockSummaryRow("Opening Stock",
-//            value = product.openingStock.toString(),
-//            unit = product.weightUnit.lowercase()
-//        )
-        // Online product check
         if (!product.isInStore) {
             StockSummaryRow(
-                label = "Committed Stock:",
+                label = "Committed Stock",
                 value = product.committedStock.toString(),
                 unit = product.weightUnit.lowercase()
             )
@@ -820,19 +956,22 @@ private fun StockSummaryRow(label: String, value: String, unit: String) {
             text = label,
             style = MaterialTheme.typography.bodyMedium,
             color = Color.Gray,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            fontWeight = FontWeight.Bold,
+            fontFamily = mintsansFontFamily
         )
         Text(
             text = "$value $unit",
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.weight(1f),
-            textAlign = TextAlign.End
+            textAlign = TextAlign.End,
+            fontFamily = mintsansFontFamily
         )
     }
 }
 
 @Composable
-private fun StockStatusGrid() {
+private fun StockStatusGrid(product: ProductData) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -844,16 +983,25 @@ private fun StockStatusGrid() {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             StockStatusItem(
-                quantity = "0",
-                label = "To be Shipped",
+                quantity = product.committedStock.toInt().toString(),
+                label = "Ordered Stock",
                 modifier = Modifier.weight(1f)
             )
             StockStatusItem(
-                quantity = "0",
-                label = "To be Received",
+                quantity = getStockStatus(product),
+                label = "Stock Status",
                 modifier = Modifier.weight(1f)
             )
         }
+    }
+}
+
+private fun getStockStatus(product: ProductData): String {
+    val availableStock = product.quantity - product.committedStock
+    return if (availableStock > product.reorderPoint) {
+        "Sufficient"
+    } else {
+        "Low"
     }
 }
 
@@ -866,12 +1014,15 @@ private fun StockStatusItem(
     Column(modifier = modifier) {
         Text(
             text = "$quantity Qty",
-            style = MaterialTheme.typography.titleLarge
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            fontFamily = mintsansFontFamily
         )
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray
+            color = Color.Gray,
+            fontFamily = mintsansFontFamily
         )
     }
 }
@@ -884,16 +1035,20 @@ private fun SalesInfoSection(product: ProductData) {
         Text(
             text = "Sales",
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray
+            color = Color.Gray,
+            fontWeight = FontWeight.Bold,
+            fontFamily = mintsansFontFamily
         )
         Text(
-            text = product.totalQuantitySold.toString(), // already calling the field for total quantity sold
-            style = MaterialTheme.typography.titleLarge
+            text = product.totalQuantitySold.toString(),
+            style = MaterialTheme.typography.titleLarge,
+            fontFamily = mintsansFontFamily
         )
         Text(
             text = product.weightUnit.lowercase(),
             style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray
+            color = Color.Gray,
+            fontFamily = mintsansFontFamily
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -901,11 +1056,14 @@ private fun SalesInfoSection(product: ProductData) {
         Text(
             text = "Total Amount",
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray
+            color = Color.Gray,
+            fontWeight = FontWeight.Bold,
+            fontFamily = mintsansFontFamily
         )
         Text(
-            text = "PHP 1,000.00", //TODO: dunno kung may computation ba to or something or panibagong field for this
-            style = MaterialTheme.typography.bodyLarge
+            text = "PHP 1,000.00", //TODO: PLACEHOLDER
+            style = MaterialTheme.typography.bodyLarge,
+            fontFamily = mintsansFontFamily
         )
     }
 }
@@ -918,16 +1076,20 @@ private fun PurchaseInfoSection(product: ProductData) {
         Text(
             text = "Purchases",
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray
+            color = Color.Gray,
+            fontWeight = FontWeight.Bold,
+            fontFamily = mintsansFontFamily
         )
         Text(
-            text = "50", //TODO: also this, idk if panibagong field or cocompute or something yung purchases
-            style = MaterialTheme.typography.titleLarge
+            text = "50", //TODO: PLACEHOLDER
+            style = MaterialTheme.typography.titleLarge,
+            fontFamily = mintsansFontFamily
         )
         Text(
             text = product.weightUnit.lowercase(),
             style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray
+            color = Color.Gray,
+            fontFamily = mintsansFontFamily
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -935,11 +1097,14 @@ private fun PurchaseInfoSection(product: ProductData) {
         Text(
             text = "Total Cost of Purchases",
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.Gray
+            color = Color.Gray,
+            fontWeight = FontWeight.Bold,
+            fontFamily = mintsansFontFamily
         )
         Text(
             text = "PHP${product.totalPurchases}",
-            style = MaterialTheme.typography.titleLarge
+            style = MaterialTheme.typography.titleLarge,
+            fontFamily = mintsansFontFamily
         )
     }
 }
@@ -1028,13 +1193,15 @@ fun TransactionsCard(transaction: TransactionData) {
                     text = transaction.transactionId,
                     fontSize = 12.sp,
                     style = MaterialTheme.typography.titleMedium,
-                    color = Green1
+                    color = Green1,
+                    fontFamily = mintsansFontFamily
                 )
                 Text(
                     text = transaction.date,
                     fontSize = 12.sp,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -1079,7 +1246,8 @@ fun TransactionsCard(transaction: TransactionData) {
                     Text(
                         text = transaction.type,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = mintsansFontFamily
                     )
                 }
                 Text(
@@ -1089,7 +1257,8 @@ fun TransactionsCard(transaction: TransactionData) {
                         "Completed", "COMPLETED" -> Green1
                         "Failed" -> MaterialTheme.colorScheme.error
                         else -> MaterialTheme.colorScheme.onSurfaceVariant
-                    }
+                    },
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -1102,7 +1271,9 @@ fun TransactionsCard(transaction: TransactionData) {
                 Text(
                     text = transaction.productName,
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -1112,7 +1283,8 @@ fun TransactionsCard(transaction: TransactionData) {
                 Text(
                     text = transaction.description,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily = mintsansFontFamily
                 )
             }
         }
@@ -1189,21 +1361,26 @@ fun HistoryCard(priceUpdate: PriceUpdate, weightUnit: String) {
                     Text(
                         text = "PHP ${String.format("%.2f", priceUpdate.price)}",
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily
                     )
                     if (priceUpdate.previousPrice > 0.0) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Previous: PHP ${String.format("%.2f", priceUpdate.previousPrice)}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            fontFamily = mintsansFontFamily
                         )
                     }
                 }
                 Text(
                     text = "per ${weightUnit.lowercase()}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -1218,12 +1395,14 @@ fun HistoryCard(priceUpdate: PriceUpdate, weightUnit: String) {
                 Text(
                     text = priceUpdate.dateTime,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    fontFamily = mintsansFontFamily
                 )
                 Text(
                     text = "Updated by: ${priceUpdate.updatedBy}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    fontFamily = mintsansFontFamily
                 )
             }
         }

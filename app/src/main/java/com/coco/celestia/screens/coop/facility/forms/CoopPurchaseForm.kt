@@ -1,7 +1,6 @@
 package com.coco.celestia.screens.coop.facility.forms
 
 import android.app.DatePickerDialog
-import android.util.Log
 import android.widget.DatePicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,15 +22,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -63,21 +59,12 @@ import com.coco.celestia.viewmodel.VendorState
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
@@ -90,10 +77,6 @@ import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.TransactionData
 import java.text.SimpleDateFormat
-import java.time.DayOfWeek
-import java.time.Month
-import java.time.YearMonth
-import java.time.format.TextStyle
 import java.util.Calendar
 import java.util.Locale
 
@@ -426,7 +409,8 @@ fun recordPurchaseOrderTransactions(
             status = "COMPLETED",
             productName = item.itemName,
             productId = item.productId,
-            facilityName = facilityName
+            facilityName = facilityName,
+            vendorName = vendorName
         )
 
         transactionViewModel.recordTransaction(

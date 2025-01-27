@@ -526,7 +526,7 @@ fun NavGraph(
                 productName = productName,
                 productViewModel = productViewModel,
                 transactionViewModel = transactionViewModel,
-                onEvent = { onEvent(it) }
+                onEvent = { onEvent(it) },
             )
         }
         composable(route = Screen.AddOrder.route) {
@@ -1004,7 +1004,8 @@ fun NavGraph(
                 email = email,
                 viewModel = vendorViewModel,
                 onNavigateUp = { navController.navigateUp() },
-                navController = navController
+                navController = navController,
+                transactionViewModel = transactionViewModel
             )
         }
         composable(

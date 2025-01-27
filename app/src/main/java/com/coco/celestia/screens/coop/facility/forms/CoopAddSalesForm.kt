@@ -312,6 +312,15 @@ fun SalesFormContent(
     var errors by remember { mutableStateOf(mapOf<String, String>()) }
     var shouldShowErrors by remember { mutableStateOf(false) }
 
+    LaunchedEffect(isEditMode, products, salesData) {
+        if (isEditMode && selectedProduct == null) {
+            val existingProduct = products.find { it.name == salesData.productName }
+            if (existingProduct != null) {
+                onSelectedProductChange(existingProduct)
+            }
+        }
+    }
+
     LaunchedEffect(salesData, selectedProduct) {
         if (shouldShowErrors) {
             errors = validateSalesForm(
@@ -464,100 +473,104 @@ fun SalesFormContent(
 
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
-                        value = if (showProductDropdown) searchQuery else salesData.productName,
+                        value = salesData.productName,
                         onValueChange = { newQuery ->
-                            searchQuery = newQuery
-                            if (!showProductDropdown) {
-                                onSalesDataChange(salesData.copy(productName = newQuery))
-                                validateField("productName")
+                            if (!isEditMode) {
+                                searchQuery = newQuery
+                                if (!showProductDropdown) {
+                                    onSalesDataChange(salesData.copy(productName = newQuery))
+                                    validateField("productName")
+                                }
+                                showProductDropdown = true
                             }
-                            showProductDropdown = true
                         },
                         label = { Text("Product Name") },
+                        readOnly = isEditMode,  // Make read-only in edit mode
+                        enabled = !isEditMode,  // Disable in edit mode
                         isError = shouldShowErrors && errors["productName"] != null,
                         supportingText = {
                             if (shouldShowErrors) {
                                 errors["productName"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                            } else if (selectedProduct == null) {
-                                Text(
-                                    "Select a product first",
-                                    color = MaterialTheme.colorScheme.secondary
-                                )
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = textFieldColors,
+                        colors = if (isEditMode) disabledTextFieldColors else textFieldColors,
                         trailingIcon = {
-                            IconButton(onClick = {
-                                showProductDropdown = !showProductDropdown
-                                if (showProductDropdown) {
-                                    searchQuery = ""
+                            if (!isEditMode) {  // Only show dropdown icon if not in edit mode
+                                IconButton(onClick = {
+                                    showProductDropdown = !showProductDropdown
+                                    if (showProductDropdown) {
+                                        searchQuery = ""
+                                    }
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = "Select product"
+                                    )
                                 }
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowDropDown,
-                                    contentDescription = "Select product"
-                                )
                             }
                         }
                     )
 
-                    DropdownMenu(
-                        expanded = showProductDropdown && filteredProducts.isNotEmpty(),
-                        onDismissRequest = {
-                            showProductDropdown = false
-                            searchQuery = ""
-                        },
-                        modifier = Modifier
-                            .heightIn(max = 300.dp)
-                            .width(with(LocalDensity.current) {
-                                LocalView.current.width.toDp()
-                            })
-                    ) {
-                        when (productState) {
-                            ProductState.LOADING -> {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(24.dp),
-                                        color = Green1
-                                    )
+                    // Only show dropdown if not in edit mode
+                    if (!isEditMode) {
+                        DropdownMenu(
+                            expanded = showProductDropdown && filteredProducts.isNotEmpty(),
+                            onDismissRequest = {
+                                showProductDropdown = false
+                                searchQuery = ""
+                            },
+                            modifier = Modifier
+                                .heightIn(max = 300.dp)
+                                .width(with(LocalDensity.current) {
+                                    LocalView.current.width.toDp()
+                                })
+                        ) {
+                            when (productState) {
+                                ProductState.LOADING -> {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = Green1
+                                        )
+                                    }
                                 }
-                            }
-                            is ProductState.ERROR -> {
-                                DropdownMenuItem(
-                                    text = { Text("Error loading products") },
-                                    onClick = { }
-                                )
-                            }
-                            ProductState.EMPTY -> {
-                                if (searchQuery.isNotEmpty()) {
+                                is ProductState.ERROR -> {
                                     DropdownMenuItem(
-                                        text = { Text("No matching products") },
+                                        text = { Text("Error loading products") },
                                         onClick = { }
                                     )
                                 }
-                            }
-                            ProductState.SUCCESS -> {
-                                filteredProducts.forEach { product ->
-                                    DropdownMenuItem(
-                                        text = { Text(product.name) },
-                                        onClick = {
-                                            onSelectedProductChange(product)
-                                            onSalesDataChange(salesData.copy(
-                                                productName = product.name,
-                                                weightUnit = product.weightUnit,
-                                                price = product.price
-                                            ))
-                                            searchQuery = ""
-                                            showProductDropdown = false
-                                            validateField("productName")
-                                        }
-                                    )
+                                ProductState.EMPTY -> {
+                                    if (searchQuery.isNotEmpty()) {
+                                        DropdownMenuItem(
+                                            text = { Text("No matching products") },
+                                            onClick = { }
+                                        )
+                                    }
+                                }
+                                ProductState.SUCCESS -> {
+                                    filteredProducts.forEach { product ->
+                                        DropdownMenuItem(
+                                            text = { Text(product.name) },
+                                            onClick = {
+                                                onSelectedProductChange(product)
+                                                onSalesDataChange(salesData.copy(
+                                                    productName = product.name,
+                                                    weightUnit = product.weightUnit,
+                                                    price = product.price
+                                                ))
+                                                searchQuery = ""
+                                                showProductDropdown = false
+                                                validateField("productName")
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
