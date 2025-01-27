@@ -396,7 +396,7 @@ fun ProductCatalog(
                                         products = facilityProducts,
                                         navController = navController
                                     )
-                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Spacer(modifier = Modifier.height(5.dp))
                                 }
                             }
                         }
@@ -427,48 +427,60 @@ fun ProductCatalog(
 
 @Composable
 fun ProductGrid(title: String, products: List<ProductData>, navController: NavController) {
-    Column {
-        Text(
-            text = title,
-            fontWeight = FontWeight.Bold,
-            fontSize = 30.sp,
-            fontFamily = mintsansFontFamily,
-            color = Color.Black,
-            modifier = Modifier.padding(start = 16.dp, top = 16.dp)
-        )
-        Text(
-            text = "Products",
-            fontWeight = FontWeight.Bold,
-            fontSize = 15.sp,
-            fontFamily = mintsansFontFamily,
-            color = Color.Black,
-            modifier = Modifier.padding(start = 20.dp, top = 8.dp)
-        )
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = White2)
 
-        Column(modifier = Modifier.padding(8.dp)) {
-            products.chunked(3).forEach { rowProducts ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    rowProducts.forEach { product ->
-                        ProductCard(
-                            product = product,
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 4.dp),
-                            onClick = {
-                                val encodedName = java.net.URLEncoder.encode(product.productId, "UTF-8")
-                                navController.navigate(Screen.ProductDetails.createRoute(encodedName))
-                            }
-                        )
-                    }
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp)
+        ) {
+            Text(
+                text = title,
+                fontWeight = FontWeight.Bold,
+                fontSize = 30.sp,
+                fontFamily = mintsansFontFamily,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = "Products",
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp,
+                fontFamily = mintsansFontFamily,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
 
-                    repeat(3 - rowProducts.size) {
-                        Spacer(modifier = Modifier.weight(1f))
+            Column {
+                products.chunked(3).forEach { rowProducts ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        rowProducts.forEach { product ->
+                            ProductCard(
+                                product = product,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(horizontal = 4.dp),
+                                onClick = {
+                                    val encodedName = java.net.URLEncoder.encode(product.productId, "UTF-8")
+                                    navController.navigate(Screen.ProductDetails.createRoute(encodedName))
+                                }
+                            )
+                        }
+
+                        repeat(3 - rowProducts.size) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
-                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
