@@ -168,7 +168,7 @@ fun DisplayRequestItem(
     Column (
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(Green4.copy(alpha = 0.5f))
             .clickable {
                 navController.navigate(Screen.AdminSpecialRequestsDetails.createRoute(request.specialRequestUID))
             }
