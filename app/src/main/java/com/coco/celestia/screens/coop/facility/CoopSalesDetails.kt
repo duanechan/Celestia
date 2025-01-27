@@ -296,27 +296,6 @@ fun OnlineSalesDetails(
                     fontWeight = FontWeight.Bold,
                     fontFamily = mintsansFontFamily
                 )
-                Box {
-                    Button(
-                        onClick = {
-                            if (!isStatusFinal) {
-                                showDialog = true
-                            }
-                        },
-                        enabled = !isStatusFinal,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Green1,
-                            disabledContainerColor = Color.Gray
-                        )
-                    ) {
-                        Text(
-                            text = "Update Status",
-                            color = if (isStatusFinal) Color.LightGray else Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = mintsansFontFamily
-                        )
-                    }
-                }
             }
 
             if (showDialog && !isStatusFinal) {
@@ -782,6 +761,27 @@ fun OnlineSalesDetails(
                     fontWeight = FontWeight.Bold,
                     fontFamily = mintsansFontFamily
                 )
+                Box {
+                    Button(
+                        onClick = {
+                            if (!isStatusFinal) {
+                                showDialog = true
+                            }
+                        },
+                        enabled = !isStatusFinal,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Green1,
+                            disabledContainerColor = Color.Gray
+                        )
+                    ) {
+                        Text(
+                            text = "Update Status",
+                            color = if (isStatusFinal) Color.LightGray else Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
+                        )
+                    }
+                }
             }
 
             OrderStatus(
