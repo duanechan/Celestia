@@ -633,7 +633,6 @@ fun ProductCard(
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Product Image Card
             Card(
                 modifier = Modifier.size(60.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -643,10 +642,11 @@ fun ProductCard(
                     contentAlignment = Alignment.Center
                 ) {
                     if (isLoading || productImage == null) {
-                        Text(
-                            text = "+ Add\nImage",
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.bodySmall
+                        Image(
+                            painter = painterResource(id = R.drawable.product_icon),
+                            contentDescription = "Default Product Icon",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
                         )
                     } else {
                         Image(
@@ -659,7 +659,6 @@ fun ProductCard(
                 }
             }
 
-            // Product Details Column
             Column(
                 modifier = Modifier.weight(1f)
             ) {

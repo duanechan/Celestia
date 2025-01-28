@@ -72,27 +72,35 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.coco.celestia.R
+import com.coco.celestia.screens.coop.facility.formatDate
 import com.coco.celestia.service.AttachFileService
 import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.FacilityData
 import com.coco.celestia.viewmodel.model.OrderData
 import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.StatusUpdate
+import com.coco.celestia.viewmodel.model.TransactionData
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 
 @Composable
 fun ClientOrderDetails(
     navController: NavController,
     orderId: String,
-    viewModel: OrderViewModel
+    viewModel: OrderViewModel,
+    transactionViewModel: TransactionViewModel  // Add as parameter instead of creating here
 ) {
     val orderState by viewModel.orderState.observeAsState()
     val orderData by viewModel.orderData.observeAsState(emptyList())
@@ -188,10 +196,12 @@ fun ClientOrderDetails(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Order status tracking
+                // Updated TrackOrderSection with transaction support
                 TrackOrderSection(
                     orderData = currentOrder,
-                    orderViewModel = viewModel
+                    orderViewModel = viewModel,
+                    transactionViewModel = transactionViewModel,
+                    currentUserId = uid
                 )
             }
         }
@@ -1060,7 +1070,9 @@ fun ClientDetailsPaymentMethod(
 @Composable
 fun TrackOrderSection(
     orderData: OrderData,
-    orderViewModel: OrderViewModel
+    orderViewModel: OrderViewModel,
+    transactionViewModel: TransactionViewModel,
+    currentUserId: String
 ) {
     var showConfirmDialog by remember { mutableStateOf(false) }
     var selectedFiles by remember { mutableStateOf<List<Uri>>(emptyList()) }
@@ -1068,6 +1080,45 @@ fun TrackOrderSection(
     var uploadProgress by remember { mutableFloatStateOf(0f) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma"))
+    val formattedDateTime = formatDate(currentDateTime)
+
+    fun formatDate(dateStr: String): String {
+        try {
+            val inputFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
+            val date = LocalDateTime.parse(dateStr, inputFormatter)
+            val outputFormatter = DateTimeFormatterBuilder()
+                .appendPattern("dd MMM yyyy")
+                .toFormatter(Locale.ENGLISH)
+
+            return date.format(outputFormatter)
+        } catch (e: Exception) {
+            return dateStr
+        }
+    }
+
+    fun recordOrderTransaction(orderData: OrderData) {
+        val completionDate = orderData.statusHistory
+            .findLast { it.status == "Completed" }
+            ?.dateTime ?: orderData.orderDate
+
+        val formattedDate = formatDate(completionDate)
+
+        orderData.orderData.forEach { product ->
+            val transaction = TransactionData(
+                transactionId = orderData.orderId,
+                type = "Online Sale",
+                date = formattedDate,
+                description = "Completed order of ${product.quantity} ${product.weightUnit} of ${product.name}",
+                status = "COMPLETED",
+                productName = product.name,
+                productId = product.productId,
+                facilityName = product.type,
+                vendorName = product.vendor
+            )
+            transactionViewModel.recordTransaction(currentUserId, transaction)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -1288,7 +1339,7 @@ fun TrackOrderSection(
                 confirmButton = {
                     TextButton(
                         onClick = {
-                            if (orderData.collectionMethod == "PICKUP" && selectedFiles.isEmpty()) {
+                            if (orderData.collectionMethod == Constants.COLLECTION_PICKUP && selectedFiles.isEmpty()) {
                                 Toast.makeText(
                                     context,
                                     "Please attach proof of receipt",
@@ -1297,7 +1348,7 @@ fun TrackOrderSection(
                                 return@TextButton
                             }
 
-                            val completionMessage = if (orderData.paymentMethod == "CASH")
+                            val completionMessage = if (orderData.paymentMethod == Constants.PAYMENT_CASH)
                                 "Order received and paid in cash"
                             else
                                 "Order received"
@@ -1325,10 +1376,11 @@ fun TrackOrderSection(
                                                 statusHistory = orderData.statusHistory + StatusUpdate(
                                                     status = "Completed",
                                                     statusDescription = completionMessage,
-                                                    dateTime = getCurrentDateTime()
+                                                    dateTime = formattedDateTime
                                                 )
                                             )
                                             orderViewModel.updateOrder(updatedOrder)
+                                            recordOrderTransaction(updatedOrder)
                                             showConfirmDialog = false
                                             selectedFiles = emptyList()
                                         } else {
@@ -1347,10 +1399,11 @@ fun TrackOrderSection(
                                     statusHistory = orderData.statusHistory + StatusUpdate(
                                         status = "Completed",
                                         statusDescription = completionMessage,
-                                        dateTime = getCurrentDateTime()
+                                        dateTime = formattedDateTime
                                     )
                                 )
                                 orderViewModel.updateOrder(updatedOrder)
+                                recordOrderTransaction(updatedOrder)
                                 showConfirmDialog = false
                             }
                         },
@@ -1363,7 +1416,7 @@ fun TrackOrderSection(
                             )
                         } else {
                             Text(
-                                text = if (orderData.paymentMethod == "CASH")
+                                text = if (orderData.paymentMethod == Constants.PAYMENT_CASH)
                                     "Confirm Payment"
                                 else
                                     "Confirm Receipt"

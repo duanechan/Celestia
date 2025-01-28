@@ -1164,7 +1164,7 @@ fun NavGraph(
             arguments = listOf(navArgument("orderId") { type = NavType.StringType })
         ) { backStackEntry ->
             val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
-            ClientOrderDetails(navController = navController, orderId = orderId, viewModel = orderViewModel)
+            ClientOrderDetails(navController = navController, orderId = orderId, viewModel = orderViewModel, transactionViewModel = transactionViewModel)
         }
 
         composable(

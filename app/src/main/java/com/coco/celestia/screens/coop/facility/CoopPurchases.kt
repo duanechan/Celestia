@@ -20,10 +20,12 @@ import androidx.navigation.NavController
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.PurchaseOrderState
 import com.coco.celestia.viewmodel.PurchaseOrderViewModel
@@ -32,8 +34,6 @@ import com.coco.celestia.viewmodel.model.PurchaseOrderItem
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
-
-// TODO: filtering options
 
 @Composable
 fun CoopPurchases(
@@ -45,6 +45,8 @@ fun CoopPurchases(
 ) {
     var selectedTab by remember { mutableStateOf("All") }
     var searchQuery by remember { mutableStateOf("") }
+    var showSortMenu by remember { mutableStateOf(false) }
+    var selectedSort by remember { mutableStateOf("Newest") }
     val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
     val facilityState by facilityViewModel.facilityState.observeAsState(FacilityState.LOADING)
     var hasInitialFetch by remember { mutableStateOf(false) }
@@ -132,22 +134,63 @@ fun CoopPurchases(
                                 singleLine = true
                             )
 
-                            IconButton(
-                                onClick = { /* Handle filter click */ },
-                                modifier = Modifier
-                                    .size(56.dp)
-                                    .background(
-                                        color = White1,
-                                        shape = RoundedCornerShape(8.dp)
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            // Sort Button
+                            Box {
+                                IconButton(
+                                    onClick = { showSortMenu = true },
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .background(
+                                            color = White1,
+                                            shape = RoundedCornerShape(8.dp)
+                                        )
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.sort),
+                                        contentDescription = "Sort",
+                                        tint = Green1
                                     )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.List,
-                                    contentDescription = "Filter",
-                                    tint = Green1
-                                )
+                                }
+
+                                DropdownMenu(
+                                    expanded = showSortMenu,
+                                    onDismissRequest = { showSortMenu = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("Newest") },
+                                        onClick = {
+                                            selectedSort = "Newest"
+                                            showSortMenu = false
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Oldest") },
+                                        onClick = {
+                                            selectedSort = "Oldest"
+                                            showSortMenu = false
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("A-Z") },
+                                        onClick = {
+                                            selectedSort = "A-Z"
+                                            showSortMenu = false
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Z-A") },
+                                        onClick = {
+                                            selectedSort = "Z-A"
+                                            showSortMenu = false
+                                        }
+                                    )
+                                }
                             }
                         }
+
+                        Spacer(modifier = Modifier.width(8.dp))
 
                         Column(modifier = Modifier.fillMaxWidth()) {
                             Row(
@@ -172,7 +215,9 @@ fun CoopPurchases(
                                         ) {
                                             Text(
                                                 text = tab,
-                                                style = MaterialTheme.typography.titleMedium
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                fontFamily = mintsansFontFamily
                                             )
                                         }
 
@@ -204,6 +249,14 @@ fun CoopPurchases(
                         val filteredOrders = when (selectedTab) {
                             "Draft" -> purchaseOrders?.filter { it.savedAsDraft }
                             else -> purchaseOrders?.filter { !it.savedAsDraft }
+                        }?.let { orders ->
+                            when (selectedSort) {
+                                "Newest" -> orders.sortedByDescending { it.dateAdded }
+                                "Oldest" -> orders.sortedBy { it.dateAdded }
+                                "A-Z" -> orders.sortedBy { it.vendor }
+                                "Z-A" -> orders.sortedByDescending { it.vendor }
+                                else -> orders
+                            }
                         }
 
                         when {

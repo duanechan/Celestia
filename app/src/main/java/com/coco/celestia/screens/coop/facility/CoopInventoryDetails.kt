@@ -558,172 +558,6 @@ private fun Details(product: ProductData) {
             }
         }
 
-        // Collection Method Card - for online products only
-        if (!isProductInStore) {
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = White1)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.weight(1f) // Allocates space for this group
-                            ){
-                                Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = null,
-                                    tint = Green1
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Collection Method",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = mintsansFontFamily
-                                )
-                            }
-                            Text(
-                                text = "Available In",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontFamily = mintsansFontFamily
-                            )
-                        }
-
-
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = "Pick Up",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = mintsansFontFamily
-                            )
-                            Text(
-                                text = "Pick Up Location here", //TODO: PLACEHOLDER
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontFamily = mintsansFontFamily
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = "Delivery",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = mintsansFontFamily
-                            )
-                            Text(
-                                text = "Couriers here or etc", //TODO: PLACEHOLDER
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontFamily = mintsansFontFamily
-                            )
-                        }
-
-                    }
-                }
-            }
-        }
-
-        // Payment Method Card - for online products only
-        if (!isProductInStore) {
-            item {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = White1)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.weight(1f) // Allocates space for this group
-                            ){
-                                Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = null,
-                                    tint = Green1
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = "Payment Method",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = mintsansFontFamily
-                                )
-                            }
-                            Text(
-                                text = "Available In",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontFamily = mintsansFontFamily
-                            )
-                        }
-
-
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = "Cash",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = mintsansFontFamily
-                            )
-                            Text(
-                                text = "Instruction here or blank", //TODO: PLACEHOLDER
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontFamily = mintsansFontFamily
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = "G-Cash",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = mintsansFontFamily
-                            )
-                            Text(
-                                text = "G-Cash Number/s here", //TODO: PLACEHOLDER
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontFamily = mintsansFontFamily
-                            )
-                        }
-
-                    }
-                }
-            }
-        }
-
         // Sales & Purchase Information Card
         item {
             Card(
@@ -821,103 +655,6 @@ private fun Details(product: ProductData) {
             Spacer(modifier = Modifier.height(30.dp))
         }
 
-    }
-}
-
-// TODO: USE THESE LATER
-@Composable
-private fun CollectionMethodCard(facilityData: FacilityData) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        if (facilityData.isPickupEnabled) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = Constants.COLLECTION_PICKUP,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = mintsansFontFamily
-                )
-                Text(
-                    text = facilityData.pickupLocation,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontFamily = mintsansFontFamily
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        if (facilityData.isDeliveryEnabled) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = Constants.COLLECTION_DELIVERY,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = mintsansFontFamily
-                )
-                Text(
-                    text = facilityData.deliveryDetails,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontFamily = mintsansFontFamily
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun PaymentMethodCard(facilityData: FacilityData) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        if (facilityData.isCashEnabled) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = Constants.PAYMENT_CASH,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = mintsansFontFamily
-                )
-                Text(
-                    text = facilityData.cashInstructions,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontFamily = mintsansFontFamily
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        if (facilityData.isGcashEnabled) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = Constants.PAYMENT_GCASH,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = mintsansFontFamily
-                )
-                Text(
-                    text = facilityData.gcashNumbers,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontFamily = mintsansFontFamily
-                )
-            }
-        }
     }
 }
 
@@ -1029,6 +766,8 @@ private fun StockStatusItem(
 
 @Composable
 private fun SalesInfoSection(product: ProductData) {
+    val totalAmount = product.price * product.totalPurchases
+
     Column(
         modifier = Modifier.padding(horizontal = 16.dp)
     ) {
@@ -1061,7 +800,7 @@ private fun SalesInfoSection(product: ProductData) {
             fontFamily = mintsansFontFamily
         )
         Text(
-            text = "PHP 1,000.00", //TODO: PLACEHOLDER
+            text = "PHP %.2f".format(totalAmount),
             style = MaterialTheme.typography.bodyLarge,
             fontFamily = mintsansFontFamily
         )
@@ -1081,7 +820,7 @@ private fun PurchaseInfoSection(product: ProductData) {
             fontFamily = mintsansFontFamily
         )
         Text(
-            text = "50", //TODO: PLACEHOLDER
+            text = product.totalPurchases.toString(),
             style = MaterialTheme.typography.titleLarge,
             fontFamily = mintsansFontFamily
         )
@@ -1145,10 +884,13 @@ fun TransactionsTab(
                 )
             }
             TransactionState.SUCCESS -> {
-                val productTransactions = transactionData.values.flatten()
-                    .filter { it.productId == productId }
+                // Flatten all transactions from all users
+                val allTransactions = transactionData.values.flatten()
 
-                if (productTransactions.isEmpty()) {
+                // Log the number of transactions found
+                Log.d("TransactionsTab", "Total transactions: ${allTransactions.size}")
+
+                if (allTransactions.isEmpty()) {
                     Text(
                         text = "No transactions found",
                         style = MaterialTheme.typography.bodyLarge,
@@ -1161,7 +903,7 @@ fun TransactionsTab(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(productTransactions) { transaction ->
+                        items(allTransactions) { transaction ->
                             TransactionsCard(transaction)
                         }
                     }
@@ -1185,6 +927,7 @@ fun TransactionsCard(transaction: TransactionData) {
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
+            // Transaction ID and Date
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -1207,6 +950,7 @@ fun TransactionsCard(transaction: TransactionData) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Transaction Type and Status
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -1244,7 +988,7 @@ fun TransactionsCard(transaction: TransactionData) {
                         )
                     }
                     Text(
-                        text = transaction.type,
+                        text = "${transaction.type} - ${transaction.facilityName}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontFamily = mintsansFontFamily
@@ -1253,9 +997,9 @@ fun TransactionsCard(transaction: TransactionData) {
                 Text(
                     text = transaction.status,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = when (transaction.status) {
-                        "Completed", "COMPLETED" -> Green1
-                        "Failed" -> MaterialTheme.colorScheme.error
+                    color = when (transaction.status.uppercase()) {
+                        "COMPLETED" -> Green1
+                        "FAILED" -> MaterialTheme.colorScheme.error
                         else -> MaterialTheme.colorScheme.onSurfaceVariant
                     },
                     fontFamily = mintsansFontFamily
@@ -1264,21 +1008,18 @@ fun TransactionsCard(transaction: TransactionData) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = transaction.productName,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = mintsansFontFamily
-                )
-            }
+            // Product Name
+            Text(
+                text = transaction.productName,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Description
             if (transaction.description.isNotEmpty()) {
                 Text(
                     text = transaction.description,

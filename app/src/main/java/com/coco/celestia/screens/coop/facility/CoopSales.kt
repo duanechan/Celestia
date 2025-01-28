@@ -471,7 +471,9 @@ private fun OnlineSalesContentUI(
                     ) {
                         Text(
                             text = tab,
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                     }
 
