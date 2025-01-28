@@ -159,14 +159,14 @@ class SpecialRequestViewModel : ViewModel() {
                                     request.ref.setValue(specialReq)
                                         .addOnSuccessListener {
                                             viewModelScope.launch {
-                                                notify(
-                                                    if (specialReq.status == "Calamity-Affected") {
-                                                        NotificationType.FarmerCalamityAffected
-                                                    } else {
-                                                        NotificationType.CoopSpecialRequestUpdated
-                                                    },
-                                                    specialReq
-                                                )
+//                                                notify(
+//                                                    if (specialReq.status == "Calamity-Affected") {
+//                                                        NotificationType.FarmerCalamityAffected
+//                                                    } else {
+//                                                        NotificationType.CoopSpecialRequestUpdated
+//                                                    },
+//                                                    specialReq
+//                                                )
                                             }
                                             _specialReqState.value = SpecialReqState.SUCCESS
                                         }

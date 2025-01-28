@@ -278,7 +278,7 @@ class OrderViewModel : ViewModel() {
                 query.setValue(orderWithTimestamp)
                     .addOnSuccessListener {
                         viewModelScope.launch {
-                            notify(NotificationType.ClientOrderPlaced, orderWithTimestamp)
+//                            notify(NotificationType.ClientOrderPlaced, orderWithTimestamp)
                             _orderState.value = OrderState.SUCCESS
                         }
                     }
