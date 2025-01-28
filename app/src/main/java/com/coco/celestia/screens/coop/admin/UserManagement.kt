@@ -90,10 +90,8 @@ fun AdminUserManagement(
                 val matchesFacility = selectedFacility?.let { facility ->
                     user.role == "Coop$facility"
                 } ?: true
-                user.role.startsWith("Coop") &&
-                        facilityRoles.contains(user.role) &&
-                        matchesSearch &&
-                        matchesFacility
+
+                user.role.startsWith("Coop") && matchesSearch && matchesFacility
             }
             1 -> user.role == "Farmer" &&
                     "${user.firstname} ${user.lastname}".contains(text, ignoreCase = true)
@@ -202,7 +200,8 @@ fun AdminUserManagement(
                                     Text(
                                         "All Facilities",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = Green1
+                                        color = Green1,
+                                        fontFamily = mintsansFontFamily
                                     )
                                 },
                                 onClick = {
@@ -217,7 +216,8 @@ fun AdminUserManagement(
                                         Text(
                                             facility.name,
                                             style = MaterialTheme.typography.bodyMedium,
-                                            color = Green1
+                                            color = Green1,
+                                            fontFamily = mintsansFontFamily
                                         )
                                     },
                                     onClick = {
@@ -251,7 +251,9 @@ fun AdminUserManagement(
                             "Coop Members",
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal
-                            )
+                            ),
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                     },
                     modifier = Modifier.semantics { testTag = "android:id/coopMembersTab" }
@@ -267,7 +269,9 @@ fun AdminUserManagement(
                             "Farmer Members",
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal
-                            )
+                            ),
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily
                         )
                     },
                     modifier = Modifier.semantics { testTag = "android:id/farmerMembersTab" }
@@ -340,7 +344,8 @@ fun UserTable(
                         .semantics { testTag = "android:id/userTableHeaderName" },
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Start,
-                    color = Green1
+                    color = Green1,
+                    fontFamily = mintsansFontFamily
                 )
                 Text(
                     text = if (selectedTab == 0) "FACILITY" else "ROLE",
@@ -351,7 +356,8 @@ fun UserTable(
                         .semantics { testTag = "android:id/userTableHeaderRole" },
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Start,
-                    color = Green1
+                    color = Green1,
+                    fontFamily = mintsansFontFamily
                 )
                 Text(
                     text = "EDIT",
@@ -361,7 +367,8 @@ fun UserTable(
                         .semantics { testTag = "android:id/userTableHeaderEdit" },
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
-                    color = Green1
+                    color = Green1,
+                    fontFamily = mintsansFontFamily
                 )
             }
         }
@@ -396,16 +403,22 @@ fun UserTable(
                                 .fillMaxWidth()
                                 .semantics { testTag = "android:id/userName_$index" },
                             textAlign = TextAlign.Start,
-                            color = Green1
+                            color = Green1,
+                            fontFamily = mintsansFontFamily
                         )
                         Text(
-                            text = if (user.role == "Farmer") "Farmer" else user.role.removePrefix("Coop"),
+                            text = when {
+                                user.role == "Farmer" -> "Farmer"
+                                user.role == "Coop" -> "No Facility"
+                                else -> user.role.removePrefix("Coop")
+                            },
                             modifier = Modifier
                                 .weight(2f)
                                 .fillMaxWidth()
                                 .semantics { testTag = "android:id/userRole_$index" },
                             textAlign = TextAlign.Start,
-                            color = Green1
+                            color = Green1,
+                            fontFamily = mintsansFontFamily
                         )
 
                         IconButton(

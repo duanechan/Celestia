@@ -1,5 +1,6 @@
 package com.coco.celestia.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -36,7 +37,18 @@ class FacilityViewModel: ViewModel() {
         database.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
-                    val facilities = snapshot.children.mapNotNull { it.getValue(FacilityData::class.java) }
+                    val facilities = snapshot.children.mapNotNull { child ->
+                        try {
+                            if (child.getValue() is Boolean) {
+                                null
+                            } else {
+                                child.getValue(FacilityData::class.java)
+                            }
+                        } catch (e: Exception) {
+                            Log.e("FacilityViewModel", "Error converting facility data: ${e.message}")
+                            null
+                        }
+                    }
                     _facilitiesData.value = facilities
                     _facilityState.value = if (facilities.isEmpty()) FacilityState.EMPTY else FacilityState.SUCCESS
                 } else {
@@ -63,59 +75,34 @@ class FacilityViewModel: ViewModel() {
             try {
                 val facilityRef = database.child(name.lowercase())
 
-                facilityRef.runTransaction(object : Transaction.Handler {
-                    override fun doTransaction(currentData: MutableData): Transaction.Result {
-                        if (currentData.value != null) {
-                            return Transaction.abort()
-                        }
+                val facilityData = mutableMapOf<String, Any>(
+                    "icon" to icon,
+                    "name" to name,
+                    "emails" to emails.toList(),
+                    "isPickupEnabled" to false,
+                    "pickupLocation" to "",
+                    "isDeliveryEnabled" to false,
+                    "deliveryDetails" to "",
+                    "isCashEnabled" to false,
+                    "cashInstructions" to "",
+                    "isGcashEnabled" to false,
+                    "gcashNumbers" to ""
+                )
 
-                        val facility = mapOf(
-                            "icon" to icon,
-                            "name" to name,
-                            "emails" to emails,
-                            // Collection Methods
-                            "isPickupEnabled" to false,
-                            "isDeliveryEnabled" to false,
-                            "pickupLocation" to "",
-                            "deliveryDetails" to "",
-                            // Payment Methods
-                            "isCashEnabled" to false,
-                            "isGcashEnabled" to false,
-                            "cashInstructions" to "",
-                            "gcashNumbers" to ""
-                        )
-
-                        currentData.value = facility
-                        return Transaction.success(currentData)
+                facilityRef.setValue(facilityData)
+                    .addOnSuccessListener {
+                        onComplete()
+                        _facilityState.value = FacilityState.SUCCESS
+                    }
+                    .addOnFailureListener { e ->
+                        onError(e.message ?: "Failed to create facility")
+                        _facilityState.value = FacilityState.ERROR(e.message ?: "Failed to create facility")
                     }
 
-                    override fun onComplete(
-                        error: DatabaseError?,
-                        committed: Boolean,
-                        currentData: DataSnapshot?
-                    ) {
-                        when {
-                            error != null -> {
-                                onError(error.message)
-                                _facilityState.value = FacilityState.ERROR(error.message)
-                            }
-                            !committed && currentData?.exists() == true -> {
-                                onError("$name already exists!")
-                                _facilityState.value = FacilityState.ERROR("$name already exists!")
-                            }
-                            committed -> {
-                                onComplete()
-                                _facilityState.value = FacilityState.SUCCESS
-                            }
-                            else -> {
-                                onError("Unknown error occurred.")
-                                _facilityState.value = FacilityState.ERROR("Unknown error occurred.")
-                            }
-                        }
-                    }
-                })
             } catch (e: Exception) {
-                _facilityState.value = FacilityState.ERROR(e.message.toString())
+                Log.e("FacilityViewModel", "Error creating facility: ${e.message}", e)
+                onError(e.message ?: "Unknown error occurred")
+                _facilityState.value = FacilityState.ERROR(e.message ?: "Unknown error occurred")
             }
         }
     }
@@ -129,15 +116,63 @@ class FacilityViewModel: ViewModel() {
     ) {
         viewModelScope.launch {
             try {
-                // Remove email from old facility if it exists
-                if (oldRole != null && oldRole.startsWith("Coop")) {
+                if (oldRole != null && oldRole.startsWith("Coop") && oldRole != "Coop") {
                     val oldFacilityName = oldRole.removePrefix("Coop").lowercase()
-                    removeEmailFromFacility(oldFacilityName, userEmail)
+                    database.child(oldFacilityName).runTransaction(object : Transaction.Handler {
+                        override fun doTransaction(currentData: MutableData): Transaction.Result {
+                            val facility = currentData.getValue(FacilityData::class.java)
+                            if (facility != null) {
+                                facility.emails.remove(userEmail)
+                                currentData.value = facility
+                                return Transaction.success(currentData)
+                            }
+                            return Transaction.abort()
+                        }
+
+                        override fun onComplete(error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {
+                            if (error != null) {
+                                _facilityState.value = FacilityState.ERROR(error.message)
+                            }
+                        }
+                    })
                 }
 
-                // Add email to new facility
-                val newFacilityName = newRole.removePrefix("Coop").lowercase()
-                addEmailToFacility(newFacilityName, userEmail, onSuccess, onError)
+                if (newRole != "Coop") {
+                    val newFacilityName = newRole.removePrefix("Coop").lowercase()
+                    database.child(newFacilityName).runTransaction(object : Transaction.Handler {
+                        override fun doTransaction(currentData: MutableData): Transaction.Result {
+                            val facility = currentData.getValue(FacilityData::class.java)
+                            if (facility != null) {
+                                if (!facility.emails.contains(userEmail)) {
+                                    facility.emails.add(userEmail)
+                                }
+                                currentData.value = facility
+                                return Transaction.success(currentData)
+                            }
+                            return Transaction.abort()
+                        }
+
+                        override fun onComplete(error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {
+                            when {
+                                error != null -> {
+                                    onError(error.message)
+                                    _facilityState.value = FacilityState.ERROR(error.message)
+                                }
+                                committed -> {
+                                    onSuccess()
+                                    _facilityState.value = FacilityState.SUCCESS
+                                }
+                                else -> {
+                                    onError("Failed to update facility")
+                                    _facilityState.value = FacilityState.ERROR("Failed to update facility")
+                                }
+                            }
+                        }
+                    })
+                } else {
+                    onSuccess()
+                    _facilityState.value = FacilityState.SUCCESS
+                }
             } catch (e: Exception) {
                 onError(e.message ?: "Unknown error occurred")
                 _facilityState.value = FacilityState.ERROR(e.message ?: "Unknown error occurred")
@@ -244,7 +279,7 @@ class FacilityViewModel: ViewModel() {
         return mapOf(
             "icon" to icon,
             "name" to name,
-            "emails" to emails,
+            "emails" to ArrayList(emails),
             // Collection Methods
             "isPickupEnabled" to isPickupEnabled,
             "isDeliveryEnabled" to isDeliveryEnabled,

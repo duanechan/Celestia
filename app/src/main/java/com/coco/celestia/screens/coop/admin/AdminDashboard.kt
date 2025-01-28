@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AddCircle
@@ -33,6 +34,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -47,6 +49,10 @@ import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.FacilityData
+import com.coco.celestia.viewmodel.model.UserData
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun AdminHome(
@@ -291,11 +297,18 @@ fun AddFacilityForm(
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
-    var emails = remember { mutableStateListOf("") }
     var facilityFocused by remember { mutableStateOf(false) }
-    var accessibleFocused by remember { mutableStateOf(false) }
     var iconPickerShown by remember { mutableStateOf(false) }
     var selectedIcon by remember { mutableIntStateOf(R.drawable.facility) }
+    var expanded by remember { mutableStateOf(false) }
+
+    val usersData by userViewModel.usersData.observeAsState(initial = emptyList())
+    val noFacilityUsers = usersData.filter { it.role == "Coop" }
+    var selectedUsers by remember { mutableStateOf(setOf<UserData>()) }
+
+    LaunchedEffect(Unit) {
+        userViewModel.fetchUsers()
+    }
 
     Column(
         modifier = Modifier
@@ -329,13 +342,17 @@ fun AddFacilityForm(
                             Image(
                                 imageVector = Icons.Default.AddCircle,
                                 contentDescription = "Facility Image",
-                                modifier = Modifier.size(40.dp).clickable { iconPickerShown = true }
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clickable { iconPickerShown = true }
                             )
                         } else {
                             Image(
                                 painter = painterResource(id = selectedIcon),
                                 contentDescription = "Facility Image",
-                                modifier = Modifier.size(40.dp).clickable { iconPickerShown = true }
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clickable { iconPickerShown = true }
                             )
                         }
                     }
@@ -344,7 +361,8 @@ fun AddFacilityForm(
                     Text(
                         text = "Facility Name",
                         color = Green1,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -356,7 +374,8 @@ fun AddFacilityForm(
                         Text(
                             text = "Enter name of Facility",
                             fontStyle = FontStyle.Italic,
-                            color = if (facilityFocused) Color.Transparent else Color.Gray
+                            color = if (facilityFocused) Color.Transparent else Color.Gray,
+                            fontFamily = mintsansFontFamily
                         )
                     },
                     modifier = Modifier
@@ -375,49 +394,97 @@ fun AddFacilityForm(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Accessible to:",
+                    text = "Select Users",
                     color = Green1,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                LazyColumn {
-                    itemsIndexed(emails) { index, email ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp)
-                        ) {
-                            TextField(
-                                value = email,
-                                onValueChange = { newValue -> emails[index] = newValue },
-                                placeholder = { Text(text = "Enter email address", color = if (accessibleFocused) Color.Transparent else Color.Gray) },
-                                modifier = Modifier.weight(1f),
-                                colors = TextFieldDefaults.textFieldColors(
-                                    containerColor = White1,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent
-                                )
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    OutlinedTextField(
+                        value = if (selectedUsers.isEmpty()) "Select users" else "${selectedUsers.size} user(s) selected",
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            containerColor = White1,
+                            unfocusedBorderColor = Color.Transparent,
+                            focusedBorderColor = Color.Transparent
+                        )
+                    )
 
-                            IconButton(
-                                onClick = {
-                                    if (index == emails.size - 1) {
-                                        emails.add("")
-                                    } else {
-                                        emails.removeAt(index)
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier
+                            .background(Color.White)
+                            .exposedDropdownSize()
+                    ) {
+                        if (noFacilityUsers.isEmpty()) {
+                            DropdownMenuItem(
+                                text = { Text("No users available without a facility") },
+                                onClick = { },
+                                enabled = false
+                            )
+                        } else {
+                            noFacilityUsers.forEach { user ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Text("${user.firstname} ${user.lastname}", fontFamily = mintsansFontFamily)
+                                            if (selectedUsers.contains(user)) {
+                                                Icon(
+                                                    imageVector = Icons.Default.CheckCircle,
+                                                    contentDescription = "Selected",
+                                                    tint = Green1
+                                                )
+                                            }
+                                        }
+                                    },
+                                    onClick = {
+                                        selectedUsers = if (selectedUsers.contains(user)) {
+                                            selectedUsers - user
+                                        } else {
+                                            selectedUsers + user
+                                        }
                                     }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = if (index == emails.size - 1) Icons.Default.Add else Icons.Default.Clear,
-                                    contentDescription = null,
-                                    tint = Green1
                                 )
                             }
                         }
+                    }
+                }
+
+                // Show selected users
+                if (selectedUsers.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Selected Users:",
+                        color = Green1,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily
+                    )
+                    selectedUsers.forEach { user ->
+                        Text(
+                            text = "${user.firstname} ${user.lastname}",
+                            color = Green1,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = mintsansFontFamily
+                        )
                     }
                 }
             }
@@ -427,20 +494,29 @@ fun AddFacilityForm(
 
         Button(
             onClick = {
-                if (name.isNotEmpty() && emails.all { it.isNotEmpty() }) {
+                if (name.isNotEmpty() && selectedUsers.isNotEmpty()) {
+                    val currentDateTime = LocalDateTime.now()
+                    val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma", Locale.US)
+                    val formattedDateTime = currentDateTime.format(formatter).toString()
+
                     facilityViewModel.createFacility(
                         icon = selectedIcon,
                         name = name,
-                        emails = emails,
+                        emails = selectedUsers.map { it.email }.toMutableList(),
                         onComplete = {
                             onEvent(Triple(ToastStatus.SUCCESSFUL, "$name facility added.", System.currentTimeMillis()))
-                            userViewModel.assignFacility(emails, name)
+                            userViewModel.assignFacility(selectedUsers.map { it.email }, name)
                             navController.navigate(Screen.Admin.route)
                         },
                         onError = { onEvent(Triple(ToastStatus.FAILED, it, System.currentTimeMillis())) }
                     )
                 } else {
-                    onEvent(Triple(ToastStatus.FAILED, "Please fill in all fields.", System.currentTimeMillis()))
+                    onEvent(Triple(
+                        ToastStatus.FAILED,
+                        if (name.isEmpty()) "Please enter a facility name."
+                        else "Please select at least one user.",
+                        System.currentTimeMillis()
+                    ))
                 }
             },
             colors = ButtonDefaults.buttonColors(containerColor = Green1),

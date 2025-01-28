@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.coop.admin
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -96,8 +97,9 @@ fun EditUser(
                     ) {
                         OutlinedTextField(
                             readOnly = true,
-                            value = updatedRole.removePrefix("Coop"),
+                            value = if (updatedRole == "Coop") "No Facility" else updatedRole.removePrefix("Coop"),
                             onValueChange = {},
+                            label = { Text("Facility") },
                             trailingIcon = {
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded)
                             },
@@ -124,6 +126,19 @@ fun EditUser(
                                     onDismissRequest = { expanded = false },
                                     modifier = Modifier.semantics { testTag = "android:id/EditUserRoleMenu" }
                                 ) {
+                                    // Add "No Facility" option at the top
+                                    DropdownMenuItem(
+                                        text = { Text("No Facility") },
+                                        onClick = {
+                                            updatedRole = "Coop"
+                                            expanded = false
+                                        },
+                                        modifier = Modifier.semantics {
+                                            testTag = "android:id/EditUserRoleItem_NoFacility"
+                                        }
+                                    )
+
+                                    // List all facilities
                                     facilitiesData.forEach { facility ->
                                         DropdownMenuItem(
                                             text = { Text(facility.name) },
@@ -139,10 +154,23 @@ fun EditUser(
                                 }
                             }
                             is FacilityState.EMPTY -> {
-                                Text(
-                                    text = "No facilities available",
-                                    modifier = Modifier.padding(16.dp)
-                                )
+                                ExposedDropdownMenu(
+                                    expanded = expanded,
+                                    onDismissRequest = { expanded = false },
+                                    modifier = Modifier.semantics { testTag = "android:id/EditUserRoleMenu" }
+                                ) {
+                                    // Show only "No Facility" option when no facilities are available
+                                    DropdownMenuItem(
+                                        text = { Text("No Facility") },
+                                        onClick = {
+                                            updatedRole = "Coop"
+                                            expanded = false
+                                        },
+                                        modifier = Modifier.semantics {
+                                            testTag = "android:id/EditUserRoleItem_NoFacility"
+                                        }
+                                    )
+                                }
                             }
                             is FacilityState.ERROR -> {
                                 Text(
@@ -173,7 +201,8 @@ fun EditUser(
                             if (uid != null) {
                                 val newRole = if (user.role == "Farmer") user.role else updatedRole
 
-                                if (user.role.startsWith("Coop")) {
+                                // Only call updateFacilityEmails if the role is changing and involves a facility
+                                if (user.role.startsWith("Coop") && user.role != newRole) {
                                     facilityViewModel.updateFacilityEmails(
                                         oldRole = user.role,
                                         newRole = newRole,
@@ -200,13 +229,19 @@ fun EditUser(
                                             }
 
                                             if (user.role != newRole) {
+                                                val facilityDescription = if (newRole == "Coop") {
+                                                    "removed from facility"
+                                                } else {
+                                                    "updated to ${newRole.removePrefix("Coop")}"
+                                                }
+
                                                 transactionViewModel.recordTransaction(
                                                     uid = FirebaseAuth.getInstance().uid.toString(),
                                                     transaction = TransactionData(
                                                         transactionId = "Transaction-${UUID.randomUUID()}",
                                                         type = "User_Updated",
                                                         date = formattedDateTime,
-                                                        description = "${user.firstname} ${user.lastname}'s facility updated to ${newRole.removePrefix("Coop")}"
+                                                        description = "${user.firstname} ${user.lastname}'s facility $facilityDescription"
                                                     )
                                                 )
                                             }

@@ -1,5 +1,6 @@
 package com.coco.celestia.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -338,32 +339,41 @@ class UserViewModel : ViewModel() {
         viewModelScope.launch {
             _userState.value = UserState.LOADING
             try {
-                database.runTransaction(object : Transaction.Handler {
-                    override fun doTransaction(currentData: MutableData): Transaction.Result {
-                        currentData.children.forEach { child ->
-                            var user = child.getValue(UserData::class.java) ?: UserData()
-                            if (emails.contains(user.email) && user.role == "Client") {
-                                user.role = "Coop${facility.replaceFirstChar { it.uppercase() }}"
-                                child.value = user
+                database.orderByChild("role").equalTo("Coop")
+                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            val batch = HashMap<String, Any>()
+
+                            snapshot.children.forEach { child ->
+                                val userData = child.getValue(UserData::class.java)
+                                if (userData != null && emails.contains(userData.email)) {
+                                    val newRole = "Coop${facility.replaceFirstChar { it.uppercase() }}"
+                                    batch["${child.key}/role"] = newRole
+                                }
+                            }
+
+                            if (batch.isNotEmpty()) {
+                                database.updateChildren(batch)
+                                    .addOnSuccessListener {
+                                        _userState.value = UserState.SUCCESS
+                                        fetchUsers()
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Log.e("UserViewModel", "Failed to update users: ${e.message}")
+                                        _userState.value = UserState.ERROR(e.message ?: "Failed to update users")
+                                    }
+                            } else {
+                                _userState.value = UserState.SUCCESS
                             }
                         }
-                        return Transaction.success(currentData)
-                    }
 
-                    override fun onComplete(
-                        error: DatabaseError?,
-                        committed: Boolean,
-                        currentData: DataSnapshot?
-                    ) {
-                        if (error != null) {
+                        override fun onCancelled(error: DatabaseError) {
+                            Log.e("UserViewModel", "Query cancelled: ${error.message}")
                             _userState.value = UserState.ERROR(error.message)
-                        } else if (committed) {
-                            _userState.value = UserState.SUCCESS
                         }
-                    }
-
-                })
+                    })
             } catch (e: Exception) {
+                Log.e("UserViewModel", "Error assigning facility: ${e.message}", e)
                 _userState.value = UserState.ERROR(e.message ?: "Unknown Error.")
             }
         }
