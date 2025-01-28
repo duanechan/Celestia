@@ -6,8 +6,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -89,7 +87,7 @@ fun ClientSpecialReqDetails(
                                     .padding(horizontal = 2.dp, vertical = 5.dp)
                             ) {
                                 Text(
-                                    text = "${specialReq.status}",
+                                    text = specialReq.status,
                                     color = White1,
                                     fontSize = 16.sp,
                                     fontFamily = mintsansFontFamily,
@@ -133,7 +131,7 @@ fun ClientSpecialReqDetails(
                 }
 
                 // Description Card
-                if (!specialReq.description.isNullOrEmpty()) {
+                if (specialReq.description.isNotEmpty()) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -292,8 +290,57 @@ fun ClientSpecialReqDetails(
                         }
                     }
                 }
+
+                if (specialReq.toDeliver.any { it.status == "Delivering to Client" || it.status == "To Pick Up"}) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        colors = CardDefaults.cardColors(containerColor = White1),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Button(
+                                onClick = {
+                                    request.toDeliver.map { product ->
+                                        val addTrack = TrackRecord(
+                                            description = "Client Received ${product.name}: ${product.quantity}kg",
+                                            dateTime = formattedDateTime
+                                        )
+                                        trackRecord.add(addTrack)
+                                    }
+
+                                    toDeliver.clear()
+                                    specialRequestViewModel.updateSpecialRequest(
+                                        request.copy(
+                                            trackRecord = trackRecord,
+                                            toDeliver = toDeliver,
+                                            status = if (request.assignedMember.all { it.status == "Completed" }) {
+                                                "Completed"
+                                            } else "In Progress"
+                                        )
+                                    )
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    contentColor = Color.White,
+                                    containerColor = Green1
+                                ),
+                                modifier = Modifier
+                                    .height(52.dp)
+                            ) {
+                                Text(
+                                    text = "Received Products",
+                                    color = Color.White,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+                }
                 // Additional Requests Card (if any)
-                if (!specialReq.additionalRequest.isNullOrEmpty()) {
+                if (specialReq.additionalRequest.isNotEmpty()) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
