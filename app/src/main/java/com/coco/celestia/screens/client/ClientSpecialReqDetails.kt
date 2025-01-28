@@ -41,8 +41,8 @@ fun ClientSpecialReqDetails(
 
     val specialReqData by specialRequestViewModel.specialReqData.observeAsState(emptyList())
     val request = specialReqData.find { it.specialRequestUID == specialRequestUID }
-    val trackRecord = remember { mutableStateListOf(*request?.trackRecord!!.toTypedArray()) }
-    val toDeliver = remember { mutableStateListOf(*request?.toDeliver!!.toTypedArray()) }
+    val trackRecord = remember { mutableStateListOf(*(request?.trackRecord?.toTypedArray() ?: emptyArray())) }
+    val toDeliver = remember { mutableStateListOf(*(request?.toDeliver?.toTypedArray() ?: emptyArray())) }
     LaunchedEffect(Unit) {
         specialRequestViewModel.fetchSpecialRequests(
             filter = "",
@@ -268,7 +268,7 @@ fun ClientSpecialReqDetails(
                                         request.copy(
                                             trackRecord = trackRecord,
                                             toDeliver = toDeliver,
-                                            status = if (request.toDeliver.isEmpty() && request.assignedMember.all { it.status == "Completed" }) {
+                                            status = if (request.assignedMember.all { it.status == "Completed" }) {
                                                 "Completed"
                                             } else "In Progress"
                                         )

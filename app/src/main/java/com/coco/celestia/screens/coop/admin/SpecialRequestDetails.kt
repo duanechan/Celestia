@@ -740,7 +740,8 @@ fun SpecialRequestDetails(
                                     name = name,
                                     product = product,
                                     quantity = quantity,
-                                    trackingID = trackingID
+                                    trackingID = trackingID,
+                                    remainingQuantity = quantity
                                 )
                                 assignedMember.add(member)
                             }

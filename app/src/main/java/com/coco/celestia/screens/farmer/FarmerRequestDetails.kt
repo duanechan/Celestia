@@ -224,7 +224,7 @@ fun DisplayRequestDetails (
                         )
                     }
 
-                    val delivered = member.remainingQuantity - member.deliveredQuantity
+                    val delivered = if (member.remainingQuantity - member.deliveredQuantity == member.quantity) 0 else member.remainingQuantity - member.deliveredQuantity
                     if (delivered != 0) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
