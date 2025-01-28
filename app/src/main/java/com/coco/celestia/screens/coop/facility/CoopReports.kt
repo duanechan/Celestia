@@ -487,6 +487,9 @@ fun CoopReports(
                         }
                     }
                 }
+                else {
+                    NoFacilityScreen()
+                }
             }
         }
     }

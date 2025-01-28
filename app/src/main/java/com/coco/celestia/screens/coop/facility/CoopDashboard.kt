@@ -133,9 +133,11 @@ fun CoopDashboard(
 
     val scrollState = rememberScrollState()
 
-    val facilityOrders = allOrders.filter { order ->
-        order.orderData.any { product -> product.type == facilityName }
-    }
+    val facilityOrders = if (userFacility != null) {
+        allOrders.filter { order ->
+            order.orderData.any { product -> product.type == facilityName }
+        }
+    } else emptyList()
 
     val pendingCount = facilityOrders.count { it.status == "Pending" }
     val confirmedCount = facilityOrders.count { it.status == "Confirmed" }
@@ -156,158 +158,180 @@ fun CoopDashboard(
         modifier = Modifier.fillMaxSize(),
         color = White2
     ) {
-        Column(
-            modifier = Modifier
-                .verticalScroll(scrollState)
-                .padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+        when (facilityState) {
+            FacilityState.LOADING -> {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
+            }
+
+            is FacilityState.ERROR -> {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Text(
+                        text = (facilityState as FacilityState.ERROR).message,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+            }
+
+            else -> {
+                Column(
+                    modifier = Modifier
+                        .verticalScroll(scrollState)
+                        .padding(16.dp)
                 ) {
-                    userFacility?.let { facility ->
-                        Icon(
-                            painter = painterResource(id = facility.icon),
-                            contentDescription = null,
-                            modifier = Modifier.size(25.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            userFacility?.let { facility ->
+                                Icon(
+                                    painter = painterResource(id = facility.icon),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(25.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
+
+                            Text(
+                                text = currentFacilityName.uppercase(),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+
+                        if (userFacility != null && (
+                                    facilityState is FacilityState.LOADING ||
+                                            productState is ProductState.LOADING ||
+                                            orderState is OrderState.LOADING
+                                    )) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                            .background(White1, shape = RoundedCornerShape(12.dp))
+                            .padding(16.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = today,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Normal,
+                                textAlign = TextAlign.Start,
+                                color = DarkGreen,
+                                fontFamily = mintsansFontFamily
+                            )
+
+                            userData?.let { user ->
+                                Text(
+                                    text = "$greeting, ${user.firstname} ${user.lastname}!",
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Start,
+                                    color = DarkGreen,
+                                    modifier = Modifier.padding(top = 8.dp),
+                                    fontFamily = mintsansFontFamily
+                                )
+                            }
+                        }
                     }
 
                     Text(
-                        text = currentFacilityName.uppercase(),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                if (facilityState is FacilityState.LOADING ||
-                    productState is ProductState.LOADING ||
-                    orderState is OrderState.LOADING) {
-                    Spacer(modifier = Modifier.width(8.dp))
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp
-                    )
-                }
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .background(White1, shape = RoundedCornerShape(12.dp))
-                    .padding(16.dp)
-            ) {
-                Column {
-                    Text(
-                        text = today,
+                        text = "Items",
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Normal,
-                        textAlign = TextAlign.Start,
-                        color = DarkGreen,
-                        fontFamily = mintsansFontFamily
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily,
+                        color = Green1,
+                        modifier = Modifier.padding(vertical = 8.dp)
                     )
 
-                    userData?.let { user ->
-                        Text(
-                            text = "$greeting, ${user.firstname} ${user.lastname}!",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Start,
-                            color = DarkGreen,
-                            modifier = Modifier.padding(top = 8.dp),
-                            fontFamily = mintsansFontFamily
+                    ItemCard(
+                        "Active Products",
+                        activeProducts.toString(),
+                        onClick = { if (userFacility != null) showActiveProductsDialog = true }
+                    )
+                    ItemCard(
+                        "Inactive Products",
+                        inactiveProducts.toString(),
+                        onClick = { if (userFacility != null) showInactiveProductsDialog = true }
+                    )
+
+                    if (showActiveProductsDialog) {
+                        ProductListDialog(
+                            title = "Active Products",
+                            products = products.filter { it.isActive },
+                            onDismiss = { showActiveProductsDialog = false },
+                            navController = navController
                         )
                     }
+
+                    if (showInactiveProductsDialog) {
+                        ProductListDialog(
+                            title = "Inactive Products",
+                            products = products.filter { !it.isActive },
+                            onDismiss = { showInactiveProductsDialog = false },
+                            navController = navController
+                        )
+                    }
+
+                    Text(
+                        text = "Stock Alerts",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily,
+                        color = Green1,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+
+                    ItemCard(
+                        label = "Low Stocks",
+                        count = lowStockProducts.size.toString(),
+                        onClick = { if (userFacility != null) showLowStockDialog = true }
+                    )
+
+                    if (showLowStockDialog) {
+                        LowStockDialog(
+                            products = lowStockProducts,
+                            onDismiss = { showLowStockDialog = false }
+                        )
+                    }
+
+                    Text(
+                        text = "Order Statuses",
+                        fontSize = 16.sp,
+                        color = Green1,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = mintsansFontFamily,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+
+                    OrderStatusCard("Pending", pendingCount.toString(), R.drawable.review)
+                    OrderStatusCard("Confirmed", confirmedCount.toString(), R.drawable.progress)
+                    OrderStatusCard("To Deliver", toDeliverCount.toString(), R.drawable.progress)
+                    OrderStatusCard("To Receive", toReceiveCount.toString(), R.drawable.progress)
+                    OrderStatusCard("Completed", completedCount.toString(), R.drawable.progress)
+                    OrderStatusCard("Cancelled", cancelledCount.toString(), R.drawable.cancelled)
+                    OrderStatusCard("Return/Refund", returnRefundCount.toString(), R.drawable.cancelled)
                 }
             }
-
-            Text(
-                text = "Items",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = mintsansFontFamily,
-                color = Green1,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-
-            ItemCard(
-                "Active Products",
-                activeProducts.toString(),
-                onClick = { showActiveProductsDialog = true }
-            )
-            ItemCard(
-                "Inactive Products",
-                inactiveProducts.toString(),
-                onClick = { showInactiveProductsDialog = true }
-            )
-
-            if (showActiveProductsDialog) {
-                ProductListDialog(
-                    title = "Active Products",
-                    products = products.filter { it.isActive },
-                    onDismiss = { showActiveProductsDialog = false },
-                    navController = navController
-                )
-            }
-
-            if (showInactiveProductsDialog) {
-                ProductListDialog(
-                    title = "Inactive Products",
-                    products = products.filter { !it.isActive },
-                    onDismiss = { showInactiveProductsDialog = false },
-                    navController = navController
-                )
-            }
-
-            Text(
-                text = "Stock Alerts",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = mintsansFontFamily,
-                color = Green1,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-
-            ItemCard(
-                label = "Low Stocks",
-                count = lowStockProducts.size.toString(),
-                onClick = { showLowStockDialog = true }
-            )
-
-            if (showLowStockDialog) {
-                LowStockDialog(
-                    products = lowStockProducts,
-                    onDismiss = { showLowStockDialog = false }
-                )
-            }
-
-            Text(
-                text = "Order Statuses",
-                fontSize = 16.sp,
-                color = Green1,
-                fontWeight = FontWeight.Bold,
-                fontFamily = mintsansFontFamily,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-
-            OrderStatusCard("Pending", pendingCount.toString(), R.drawable.review)
-            OrderStatusCard("Confirmed", confirmedCount.toString(), R.drawable.progress)
-            OrderStatusCard("To Deliver", toDeliverCount.toString(), R.drawable.progress)
-            OrderStatusCard("To Receive", toReceiveCount.toString(), R.drawable.progress)
-            OrderStatusCard("Completed", completedCount.toString(), R.drawable.progress)
-            OrderStatusCard("Cancelled", cancelledCount.toString(), R.drawable.cancelled)
-            OrderStatusCard("Return/Refund", returnRefundCount.toString(), R.drawable.cancelled)
         }
     }
 }
@@ -343,7 +367,7 @@ fun LowStockDialog(
         text = {
             Box(
                 modifier = Modifier
-                    .height(300.dp) // Fixed height
+                    .height(300.dp)
                     .fillMaxWidth()
             ) {
                 LazyColumn(

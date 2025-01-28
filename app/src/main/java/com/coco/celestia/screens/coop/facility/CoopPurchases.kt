@@ -34,8 +34,6 @@ import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
 
 // TODO: filtering options
-// TODO:
-//  Note: Removed: Reference Number, More Information, Status(Processing)
 
 @Composable
 fun CoopPurchases(
