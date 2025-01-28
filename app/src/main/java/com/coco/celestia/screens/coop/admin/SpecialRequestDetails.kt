@@ -74,7 +74,6 @@ import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.AssignedMember
 import com.coco.celestia.viewmodel.model.Constants
-import com.coco.celestia.viewmodel.model.ProductReq
 import com.coco.celestia.viewmodel.model.ProductStatus
 import com.coco.celestia.viewmodel.model.SpecialRequest
 import com.coco.celestia.viewmodel.model.TrackRecord
@@ -294,7 +293,7 @@ fun SpecialRequestDetails(
                                 val addToDeliver = ProductStatus(
                                     name = member.product,
                                     quantity = member.deliveredQuantity,
-                                    status = "To Deliver"
+                                    status = if (request.collectionMethod == Constants.COLLECTION_DELIVERY) "To Deliver" else "To Pick Up"
                                 )
 
                                 farmerTrackRecord.add(addFarmerTrack)
@@ -320,6 +319,7 @@ fun SpecialRequestDetails(
                     ),
                     modifier = Modifier
                         .height(52.dp)
+                        .padding(vertical = 4.dp, horizontal = 8.dp)
                 ) {
                     Text(
                         text = "Receive ${member.product} from ${member.name}",
@@ -360,9 +360,30 @@ fun SpecialRequestDetails(
                 ),
                 modifier = Modifier
                     .height(52.dp)
+                    .padding(vertical = 4.dp, horizontal = 8.dp)
             ) {
                 Text(
                     text = "Deliver Products to Client",
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+
+        if (request.toDeliver.any { it.status == "To Pick Up" }) {
+            Button(
+                onClick = { },
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    contentColor = Color.White,
+                    containerColor = Green1
+                ),
+                modifier = Modifier
+                    .height(52.dp)
+            ) {
+                Text(
+                    text = "Waiting for Client to Pick Up Product",
                     color = Color.White,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()

@@ -6,8 +6,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -89,7 +87,7 @@ fun ClientSpecialReqDetails(
                                     .padding(horizontal = 2.dp, vertical = 5.dp)
                             ) {
                                 Text(
-                                    text = "${specialReq.status}",
+                                    text = specialReq.status,
                                     color = White1,
                                     fontSize = 16.sp,
                                     fontFamily = mintsansFontFamily,
@@ -133,7 +131,7 @@ fun ClientSpecialReqDetails(
                 }
 
                 // Description Card
-                if (!specialReq.description.isNullOrEmpty()) {
+                if (specialReq.description.isNotEmpty()) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -244,7 +242,7 @@ fun ClientSpecialReqDetails(
                     }
                 }
 
-                if (specialReq.toDeliver.any { it.status == "Delivering to Client" }) {
+                if (specialReq.toDeliver.any { it.status == "Delivering to Client" || it.status == "To Pick Up"}) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -293,7 +291,7 @@ fun ClientSpecialReqDetails(
                     }
                 }
                 // Additional Requests Card (if any)
-                if (!specialReq.additionalRequest.isNullOrEmpty()) {
+                if (specialReq.additionalRequest.isNotEmpty()) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
