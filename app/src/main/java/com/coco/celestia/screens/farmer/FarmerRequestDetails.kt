@@ -380,7 +380,7 @@ fun DisplayRequestDetails (
                     specialRequest.assignedMember.map { member ->
                         if (member.email == farmerEmail) {
                             val addTrack = TrackRecord(
-                                description = "Farmer ${member.name} status: $status",
+                                description = "Farmer ${member.name} status: $status - $description",
                                 dateTime = formattedDateTime
                             )
                             val addFarmerTrack = TrackRecord(

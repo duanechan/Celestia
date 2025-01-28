@@ -16,13 +16,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
+import com.coco.celestia.viewmodel.model.TrackRecord
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
@@ -31,9 +35,14 @@ fun ClientSpecialReqDetails(
     specialRequestViewModel: SpecialRequestViewModel,
     specialRequestUID: String
 ) {
+    val currentDateTime = LocalDateTime.now()
+    val formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
+    val formattedDateTime = currentDateTime.format(formatter)
+
     val specialReqData by specialRequestViewModel.specialReqData.observeAsState(emptyList())
     val request = specialReqData.find { it.specialRequestUID == specialRequestUID }
-
+    val trackRecord = remember { mutableStateListOf(*request?.trackRecord!!.toTypedArray()) }
+    val toDeliver = remember { mutableStateListOf(*request?.toDeliver!!.toTypedArray()) }
     LaunchedEffect(Unit) {
         specialRequestViewModel.fetchSpecialRequests(
             filter = "",
@@ -235,6 +244,54 @@ fun ClientSpecialReqDetails(
                     }
                 }
 
+                if (specialReq.toDeliver.any { it.status == "Delivering to Client" }) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        colors = CardDefaults.cardColors(containerColor = White1),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Button(
+                                onClick = {
+                                    request.toDeliver.map { product ->
+                                        val addTrack = TrackRecord(
+                                            description = "Client Received ${product.name}: ${product.quantity}kg",
+                                            dateTime = formattedDateTime
+                                        )
+                                        trackRecord.add(addTrack)
+                                    }
+
+                                    toDeliver.clear()
+                                    specialRequestViewModel.updateSpecialRequest(
+                                        request.copy(
+                                            trackRecord = trackRecord,
+                                            toDeliver = toDeliver,
+                                            status = if (request.toDeliver.isEmpty() && request.assignedMember.all { it.status == "Completed" }) {
+                                                "Completed"
+                                            } else "In Progress"
+                                        )
+                                    )
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    contentColor = Color.White,
+                                    containerColor = Green1
+                                ),
+                                modifier = Modifier
+                                    .height(52.dp)
+                            ) {
+                                Text(
+                                    text = "Received Products",
+                                    color = Color.White,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+                }
                 // Additional Requests Card (if any)
                 if (!specialReq.additionalRequest.isNullOrEmpty()) {
                     Card(

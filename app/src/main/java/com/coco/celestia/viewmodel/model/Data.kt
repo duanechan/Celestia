@@ -101,7 +101,14 @@ data class SpecialRequest(
     val products: List<ProductReq> = emptyList(),
     val assignedMember: List<AssignedMember> = emptyList(),
     val trackRecord: List<TrackRecord> = emptyList(),
-    val attachments: List<String> = emptyList()
+    val attachments: List<String> = emptyList(),
+    val toDeliver: List<ProductStatus> = emptyList()
+)
+
+data class ProductStatus (
+    val name: String = "",
+    val quantity: Int = 0,
+    val status: String = ""
 )
 
 data class ProductReq(

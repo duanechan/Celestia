@@ -154,36 +154,42 @@ fun NavGraph(
     var newNotification by remember { mutableIntStateOf(0) }
     var notificationFirstLaunch by remember { mutableStateOf(true) }
 
-//    LaunchedEffect(Unit) {
-//        val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
-//        NotificationService.observeUserNotifications(
-//            uid = uid,
-//            onNotificationsChanged = {
-//                if (notificationFirstLaunch) {
-//                    notifications.clear()
-//                    notifications.addAll(it)
-//                    notificationFirstLaunch = false
-//                    newNotification = it.size
-//                } else {
-//                    if (it.size > newNotification) {
-//                        onEvent(
-//                            Triple(
-//                                ToastStatus.SUCCESSFUL,
-//                                it.maxByOrNull { notification ->
-//                                    LocalDateTime.parse(notification.timestamp, formatter)
-//                                }?.message.toString(),
-//                                System.currentTimeMillis()
-//                            )
-//                        )
-//                    }
-//                    notifications.clear()
-//                    notifications.addAll(it)
-//                    newNotification = it.size
-//                }
-//            },
-//            onError = {}
-//        )
-//    }
+    LaunchedEffect(Unit) {
+        val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
+        NotificationService.observeUserNotifications(
+            uid = uid,
+            onNotificationsChanged = {
+                it.forEach { notification ->
+                    println(notification.timestamp)
+                }
+                if (notificationFirstLaunch) {
+                    notifications.clear()
+                    notifications.addAll(it)
+                    notificationFirstLaunch = false
+                    newNotification = it.size
+                } else {
+                    if (it.size > newNotification) {
+                        onEvent(
+                            Triple(
+                                ToastStatus.SUCCESSFUL,
+                                it.maxByOrNull { notification ->
+                                    val standardizedTimestamp = notification.timestamp
+                                        .replace("PM", "pm", true)
+                                        .replace("AM", "am", true)
+                                    LocalDateTime.parse(standardizedTimestamp, formatter)
+                                }?.message.toString(),
+                                System.currentTimeMillis()
+                            )
+                        )
+                    }
+                    notifications.clear()
+                    notifications.addAll(it)
+                    newNotification = it.size
+                }
+            },
+            onError = {}
+        )
+    }
 
     NavHost(
         navController = navController,

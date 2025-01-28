@@ -74,6 +74,8 @@ import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.AssignedMember
 import com.coco.celestia.viewmodel.model.Constants
+import com.coco.celestia.viewmodel.model.ProductReq
+import com.coco.celestia.viewmodel.model.ProductStatus
 import com.coco.celestia.viewmodel.model.SpecialRequest
 import com.coco.celestia.viewmodel.model.TrackRecord
 import java.text.SimpleDateFormat
@@ -108,6 +110,7 @@ fun SpecialRequestDetails(
     val usersData by userViewModel.usersData.observeAsState()
     val assignedMember = remember { mutableStateListOf<AssignedMember>() }
     val trackRecord = remember { mutableStateListOf(*request.trackRecord.toTypedArray()) }
+    val toDeliver = remember { mutableStateListOf(*request.toDeliver.toTypedArray()) }
 
     var text by remember { mutableStateOf("") }
     var product by remember { mutableStateOf("") }
@@ -259,30 +262,114 @@ fun SpecialRequestDetails(
         }
 
         if (request.status == "In Progress") {
-            request.assignedMember.forEach { member ->
-                if (member.status == "Delivering to Coop") {
-                    Button(
-                        onClick = {
-                            // update remaining quantity, set delivered quantity to 0
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            contentColor = Color.White,
-                            containerColor = Green1
-                        ),
-                        modifier = Modifier
-                            .height(52.dp)
-                    ) {
-                        Text(
-                            text = "Receive ${member.product} from ${member.name}",
-                            color = Color.White,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
+            request.assignedMember.filter { it.status == "Delivering to Coop" }.forEach { member ->
+                Button(
+                    onClick = {
+                        val remainingQuantity = member.remainingQuantity - member.deliveredQuantity
+                        val updatedMember = member.copy(
+                            remainingQuantity = remainingQuantity,
+                            deliveredQuantity = 0,
+                            status = if (remainingQuantity == 0) "Completed" else "Received by Coop"
                         )
-                    }
+
+                        val updatedMembers = request.assignedMember.map { assigned ->
+                            if (assigned.email == member.email) {
+                                val farmerTrackRecord = assigned.farmerTrackRecord.toMutableList()
+                                val addTrack = TrackRecord(
+                                    description = if (remainingQuantity == 0) {
+                                        "Farmer ${member.name} status: Completed - Products Received by Coop"
+                                    } else {
+                                        "Farmer ${member.name} status: Received by Coop - Products Received by Coop"
+                                    },
+                                    dateTime = formattedDateTime
+                                )
+                                val addFarmerTrack = TrackRecord(
+                                    description = if (remainingQuantity == 0) {
+                                        "Completed: Products Received by Coop"
+                                    } else {
+                                        "Received by Coop: Products Received by Coop"
+                                    },
+                                    dateTime = formattedDateTime
+                                )
+                                val addToDeliver = ProductStatus(
+                                    name = member.product,
+                                    quantity = member.deliveredQuantity,
+                                    status = "To Deliver"
+                                )
+
+                                farmerTrackRecord.add(addFarmerTrack)
+                                trackRecord.add(addTrack)
+                                toDeliver.add(addToDeliver)
+
+                                updatedMember.copy(farmerTrackRecord = farmerTrackRecord)
+                            } else assigned
+                        }
+
+                        specialRequestViewModel.updateSpecialRequest(
+                            request.copy(
+                                assignedMember = updatedMembers,
+                                trackRecord = trackRecord,
+                                toDeliver = toDeliver
+                            )
+                        )
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = Color.White,
+                        containerColor = Green1
+                    ),
+                    modifier = Modifier
+                        .height(52.dp)
+                ) {
+                    Text(
+                        text = "Receive ${member.product} from ${member.name}",
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         }
+        // Deliver/ Pickup button
+        if (request.toDeliver.any { it.status == "To Deliver" }) {
+            Button(
+                onClick = {
+                    val updateProductStatus = request.toDeliver.map { product ->
+                        val addTrack = TrackRecord(
+                            description = "Delivering ${product.name}: ${product.quantity}kg",
+                            dateTime = formattedDateTime
+                        )
+                        trackRecord.add(addTrack)
+
+                        product.copy(
+                            status = "Delivering to Client"
+                        )
+                    }
+
+                    specialRequestViewModel.updateSpecialRequest(
+                        request.copy(
+                            trackRecord = trackRecord,
+                            toDeliver = updateProductStatus
+                        )
+                    )
+                },
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    contentColor = Color.White,
+                    containerColor = Green1
+                ),
+                modifier = Modifier
+                    .height(52.dp)
+            ) {
+                Text(
+                    text = "Deliver Products to Client",
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+
         // Accept/ Decline
         if (request.status == "To Review") {
             Box (
@@ -934,6 +1021,8 @@ fun DisplayAssignedMembers (
                     )
                 }
             }
+
+            // TODO: Display delivered quantity
         }
     }
 }
@@ -1012,7 +1101,11 @@ fun UpdateStatusDialog (
     var farmerExpanded by remember { mutableStateOf(false) }
     var statusExpanded by remember { mutableStateOf(false) }
     val formattedUser = request.assignedMember.map { "${it.name} - ${it.email}" }
-    val statusList = listOf("Test", " Test", "Test")
+    val statusList = listOf(
+        "Soil Preparation", "Seed Sowing", "Growing",
+        "Pre-Harvest", "Harvesting", "Post-Harvest",
+        "Delivering to Coop", "Calamity Affected", "Cancelled"
+    )
 
     AlertDialog(
         onDismissRequest = onDismiss,
