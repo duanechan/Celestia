@@ -360,6 +360,7 @@ fun SpecialRequestDetails(
                 ),
                 modifier = Modifier
                     .height(52.dp)
+                    .padding(vertical = 4.dp, horizontal = 8.dp)
             ) {
                 Text(
                     text = "Deliver Products to Client",

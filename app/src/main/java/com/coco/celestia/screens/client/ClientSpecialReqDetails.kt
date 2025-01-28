@@ -242,55 +242,6 @@ fun ClientSpecialReqDetails(
                     }
                 }
 
-                if (specialReq.toDeliver.any { it.status == "Delivering to Client" }) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        colors = CardDefaults.cardColors(containerColor = White1),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Button(
-                                onClick = {
-                                    request.toDeliver.map { product ->
-                                        val addTrack = TrackRecord(
-                                            description = "Client Received ${product.name}: ${product.quantity}kg",
-                                            dateTime = formattedDateTime
-                                        )
-                                        trackRecord.add(addTrack)
-                                    }
-
-                                    toDeliver.clear()
-                                    specialRequestViewModel.updateSpecialRequest(
-                                        request.copy(
-                                            trackRecord = trackRecord,
-                                            toDeliver = toDeliver,
-                                            status = if (request.assignedMember.all { it.status == "Completed" }) {
-                                                "Completed"
-                                            } else "In Progress"
-                                        )
-                                    )
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    contentColor = Color.White,
-                                    containerColor = Green1
-                                ),
-                                modifier = Modifier
-                                    .height(52.dp)
-                            ) {
-                                Text(
-                                    text = "Received Products",
-                                    color = Color.White,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        }
-                    }
-                }
-
                 if (specialReq.toDeliver.any { it.status == "Delivering to Client" || it.status == "To Pick Up"}) {
                     Card(
                         modifier = Modifier
