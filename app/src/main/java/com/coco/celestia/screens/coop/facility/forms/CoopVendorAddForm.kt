@@ -55,7 +55,8 @@ fun CoopVendorAddForm(
     onSuccess: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
-    email: String? = null
+    email: String? = null,
+    onVendorChange: (VendorData) -> Unit = {}
 ) {
     var vendorData by remember {
         mutableStateOf(
@@ -94,6 +95,10 @@ fun CoopVendorAddForm(
             street + barangay
         }
         vendorData = vendorData.copy(address = combinedAddress)
+    }
+
+    LaunchedEffect(vendorData) {
+        onVendorChange(vendorData)
     }
 
     LaunchedEffect(vendorData.address) {

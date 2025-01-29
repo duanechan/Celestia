@@ -91,7 +91,10 @@ sealed class Screen(val route: String) {
         fun createRoute(purchaseNumber: String) = "purchase_details/$purchaseNumber"
     }
     data object CoopVendors: Screen( route = "coop_vendors")
-    data object CoopAddVendor: Screen( route = "add_vendor")
+    data object CoopAddVendor : Screen("add_vendor")
+    companion object {
+        const val VENDOR_RESULT_KEY = "added_vendor_name"
+    }
     data object CoopEditVendor: Screen("vendor_add_edit/{email}") {
         fun createRoute(email: String) = "vendor_add_edit/$email"
     }

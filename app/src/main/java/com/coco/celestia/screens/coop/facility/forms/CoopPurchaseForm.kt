@@ -63,6 +63,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.runtime.livedata.observeAsState
@@ -235,7 +236,9 @@ fun CoopPurchaseForm(
                         vendorViewModel = vendorViewModel,
                         showErrorMessages = showErrorMessages,
                         textFieldColors = textFieldColors,
-                        isEditingDraft = draftId != null && !isEdit
+                        isEditingDraft = draftId != null && !isEdit,
+                        navController = navController,
+                        facilityName = facilityName
                     )
 
                     // Items Section
@@ -428,11 +431,26 @@ fun PurchaseFormHeader(
     vendorViewModel: VendorViewModel,
     showErrorMessages: Boolean,
     textFieldColors: TextFieldColors,
-    isEditingDraft: Boolean = false
+    isEditingDraft: Boolean = false,
+    navController: NavController,
+    facilityName: String
 ) {
     var expanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
+
+    LaunchedEffect(navController) {
+        navController.currentBackStackEntry
+            ?.savedStateHandle
+            ?.getStateFlow<String?>(Screen.VENDOR_RESULT_KEY, null)
+            ?.collect { vendorName ->
+                if (vendorName != null) {
+                    onPurchaseOrderChange(purchaseOrderData.copy(vendor = vendorName))
+                    vendorViewModel.fetchVendors()
+                    navController.currentBackStackEntry?.savedStateHandle?.remove<String>(Screen.VENDOR_RESULT_KEY)
+                }
+            }
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -534,17 +552,49 @@ fun PurchaseFormHeader(
                 onDismissRequest = { expanded = false },
                 modifier = Modifier.exposedDropdownSize()
             ) {
+                DropdownMenuItem(
+                    text = {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add vendor"
+                            )
+                            Text("Add New Vendor")
+                        }
+                    },
+                    onClick = {
+                        expanded = false
+                        navController.navigate(Screen.CoopAddVendor.route)
+                    }
+                )
+
+                Divider(modifier = Modifier.padding(vertical = 4.dp))
+
                 when (val state = vendorViewModel.vendorState.value) {
                     is VendorState.SUCCESS -> {
-                        vendorViewModel.vendorData.value?.forEach { vendor ->
-                            val vendorName = "${vendor.firstName} ${vendor.lastName}".trim()
+                        val facilityVendors = vendorViewModel.vendorData.value
+                            ?.filter { vendor -> vendor.facility == facilityName }
+                            ?: emptyList()
+
+                        if (facilityVendors.isEmpty()) {
                             DropdownMenuItem(
-                                text = { Text(vendorName) },
-                                onClick = {
-                                    onPurchaseOrderChange(purchaseOrderData.copy(vendor = vendorName))
-                                    expanded = false
-                                }
+                                text = { Text("No vendors available for this facility") },
+                                onClick = { }
                             )
+                        } else {
+                            facilityVendors.forEach { vendor ->
+                                val vendorName = "${vendor.firstName} ${vendor.lastName}".trim()
+                                DropdownMenuItem(
+                                    text = { Text(vendorName) },
+                                    onClick = {
+                                        onPurchaseOrderChange(purchaseOrderData.copy(vendor = vendorName))
+                                        expanded = false
+                                    }
+                                )
+                            }
                         }
                     }
                     is VendorState.LOADING -> {

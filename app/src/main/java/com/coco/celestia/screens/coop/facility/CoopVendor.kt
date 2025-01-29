@@ -53,6 +53,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -85,7 +86,6 @@ fun Vendors(
     val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
     val facilityState by facilityViewModel.facilityState.observeAsState(FacilityState.LOADING)
 
-    // Fetch facilities once when component mounts
     LaunchedEffect(Unit) {
         facilityViewModel.fetchFacilities()
     }
@@ -108,7 +108,6 @@ fun Vendors(
                 }
 
                 if (userFacility != null) {
-                    // Fetch vendors when tab, search, or facility changes
                     LaunchedEffect(selectedTabIndex, searchQuery, userFacility.name) {
                         val filter = when (selectedTabIndex) {
                             0 -> "all"
@@ -198,7 +197,27 @@ fun Vendors(
                                         modifier = Modifier.fillMaxSize(),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text("No vendors found for ${userFacility.name}")
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Text(
+                                                "No vendors found for ${userFacility.name}",
+                                                textAlign = TextAlign.Center,
+                                                fontFamily = mintsansFontFamily
+                                            )
+                                            TextButton(
+                                                onClick = {
+                                                    navController.navigate(Screen.CoopAddVendor.route)
+                                                }
+                                            ) {
+                                                Text(
+                                                    "Add a vendor",
+                                                    color = Green1,
+                                                    fontFamily = mintsansFontFamily
+                                                )
+                                            }
+                                        }
                                     }
                                 }
 
@@ -209,7 +228,27 @@ fun Vendors(
                                             modifier = Modifier.fillMaxSize(),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Text("No results found for \"$searchQuery\"")
+                                            Column(
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                Text(
+                                                    "No results found for \"$searchQuery\"",
+                                                    textAlign = TextAlign.Center,
+                                                    fontFamily = mintsansFontFamily
+                                                )
+                                                if (searchQuery.isNotBlank()) {
+                                                    TextButton(
+                                                        onClick = { searchQuery = "" }
+                                                    ) {
+                                                        Text(
+                                                            "Clear search",
+                                                            color = Green1,
+                                                            fontFamily = mintsansFontFamily
+                                                        )
+                                                    }
+                                                }
+                                            }
                                         }
                                     } else {
                                         LazyColumn {
@@ -232,7 +271,8 @@ fun Vendors(
                                     ) {
                                         Text(
                                             text = (vendorState as VendorState.ERROR).message,
-                                            color = MaterialTheme.colorScheme.error
+                                            color = MaterialTheme.colorScheme.error,
+                                            fontFamily = mintsansFontFamily
                                         )
                                     }
                                 }

@@ -102,8 +102,11 @@ import com.coco.celestia.viewmodel.model.BasketItem
 import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.ProductData
+import com.coco.celestia.viewmodel.model.VendorData
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.serialization.json.Json
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -968,6 +971,7 @@ fun NavGraph(
         }
         composable(Screen.CoopAddVendor.route) {
             val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
+            var vendorData by remember { mutableStateOf<VendorData?>(null) }
 
             val userFacility = facilitiesData.find { facility ->
                 facility.emails.contains(userEmail)
@@ -975,10 +979,24 @@ fun NavGraph(
 
             CoopVendorAddForm(
                 viewModel = vendorViewModel,
+                locationViewModel = locationViewModel,
                 facilityName = userFacility?.name ?: "",
-                onSuccess = { navController.navigateUp() },
-                onCancel = { navController.navigateUp() },
-                locationViewModel = locationViewModel
+                onSuccess = {
+                    vendorData?.let { data ->
+                        val vendorName = "${data.firstName} ${data.lastName}".trim()
+                        navController.previousBackStackEntry?.savedStateHandle?.set(
+                            Screen.VENDOR_RESULT_KEY,
+                            vendorName
+                        )
+                    }
+                    navController.navigateUp()
+                },
+                onCancel = {
+                    navController.navigateUp()
+                },
+                onVendorChange = { data ->
+                    vendorData = data
+                }
             )
         }
         composable(
