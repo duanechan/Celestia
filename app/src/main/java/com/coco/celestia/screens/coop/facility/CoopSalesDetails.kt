@@ -894,6 +894,7 @@ fun TimelineStep(
     gcashPaymentId: String,
     collectionMethod: String = "",
     attachments: List<String> = emptyList(),
+    isTrackOrder: Boolean = false,
     onRefundAction: (Boolean, String) -> Unit = { _, _ -> }
 ) {
     var selectedImageUrl by remember { mutableStateOf<Uri?>(null) }
@@ -1037,8 +1038,7 @@ fun TimelineStep(
                     when {
                         status == "Pending" && paymentMethod == "GCASH" -> 160.dp
                         status == "To Receive" -> 160.dp
-                        status == "Refund Requested" -> 200.dp
-                        status == "Completed" && attachments.isNotEmpty() -> 160.dp
+                        status == "Refund Requested" -> 160.dp
                         statusDescription.isNotBlank() && dateTime.isNotBlank() -> 60.dp
                         else -> 32.dp
                     }
@@ -1148,7 +1148,7 @@ fun TimelineStep(
                             )
                         }
 
-                        if (isCurrent) {
+                        if (isCurrent && !isTrackOrder) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()

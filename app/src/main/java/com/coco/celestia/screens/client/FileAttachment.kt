@@ -21,6 +21,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import com.coco.celestia.R
 import com.coco.celestia.service.AttachFileService
 import com.coco.celestia.ui.theme.*
@@ -218,7 +219,8 @@ fun FileAttachment(
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Attach Files")
+                        Text("Attach Files", fontWeight = FontWeight.Bold,
+                            fontFamily = mintsansFontFamily)
                     }
                 }
             }

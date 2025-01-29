@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,7 +21,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -69,9 +69,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
+import coil.size.Scale
 import com.coco.celestia.R
+import com.coco.celestia.screens.coop.facility.TimelineStep
 import com.coco.celestia.screens.coop.facility.formatDate
 import com.coco.celestia.service.AttachFileService
 import com.coco.celestia.service.ImageService
@@ -93,14 +97,13 @@ import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeFormatterBuilder
 import java.util.Date
 import java.util.Locale
-import java.util.UUID
 
 @Composable
 fun ClientOrderDetails(
     navController: NavController,
     orderId: String,
     viewModel: OrderViewModel,
-    transactionViewModel: TransactionViewModel  // Add as parameter instead of creating here
+    transactionViewModel: TransactionViewModel
 ) {
     val orderState by viewModel.orderState.observeAsState()
     val orderData by viewModel.orderData.observeAsState(emptyList())
@@ -1078,10 +1081,58 @@ fun TrackOrderSection(
     var selectedFiles by remember { mutableStateOf<List<Uri>>(emptyList()) }
     var isUploading by remember { mutableStateOf(false) }
     var uploadProgress by remember { mutableFloatStateOf(0f) }
+    var selectedImageUrl by remember { mutableStateOf<Uri?>(null) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma"))
     val formattedDateTime = formatDate(currentDateTime)
+
+    if (selectedImageUrl != null) {
+        Dialog(
+            onDismissRequest = { selectedImageUrl = null },
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.White)
+            ) {
+                Image(
+                    painter = rememberImagePainter(
+                        data = selectedImageUrl,
+                        builder = {
+                            crossfade(true)
+                            scale(Scale.FIT)
+                        }
+                    ),
+                    contentDescription = "Full size image",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit
+                )
+
+                IconButton(
+                    onClick = { selectedImageUrl = null },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .size(32.dp)
+                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.White,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+    }
 
     fun formatDate(dateStr: String): String {
         try {
@@ -1158,13 +1209,32 @@ fun TrackOrderSection(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        ClientOrderStatus(
-            status = orderData.status,
-            statusDescription = orderData.statusDescription,
-            dateTime = orderData.orderDate,
-            statusHistory = orderData.statusHistory,
-            collectionMethod = orderData.collectionMethod
-        )
+        // Modified status timeline section
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            orderData.statusHistory.forEachIndexed { index, statusUpdate ->
+                TimelineStep(
+                    status = statusUpdate.status,
+                    statusDescription = statusUpdate.statusDescription,
+                    dateTime = statusUpdate.dateTime,
+                    showInfo = true,
+                    isCurrent = statusUpdate.status == orderData.status,
+                    isCompleted = true,
+                    showLine = index < orderData.statusHistory.size - 1,
+                    orderId = orderData.orderId,
+                    paymentMethod = orderData.paymentMethod,
+                    gcashPaymentId = orderData.gcashPaymentId,
+                    collectionMethod = orderData.collectionMethod,
+                    attachments = when (statusUpdate.status) {
+                        "Completed", "Refund Requested" -> orderData.attachments
+                        else -> emptyList()
+                    },
+                    isTrackOrder = true
+                )
+            }
+        }
 
         if (showConfirmDialog) {
             AlertDialog(
@@ -1443,166 +1513,4 @@ fun TrackOrderSection(
 fun getCurrentDateTime(): String {
     val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
     return sdf.format(Date())
-}
-
-@Composable
-fun ClientOrderStatus(
-    status: String,
-    statusDescription: String,
-    dateTime: String,
-    statusHistory: List<StatusUpdate> = emptyList(),
-    collectionMethod: String // Add collection method parameter
-) {
-    val allStatuses = if (collectionMethod == "PICKUP") {
-        listOf(
-            "Pending",
-            "Confirmed",
-            "To Receive",
-            "Completed"
-        )
-    } else {
-        listOf(
-            "Pending",
-            "Confirmed",
-            "To Deliver",
-            "To Receive",
-            "Completed"
-        )
-    }
-
-    val currentIndex = allStatuses.indexOf(status)
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
-    ) {
-        allStatuses.forEachIndexed { index, currentStatus ->
-            val isCurrent = index == currentIndex
-            val isPast = index < currentIndex
-            val showInfo = isCurrent || isPast
-
-            if (isCurrent || isPast) {
-                val statusUpdate = if (isCurrent) {
-                    StatusUpdate(status, statusDescription, dateTime)
-                } else {
-                    statusHistory.find { it.status == currentStatus }
-                }
-
-                ClientTimelineStep(
-                    status = currentStatus,
-                    statusDescription = statusUpdate?.statusDescription ?: "",
-                    dateTime = statusUpdate?.dateTime ?: "",
-                    showInfo = showInfo,
-                    isCurrent = isCurrent,
-                    isCompleted = isPast,
-                    showLine = index < allStatuses.lastIndex
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ClientTimelineStep(
-    status: String,
-    statusDescription: String,
-    dateTime: String,
-    showInfo: Boolean,
-    isCurrent: Boolean,
-    isCompleted: Boolean,
-    showLine: Boolean
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .wrapContentHeight()
-                .width(24.dp)
-        ) {
-            // Status dot
-            Box(
-                modifier = Modifier
-                    .size(12.dp)
-                    .background(
-                        color = when {
-                            isCurrent || isCompleted -> Green2
-                            else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                        },
-                        shape = CircleShape
-                    )
-            ) {
-                if (isCurrent) {
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .background(Color.White, CircleShape)
-                            .align(Alignment.Center)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(5.dp))
-
-            if (showLine) {
-                Spacer(modifier = Modifier.height(2.dp))
-                val lineHeight = if (showInfo) {
-                    val additionalHeight = if (statusDescription.isNotEmpty() && dateTime.isNotEmpty()) {
-                        70.dp // Assume more content adds additional height
-                    } else {
-                        35.dp // Default height for minimal content
-                    }
-                    additionalHeight
-                } else {
-                    20.dp // Minimal height for no content
-                }
-                Box(
-                    modifier = Modifier
-                        .width(2.dp)
-                        .height(lineHeight)
-                        .background(
-                            color = if (isCompleted) Green1
-                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                        )
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        // Status details
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(
-                text = status,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                fontFamily = mintsansFontFamily,
-                color = Green1
-            )
-
-            if (showInfo && statusDescription.isNotEmpty()) {
-                Text(
-                    text = statusDescription,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            if (showInfo && dateTime.isNotEmpty()) {
-                Text(
-                    text = dateTime,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontFamily = mintsansFontFamily
-                )
-            }
-        }
-    }
 }

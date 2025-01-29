@@ -433,7 +433,7 @@ fun ProductGrid(title: String, products: List<ProductData>, navController: NavCo
             .padding(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = White2)
+        colors = CardDefaults.cardColors(containerColor = White1)
 
     ) {
         Column(

@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -56,6 +57,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
@@ -325,7 +327,7 @@ fun CoopProductInventory(
                                 }
 
                                 if (filteredProducts.isEmpty()) {
-                                    EmptyProductsScreen(isInStore, userFacility.name)
+                                    EmptyProductsScreen(isInStore, userFacility.name, navController)
                                 } else {
                                     LazyColumn(
                                         modifier = Modifier.fillMaxSize()
@@ -359,7 +361,7 @@ fun CoopProductInventory(
                             )
                         }
                         is ProductState.EMPTY -> {
-                            EmptyProductsScreen(isInStore, userFacility.name)
+                            EmptyProductsScreen(isInStore, userFacility.name, navController)
                         }
                     }
 
@@ -558,27 +560,59 @@ fun ErrorScreen(message: String) {
 }
 
 @Composable
-private fun EmptyProductsScreen(isInStore: Boolean, facilityName: String) {
-    Box(
+fun EmptyProductsScreen(
+    isInStore: Boolean,
+    facilityName: String,
+    navController: NavController
+) {
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Info,
-                contentDescription = "No Products",
-                modifier = Modifier.size(48.dp)
+        Image(
+            painter = painterResource(id = R.drawable.empty),
+            contentDescription = "Empty Product",
+            modifier = Modifier.size(100.dp),
+            colorFilter = ColorFilter.tint(Green1)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "No ${if (isInStore) "in-store" else "online"} products found for $facilityName",
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Make sure collection and payment methods are configured first before adding products",
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+            color = Gray
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Button(
+            onClick = {
+                navController.navigate(Screen.FacilitySettings.route)
+            },
+            modifier = Modifier
+                .fillMaxWidth(0.7f)
+                .height(48.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Green1
             )
-            Spacer(modifier = Modifier.height(8.dp))
+        ) {
             Text(
-                text = "No ${if (isInStore) "in-store" else "online"} products available at $facilityName",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
+                text = "Go to Facility Settings",
+                style = MaterialTheme.typography.labelLarge,
+                color = White1
             )
         }
     }

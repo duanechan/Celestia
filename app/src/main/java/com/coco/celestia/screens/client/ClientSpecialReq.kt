@@ -6,7 +6,6 @@ import android.app.DatePickerDialog
 import android.net.Uri
 import android.widget.DatePicker
 import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Search
@@ -40,8 +38,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.ScrollableTabRow
@@ -62,23 +60,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
-import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.SpecialReqState
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.VegetableViewModel
 import com.coco.celestia.viewmodel.model.Constants
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.mutableFloatStateOf
 import com.coco.celestia.service.AttachFileService
 import com.coco.celestia.viewmodel.model.ProductReq
@@ -267,17 +260,22 @@ fun DisplaySpecialReq(
             }
         }
 
-        Icon(
-            painter = painterResource(R.drawable.add),
-            contentDescription = "Add",
+        FloatingActionButton(
+            onClick = {
+                navController.navigate(Screen.ClientAddSpecialReq.route)
+            },
+            containerColor = Green1,
             modifier = Modifier
                 .padding(16.dp)
                 .align(Alignment.BottomEnd)
                 .size(56.dp)
-                .clickable {
-                    navController.navigate(Screen.ClientAddSpecialReq.route)
-                }
-        )
+        ) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add",
+                tint = White1
+            )
+        }
     }
 }
 
@@ -297,7 +295,8 @@ fun OrderCard(
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = White1
-        )
+        ),
+        elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Box(
             modifier = Modifier
@@ -307,7 +306,7 @@ fun OrderCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(end = 100.dp) // Add padding to prevent text overlap with status
+                    .padding(end = 100.dp)
             ) {
                 Text(
                     text = order.subject,
@@ -320,7 +319,7 @@ fun OrderCard(
                 Spacer(modifier = Modifier.height(15.dp))
 
                 Text(
-                    text = "Date Requested: ${order.dateRequested}",
+                    text = order.products.joinToString(", ") { it.name },
                     color = Green1,
                     fontSize = 14.sp,
                     fontFamily = mintsansFontFamily
@@ -332,8 +331,7 @@ fun OrderCard(
                     text = "Target Date: ${order.targetDate}",
                     color = Green1,
                     fontSize = 14.sp,
-                    fontFamily = mintsansFontFamily,
-                    fontWeight = FontWeight.Bold
+                    fontFamily = mintsansFontFamily
                 )
             }
 
@@ -409,6 +407,7 @@ fun AddSpecialReq(
     Column (
         modifier = Modifier
             .fillMaxSize()
+            .background(White1)
             .padding(8.dp)
             .verticalScroll(rememberScrollState())
     ) {
@@ -563,7 +562,8 @@ fun AddSpecialReq(
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
-            Text(text = "Add Product")
+            Text(text = "Add Product", fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily)
         }
 
         Row(
@@ -816,8 +816,8 @@ fun AddSpecialReq(
                 }
             },
             colors = ButtonDefaults.buttonColors(
-                containerColor = Green4,
-                contentColor = Green1
+                containerColor = Green1,
+                contentColor = White1
             ),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier
@@ -831,7 +831,8 @@ fun AddSpecialReq(
                     modifier = Modifier.size(24.dp)
                 )
             } else {
-                Text(text = "Submit Request")
+                Text(text = "Submit Request",fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily)
             }
         }
     }

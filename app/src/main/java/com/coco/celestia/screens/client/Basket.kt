@@ -62,11 +62,7 @@ import com.coco.celestia.R
 import com.coco.celestia.components.toast.ToastStatus
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.ImageService
-import com.coco.celestia.ui.theme.BgColor
-import com.coco.celestia.ui.theme.Green1
-import com.coco.celestia.ui.theme.Green4
-import com.coco.celestia.ui.theme.White1
-import com.coco.celestia.ui.theme.mintsansFontFamily
+import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
@@ -93,59 +89,63 @@ fun BasketScreen(
         userViewModel.fetchUser(uid)
     }
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+    Box(
         modifier = Modifier
-            .background(BgColor)
             .fillMaxSize()
-            .padding(15.dp)
+            .background(White2)
     ) {
-        when (userState) {
-            UserState.EMPTY,
-            UserState.EMAIL_SENT_SUCCESS,
-            is UserState.LOGIN_SUCCESS,
-            UserState.REGISTER_SUCCESS,
-            is UserState.ERROR -> BasketError(
-                message = (userState as UserState.ERROR).message ?: "Unknown error",
-                onBrowseProducts = {
-                    navController.navigate(Screen.ProductCatalog.createRoute(role = "Client"))
-                }
-            )
-            UserState.LOADING -> BasketLoading()
-            UserState.SUCCESS -> {
-                if (userData.basket.isNotEmpty()) {
-                    Basket(
-                        userViewModel = userViewModel,
-                        items = userData.basket,
-                        checkoutItems = checkoutItems,
-                        onCheckout = {
-                            if (it.isNotEmpty()) {
-                                val items = it.toList()
-                                userViewModel.updateCheckoutItems(uid, items)
-                                val itemsJson = Uri.encode(Json.encodeToString(items))
-                                navController.navigate(Screen.OrderSummary.createRoute(itemsJson))
-                            } else {
-                                onEvent(
-                                    Triple(
-                                        ToastStatus.WARNING,
-                                        "Mark the items to checkout.",
-                                        System.currentTimeMillis()
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            when (userState) {
+                UserState.EMPTY,
+                UserState.EMAIL_SENT_SUCCESS,
+                is UserState.LOGIN_SUCCESS,
+                UserState.REGISTER_SUCCESS,
+                is UserState.ERROR -> BasketError(
+                    message = (userState as UserState.ERROR).message ?: "Unknown error",
+                    onBrowseProducts = {
+                        navController.navigate(Screen.ProductCatalog.createRoute(role = "Client"))
+                    }
+                )
+                UserState.LOADING -> BasketLoading()
+                UserState.SUCCESS -> {
+                    if (userData.basket.isNotEmpty()) {
+                        Basket(
+                            userViewModel = userViewModel,
+                            items = userData.basket,
+                            checkoutItems = checkoutItems,
+                            onCheckout = {
+                                if (it.isNotEmpty()) {
+                                    val items = it.toList()
+                                    userViewModel.updateCheckoutItems(uid, items)
+                                    val itemsJson = Uri.encode(Json.encodeToString(items))
+                                    navController.navigate(Screen.OrderSummary.createRoute(itemsJson))
+                                } else {
+                                    onEvent(
+                                        Triple(
+                                            ToastStatus.WARNING,
+                                            "Mark the items to checkout.",
+                                            System.currentTimeMillis()
+                                        )
                                     )
-                                )
+                                }
+                            },
+                            onBrowseMore = {
+                                navController.navigate(Screen.ProductCatalog.createRoute(role = "Client"))
+                            },
+                            onRemove = { onEvent(it) }
+                        )
+                    } else {
+                        BasketEmpty(
+                            onBrowseProducts = {
+                                navController.navigate(Screen.ProductCatalog.createRoute(role = "Client"))
                             }
-                        },
-                        onBrowseMore = {
-                            navController.navigate(Screen.ProductCatalog.createRoute(role = "Client"))
-                        },
-                        onRemove = { onEvent(it) }
-                    )
-                } else {
-                    BasketEmpty(
-                        onBrowseProducts = {
-                            navController.navigate(Screen.ProductCatalog.createRoute(role = "Client"))
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
@@ -183,103 +183,115 @@ fun Basket(
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-    ) {
-        groupedItems.forEach { (facility, facilityItems) ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                colors = CardDefaults.cardColors(containerColor = Green4)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 130.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            groupedItems.forEach { (facility, facilityItems) ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Green4)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier.padding(16.dp)
                     ) {
-                        Text(
-                            text = facility,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-
                         Row(
-                            horizontalArrangement = Arrangement.End,
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            var allChecked by remember { mutableStateOf(false) }
-                            Checkbox(
-                                checked = allChecked,
-                                onCheckedChange = { checked ->
-                                    allChecked = checked
-                                    if (checked) {
-                                        facilityItems.forEach { item ->
-                                            if (!checkoutItems.any { it.id == item.id }) {
-                                                checkoutItems.add(item)
-                                            }
-                                        }
-                                    } else {
-                                        checkoutItems.removeAll { checkItem ->
-                                            facilityItems.any { it.id == checkItem.id }
-                                        }
-                                    }
-                                },
-                                colors = CheckboxDefaults.colors(checkedColor = Green1)
+                            Text(
+                                text = facility,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
                             )
 
-                            IconButton(
-                                onClick = {
-                                    removingFacility = facility
-                                    deleteFacilityModal = true
-                                }
+                            Row(
+                                horizontalArrangement = Arrangement.End,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Delete Facility Items",
-                                    tint = Green1
+                                var allChecked by remember { mutableStateOf(false) }
+                                Checkbox(
+                                    checked = allChecked,
+                                    onCheckedChange = { checked ->
+                                        allChecked = checked
+                                        if (checked) {
+                                            facilityItems.forEach { item ->
+                                                if (!checkoutItems.any { it.id == item.id }) {
+                                                    checkoutItems.add(item)
+                                                }
+                                            }
+                                        } else {
+                                            checkoutItems.removeAll { checkItem ->
+                                                facilityItems.any { it.id == checkItem.id }
+                                            }
+                                        }
+                                    },
+                                    colors = CheckboxDefaults.colors(checkedColor = Green1)
                                 )
+
+                                IconButton(
+                                    onClick = {
+                                        removingFacility = facility
+                                        deleteFacilityModal = true
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Delete Facility Items",
+                                        tint = Green1
+                                    )
+                                }
                             }
                         }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Divider(
-                        color = MaterialTheme.colorScheme.onSurface,
-                        thickness = 1.dp,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-
-                    facilityItems.forEach { item ->
-                        BasketItemCard(
-                            product = productData.find { it.productId == item.productId } ?: ProductData(),
-                            item = item,
-                            isChecked = checkoutItems.any { it.id == item.id },
-                            onAdd = { checkoutItems.add(it) },
-                            onUpdate = { old, new -> checkoutItems[checkoutItems.indexOf(old)] = new },
-                            onRemove = { checkoutItems.remove(it) },
-                            onDelete = {
-                                removingItem = item
-                                deleteModal = true
-                            }
-                        )
 
                         Spacer(modifier = Modifier.height(8.dp))
+                        Divider(
+                            color = MaterialTheme.colorScheme.onSurface,
+                            thickness = 1.dp,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+
+                        facilityItems.forEach { item ->
+                            BasketItemCard(
+                                product = productData.find { it.productId == item.productId } ?: ProductData(),
+                                item = item,
+                                isChecked = checkoutItems.any { it.id == item.id },
+                                onAdd = { checkoutItems.add(it) },
+                                onUpdate = { old, new -> checkoutItems[checkoutItems.indexOf(old)] = new },
+                                onRemove = { checkoutItems.remove(it) },
+                                onDelete = {
+                                    removingItem = item
+                                    deleteModal = true
+                                }
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
                     }
                 }
             }
         }
 
-        BasketActions(
-            totalPrice = checkoutItems.sumOf { it.price },
-            onCheckout = { onCheckout(checkoutItems) },
-            onBrowseMore = onBrowseMore
-        )
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                .background(Green1)
+                .padding(16.dp)
+        ) {
+            BasketActions(
+                totalPrice = checkoutItems.sumOf { it.price },
+                onCheckout = { onCheckout(checkoutItems) },
+                onBrowseMore = onBrowseMore
+            )
+        }
     }
 
     if (deleteModal && removingItem != null) {
@@ -443,11 +455,12 @@ fun BasketItemCard(
         modifier = Modifier
             .fillMaxSize()
             .height(175.dp)
-            .padding(vertical = 12.dp)
+            .padding(vertical = 12.dp, horizontal = 16.dp)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(16.dp)
         ) {
             IconButton(
                 onClick = onDelete,
@@ -583,63 +596,63 @@ fun BasketActions(
     onBrowseMore: () -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Green4)
+        Button(
+            onClick = onBrowseMore,
+            colors = ButtonDefaults.buttonColors(containerColor = Green4),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = 4.dp,
+                pressedElevation = 2.dp,
+                hoveredElevation = 6.dp
+            ),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Button(
-                    onClick = onBrowseMore,
-                    colors = ButtonDefaults.buttonColors(containerColor = White1),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add More Products",
-                        tint = Green1
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Add More Products",
-                        color = Green1
-                    )
-                }
-            }
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Add More Products",
+                tint = Green1
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = "Add More Products",
+                color = Green1,
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily
+            )
         }
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Green4)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Text(
+                text = "Total: PHP $totalPrice",
+                style = MaterialTheme.typography.titleMedium,
+                color = White1,
+                fontWeight = FontWeight.Bold,
+                fontFamily = mintsansFontFamily
+            )
+            Button(
+                onClick = { onCheckout() },
+                colors = ButtonDefaults.buttonColors(containerColor = Green4),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 4.dp,
+                    pressedElevation = 2.dp,
+                    hoveredElevation = 6.dp
+                )
             ) {
                 Text(
-                    text = "Total: PHP $totalPrice",
-                    style = MaterialTheme.typography.titleMedium
+                    text = "Checkout",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Green1,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = mintsansFontFamily
                 )
-                Button(
-                    onClick = { onCheckout() },
-                    colors = ButtonDefaults.buttonColors(containerColor = Green1),
-                    elevation = ButtonDefaults.elevatedButtonElevation(4.dp),
-                ) {
-                    Text(
-                        text = "Checkout",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = White1
-                    )
-                }
             }
         }
     }

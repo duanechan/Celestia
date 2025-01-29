@@ -42,7 +42,20 @@ class FacilityViewModel: ViewModel() {
                             if (child.getValue() is Boolean) {
                                 null
                             } else {
-                                child.getValue(FacilityData::class.java)
+                                // Add these debug logs
+                                Log.d("FacilityViewModel", "Raw data for ${child.key}: ${child.getValue()}")
+                                val facility = child.getValue(FacilityData::class.java)
+                                // Log the converted facility data
+                                facility?.let {
+                                    Log.d("FacilityViewModel", """
+                                    Converted Facility Data for ${it.name}:
+                                    isPickupEnabled: ${it.isPickupEnabled}
+                                    isCashEnabled: ${it.isCashEnabled}
+                                    pickupLocation: ${it.pickupLocation}
+                                    cashInstructions: ${it.cashInstructions}
+                                """.trimIndent())
+                                }
+                                facility
                             }
                         } catch (e: Exception) {
                             Log.e("FacilityViewModel", "Error converting facility data: ${e.message}")
