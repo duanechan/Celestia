@@ -111,6 +111,11 @@ fun OrderSummary(
         mutableStateMapOf<String, Pair<String, String>>()
     }
 
+    // Track order data including attachments for each facility
+    val facilityOrderData = remember(groupedItems) {
+        mutableStateMapOf<String, OrderData>()
+    }
+
     val paymentRequestId = remember {
         "GCASH-PAYMENT-${UUID.randomUUID()}"
     }
@@ -159,8 +164,12 @@ fun OrderSummary(
                         },
                         collectionMethod = facilityMethods[facilityName]?.first ?: "",
                         paymentMethod = facilityMethods[facilityName]?.second ?: "",
-                        gcashPaymentId = paymentRequestId
+                        gcashPaymentId = paymentRequestId,
+                        attachments = facilityOrderData[facilityName]?.attachments ?: emptyList()
                     )
+
+                    // Update facility order data
+                    facilityOrderData[facilityName] = tempOrderData
 
                     item {
                         ClientCollectionMethod(
@@ -180,10 +189,14 @@ fun OrderSummary(
                             orderData = tempOrderData,
                             orderViewModel = orderViewModel,
                             facilityData = facilityData,
-                            onUpdate = { method ->
+                            onUpdate = { method, attachments ->
                                 facilityMethods[facilityName] = Pair(
                                     facilityMethods[facilityName]?.first ?: "",
                                     method
+                                )
+                                // Update the facilityOrderData with new attachments
+                                facilityOrderData[facilityName] = tempOrderData.copy(
+                                    attachments = attachments ?: emptyList()
                                 )
                             }
                         )
@@ -194,7 +207,24 @@ fun OrderSummary(
                     OrderSummaryActions(
                         enabled = validateMethods(groupedItems.keys, facilityMethods),
                         totalPrice = items.sumOf { it.price },
+                        facilityOrderData = facilityOrderData,
                         onPlaceOrder = {
+                            val hasInvalidGcashPayment = facilityOrderData.any { (_, orderData) ->
+                                orderData.paymentMethod == Constants.PAYMENT_GCASH &&
+                                        (orderData.attachments.isNullOrEmpty() || orderData.gcashPaymentId.isNullOrEmpty())
+                            }
+
+                            if (hasInvalidGcashPayment) {
+                                onEvent(
+                                    Triple(
+                                        ToastStatus.WARNING,
+                                        "Please complete GCash payment upload for all facilities",
+                                        System.currentTimeMillis()
+                                    )
+                                )
+                                return@OrderSummaryActions
+                            }
+
                             groupedItems.forEach { (facilityName, facilityItems) ->
                                 val methods = facilityMethods[facilityName] ?: Pair("", "")
                                 val formattedOrderId = "OID-${facilityName.uppercase()}-$currentDateTime"
@@ -208,6 +238,7 @@ fun OrderSummary(
                                     dateTime = formattedDisplayDate
                                 )
 
+                                val currentOrderData = facilityOrderData[facilityName]
                                 orderViewModel.placeOrder(
                                     uid = uid,
                                     order = OrderData(
@@ -230,7 +261,8 @@ fun OrderSummary(
                                         client = "${userData.firstname} ${userData.lastname}",
                                         collectionMethod = methods.first,
                                         paymentMethod = methods.second,
-                                        gcashPaymentId = paymentRequestId
+                                        gcashPaymentId = currentOrderData?.gcashPaymentId ?: paymentRequestId,
+                                        attachments = currentOrderData?.attachments ?: emptyList()
                                     )
                                 )
                             }
@@ -251,6 +283,7 @@ fun OrderSummary(
 fun OrderSummaryActions(
     enabled: Pair<Boolean, String>,
     totalPrice: Double,
+    facilityOrderData: Map<String, OrderData>,
     onPlaceOrder: () -> Unit,
     onEvent: (Triple<ToastStatus, String, Long>) -> Unit
 ) {
@@ -272,23 +305,38 @@ fun OrderSummaryActions(
             )
             Button(
                 onClick = {
-                    if (enabled.first) {
-                        onPlaceOrder()
-                        onEvent(
-                            Triple(
-                                ToastStatus.SUCCESSFUL,
-                                "Order placed successfully!",
-                                System.currentTimeMillis()
+                    when {
+                        !enabled.first -> {
+                            onEvent(
+                                Triple(
+                                    ToastStatus.WARNING,
+                                    enabled.second,
+                                    System.currentTimeMillis()
+                                )
                             )
-                        )
-                    } else {
-                        onEvent(
-                            Triple(
-                                ToastStatus.WARNING,
-                                enabled.second,
-                                System.currentTimeMillis()
+                        }
+                        facilityOrderData.any { (_, orderData) ->
+                            orderData.paymentMethod == Constants.PAYMENT_GCASH &&
+                                    (orderData.attachments.isNullOrEmpty() || orderData.gcashPaymentId.isNullOrEmpty())
+                        } -> {
+                            onEvent(
+                                Triple(
+                                    ToastStatus.WARNING,
+                                    "Please upload GCash payment receipt for all facilities using GCash",
+                                    System.currentTimeMillis()
+                                )
                             )
-                        )
+                        }
+                        else -> {
+                            onPlaceOrder()
+                            onEvent(
+                                Triple(
+                                    ToastStatus.SUCCESSFUL,
+                                    "Order placed successfully!",
+                                    System.currentTimeMillis()
+                                )
+                            )
+                        }
                     }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = White1),
@@ -614,14 +662,16 @@ fun ClientPaymentMethod(
     orderData: OrderData,
     orderViewModel: OrderViewModel,
     facilityData: FacilityData?,
-    onUpdate: (String) -> Unit
+    onUpdate: (String, List<String>?) -> Unit
 ) {
-    var selectedFiles by remember { mutableStateOf<List<Uri>>(emptyList()) }
+    var selectedFile by remember { mutableStateOf<Uri?>(null) }
     var isUploading by remember { mutableStateOf(false) }
     var uploadProgress by remember { mutableStateOf(0f) }
     var showUploadDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
+    var hasUploadedFiles by remember { mutableStateOf(!orderData.attachments.isNullOrEmpty()) }
 
     val enabledMethods = mutableListOf<Pair<String, String>>()
     if (!facilityData?.cashInstructions.isNullOrEmpty()) {
@@ -635,8 +685,13 @@ fun ClientPaymentMethod(
 
     LaunchedEffect(enabledMethods) {
         if (enabledMethods.size == 1) {
-            onUpdate(enabledMethods[0].first)
+            val method = enabledMethods[0].first
+            onUpdate(method, if (method == Constants.PAYMENT_GCASH) emptyList() else null)
         }
+    }
+
+    LaunchedEffect(orderData.attachments) {
+        hasUploadedFiles = !orderData.attachments.isNullOrEmpty()
     }
 
     Card(
@@ -703,11 +758,11 @@ fun ClientPaymentMethod(
                                 Button(
                                     onClick = { showUploadDialog = true },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Green1
+                                        containerColor = if (hasUploadedFiles) Green4 else Green1
                                     ),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text("Upload GCash Receipt")
+                                    Text(if (hasUploadedFiles) "Receipt Uploaded ✓" else "Upload GCash Receipt")
                                 }
                             }
                         }
@@ -724,7 +779,16 @@ fun ClientPaymentMethod(
                                         .fillMaxWidth()
                                         .clickable {
                                             selectedMethod = method
-                                            onUpdate(selectedMethod)
+                                            if (method != Constants.PAYMENT_GCASH) {
+                                                onUpdate(method, emptyList())
+                                                val updatedOrder = orderData.copy(
+                                                    attachments = emptyList()
+                                                )
+                                                orderViewModel.updateOrder(updatedOrder)
+                                                hasUploadedFiles = false
+                                            } else {
+                                                onUpdate(method, emptyList())
+                                            }
                                         },
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -732,7 +796,16 @@ fun ClientPaymentMethod(
                                         selected = selectedMethod == method,
                                         onClick = {
                                             selectedMethod = method
-                                            onUpdate(selectedMethod)
+                                            if (method != Constants.PAYMENT_GCASH) {
+                                                onUpdate(method, emptyList())
+                                                val updatedOrder = orderData.copy(
+                                                    attachments = emptyList()
+                                                )
+                                                orderViewModel.updateOrder(updatedOrder)
+                                                hasUploadedFiles = false
+                                            } else {
+                                                onUpdate(method, emptyList())
+                                            }
                                         },
                                         colors = RadioButtonDefaults.colors(selectedColor = Green1)
                                     )
@@ -756,11 +829,11 @@ fun ClientPaymentMethod(
                                     Button(
                                         onClick = { showUploadDialog = true },
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = Green1
+                                            containerColor = if (hasUploadedFiles) Green4 else Green1
                                         ),
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Text("Upload GCash Receipt")
+                                        Text(if (hasUploadedFiles) "Receipt Uploaded ✓" else "Upload GCash Receipt")
                                     }
                                 }
                             }
@@ -785,24 +858,11 @@ fun ClientPaymentMethod(
             text = {
                 Column {
                     val launcher = rememberLauncherForActivityResult(
-                        contract = ActivityResultContracts.GetMultipleContents()
-                    ) { uris: List<Uri>? ->
-                        uris?.let { newUris ->
-                            if (newUris.size + selectedFiles.size > 1) {
-                                Toast.makeText(
-                                    context,
-                                    "Only one receipt image allowed",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                return@let
-                            }
-
-                            val imageUris = newUris.filter { uri ->
-                                val type = context.contentResolver.getType(uri)
-                                type?.startsWith("image/") == true
-                            }
-
-                            if (imageUris.isEmpty()) {
+                        contract = ActivityResultContracts.GetContent()
+                    ) { uri: Uri? ->
+                        uri?.let { newUri ->
+                            val type = context.contentResolver.getType(newUri)
+                            if (type?.startsWith("image/") != true) {
                                 Toast.makeText(
                                     context,
                                     "Please select an image file",
@@ -811,13 +871,11 @@ fun ClientPaymentMethod(
                                 return@let
                             }
 
-                            val oversizedFiles = imageUris.filter { uri ->
-                                context.contentResolver.openInputStream(uri)?.use {
-                                    it.available() > 5 * 1024 * 1024 // 5MB
-                                } ?: false
-                            }
+                            val isOversized = context.contentResolver.openInputStream(newUri)?.use {
+                                it.available() > 5 * 1024 * 1024 // 5MB
+                            } ?: false
 
-                            if (oversizedFiles.isNotEmpty()) {
+                            if (isOversized) {
                                 Toast.makeText(
                                     context,
                                     "Image exceeds 5MB limit",
@@ -826,11 +884,12 @@ fun ClientPaymentMethod(
                                 return@let
                             }
 
-                            selectedFiles = imageUris
+                            selectedFile = newUri
                         }
                     }
 
-                    selectedFiles.forEach { uri ->
+                    if (selectedFile != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -860,7 +919,35 @@ fun ClientPaymentMethod(
                                 )
                             }
                             IconButton(
-                                onClick = { selectedFiles = emptyList() }
+                                onClick = {
+                                    scope.launch {
+                                        AttachFileService.deleteAllAttachments(
+                                            requestId = orderData.gcashPaymentId
+                                        ) { success ->
+                                            if (success) {
+                                                selectedFile = null
+                                                onUpdate(Constants.PAYMENT_GCASH, emptyList())
+                                                hasUploadedFiles = false
+                                                val updatedOrder = orderData.copy(
+                                                    attachments = emptyList()
+                                                )
+                                                orderViewModel.updateOrder(updatedOrder)
+
+                                                Toast.makeText(
+                                                    context,
+                                                    "Receipt removed successfully",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            } else {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Failed to remove receipt",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                    }
+                                }
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
@@ -871,7 +958,7 @@ fun ClientPaymentMethod(
                         }
                     }
 
-                    if (selectedFiles.isEmpty()) {
+                    if (selectedFile == null) {
                         Button(
                             onClick = { launcher.launch("image/*") },
                             colors = ButtonDefaults.buttonColors(
@@ -915,7 +1002,7 @@ fun ClientPaymentMethod(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        if (selectedFiles.isEmpty()) {
+                        if (selectedFile == null) {
                             Toast.makeText(
                                 context,
                                 "Please upload payment receipt",
@@ -924,22 +1011,20 @@ fun ClientPaymentMethod(
                             return@TextButton
                         }
 
-                        isUploading = true
-                        try {
-                            val fileList = selectedFiles.map { uri ->
-                                val timestamp = System.currentTimeMillis()
-                                uri to AttachFileService.getFileName(uri)
-                            }
+                        scope.launch {
+                            try {
+                                isUploading = true
+                                val fileName = AttachFileService.getFileName(selectedFile!!)
 
-                            scope.launch {
                                 AttachFileService.uploadMultipleAttachments(
                                     requestId = orderData.gcashPaymentId,
-                                    files = fileList,
+                                    files = listOf(selectedFile!! to fileName),
                                     onProgress = { progress ->
                                         uploadProgress = progress
                                     }
                                 ) { success ->
                                     if (success) {
+                                        val attachmentNames = listOf(fileName)
                                         val updatedOrder = orderData.copy(
                                             statusDescription = "Payment proof submitted, waiting for confirmation",
                                             statusHistory = orderData.statusHistory + StatusUpdate(
@@ -947,11 +1032,12 @@ fun ClientPaymentMethod(
                                                 statusDescription = "Payment proof submitted, waiting for confirmation",
                                                 dateTime = getCurrentDateTime()
                                             ),
-                                            attachments = fileList.map { it.second },
+                                            attachments = attachmentNames,
                                             gcashPaymentId = orderData.gcashPaymentId
                                         )
-                                        Log.d("GcashPayment", "Updating order with existing gcashPaymentId: ${orderData.gcashPaymentId}")
                                         orderViewModel.updateOrder(updatedOrder)
+                                        onUpdate(Constants.PAYMENT_GCASH, attachmentNames)
+                                        hasUploadedFiles = true
                                         isUploading = false
                                         showUploadDialog = false
 
@@ -969,17 +1055,17 @@ fun ClientPaymentMethod(
                                         ).show()
                                     }
                                 }
+                            } catch (e: Exception) {
+                                isUploading = false
+                                Toast.makeText(
+                                    context,
+                                    "Error processing files: ${e.message}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
-                        } catch (e: Exception) {
-                            isUploading = false
-                            Toast.makeText(
-                                context,
-                                "Error processing files: ${e.message}",
-                                Toast.LENGTH_SHORT
-                            ).show()
                         }
                     },
-                    enabled = !isUploading
+                    enabled = !isUploading && selectedFile != null
                 ) {
                     if (isUploading) {
                         CircularProgressIndicator(
@@ -994,8 +1080,35 @@ fun ClientPaymentMethod(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        selectedFiles = emptyList()
-                        showUploadDialog = false
+                        scope.launch {
+                            AttachFileService.deleteAllAttachments(
+                                requestId = orderData.gcashPaymentId
+                            ) { success ->
+                                if (success) {
+                                    onUpdate(Constants.PAYMENT_GCASH, emptyList())
+                                    val updatedOrder = orderData.copy(
+                                        attachments = emptyList(),
+                                        gcashPaymentId = orderData.gcashPaymentId
+                                    )
+                                    orderViewModel.updateOrder(updatedOrder)
+                                    hasUploadedFiles = false
+                                    selectedFile = null
+                                    showUploadDialog = false
+
+                                    Toast.makeText(
+                                        context,
+                                        "Receipt removed successfully",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Failed to remove receipt",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+                        }
                     }
                 ) {
                     Text("Cancel")
