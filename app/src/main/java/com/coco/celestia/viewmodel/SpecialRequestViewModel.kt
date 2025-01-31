@@ -40,24 +40,27 @@ class SpecialRequestViewModel : ViewModel() {
     fun notify(type: NotificationType, specialReq: SpecialRequest) {
         val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
         val formattedDateTime = LocalDateTime.now().format(formatter)
-
-        val notification = Notification(
-            timestamp = formattedDateTime,
-            sender = specialReq.name,
-            details = specialReq,
-            subject = when (type) {
-                NotificationType.ClientSpecialRequest -> "Special request from ${specialReq.name}: ${specialReq.subject}"
-                NotificationType.CoopSpecialRequestUpdated -> formatSubject(specialReq.trackRecord)
-                NotificationType.FarmerCalamityAffected -> "Your special request has been affected by a calamity."
-                NotificationType.ClientOrderPlaced,
-                NotificationType.OrderUpdated,
-                NotificationType.Notice -> "Coco"
-            },
-            message = NotificationService.parseDetails(type, specialReq),
-            type = type
-        )
-
         viewModelScope.launch {
+            println(type)
+            println(specialReq)
+
+            val notification = Notification(
+                timestamp = formattedDateTime,
+                sender = specialReq.name,
+                detailsId = specialReq.specialRequestUID,
+                subject = when (type) {
+                    NotificationType.ClientSpecialRequest -> "Special request from ${specialReq.name}: ${specialReq.subject}"
+                    NotificationType.CoopSpecialRequestUpdated -> formatSubject(specialReq.trackRecord)
+                    NotificationType.FarmerCalamityAffected -> "Your special request has been affected by a calamity."
+                    NotificationType.ClientOrderPlaced,
+                    NotificationType.OrderUpdated,
+                    NotificationType.Notice -> "Coco"
+                },
+                message = NotificationService.parseDetailsMessage(type, specialReq.specialRequestUID),
+                type = type
+            )
+            println(notification)
+
             NotificationService.pushNotifications(
                 notification = notification,
                 onComplete = { },
@@ -161,6 +164,14 @@ class SpecialRequestViewModel : ViewModel() {
                                     request.ref.setValue(specialReq)
                                         .addOnSuccessListener {
                                             viewModelScope.launch {
+                                                notify(
+                                                    if (specialReq.status == "Calamity-Affected") {
+                                                        NotificationType.FarmerCalamityAffected
+                                                    } else {
+                                                        NotificationType.CoopSpecialRequestUpdated
+                                                    },
+                                                    specialReq
+                                                )
                                                 // notification code if needed
                                             }
                                             _specialReqState.value = SpecialReqState.SUCCESS

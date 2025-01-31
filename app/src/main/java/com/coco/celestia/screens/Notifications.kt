@@ -191,16 +191,16 @@ fun FarmerNotification() {
                 timestamp = "January 17, 2025 10:00AM",
                 sender = "System",
                 message = "New Order Request by Diwata Pares!",
-                details = OrderData(
-                    orderId = "12345",
-                    orderDate = "January 19, 2023",
-                    targetDate = "January 24, 2023",
-                    status = "Pending",
-                    orderData = listOf(ProductData(name = "Beef", quantity = 1)),
-                    client = "Jane Doe",
-                    barangay = "Sample Barangay",
-                    street = "Sample Street"
-                ),
+//                details = OrderData(
+//                    orderId = "12345",
+//                    orderDate = "January 19, 2023",
+//                    targetDate = "January 24, 2023",
+//                    status = "Pending",
+//                    orderData = listOf(ProductData(name = "Beef", quantity = 1)),
+//                    client = "Jane Doe",
+//                    barangay = "Sample Barangay",
+//                    street = "Sample Street"
+//                ),
                 type = NotificationType.Notice,
                 hasRead = false
             )
@@ -263,13 +263,13 @@ fun FarmerNotification() {
                                 color = MaterialTheme.colorScheme.onBackground
                             )
 
-                            Text(
-                                text = (notification.details as? OrderData)?.orderData?.get(0)?.name ?: "No details",
-                                fontSize = 14.sp,
-                                fontFamily = mintsansFontFamily,
-                                color = MaterialTheme.colorScheme.onBackground,
-                                modifier = Modifier.padding(top = 4.dp)
-                            )
+//                            Text(
+//                                text = (notification.details as? OrderData)?.orderData?.get(0)?.name ?: "No details",
+//                                fontSize = 14.sp,
+//                                fontFamily = mintsansFontFamily,
+//                                color = MaterialTheme.colorScheme.onBackground,
+//                                modifier = Modifier.padding(top = 4.dp)
+//                            )
 
                             Text(
                                 text = notification.timestamp,

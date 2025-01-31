@@ -110,7 +110,7 @@ object DataParser {
             sender = snapshot.child("sender").getValue(String::class.java) ?: "",
             subject = snapshot.child("subject").getValue(String::class.java) ?: "",
             message = snapshot.child("message").getValue(String::class.java) ?: "",
-            details = details,
+            detailsId = snapshot.child("detailsId").getValue(String::class.java) ?: "",
             type = type,
             hasRead = snapshot.child("hasRead").getValue(Boolean::class.java) ?: false,
         )

@@ -286,8 +286,9 @@ data class Notification(
     val sender: String = "",
     val subject: String = "",
     val message: String = "",
+    val detailsId: String = "",
     val type: NotificationType = NotificationType.Notice,
-    val details: Any = Any(),
+
 )
 
 enum class NotificationType {

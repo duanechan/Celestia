@@ -59,7 +59,7 @@ class OrderViewModel : ViewModel() {
         val notification = Notification(
             timestamp = formattedDateTime,
             sender = order.client,
-            details = order,
+            detailsId = order.orderId,
             message = "New order request from ${order.client}!",
             type = type
         )
@@ -278,7 +278,7 @@ class OrderViewModel : ViewModel() {
                 query.setValue(orderWithTimestamp)
                     .addOnSuccessListener {
                         viewModelScope.launch {
-//                            notify(NotificationType.ClientOrderPlaced, orderWithTimestamp)
+                            notify(NotificationType.ClientOrderPlaced, orderWithTimestamp)
                             _orderState.value = OrderState.SUCCESS
                         }
                     }

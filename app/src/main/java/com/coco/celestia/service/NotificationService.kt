@@ -24,6 +24,8 @@ import kotlin.coroutines.suspendCoroutine
 
 object NotificationService {
     private val usersRef = FirebaseDatabase.getInstance().getReference().child("users")
+    private val ordersRef = FirebaseDatabase.getInstance().getReference().child("orders")
+    private val specialRequestsRef = FirebaseDatabase.getInstance().getReference().child("special_requests")
 
     fun observeUserNotifications(
         uid: String,
@@ -60,8 +62,10 @@ object NotificationService {
 
     private suspend fun resolveDetailsAsync(
         type: NotificationType,
-        details: Any
+        detailsId: String
     ): List<UserData> = suspendCoroutine { continuation ->
+        val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+
         usersRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (!snapshot.exists()) {
@@ -69,42 +73,99 @@ object NotificationService {
                     return
                 }
 
-                val recipients = snapshot.children
-                    .mapNotNull { DataParser.parseUserData(it) }
-                    .filter {
-                        when (type) {
-                            NotificationType.Notice -> it.firstname.isNotEmpty()
-                            NotificationType.ClientOrderPlaced -> {
-                                (details as OrderData).orderData.any { product ->
-                                    "Coop${product.type}" == it.role
-                                }
-                            }
-                            NotificationType.OrderUpdated -> {
-                                "${it.firstname} ${it.lastname}" == (details as OrderData).client
-                            }
-                            NotificationType.FarmerCalamityAffected,
-                            NotificationType.ClientSpecialRequest -> {
-                                it.role == "Admin"
-                            }
+                when (type) {
+                    NotificationType.Notice -> {
+                        val recipients = snapshot.children
+                            .mapNotNull { DataParser.parseUserData(it) }
+                            .filter { it.firstname.isNotEmpty() }
+                        continuation.resume(recipients)
+                    }
 
-                            NotificationType.CoopSpecialRequestUpdated -> {
-                                val description = (details as SpecialRequest).trackRecord
-                                    .maxByOrNull { date -> date.dateTime }?.description.toString()
-                                when {
-                                    description.contains("accepted", ignoreCase = true) -> it.email == details.email
-                                    description.contains("assigned", ignoreCase = true) -> {
-                                        details.assignedMember.any { member -> member.email == it.email }
-                                    }
-                                    description.contains("status", ignoreCase = true) -> {
-                                        it.role == "Admin" || details.email == it.email
-                                    }
-                                    else -> false
+                    NotificationType.ClientOrderPlaced -> {
+                        ordersRef.child(detailsId).get().addOnSuccessListener { orderSnapshot ->
+                            val order = DataParser.parseOrderData(orderSnapshot)
+                            val recipients = snapshot.children
+                                .mapNotNull { DataParser.parseUserData(it) }
+                                .filter { userData ->
+                                    order?.orderData?.any { product ->
+                                        "Coop${product.type}" == userData.role
+                                    } == true
                                 }
-                            }
-
+                            continuation.resume(recipients)
+                        }.addOnFailureListener {
+                            continuation.resume(emptyList())
                         }
                     }
-                continuation.resume(recipients)
+
+                    NotificationType.OrderUpdated -> {
+                        ordersRef.child(detailsId).get().addOnSuccessListener { orderSnapshot ->
+                            val order = DataParser.parseOrderData(orderSnapshot)
+                            val recipients = snapshot.children
+                                .mapNotNull { DataParser.parseUserData(it) }
+                                .filter { userData ->
+                                    "${userData.firstname} ${userData.lastname}" == order?.client
+                                }
+                            continuation.resume(recipients)
+                        }.addOnFailureListener {
+                            continuation.resume(emptyList())
+                        }
+                    }
+
+                    NotificationType.FarmerCalamityAffected,
+                    NotificationType.ClientSpecialRequest -> {
+                        val recipients = snapshot.children
+                            .mapNotNull { DataParser.parseUserData(it) }
+                            .filter { it.role == "Admin" }
+                        continuation.resume(recipients)
+                    }
+
+                    NotificationType.CoopSpecialRequestUpdated -> {
+                        // Search through all users' special requests
+                        specialRequestsRef.get().addOnSuccessListener { usersSnapshot ->
+                            var foundSpecialRequest: SpecialRequest? = null
+
+                            // Traverse the correct path: special_requests -> userId -> srKey -> sr
+                            for (userSnapshot in usersSnapshot.children) {
+                                for (srSnapshot in userSnapshot.children) {
+                                    val specialRequest = DataParser.parseSpecialRequest(srSnapshot)
+                                    if (specialRequest?.specialRequestUID == detailsId) {
+                                        foundSpecialRequest = specialRequest
+                                        break
+                                    }
+                                }
+                                if (foundSpecialRequest != null) break
+                            }
+
+                            if (foundSpecialRequest == null) {
+                                continuation.resume(emptyList())
+                                return@addOnSuccessListener
+                            }
+
+                            val latestRecord = foundSpecialRequest.trackRecord.maxByOrNull { it.dateTime }
+                            val description = latestRecord?.description ?: ""
+
+                            val recipients = snapshot.children
+                                .mapNotNull { DataParser.parseUserData(it) }
+                                .filter { userData ->
+                                    when {
+                                        description.contains("accepted", ignoreCase = true) -> {
+                                            userData.email == foundSpecialRequest.email
+                                        }
+                                        description.contains("assigned", ignoreCase = true) -> {
+                                            foundSpecialRequest.assignedMember.any { it.email == userData.email }
+                                        }
+                                        description.contains("status", ignoreCase = true) -> {
+                                            userData.role == "Admin" || foundSpecialRequest.email == userData.email
+                                        }
+                                        else -> false
+                                    }
+                                }
+                            continuation.resume(recipients)
+                        }.addOnFailureListener {
+                            continuation.resume(emptyList())
+                        }
+                    }
+                }
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -113,13 +174,116 @@ object NotificationService {
         })
     }
 
+    suspend fun parseDetailsMessage(type: NotificationType, detailsId: String): String = suspendCoroutine { continuation ->
+        when (type) {
+            NotificationType.OrderUpdated,
+            NotificationType.Notice -> continuation.resume("Announcement:")
+
+            NotificationType.ClientOrderPlaced -> {
+                ordersRef.child(detailsId).get().addOnSuccessListener { snapshot ->
+                    val order = DataParser.parseOrderData(snapshot)
+                    if (order == null) {
+                        continuation.resume("Order details not available")
+                        return@addOnSuccessListener
+                    }
+
+                    var str = "${order.client} ordered ${order.orderData[0].quantity} Kg of ${order.orderData[0].name}"
+                    if (order.orderData.size > 1) {
+                        str += ", and ${order.orderData.size - 1} more..."
+                    }
+                    continuation.resume(str)
+                }.addOnFailureListener {
+                    continuation.resume("Order details not available")
+                }
+            }
+
+            NotificationType.ClientSpecialRequest -> {
+                specialRequestsRef.get().addOnSuccessListener { usersSnapshot ->
+                    var foundRequest: SpecialRequest? = null
+                    for (userSnapshot in usersSnapshot.children) {
+                        for (srSnapshot in userSnapshot.children) {
+                            val request = DataParser.parseSpecialRequest(srSnapshot)
+                            if (request?.specialRequestUID == detailsId) {
+                                foundRequest = request
+                                break
+                            }
+                        }
+                        if (foundRequest != null) break
+                    }
+                    continuation.resume(foundRequest?.description ?: "Special request details not available")
+                }.addOnFailureListener {
+                    continuation.resume("Special request details not available")
+                }
+            }
+
+            NotificationType.FarmerCalamityAffected -> {
+                specialRequestsRef.get().addOnSuccessListener { usersSnapshot ->
+                    var foundRequest: SpecialRequest? = null
+                    for (userSnapshot in usersSnapshot.children) {
+                        for (srSnapshot in userSnapshot.children) {
+                            val request = DataParser.parseSpecialRequest(srSnapshot)
+                            if (request?.specialRequestUID == detailsId) {
+                                foundRequest = request
+                                break
+                            }
+                        }
+                        if (foundRequest != null) break
+                    }
+                    continuation.resume(
+                        if (foundRequest != null) "${foundRequest!!.name}'s special request has been affected by a calamity."
+                        else "Calamity notification details not available"
+                    )
+                }.addOnFailureListener {
+                    continuation.resume("Calamity notification details not available")
+                }
+            }
+
+            NotificationType.CoopSpecialRequestUpdated -> {
+                specialRequestsRef.get().addOnSuccessListener { usersSnapshot ->
+                    var foundRequest: SpecialRequest? = null
+
+                    for (userSnapshot in usersSnapshot.children) {
+                        for (srSnapshot in userSnapshot.children) {
+                            val request = DataParser.parseSpecialRequest(srSnapshot)
+                            if (request?.specialRequestUID == detailsId) {
+                                foundRequest = request
+                                break
+                            }
+                        }
+                        if (foundRequest != null) break
+                    }
+
+                    if (foundRequest == null) {
+                        continuation.resume("Special request details not available")
+                        return@addOnSuccessListener
+                    }
+
+                    val record = foundRequest!!.trackRecord.maxByOrNull { it.dateTime }
+                    val message = record?.let {
+                        when {
+                            it.description.contains("Accepted", ignoreCase = true) ->
+                                "Please wait for further updates."
+                            it.description.contains("Assigned", ignoreCase = true) ->
+                                "View Special Request ${foundRequest!!.specialRequestUID}"
+                            else -> it.description
+                        }
+                    } ?: "Status update not available"
+                    continuation.resume(message)
+                }.addOnFailureListener {
+                    continuation.resume("Special request details not available")
+                }
+            }
+
+        }
+    }
+
     suspend fun pushNotifications(
         notification: Notification,
         onComplete: () -> Unit,
         onError: () -> Unit
     ) = coroutineScope {
         try {
-            val recipients = resolveDetailsAsync(notification.type, notification.details)
+            val recipients = resolveDetailsAsync(notification.type, notification.detailsId)
 
             val usersSnapshot = suspendCoroutine { continuation ->
                 usersRef.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -161,6 +325,65 @@ object NotificationService {
             .addOnFailureListener { continuation.resumeWithException(it) }
     }
 
+    fun navigateTo(
+        navController: NavController,
+        user: UserData,
+        role: String,
+        notification: Notification
+    ) {
+        when (notification.type) {
+            NotificationType.ClientOrderPlaced -> {
+                navController.navigate(
+                    Screen.CoopOrderDetails.createRoute(notification.detailsId)
+                )
+            }
+            NotificationType.CoopSpecialRequestUpdated -> {
+                when (role) {
+                    "Farmer" -> {
+                        specialRequestsRef.get().addOnSuccessListener { usersSnapshot ->
+                            for (userSnapshot in usersSnapshot.children) {
+                                for (srSnapshot in userSnapshot.children) {
+                                    val specialRequest = DataParser.parseSpecialRequest(srSnapshot)
+                                    if (specialRequest?.specialRequestUID == notification.detailsId) {
+                                        val assignedProduct = specialRequest.assignedMember
+                                            .find { it.email == user.email }
+                                            ?.product ?: ""
+
+                                        navController.navigate(
+                                            Screen.FarmerRequestCardDetails.createRoute(
+                                                notification.detailsId,
+                                                user.email,
+                                                assignedProduct
+                                            )
+                                        )
+                                        return@addOnSuccessListener
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    "Client" -> {
+                        navController.navigate(
+                            Screen.ClientSpecialReqDetails.createRoute(notification.detailsId)
+                        )
+                    }
+                    "Admin" -> {
+                        navController.navigate(
+                            Screen.AdminSpecialRequestsDetails.createRoute(notification.detailsId)
+                        )
+                    }
+                }
+            }
+            NotificationType.ClientSpecialRequest,
+            NotificationType.FarmerCalamityAffected -> {
+                navController.navigate(
+                    Screen.AdminSpecialRequestsDetails.createRoute(notification.detailsId)
+                )
+            }
+            else -> {}
+        }
+    }
+
     fun markAsRead(
         notification: Notification,
         onComplete: () -> Unit,
@@ -190,143 +413,5 @@ object NotificationService {
                 }
                 override fun onCancelled(error: DatabaseError) { onError(error.message) }
             })
-    }
-
-
-     fun navigateTo(
-        navController: NavController,
-        user: UserData,
-        role: String,
-        notification: Notification
-    ) {
-        when (notification.type) {
-            NotificationType.ClientOrderPlaced -> {
-                navController.navigate(
-                    Screen.CoopOrderDetails.createRoute(
-                        (notification.details as OrderData).orderId
-                    )
-                )
-            }
-            NotificationType.CoopSpecialRequestUpdated -> {
-                notification.details as SpecialRequest
-                when (role) {
-                    "Farmer" -> {
-                        val farmer = notification.details.assignedMember
-                            .find { it.email == user.email }
-                        navController.navigate(
-                            Screen.FarmerRequestCardDetails.createRoute(
-                                notification.details.specialRequestUID,
-                                farmer?.email.toString(),
-                                farmer?.product.toString()
-                            )
-                        )
-                    }
-                    "Client" -> {
-                        navController.navigate(
-                            Screen.ClientSpecialReqDetails.createRoute(
-                                notification.details.specialRequestUID
-                            )
-                        )
-                    }
-                    "Admin" -> {
-                        navController.navigate(
-                            Screen.AdminSpecialRequestsDetails.createRoute(
-                                notification.details.specialRequestUID
-                            )
-                        )
-                    }
-                    else -> {
-
-                    }
-                }
-            }
-            NotificationType.ClientSpecialRequest -> {
-                navController.navigate(
-                    Screen.AdminSpecialRequestsDetails.createRoute(
-                        (notification.details as SpecialRequest).specialRequestUID
-                    )
-                )
-            }
-            NotificationType.FarmerCalamityAffected -> {
-                navController.navigate(
-                    Screen.AdminSpecialRequestsDetails.createRoute(
-                        (notification.details as SpecialRequest).specialRequestUID
-                    )
-                )
-            }
-
-            else -> {}
-        }
-    }
-
-    fun parseDetails(type: NotificationType, details: Any): String {
-        return when (type) {
-            NotificationType.OrderUpdated,
-            NotificationType.Notice -> "Announcement:"
-            NotificationType.ClientOrderPlaced -> {
-                var str = "${(details as OrderData).client} ordered ${details.orderData[0].quantity} Kg of ${details.orderData[0].name}"
-                if (details.orderData.size > 1) {
-                    str += ", and ${details.orderData.size - 1} more..."
-                }
-                str
-            }
-            NotificationType.ClientSpecialRequest -> (details as SpecialRequest).description
-            NotificationType.CoopSpecialRequestUpdated -> {
-                val record = (details as SpecialRequest).trackRecord.maxByOrNull { it.dateTime }
-                record?.let {
-                    when {
-                        it.description.contains("Accepted", ignoreCase = true) -> {
-                            "Please wait for further updates."
-                        }
-                        it.description.contains("Assigned", ignoreCase = true) -> {
-                            "View Special Request ${details.specialRequestUID}"
-                        }
-
-                        else -> it.description
-                    }
-                }.toString()
-            }
-            NotificationType.FarmerCalamityAffected -> {
-                "${(details as SpecialRequest).name}'s special request has been affected by a calamity."
-            }
-        }
-//        return when (details) {
-//            is OrderData -> {
-//                var str = "${details.client} ordered ${details.orderData[0].quantity} Kg of ${details.orderData[0].name}"
-//                if (details.orderData.size > 1) {
-//                    str += ", and ${details.orderData.size - 1} more..."
-//                }
-//                str
-//            }
-//            is SpecialRequest -> {
-//                when (type) {
-//                    NotificationType.ClientSpecialRequest -> {
-//                        "From ${details.name}: ${details.description}"
-//                    }
-//                    NotificationType.CoopSpecialRequestUpdated -> {
-//                        when {
-//                            notification.message.contains("accepted", ignoreCase = true) -> {
-//                                "Please wait for further updates."
-//                            }
-//                            notification.message.contains("assigned", ignoreCase = true) -> {
-//                                "View Special Request ${details.specialRequestUID}"
-//                            }
-//                            notification.message.contains("update", ignoreCase = true) -> {
-//                                "${(notification.details as SpecialRequest).trackRecord
-//                                    .maxByOrNull { it.dateTime }?.description}"
-//                            }
-//                            else -> "Unknown"
-//                        }
-//                    }
-//                    NotificationType.FarmerCalamityAffected -> {
-//                        "${details.name}'s special request has been affected by a calamity."
-//                    }
-//                    else -> {
-//                        "Unknown Special Request Notification Type"
-//                    }
-//                }
-//            }
-//            else -> details.toString()
-//        }
     }
 }

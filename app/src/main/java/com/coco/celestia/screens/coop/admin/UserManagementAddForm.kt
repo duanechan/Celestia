@@ -161,9 +161,9 @@ fun AddUserForm(
         ) {
             OutlinedTextField(
                 readOnly = true,
-                value = if (role.isEmpty()) "" else role.removePrefix("Coop"),
+                value = role,
                 onValueChange = {},
-                placeholder = { Text("Select Facility") },
+                placeholder = { Text("Select Role") },
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded)
                 },
@@ -173,49 +173,66 @@ fun AddUserForm(
                     .semantics { testTag = "android:id/roleDropdownField" }
             )
 
-            when (facilityState) {
-                is FacilityState.LOADING -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                }
-                is FacilityState.EMPTY -> {
-                    Text(
-                        text = "No facilities available",
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-                is FacilityState.SUCCESS -> {
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.semantics { testTag = "android:id/roleDropdownMenu" }
-                    ) {
-                        facilitiesData.forEach { facility ->
-                            DropdownMenuItem(
-                                text = { Text(facility.name) },
-                                onClick = {
-                                    onRoleChanged("Coop${facility.name}")
-                                    expanded = false
-                                },
-                                modifier = Modifier.semantics { testTag = "android:id/roleItem_${facility.name}" }
-                            )
-                        }
-                    }
-                }
-                is FacilityState.ERROR -> {
-                    Text(
-                        text = (facilityState as FacilityState.ERROR).message,
-                        color = Color.Red,
-                        modifier = Modifier.padding(16.dp)
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                modifier = Modifier.semantics { testTag = "android:id/roleDropdownMenu" }
+            ) {
+                listOf("Coop", "Farmer").forEach { role ->
+                    DropdownMenuItem(
+                        text = { Text(role) },
+                        onClick = {
+                            onRoleChanged(role)
+                            expanded = false
+                        },
+                        modifier = Modifier.semantics { testTag = "android:id/roleItem_$role" }
                     )
                 }
             }
+
+//            when (facilityState) {
+//                is FacilityState.LOADING -> {
+//                    Box(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(16.dp),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        CircularProgressIndicator()
+//                    }
+//                }
+//                is FacilityState.EMPTY -> {
+//                    Text(
+//                        text = "No facilities available",
+//                        modifier = Modifier.padding(16.dp)
+//                    )
+//                }
+//                is FacilityState.SUCCESS -> {
+//                    ExposedDropdownMenu(
+//                        expanded = expanded,
+//                        onDismissRequest = { expanded = false },
+//                        modifier = Modifier.semantics { testTag = "android:id/roleDropdownMenu" }
+//                    ) {
+//                        facilitiesData.forEach { facility ->
+//                            DropdownMenuItem(
+//                                text = { Text(facility.name) },
+//                                onClick = {
+//                                    onRoleChanged("Coop${facility.name}")
+//                                    expanded = false
+//                                },
+//                                modifier = Modifier.semantics { testTag = "android:id/roleItem_${facility.name}" }
+//                            )
+//                        }
+//                    }
+//                }
+//                is FacilityState.ERROR -> {
+//                    Text(
+//                        text = (facilityState as FacilityState.ERROR).message,
+//                        color = Color.Red,
+//                        modifier = Modifier.padding(16.dp)
+//                    )
+//                }
+//            }
         }
 
         // Add User Button
