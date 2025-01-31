@@ -101,10 +101,30 @@ fun BasketScreen(
                 .fillMaxSize()
         ) {
             when (userState) {
-                UserState.EMPTY,
-                UserState.EMAIL_SENT_SUCCESS,
-                is UserState.LOGIN_SUCCESS,
-                UserState.REGISTER_SUCCESS,
+                UserState.EMPTY -> BasketError(
+                    message = "No items found",
+                    onBrowseProducts = {
+                        navController.navigate(Screen.ProductCatalog.createRoute(role = "Client"))
+                    }
+                )
+                UserState.EMAIL_SENT_SUCCESS -> BasketError(
+                    message = "Email verification required",
+                    onBrowseProducts = {
+                        navController.navigate(Screen.ProductCatalog.createRoute(role = "Client"))
+                    }
+                )
+                is UserState.LOGIN_SUCCESS -> BasketError(
+                    message = "Please wait while we load your basket",
+                    onBrowseProducts = {
+                        navController.navigate(Screen.ProductCatalog.createRoute(role = "Client"))
+                    }
+                )
+                UserState.REGISTER_SUCCESS -> BasketError(
+                    message = "Account setup in progress",
+                    onBrowseProducts = {
+                        navController.navigate(Screen.ProductCatalog.createRoute(role = "Client"))
+                    }
+                )
                 is UserState.ERROR -> BasketError(
                     message = (userState as UserState.ERROR).message ?: "Unknown error",
                     onBrowseProducts = {
