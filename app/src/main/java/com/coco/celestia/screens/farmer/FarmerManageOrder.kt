@@ -268,6 +268,13 @@ fun DisplayRequestCard(
         else -> null
     }
 
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
+
     Card(
         colors = CardDefaults.cardColors(
             containerColor = White1
@@ -352,6 +359,7 @@ fun DisplayRequestCard(
                 }
             }
         }
+    }
     }
 }
 
