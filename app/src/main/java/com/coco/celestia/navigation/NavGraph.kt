@@ -1183,6 +1183,7 @@ fun NavGraph(
         ) { backStackEntry ->
             val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
             ClientOrderDetails(navController = navController, orderId = orderId, viewModel = orderViewModel, transactionViewModel = transactionViewModel)
+            onNavigate("Order Details")
         }
 
         composable(

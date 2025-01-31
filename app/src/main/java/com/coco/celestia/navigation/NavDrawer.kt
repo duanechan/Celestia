@@ -214,12 +214,39 @@ fun TopBar(
                 }
             },
             navigationIcon = {
-                if (navController.currentDestination.toString().contains(Screen.ClientOrder.route)) {
+                val backButtonRoutes = listOf(
+                    Screen.ProductDetails.route,
+                    Screen.Notifications.route,
+                    Screen.ClientSpecialReqDetails.route
+                )
+                if (navController.currentDestination?.route == Screen.ClientOrder.route ||
+                    navController.currentDestination?.route == Screen.Client.route) {
                     IconButton(onClick = { navController.navigate(Screen.Basket.route) }) {
                         Icon(
                             painter = painterResource(R.drawable.shopping_basket),
                             contentDescription = "Basket",
                             tint = Green1
+                        )
+                    }
+                }
+                if (navController.currentDestination?.route == Screen.ClientOrderDetails.route ||
+                    navController.currentDestination?.route == Screen.Basket.route) {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            painter = painterResource(R.drawable.back),
+                            contentDescription = "Back Button",
+                            tint = Green1,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+                if (navController.currentDestination?.route in backButtonRoutes) {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            painter = painterResource(R.drawable.back),
+                            contentDescription = "Back Button",
+                            tint = Green1,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
