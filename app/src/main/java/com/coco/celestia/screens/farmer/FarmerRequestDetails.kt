@@ -97,7 +97,7 @@ fun DisplayRequestDetails (
 
     val specialRequests by specialRequestViewModel.specialReqData.observeAsState()
     val specialRequest = specialRequests?.find { it.specialRequestUID == specialRequestUID }
-    var requiredQuantity by remember { mutableStateOf(0) }
+    var requiredQuantity by remember { mutableIntStateOf(0) }
 
     val inputFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
     val dateTime = LocalDateTime.parse(specialRequest?.dateRequested ?: "", inputFormatter)
@@ -280,28 +280,50 @@ fun DisplayRequestDetails (
                 // Assign Milestone
                 specialRequest?.assignedMember?.forEach { member ->
                     if (member.status != "Delivering to Coop") {
-                        Button(
-                            onClick = {
-                                updateStatusDialog = true
-                            },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                contentColor = Color.White,
-                                containerColor = Green1
-                            ),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(56.dp)
-                                .padding(top = 16.dp)
-                        ) {
-                            Text("Assign Milestone")
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Icon(
-                                painter = painterResource(id = R.drawable.dashboard),
-                                contentDescription = "Assign Milestone Icon",
-                                modifier = Modifier.size(20.dp),
-                                tint = Color.White
-                            )
+                        if (member.status == "Completed" || member.status == "Calamity Affected") {
+                            Button(
+                                onClick = { },
+                                shape = RoundedCornerShape(25.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    contentColor = Color.White,
+                                    disabledContainerColor = Green4
+                                ),
+                                enabled = false,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(56.dp)
+                            ) {
+                                Text(
+                                    text =  if (member.status == "Completed") "Order is Completed" else "Order is affected by Unforeseen Event/s",
+                                    color = DarkGreen,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        } else {
+                            Button(
+                                onClick = {
+                                    updateStatusDialog = true
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    contentColor = Color.White,
+                                    containerColor = Green1
+                                ),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(56.dp)
+                                    .padding(top = 16.dp)
+                            ) {
+                                Text("Assign Milestone")
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Icon(
+                                    painter = painterResource(id = R.drawable.dashboard),
+                                    contentDescription = "Assign Milestone Icon",
+                                    modifier = Modifier.size(20.dp),
+                                    tint = Color.White
+                                )
+                            }
                         }
                     } else {
                         Button(
