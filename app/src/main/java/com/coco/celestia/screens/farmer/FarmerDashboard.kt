@@ -168,6 +168,7 @@ fun FarmerDashboard(
                             .maxByOrNull { it.dateTime }
                             ?.dateTime
                     }
+                    ?.take(3)
                     ?.forEach { assigned ->
                         DisplayRequestCard(
                             navController,
