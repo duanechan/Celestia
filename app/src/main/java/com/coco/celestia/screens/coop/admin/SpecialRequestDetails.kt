@@ -1,6 +1,7 @@
 package com.coco.celestia.screens.coop.admin
 
 import android.annotation.SuppressLint
+import android.net.Uri
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -55,6 +56,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -64,12 +66,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.ui.theme.Green1
-import com.coco.celestia.ui.theme.Green2
-import com.coco.celestia.ui.theme.Green4
-import com.coco.celestia.ui.theme.White2
+import com.coco.celestia.service.ImageService
+import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.AssignedMember
@@ -1049,8 +1051,9 @@ fun DisplayAssignedMembers (
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
-fun DisplayTrackOrder (
+fun DisplayTrackOrder(
     record: TrackRecord,
     isLastItem: Boolean
 ) {
@@ -1061,14 +1064,13 @@ fun DisplayTrackOrder (
     val date = dateTime.format(dateFormatter)
     val time = dateTime.format(timeFormatter)
 
-    Row (
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
             .padding(start = 32.dp, end = 8.dp),
         verticalAlignment = Alignment.Top
     ) {
-        Column (
+        Column(
             horizontalAlignment = Alignment.End
         ) {
             Text(
@@ -1084,7 +1086,7 @@ fun DisplayTrackOrder (
             )
         }
 
-        Column (
+        Column(
             modifier = Modifier
                 .padding(horizontal = 8.dp)
         ) {
@@ -1105,9 +1107,43 @@ fun DisplayTrackOrder (
             }
         }
 
-        Text(
-            text = record.description,
-        )
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = record.description,
+                color = Green1,
+                fontFamily = mintsansFontFamily
+            )
+
+            record.imageUrl?.let { url ->
+                var imageUri by remember(url) { mutableStateOf<Uri?>(null) }
+
+                LaunchedEffect(url) {
+                    ImageService.fetchStatusImage(url) { uri ->
+                        imageUri = uri
+                    }
+                }
+
+                imageUri?.let { uri ->
+                    Image(
+                        painter = rememberImagePainter(
+                            data = uri,
+                            builder = {
+                                crossfade(true)
+                            }
+                        ),
+                        contentDescription = "Status update image",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp)
+                            .padding(top = 8.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+        }
     }
 }
 

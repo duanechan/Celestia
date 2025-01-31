@@ -1,5 +1,7 @@
 package com.coco.celestia.screens.client
 
+import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,14 +13,19 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
 import com.coco.celestia.R
+import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.model.TrackRecord
@@ -27,6 +34,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun ClientSpecialReqDetails(
     navController: NavController,
@@ -333,7 +341,7 @@ fun ClientSpecialReqDetails(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         val sortedRecords = specialReq.trackRecord.sortedByDescending {
-                            SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).parse(it.dateTime)?.time ?: 0
+                            SimpleDateFormat("MM-dd-yyyy HH:mm:ss", Locale.getDefault()).parse(it.dateTime)?.time ?: 0
                         }
                         val mostRecentDate = sortedRecords.firstOrNull()?.dateTime
 
@@ -393,6 +401,35 @@ fun ClientSpecialReqDetails(
                                         color = textColor,
                                         fontFamily = mintsansFontFamily
                                     )
+
+                                    // Add image if it exists
+                                    record.imageUrl?.let { url ->
+                                        var imageUri by remember(url) { mutableStateOf<Uri?>(null) }
+
+                                        LaunchedEffect(url) {
+                                            ImageService.fetchStatusImage(url) { uri ->
+                                                imageUri = uri
+                                            }
+                                        }
+
+                                        imageUri?.let { uri ->
+                                            Image(
+                                                painter = rememberImagePainter(
+                                                    data = uri,
+                                                    builder = {
+                                                        crossfade(true)
+                                                    }
+                                                ),
+                                                contentDescription = "Status update image",
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(180.dp)
+                                                    .padding(top = 8.dp)
+                                                    .clip(RoundedCornerShape(8.dp)),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
