@@ -57,6 +57,9 @@ import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
 import com.coco.celestia.viewmodel.model.SpecialRequest
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 @Composable
 fun FarmerManageOrder(
@@ -249,6 +252,7 @@ fun DisplayRequestCard(
     val assignedMember = specialRequest.assignedMember.find { it.email == farmerEmail }
     val status = assignedMember?.status ?: ""
     val normalizedStatus = status.uppercase()
+    val dateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
 
     val iconPainter: Painter? = when (normalizedStatus) {
         "SOIL PREPARATION" -> painterResource(id = R.drawable.plant_hand)
@@ -322,6 +326,31 @@ fun DisplayRequestCard(
                 text = specialRequest.name,
                 color = Green2
             )
+
+            if (assignedMember?.status == "Growing") {
+                val latestDateStr = assignedMember
+                    .farmerTrackRecord
+                    .maxByOrNull { LocalDateTime.parse(it.dateTime, dateFormatter) }
+                    ?.dateTime
+
+                val latestDate = LocalDateTime.parse(latestDateStr, dateFormatter)
+                val currentDate = LocalDateTime.now()
+                val daysDifference = ChronoUnit.DAYS.between(latestDate, currentDate)
+
+                Text(
+                    text = "Last Updated: $daysDifference Days ago",
+                    color = Green2
+                )
+
+                if (daysDifference >= 10) {
+                    Text(
+                        text = "! Your last update is 10 Days ago. Please update your status.",
+                        color = Color.Red,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
+            }
         }
     }
 }
