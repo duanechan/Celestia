@@ -69,6 +69,7 @@ import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.ui.theme.DarkGreen
 import com.coco.celestia.ui.theme.Gray
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green2
@@ -291,21 +292,24 @@ fun DisplayRequestDetails (
                             modifier = Modifier
                                 .weight(1f)
                                 .height(56.dp)
+                                .padding(top = 16.dp)
                         ) {
-                            Text(
-                                text = "Assign Milestone",
-                                color = Color.White,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
+                            Text("Assign Milestone")
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(
+                                painter = painterResource(id = R.drawable.dashboard),
+                                contentDescription = "Assign Milestone Icon",
+                                modifier = Modifier.size(20.dp),
+                                tint = Color.White
                             )
                         }
                     } else {
                         Button(
                             onClick = { },
-                            shape = RoundedCornerShape(12.dp),
+                            shape = RoundedCornerShape(25.dp),
                             colors = ButtonDefaults.buttonColors(
                                 contentColor = Color.White,
-                                disabledContainerColor = Green1
+                                disabledContainerColor = Green4
                             ),
                             enabled = false,
                             modifier = Modifier
@@ -314,7 +318,7 @@ fun DisplayRequestDetails (
                         ) {
                             Text(
                                 text = "Waiting for Coop to Receive the Products",
-                                color = Color.White,
+                                color = DarkGreen,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -376,6 +380,7 @@ fun DisplayRequestDetails (
                                 tint = Color.White
                             )
                         }
+                        Spacer(modifier = Modifier.height(10.dp))
                     }
                 }
             }
