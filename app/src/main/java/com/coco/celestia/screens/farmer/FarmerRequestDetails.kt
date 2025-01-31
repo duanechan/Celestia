@@ -1,9 +1,15 @@
 package com.coco.celestia.screens.farmer
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,18 +20,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -46,6 +56,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -53,8 +65,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.ui.theme.Gray
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green2
 import com.coco.celestia.ui.theme.Green4
@@ -376,40 +391,38 @@ fun DisplayRequestDetails (
             }
             DisplayUpdateStatus(
                 product = product,
-                onConfirm = { status, description, quantity ->
-                    specialRequest.assignedMember.map { member ->
-                        if (member.email == farmerEmail) {
-                            val addTrack = TrackRecord(
-                                description = "Farmer ${member.name} status: $status - $description",
-                                dateTime = formattedDateTime
+                onConfirm = { status, description, quantity, imageUri ->
+                    if (imageUri != null) {
+                        specialRequestViewModel.uploadStatusImage(imageUri) { imageUrl ->
+                            updateSpecialRequestWithStatus(
+                                specialRequest,
+                                status,
+                                description,
+                                quantity,
+                                imageUrl,
+                                farmerEmail,
+                                product,
+                                formattedDateTime,
+                                trackRecord,
+                                farmerTrackRecord,
+                                specialRequestViewModel
                             )
-                            val addFarmerTrack = TrackRecord(
-                                description = "In Progress ($status): $description",
-                                dateTime = formattedDateTime
-                            )
-                            farmerTrackRecord.add(addFarmerTrack)
-                            trackRecord.add(addTrack)
                         }
-                    }
-
-                    specialRequestViewModel.updateSpecialRequest(
-                        specialRequest.copy(
-                            assignedMember = specialRequest.assignedMember.map { member ->
-                                if (member.email == farmerEmail && member.product == product) {
-                                    member.copy(
-                                        status = status,
-                                        farmerTrackRecord = farmerTrackRecord,
-                                        deliveredQuantity = quantity
-                                    )
-                                } else {
-                                    member
-                                }
-                            },
-                            trackRecord = trackRecord
+                    } else {
+                        updateSpecialRequestWithStatus(
+                            specialRequest,
+                            status,
+                            description,
+                            quantity,
+                            null,
+                            farmerEmail,
+                            product,
+                            formattedDateTime,
+                            trackRecord,
+                            farmerTrackRecord,
+                            specialRequestViewModel
                         )
-                    )
-
-
+                    }
                     updateStatusDialog = false
                 },
                 onDismiss = { updateStatusDialog = false },
@@ -422,11 +435,12 @@ fun DisplayRequestDetails (
 }
 
 //Changed Status to Milestone
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun DisplayUpdateStatus(
     product: String,
     requiredQuantity: Int,
-    onConfirm: (String, String, Int) -> Unit,
+    onConfirm: (String, String, Int, Uri?) -> Unit,
     onDismiss: () -> Unit,
     specialRequestViewModel: SpecialRequestViewModel,
     specialRequest: SpecialRequest?
@@ -438,12 +452,20 @@ fun DisplayUpdateStatus(
     var showNotificationPopup by remember { mutableStateOf(false) }
     var quantityExceeded by remember { mutableStateOf(false) }
     var emptyMilestone by remember { mutableStateOf(false) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     val statusList = listOf(
         "Soil Preparation", "Seed Sowing", "Growing",
         "Pre-Harvest", "Harvesting", "Post-Harvest",
         "Delivering to Coop", "Calamity Affected"
     )
+
+    val context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedImageUri = uri
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -531,6 +553,93 @@ fun DisplayUpdateStatus(
                     }
                 }
 
+                if (status.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    ) {
+                        OutlinedCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { launcher.launch("image/*") },
+                            border = BorderStroke(1.dp, Gray),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.White
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.camera),
+                                    contentDescription = "Camera Icon",
+                                    modifier = Modifier.size(24.dp),
+                                    tint = Gray
+                                )
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(horizontal = 12.dp)
+                                ) {
+                                    Text(
+                                        text = "Show proof of progress.",
+                                        color = Gray,
+                                        fontSize = 14.sp
+                                    )
+                                    Text(
+                                        text = "*Proof of Progress is optional.",
+                                        color = Gray.copy(alpha = 0.6f),
+                                        fontSize = 12.sp,
+                                        modifier = Modifier.padding(top = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        selectedImageUri?.let { uri ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 8.dp)
+                            ) {
+                                Image(
+                                    painter = rememberImagePainter(
+                                        data = uri,
+                                        builder = {
+                                            crossfade(true)
+                                        }
+                                    ),
+                                    contentDescription = "Selected image",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(200.dp)
+                                        .clip(RoundedCornerShape(8.dp)),
+                                    contentScale = ContentScale.Crop
+                                )
+
+                                IconButton(
+                                    onClick = { selectedImageUri = null },
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(4.dp)
+                                        .size(32.dp)
+                                        .background(Color.White.copy(alpha = 0.8f), CircleShape)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Remove image",
+                                        tint = Color.Black
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if (status == "Delivering to Coop") {
                     if (quantityExceeded) {
                         Text(
@@ -585,12 +694,14 @@ fun DisplayUpdateStatus(
                 if (status == "Calamity Affected") {
                     Button(
                         onClick = {
-                            specialRequestViewModel.notify(NotificationType.FarmerCalamityAffected, specialRequest!!)
-                            showNotificationPopup = true // Show the popup
+                            specialRequestViewModel.notify(
+                                NotificationType.FarmerCalamityAffected,
+                                specialRequest!!
+                            )
+                            showNotificationPopup = true
                         },
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            contentColor = Color.White,
                             containerColor = Green1
                         ),
                         modifier = Modifier
@@ -615,7 +726,7 @@ fun DisplayUpdateStatus(
                     quantityExceeded = quantity > requiredQuantity
 
                     if (!quantityExceeded && !emptyMilestone) {
-                        onConfirm(status, description, quantity)
+                        onConfirm(status, description, quantity, selectedImageUri)
                     }
                 }
             ) {
@@ -623,9 +734,7 @@ fun DisplayUpdateStatus(
             }
         },
         dismissButton = {
-            Button(
-                onClick = onDismiss
-            ) {
+            Button(onClick = onDismiss) {
                 Text("Cancel")
             }
         }
@@ -637,9 +746,7 @@ fun DisplayUpdateStatus(
             title = { Text("Notification Sent") },
             text = { Text("The cooperative has been notified about unforeseen circumstances.") },
             confirmButton = {
-                Button(
-                    onClick = { showNotificationPopup = false }
-                ) {
+                Button(onClick = { showNotificationPopup = false }) {
                     Text("OK")
                 }
             }
@@ -820,4 +927,52 @@ fun DisplayDetails (
             )
         }
     }
+}
+
+private fun updateSpecialRequestWithStatus(
+    specialRequest: SpecialRequest,
+    status: String,
+    description: String,
+    quantity: Int,
+    imageUrl: String?,
+    farmerEmail: String,
+    product: String,
+    formattedDateTime: String,
+    trackRecord: MutableList<TrackRecord>,
+    farmerTrackRecord: MutableList<TrackRecord>,
+    specialRequestViewModel: SpecialRequestViewModel
+) {
+    specialRequest.assignedMember.map { member ->
+        if (member.email == farmerEmail) {
+            val addTrack = TrackRecord(
+                description = "Farmer ${member.name} status: $status - $description",
+                dateTime = formattedDateTime,
+                imageUrl = imageUrl
+            )
+            val addFarmerTrack = TrackRecord(
+                description = "In Progress ($status): $description",
+                dateTime = formattedDateTime,
+                imageUrl = imageUrl
+            )
+            farmerTrackRecord.add(addFarmerTrack)
+            trackRecord.add(addTrack)
+        }
+    }
+
+    specialRequestViewModel.updateSpecialRequest(
+        specialRequest.copy(
+            assignedMember = specialRequest.assignedMember.map { member ->
+                if (member.email == farmerEmail && member.product == product) {
+                    member.copy(
+                        status = status,
+                        farmerTrackRecord = farmerTrackRecord,
+                        deliveredQuantity = quantity
+                    )
+                } else {
+                    member
+                }
+            },
+            trackRecord = trackRecord
+        )
+    )
 }

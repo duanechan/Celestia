@@ -131,7 +131,8 @@ data class AssignedMember(
 
 data class TrackRecord(
     val description: String = "",
-    val dateTime: String = ""
+    val dateTime: String = "",
+    val imageUrl: String? = null
 )
 
 data class ProductReqValidation(

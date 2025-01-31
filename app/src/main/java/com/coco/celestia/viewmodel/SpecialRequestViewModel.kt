@@ -1,9 +1,11 @@
 package com.coco.celestia.viewmodel
 
+import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.coco.celestia.service.ImageService
 import com.coco.celestia.service.NotificationService
 import com.coco.celestia.viewmodel.model.AssignedMember
 import com.coco.celestia.viewmodel.model.Notification
@@ -143,7 +145,7 @@ class SpecialRequestViewModel : ViewModel() {
         })
     }
 
-    fun updateSpecialRequest (specialReq: SpecialRequest) {
+    fun updateSpecialRequest(specialReq: SpecialRequest) {
         viewModelScope.launch {
             _specialReqState.value = SpecialReqState.LOADING
             database.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -159,14 +161,7 @@ class SpecialRequestViewModel : ViewModel() {
                                     request.ref.setValue(specialReq)
                                         .addOnSuccessListener {
                                             viewModelScope.launch {
-//                                                notify(
-//                                                    if (specialReq.status == "Calamity-Affected") {
-//                                                        NotificationType.FarmerCalamityAffected
-//                                                    } else {
-//                                                        NotificationType.CoopSpecialRequestUpdated
-//                                                    },
-//                                                    specialReq
-//                                                )
+                                                // notification code if needed
                                             }
                                             _specialReqState.value = SpecialReqState.SUCCESS
                                         }
@@ -264,6 +259,20 @@ class SpecialRequestViewModel : ViewModel() {
                     _specialReqState.value = SpecialReqState.ERROR(error.message)
                 }
             })
+        }
+    }
+    fun uploadStatusImage(imageUri: Uri, onComplete: (String?) -> Unit) {
+        viewModelScope.launch {
+            _specialReqState.value = SpecialReqState.LOADING
+            ImageService.uploadStatusImage(imageUri) { downloadUrl ->
+                if (downloadUrl != null) {
+                    _specialReqState.value = SpecialReqState.SUCCESS
+                    onComplete(downloadUrl)
+                } else {
+                    _specialReqState.value = SpecialReqState.ERROR("Failed to upload image")
+                    onComplete(null)
+                }
+            }
         }
     }
 }

@@ -1,6 +1,8 @@
 package com.coco.celestia.screens.farmer
 
+import android.net.Uri
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
@@ -26,11 +29,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.annotation.ExperimentalCoilApi
+import coil.compose.rememberImagePainter
+import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.Green1
 import com.coco.celestia.ui.theme.Green2
 import com.coco.celestia.ui.theme.Green4
@@ -91,6 +99,7 @@ fun DisplayFarmerProgressTracking(
     }
 }
 
+@OptIn(ExperimentalCoilApi::class)
 @Composable
 fun DisplayTrackOrder(
     record: TrackRecord,
@@ -104,6 +113,21 @@ fun DisplayTrackOrder(
     val time = dateTime.format(timeFormatter)
 
     var cardHeight by remember { mutableStateOf(0) }
+
+    val recordKey = remember(record.dateTime, record.description, record.imageUrl) {
+        "${record.dateTime}_${record.description}_${record.imageUrl}"
+    }
+
+    var imageUri by remember(recordKey) { mutableStateOf<Uri?>(null) }
+
+    LaunchedEffect(recordKey) {
+        imageUri = null // Reset first
+        record.imageUrl?.let { url ->
+            ImageService.fetchStatusImage(url) { uri ->
+                imageUri = uri
+            }
+        }
+    }
 
     Row(
         modifier = Modifier
@@ -165,10 +189,36 @@ fun DisplayTrackOrder(
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text(
-                    text = record.description,
-                    modifier = Modifier.padding(8.dp)
-                )
+                Column(
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .widthIn(max = 280.dp)
+                ) {
+                    Text(
+                        text = record.description,
+                        modifier = Modifier.padding(
+                            bottom = if (imageUri != null) 8.dp else 0.dp
+                        )
+                    )
+
+                    if (record.imageUrl != null && imageUri != null) {
+                        Image(
+                            painter = rememberImagePainter(
+                                data = imageUri,
+                                builder = {
+                                    crossfade(true)
+                                    memoryCacheKey(recordKey)
+                                }
+                            ),
+                            contentDescription = "Status update image",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(180.dp)
+                                .clip(RoundedCornerShape(4.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                }
             }
         }
     }

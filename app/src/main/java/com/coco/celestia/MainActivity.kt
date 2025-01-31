@@ -20,9 +20,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -69,9 +67,7 @@ import com.coco.celestia.navigation.NavGraph
 import com.coco.celestia.navigation.TopBar
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.NotificationService
-import com.coco.celestia.ui.theme.CelestiaTheme
-import com.coco.celestia.ui.theme.Green1
-import com.coco.celestia.ui.theme.Green4
+import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.checkNetworkConnection
 import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.UserState
@@ -98,7 +94,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color(0xFFF2E3DB))
-                        .semantics { testTagsAsResourceId = true } //testing
+                        .semantics { testTagsAsResourceId = true }
                 ) {
                     App()
                 }
@@ -315,7 +311,7 @@ fun App() {
                         Column(
                             modifier = Modifier
                                 .fillMaxHeight()
-                                .background(Color(0xFFF5F5F5))
+                                .background(White2)
                                 .padding(16.dp)
                         ) {
                             // Header
@@ -584,7 +580,6 @@ fun App() {
                 }
             }
         } else {
-            // For client routes - no drawer
             Scaffold(
                 topBar = {
                     if (userData != null && shouldShowNavigation) {

@@ -7,6 +7,7 @@ object ImageService {
     private val storage = FirebaseStorage.getInstance().getReference()
     private val usersReference = storage.child("images/users")
     private val productReference = storage.child("images/products")
+    private val statusReference = storage.child("images/status_updates")
     private val imageCache = mutableMapOf<String, Uri?>()
 
     fun fetchProfilePicture(uid: String, onComplete: (Uri?) -> Unit) {
@@ -53,6 +54,37 @@ object ImageService {
                 onSuccess(true)
             }.addOnFailureListener {
                 onSuccess(false)
+            }
+    }
+
+    fun uploadStatusImage(imageUri: Uri, onComplete: (String?) -> Unit) {
+        val timestamp = System.currentTimeMillis()
+        val statusId = "$timestamp.jpg"
+        val query = statusReference.child(statusId)
+
+        query.putFile(imageUri)
+            .addOnSuccessListener {
+                query.downloadUrl
+                    .addOnSuccessListener { uri ->
+                        onComplete("images/status_updates/$statusId")
+                    }
+                    .addOnFailureListener {
+                        onComplete(null)
+                    }
+            }
+            .addOnFailureListener {
+                onComplete(null)
+            }
+    }
+
+    fun fetchStatusImage(imageUrl: String, onComplete: (Uri?) -> Unit) {
+        // Using the relative path stored in TrackRecord
+        val query = storage.child(imageUrl)
+        query.downloadUrl
+            .addOnSuccessListener {
+                onComplete(it)
+            }.addOnFailureListener {
+                onComplete(null)
             }
     }
 }
