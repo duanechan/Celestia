@@ -187,7 +187,7 @@ fun FarmerManageOrder(
                         val statuses = listOf(
                             "All", "Soil Preparation", "Seed Sowing", "Growing",
                             "Pre-Harvest", "Harvesting", "Post-Harvest",
-                            "Delivering to Coop", "Calamity Affected", "Cancelled"
+                            "Delivering to Coop", "Calamity Affected"
                         )
 
                         statuses.forEach { status ->
@@ -263,7 +263,6 @@ fun DisplayRequestCard(
         "POST-HARVEST" -> painterResource(id = R.drawable.harvested)
         "DELIVERING TO COOP" -> painterResource(id = R.drawable.deliveryicon)
         "COMPLETED" -> painterResource(id = R.drawable.received)
-        "CANCELLED" -> painterResource(id = R.drawable.cancelled)
         "CALAMITY AFFECTED" -> painterResource(id = R.drawable.calamity)
         else -> null
     }
