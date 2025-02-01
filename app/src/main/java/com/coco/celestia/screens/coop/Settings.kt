@@ -1,6 +1,10 @@
 package com.coco.celestia.screens.coop
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,16 +14,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -27,9 +34,12 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -40,6 +50,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,6 +82,10 @@ import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.ContactData
 import com.coco.celestia.viewmodel.model.FacilityData
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun Settings(navController: NavController, userRole: String) {
@@ -102,13 +117,22 @@ fun Settings(navController: NavController, userRole: String) {
             navController.navigate(Screen.AccessControl.route)
         }
 
-        if (userRole.startsWith("Coop", ignoreCase = true)) {
+        if (userRole.equals("Admin", ignoreCase = true)) {
             Text(
                 text = "Configurations",
                 modifier = Modifier.padding(top = 16.dp),
                 color = Color.Gray
             )
-            SettingsItem(text = "Collection & Payment Settings", iconResId = R.drawable.facility) {
+            SettingsItem(text = "Manage Facilities", iconResId = R.drawable.facility) {
+                navController.navigate(Screen.ManageFacilities.route)
+            }
+        } else if (userRole.startsWith("Coop", ignoreCase = true)) {
+            Text(
+                text = "Configurations",
+                modifier = Modifier.padding(top = 16.dp),
+                color = Color.Gray
+            )
+            SettingsItem(text = "Collection & Payment Settings", iconResId = R.drawable.productlist) {
                 navController.navigate(Screen.FacilitySettings.route)
             }
         }
@@ -1140,5 +1164,438 @@ private fun ContactCard(
                 }
             }
         )
+    }
+}
+
+@Composable
+fun ManageFacilitiesScreen(
+    facilityViewModel: FacilityViewModel,
+    navController: NavController
+) {
+    val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
+    val facilityState by facilityViewModel.facilityState.observeAsState(FacilityState.LOADING)
+
+    var showConfirmationDialog by remember { mutableStateOf(false) }
+    var showArchivedDialog by remember { mutableStateOf(false) }
+    var selectedFacility by remember { mutableStateOf<FacilityData?>(null) }
+    var hasContent by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchActive by remember { mutableStateOf(false) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
+
+    val activeFacilities = remember(facilitiesData, searchQuery) {
+        facilitiesData.filter { facility ->
+            !facility.isArchived && (
+                    searchQuery.isEmpty() ||
+                            facility.name.contains(searchQuery, ignoreCase = true) ||
+                            facility.emails.any { it.contains(searchQuery, ignoreCase = true) }
+                    )
+        }
+    }
+
+    val archivedFacilities = remember(facilitiesData) {
+        facilitiesData.filter { it.isArchived }
+    }
+
+    LaunchedEffect(Unit) {
+        facilityViewModel.fetchFacilities(false)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(White2)
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Active Facilities",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                IconButton(
+                    onClick = {
+                        isSearchActive = !isSearchActive
+                        if (!isSearchActive) searchQuery = ""
+                    },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = Green1
+                    )
+                ) {
+                    Icon(
+                        imageVector = if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
+                        contentDescription = if (isSearchActive) "Close Search" else "Search"
+                    )
+                }
+
+                IconButton(
+                    onClick = {
+                        showArchivedDialog = true
+                        facilityViewModel.fetchFacilities(true)
+                    },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = Green1
+                    )
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.archived),
+                        contentDescription = "View Archived"
+                    )
+                }
+            }
+        }
+
+        // Search bar
+        AnimatedVisibility(
+            visible = isSearchActive,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                placeholder = { Text("Search facilities...") },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Green1,
+                    focusedLabelColor = Green1
+                ),
+                singleLine = true,
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null,
+                        tint = Green1
+                    )
+                }
+            )
+        }
+
+        // Main content
+        when (facilityState) {
+            is FacilityState.LOADING -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Green1)
+                }
+            }
+
+            is FacilityState.ERROR -> {
+                Text(
+                    text = (facilityState as FacilityState.ERROR).message,
+                    color = Color.Red
+                )
+            }
+
+            else -> {
+                if (activeFacilities.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (searchQuery.isEmpty()) "No active facilities found"
+                            else "No matching facilities found",
+                            color = Color.Gray
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(activeFacilities) { facility ->
+                            FacilityManagementCard(
+                                facility = facility,
+                                onDeleteClick = {
+                                    selectedFacility = facility
+                                    showConfirmationDialog = true
+                                    facilityViewModel.checkFacilityContent(facility.name) { facilityHasContent ->
+                                        hasContent = facilityHasContent
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Delete/Archive Confirmation Dialog
+    if (showConfirmationDialog && selectedFacility != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showConfirmationDialog = false
+                selectedFacility = null
+            },
+            title = { Text(if (hasContent) "Archive Facility" else "Delete Facility") },
+            text = {
+                Column {
+                    if (hasContent) {
+                        Text(
+                            "This facility (${selectedFacility?.name}) has existing orders in the system. " +
+                                    "To maintain data integrity and order history, the facility will be archived."
+                        )
+                    } else {
+                        Text("Are you sure you want to delete ${selectedFacility?.name}?")
+                        Text(
+                            "This action cannot be undone.",
+                            color = Color.Red,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        selectedFacility?.let { facility ->
+                            if (hasContent) {
+                                facilityViewModel.archiveFacility(
+                                    facilityName = facility.name,
+                                    onSuccess = {
+                                        showConfirmationDialog = false
+                                        selectedFacility = null
+                                        facilityViewModel.fetchFacilities(false)
+                                    },
+                                    onError = { errorMessage ->
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                message = errorMessage,
+                                                duration = SnackbarDuration.Short
+                                            )
+                                        }
+                                    }
+                                )
+                            } else {
+                                facilityViewModel.deleteFacility(
+                                    facilityName = facility.name,
+                                    onSuccess = {
+                                        showConfirmationDialog = false
+                                        selectedFacility = null
+                                        facilityViewModel.fetchFacilities(false)
+                                    },
+                                    onError = { errorMessage ->
+                                        coroutineScope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                message = errorMessage,
+                                                duration = SnackbarDuration.Short
+                                            )
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (hasContent) Green1 else Color.Red,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(if (hasContent) "Archive" else "Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showConfirmationDialog = false
+                        selectedFacility = null
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    // Archived Facilities Dialog
+    if (showArchivedDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showArchivedDialog = false
+                facilityViewModel.fetchFacilities(false)
+            },
+            title = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Archived Facilities",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        text = "(${archivedFacilities.size})",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
+                }
+            },
+            text = {
+                if (archivedFacilities.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "No archived facilities",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.Gray
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.height(300.dp)
+                    ) {
+                        items(archivedFacilities) { facility ->
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                            ) {
+                                Text(
+                                    text = facility.name,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = "${facility.emails.size} members",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Gray
+                                )
+                                if (facility.archivedDate != 0L) {
+                                    Text(
+                                        text = "Archived on: ${facility.archivedDate?.let {
+                                            formatDate(
+                                                it
+                                            )
+                                        }}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.Gray
+                                    )
+                                }
+                                Button(
+                                    onClick = {
+                                        facilityViewModel.unarchiveFacility(
+                                            facilityName = facility.name,
+                                            onSuccess = {
+                                                showArchivedDialog = false
+                                                facilityViewModel.fetchFacilities(true)
+                                            },
+                                            onError = { errorMessage ->
+                                                coroutineScope.launch {
+                                                    snackbarHostState.showSnackbar(
+                                                        message = errorMessage,
+                                                        duration = SnackbarDuration.Short
+                                                    )
+                                                }
+                                            }
+                                        )
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 8.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Green1,
+                                        contentColor = Color.White
+                                    )
+                                ) {
+                                    Text("Unarchive")
+                                }
+                            }
+                            if (facility != archivedFacilities.last()) {
+                                Divider(
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    color = Color.LightGray
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showArchivedDialog = false
+                        facilityViewModel.fetchFacilities(false)
+                    }
+                ) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun FacilityManagementCard(
+    facility: FacilityData,
+    onDeleteClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = White1)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = facility.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Text(
+                    text = "${facility.emails.size} members",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+            }
+
+            IconButton(
+                onClick = onDeleteClick,
+                colors = IconButtonDefaults.iconButtonColors(
+                    contentColor = Color.Red
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete Facility"
+                )
+            }
+        }
+    }
+}
+
+private fun formatDate(timestamp: Long): String {
+    return try {
+        SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(timestamp))
+    } catch (e: Exception) {
+        "Unknown date"
     }
 }

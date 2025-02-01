@@ -45,6 +45,7 @@ import com.coco.celestia.screens.client.ProductDetailScreen
 import com.coco.celestia.screens.coop.AccessControlScreen
 import com.coco.celestia.screens.coop.ContactDeveloper
 import com.coco.celestia.screens.coop.FacilitySettingsScreen
+import com.coco.celestia.screens.coop.ManageFacilitiesScreen
 import com.coco.celestia.screens.coop.admin.AdminClients
 import com.coco.celestia.screens.coop.admin.AdminHome
 import com.coco.celestia.screens.coop.admin.AdminSpecialRequests
@@ -389,6 +390,12 @@ fun NavGraph(
                 facilityViewModel = facilityViewModel,
                 currentUserEmail = userEmail,
                 currentUserRole = userRole,
+                navController = navController
+            )
+        }
+        composable(Screen.ManageFacilities.route) {
+            ManageFacilitiesScreen(
+                facilityViewModel = facilityViewModel,
                 navController = navController
             )
         }

@@ -34,7 +34,10 @@ data class FacilityData(
     var isCashEnabled: Boolean = false,
     var isGcashEnabled: Boolean = false,
     var cashInstructions: String = "",
-    var gcashNumbers: String = ""
+    var gcashNumbers: String = "",
+    // Archive Status
+    var isArchived: Boolean = false,
+    var archivedDate: Long? = null
 )
 
 data class StatusUpdate(

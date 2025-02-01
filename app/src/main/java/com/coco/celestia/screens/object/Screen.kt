@@ -1,7 +1,6 @@
 package com.coco.celestia.screens.`object`
 
 import android.net.Uri
-import com.coco.celestia.viewmodel.model.SpecialRequest
 
 sealed class Screen(val route: String) {
     data object Splash: Screen(route = "splash")
@@ -43,6 +42,7 @@ sealed class Screen(val route: String) {
     data object AccessControl: Screen(route = "access_control")
     data object ContactDeveloper: Screen(route = "contact_developer")
     data object FacilitySettings: Screen(route = "facility_settings")
+    data object ManageFacilities : Screen("manage_facilities")
     data object AdminClientDetails : Screen(route = "client_details/{email}") {
         fun createRoute(email: String) = "client_details/$email"
     }
