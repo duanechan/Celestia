@@ -213,7 +213,13 @@ fun FarmerManageOrder(
                 }
 
                 assignedProducts
-                    ?.filter { it.status == tabName }
+                    ?.filter { member ->
+                        if (tabName == "Completed") {
+                            member.assignedMember.any { it.status == "Completed" }
+                        } else {
+                            member.status == "In Progress" && member.assignedMember.any { it.email == userData?.email && it.status != "Completed" }
+                        }
+                    }
                     ?.filter { member ->
                         farmerStatus == "All" ||
                                 member.assignedMember.any { it.status.equals(farmerStatus, ignoreCase = true)}
