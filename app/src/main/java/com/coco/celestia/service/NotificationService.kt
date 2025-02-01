@@ -32,10 +32,6 @@ object NotificationService {
         onNotificationsChanged: (List<Notification>) -> Unit,
         onError: (DatabaseError) -> Unit
     ) {
-        var role: String? = null
-        usersRef.child(uid).child("role").get()
-            .addOnSuccessListener { snapshot -> role = snapshot.value as? String }
-
         usersRef
             .child(uid)
             .child("notifications")
@@ -51,6 +47,8 @@ object NotificationService {
                 }
             })
     }
+
+
 
     private suspend fun DataSnapshot.findUserByEmailAndName(recipient: UserData): String? = coroutineScope {
         this@findUserByEmailAndName.children

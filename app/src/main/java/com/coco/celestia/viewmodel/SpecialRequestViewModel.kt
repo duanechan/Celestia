@@ -45,7 +45,9 @@ class SpecialRequestViewModel : ViewModel() {
             println(specialReq)
 
             val notification = Notification(
-                timestamp = formattedDateTime,
+                timestamp = formattedDateTime
+                    .replace("am", "AM", ignoreCase = true)
+                    .replace("pm", "PM", ignoreCase = true),
                 sender = specialReq.name,
                 detailsId = specialReq.specialRequestUID,
                 subject = when (type) {

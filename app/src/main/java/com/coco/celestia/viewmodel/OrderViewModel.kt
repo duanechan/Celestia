@@ -57,7 +57,9 @@ class OrderViewModel : ViewModel() {
         val formattedDateTime = LocalDateTime.now().format(formatter)
 
         val notification = Notification(
-            timestamp = formattedDateTime,
+            timestamp = formattedDateTime
+                .replace("am", "AM", ignoreCase = true)
+                .replace("pm", "PM", ignoreCase = true),
             sender = order.client,
             detailsId = order.orderId,
             message = "New order request from ${order.client}!",
