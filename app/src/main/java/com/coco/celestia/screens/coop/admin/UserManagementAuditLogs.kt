@@ -1,10 +1,13 @@
 package com.coco.celestia.screens.coop.admin
 
 import android.Manifest
+import android.app.Activity
+import android.content.ContentValues
+import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Environment
+import android.provider.MediaStore
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -14,8 +17,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,12 +29,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -52,15 +58,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.UserIdentifier
-import com.coco.celestia.util.exportToExcel
 import com.coco.celestia.viewmodel.TransactionState
 import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.TransactionData
 import com.coco.celestia.viewmodel.model.UserData
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -72,24 +81,65 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
     var searchQuery by remember { mutableStateOf("") }
     val actionStatusView by remember { mutableStateOf(true) }
     var selectedStatus by remember { mutableStateOf("All") }
-    var selectedCategory by remember { mutableStateOf("") }
     var filterActionExpanded by remember { mutableStateOf(false) }
     var filteredOrderDataTran by remember { mutableStateOf<Map<UserData, List<TransactionData>>>(emptyMap()) }
-    var filteredSearch by remember { mutableStateOf<Map<String, Pair<UserData, List<TransactionData>>>>(
-        emptyMap()
-    ) }
+    var filteredSearch by remember { mutableStateOf<Map<String, Pair<UserData, List<TransactionData>>>>(emptyMap()) }
+    var showPermissionDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted ->
-            if (isGranted) {
-                exportToExcel(context, filteredOrderDataTran)
-            } else {
-                Toast.makeText(context, "Storage permission is required to save the file.", Toast.LENGTH_SHORT).show()
+    val transactionTypes = listOf(
+        "All",
+        "Online Sale",
+        "In-Store Sale",
+        "Purchased"
+    )
+
+    fun checkAndRequestPermissions(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            true
+        } else {
+            when {
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    true
+                }
+                else -> {
+                    showPermissionDialog = true
+                    false
+                }
             }
         }
-    )
+    }
+
+    // Permission Dialog
+    if (showPermissionDialog) {
+        AlertDialog(
+            onDismissRequest = { showPermissionDialog = false },
+            title = { Text("Permission Required") },
+            text = { Text("Storage permission is required to download audit logs.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showPermissionDialog = false
+                        val activity = context as? Activity
+                        activity?.requestPermissions(
+                            arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                            100
+                        )
+                    }
+                ) {
+                    Text("Grant Permission")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPermissionDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     LaunchedEffect(transactionData) {
         transactionViewModel.fetchAllTransactions()
@@ -98,15 +148,21 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
         val filterOrderDataTran = mutableMapOf<UserData, List<TransactionData>>()
         val filterSearch = mutableMapOf<String, Pair<UserData, List<TransactionData>>>()
 
-        transactionData.forEach { (userId, transaction) ->
-            UserIdentifier.getUserData(userId) {
-                userData = it
-            }
+        transactionData.forEach { (userId, transactions) ->
+            UserIdentifier.getUserData(userId) { userData ->
+                val relevantTransactions = transactions
+                    .filter { transaction ->
+                        transaction.type in listOf("Online Sale", "In-Store Sale", "Purchased")
+                    }
+                    .sortedByDescending { it.date }
 
-            if (userData?.role?.contains("Coop") == true) {
-                filterTransaction[userId] = transaction
-                filterOrderDataTran[userData!!] = transaction
-                filterSearch[userId] = userData!! to transaction
+                if (relevantTransactions.isNotEmpty()) {
+                    filterTransaction[userId] = relevantTransactions
+                    userData?.let {
+                        filterOrderDataTran[it] = relevantTransactions
+                        filterSearch[userId] = it to relevantTransactions
+                    }
+                }
             }
         }
 
@@ -123,8 +179,7 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Column(
-            modifier = Modifier
-            .padding(10.dp)
+            modifier = Modifier.padding(10.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -135,7 +190,7 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                 TextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search user...", color = Green1) },
+                    placeholder = { Text("Search user or product...", color = Green1) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Search,
@@ -180,64 +235,109 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                             .background(color = White1, shape = RoundedCornerShape(8.dp))
                             .heightIn(max = 250.dp)
                     ) {
-                        if (actionStatusView) {
-                            listOf("All", "Product Updated", "Order Updated", "Product Added").forEach { status ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            text = status,
-                                            color = if (selectedStatus == status) Color.White else Green1
-                                        )
-                                    },
-                                    modifier = Modifier
-                                        .background(
-                                            color = if (selectedStatus == status) Green1 else Color.Transparent
-                                        ),
-                                    onClick = {
-                                        selectedStatus = status
-                                        filterActionExpanded = false
-                                    }
-                                )
-                            }
-                        } else {
+                        transactionTypes.forEach { type ->
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "All Actions",
-                                        color = if (selectedCategory.isEmpty()) Color.White else Green1
+                                        text = type,
+                                        color = if (selectedStatus == type) Color.White else Green1
                                     )
                                 },
                                 modifier = Modifier
                                     .background(
-                                        color = if (selectedCategory.isEmpty()) Green1 else Color.Transparent
+                                        color = if (selectedStatus == type) Green1 else Color.Transparent
                                     ),
                                 onClick = {
-                                    selectedCategory = ""
+                                    selectedStatus = type
                                     filterActionExpanded = false
                                 }
                             )
                         }
                     }
                 }
+
                 Spacer(modifier = Modifier.width(12.dp))
 
-                IconButton (
+                IconButton(
                     onClick = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            exportToExcel(context, filteredOrderDataTran)
-                        } else {
-                            permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && !checkAndRequestPermissions()) {
+                            return@IconButton
+                        }
+
+                        try {
+                            val csvContent = buildString {
+                                appendLine("Date,User,Role,Action,Description")
+                                filteredSearch.forEach { (_, pair) ->
+                                    val (user, transactions) = pair
+                                    transactions.forEach { transaction ->
+                                        val formattedType = transaction.type.replace("_", " ")
+                                        appendLine("${transaction.date},${user.firstname} ${user.lastname},${user.role},${formattedType},${transaction.description}")
+                                    }
+                                }
+                            }
+
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                val contentValues = ContentValues().apply {
+                                    put(
+                                        MediaStore.MediaColumns.DISPLAY_NAME,
+                                        "audit_logs_${System.currentTimeMillis()}.txt"
+                                    )
+                                    put(MediaStore.MediaColumns.MIME_TYPE, "text/plain")
+                                    put(
+                                        MediaStore.MediaColumns.RELATIVE_PATH,
+                                        Environment.DIRECTORY_DOWNLOADS
+                                    )
+                                }
+
+                                val resolver = context.contentResolver
+                                val uri = resolver.insert(
+                                    MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                                    contentValues
+                                )
+
+                                uri?.let { fileUri ->
+                                    resolver.openOutputStream(fileUri)?.use { outputStream ->
+                                        outputStream.write(csvContent.toByteArray())
+                                    }
+                                    Toast.makeText(
+                                        context,
+                                        "Audit logs downloaded to Downloads folder",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                } ?: throw Exception("Failed to create file")
+                            } else {
+                                val downloadDir = Environment.getExternalStoragePublicDirectory(
+                                    Environment.DIRECTORY_DOWNLOADS
+                                )
+                                if (!downloadDir.exists()) {
+                                    downloadDir.mkdirs()
+                                }
+
+                                val fileName = "audit_logs_${System.currentTimeMillis()}.txt"
+                                val downloadFile = File(downloadDir, fileName)
+                                downloadFile.writeText(csvContent)
+                                Toast.makeText(
+                                    context,
+                                    "Audit logs downloaded to Downloads folder",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        } catch (e: Exception) {
+                            Toast.makeText(
+                                context,
+                                "Failed to download audit logs: ${e.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
                     },
                     modifier = Modifier
-                        .background(color = Green2 , shape = RoundedCornerShape(16.dp))
+                        .background(color = Green2, shape = RoundedCornerShape(16.dp))
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.download_icon),
-                        contentDescription = "Export to Excel",
+                        contentDescription = "Export to CSV",
                         tint = Color.White,
-                        modifier = Modifier
-                            .padding(5.dp)
+                        modifier = Modifier.padding(5.dp)
                     )
                 }
             }
@@ -249,14 +349,14 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                 .background(Color.White)
                 .semantics { testTag = "android:id/AuditLogsList" }
         ) {
-            // Sticky Header
             stickyHeader {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color.White)
                         .padding(13.dp)
-                        .semantics { testTag = "android:id/AuditLogsHeader" }
+                        .semantics { testTag = "android:id/AuditLogsHeader" },
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "DATE",
@@ -264,28 +364,29 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                             .weight(1f)
                             .semantics { testTag = "android:id/DateHeader" },
                         fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Start
+                        textAlign = TextAlign.Center
                     )
                     Text(
-                        text = "USER",
+                        text = "ITEM",
                         modifier = Modifier
-                            .weight(1f)
-                            .semantics { testTag = "android:id/UserHeader" },
+                            .weight(1.5f)
+                            .semantics { testTag = "android:id/DetailsHeader" },
                         fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Start
+                        textAlign = TextAlign.Center
                     )
                     Text(
-                        text = "ACTION",
+                        text = "TYPE",
                         modifier = Modifier
                             .weight(1f)
-                            .offset(x = (-20).dp)
-                            .semantics { testTag = "android:id/ActionHeader" },
+                            .semantics { testTag = "android:id/TypeHeader" },
                         fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Start
+                        textAlign = TextAlign.Center
                     )
+                    Spacer(modifier = Modifier.weight(0.3f))
                 }
                 Divider()
             }
+
             when (transactionState) {
                 TransactionState.EMPTY -> {
                     item { Text("Empty logs.") }
@@ -294,18 +395,77 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
                     item { Text("Error loading logs.") }
                 }
                 TransactionState.LOADING -> {
-                    item { Text("Loading logs...") }
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillParentMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    color = Green1,
+                                    modifier = Modifier.size(50.dp)
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "Loading logs...",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = Green1
+                                )
+                            }
+                        }
+                    }
                 }
                 TransactionState.SUCCESS -> {
                     filteredSearch.entries.forEach { (userId, pair) ->
                         val (user, transactions) = pair
-                        items(transactions.filter { transaction ->
-                            val formattedStatus = selectedStatus.replace(" ", "_")
-                            val fullName = "${user.firstname} ${user.lastname}"
-                            (transaction.type == formattedStatus || formattedStatus == "All") &&
-                                    (fullName.contains(searchQuery, ignoreCase = true) || searchQuery == "")
-                        }) { transaction ->
-                            LogItem(userId, transaction, isEvenRow = transactions.indexOf(transaction) % 2 == 0)
+                        val sortedAndFilteredTransactions = transactions
+                            .filter { transaction ->
+                                val formattedType = when (selectedStatus) {
+                                    "Online Sale" -> "Online Sale"
+                                    "In-Store Sale" -> "In-Store Sale"
+                                    "Purchased" -> "Purchased"
+                                    else -> selectedStatus
+                                }
+
+                                val fullName = "${user.firstname} ${user.lastname}"
+                                val searchMatches = fullName.contains(searchQuery, ignoreCase = true) ||
+                                        transaction.productName.contains(searchQuery, ignoreCase = true) ||
+                                        searchQuery.isEmpty()
+
+                                (transaction.type == formattedType || formattedType == "All") && searchMatches
+                            }
+                            .sortedByDescending { transaction ->
+                                try {
+                                    when {
+                                        transaction.date.contains(":") -> {
+                                            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                                                .parse(transaction.date)?.time ?: 0
+                                        }
+                                        transaction.date.contains(" ") -> {
+                                            SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                                                .parse(transaction.date)?.time ?: 0
+                                        }
+                                        else -> {
+                                            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                                                .parse(transaction.date)?.time ?: 0
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    0L
+                                }
+                            }
+
+                        items(sortedAndFilteredTransactions) { transaction ->
+                            LogItem(
+                                uid = userId,
+                                transaction = transaction,
+                                isEvenRow = sortedAndFilteredTransactions.indexOf(transaction) % 2 == 0
+                            )
                             Divider()
                         }
                     }
@@ -315,78 +475,110 @@ fun UserManagementAuditLogs(navController: NavController, transactionViewModel: 
     }
 }
 
-
 @Composable
 fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
-    var userData by remember { mutableStateOf<UserData?>(null) }
     var showDescriptionDialog by remember { mutableStateOf(false) }
+    val formattedType = transaction.type.replace("_", " ")
 
-    LaunchedEffect(uid) {
-        UserIdentifier.getUserData(uid) { result ->
-            userData = result
+    val formattedDate = remember(transaction.date) {
+        try {
+            val parsedDate = when {
+                transaction.date.contains(":") -> {
+                    SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                        .parse(transaction.date)
+                }
+                transaction.date.contains(" ") && !transaction.date.contains("-") -> {
+                    SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                        .parse(transaction.date)
+                }
+                else -> {
+                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                        .parse(transaction.date)
+                }
+            }
+
+            parsedDate?.let {
+                SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(it)
+            } ?: transaction.date
+        } catch (e: Exception) {
+            transaction.date
         }
     }
-    val formattedType = transaction.type.replace("_", " ")
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(if (isEvenRow) White1 else Color.White)
             .padding(10.dp)
-            .semantics { testTag = "android:id/LogItem" }
+            .semantics { testTag = "android:id/LogItem" },
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = transaction.date,
-            fontSize = 13.sp,
-            fontFamily = mintsansFontFamily,
-            color = Green1,
-            modifier = Modifier
-                .weight(1f)
-                .semantics { testTag = "android:id/transactionDate" }
-        )
         Column(
             modifier = Modifier
                 .weight(1f)
-                .semantics { testTag = "android:id/userDataColumn" }
+                .semantics { testTag = "android:id/dateColumn" },
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // First name and last name
             Text(
-                text = if (userData != null) "${userData?.firstname} ${userData?.lastname}" else "Unknown",
+                text = formattedDate,
+                fontSize = 13.sp,
+                fontFamily = mintsansFontFamily,
+                color = Green1,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .weight(1.5f)
+                .semantics { testTag = "android:id/productColumn" },
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = transaction.productName,
                 fontSize = 13.sp,
                 fontFamily = mintsansFontFamily,
                 fontWeight = FontWeight.Bold,
-                color = Green1
+                color = Green1,
+                textAlign = TextAlign.Center
             )
-            // Role
             Text(
-                text = userData?.role ?: "",
-                fontSize = 13.sp,
+                text = transaction.facilityName,
+                fontSize = 12.sp,
                 fontFamily = mintsansFontFamily,
-                color = Green1
+                color = Green1,
+                textAlign = TextAlign.Center
             )
         }
-        Text(
-            text = formattedType,
-            fontSize = 12.sp,
-            fontFamily = mintsansFontFamily,
-            color = Green1,
+
+        Column(
             modifier = Modifier
                 .weight(1f)
-                .semantics { testTag = "android:id/transactionType" }
-        )
+                .semantics { testTag = "android:id/typeColumn" },
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = formattedType,
+                fontSize = 13.sp,
+                fontFamily = mintsansFontFamily,
+                color = Green1,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
+            )
+        }
 
         IconButton(
             onClick = { showDescriptionDialog = true },
             modifier = Modifier
-                .weight(0.5f)
+                .weight(0.3f)
                 .semantics { testTag = "android:id/viewDetailsButton" }
         ) {
             Icon(
                 painter = painterResource(R.drawable.viewmore),
                 contentDescription = "View Details",
                 tint = Green1,
-                modifier = Modifier
-                    .size(25.dp)
+                modifier = Modifier.size(25.dp)
             )
         }
 
@@ -394,10 +586,25 @@ fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
             AlertDialog(
                 onDismissRequest = { showDescriptionDialog = false },
                 title = {
-                    Text(text = "Transaction Details", fontFamily = mintsansFontFamily, modifier = Modifier.semantics { testTag = "android:id/dialogTitle" })
+                    Text(
+                        text = "Transaction Details",
+                        fontFamily = mintsansFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.semantics { testTag = "android:id/dialogTitle" }
+                    )
                 },
                 text = {
-                    Text(text = transaction.description, modifier = Modifier.semantics { testTag = "android:id/transactionDescription" })
+                    Column(modifier = Modifier.semantics { testTag = "android:id/transactionDetails" }) {
+                        DetailRow("Date", formattedDate)  // Use formatted date here too
+                        DetailRow("Product", transaction.productName)
+                        DetailRow("Facility", transaction.facilityName)
+                        DetailRow("Type", formattedType)
+                        DetailRow("Product ID", transaction.productId)
+                        if (transaction.vendorName.isNotEmpty()) {
+                            DetailRow("Vendor", transaction.vendorName)
+                        }
+                        DetailRow("Description", transaction.description)
+                    }
                 },
                 confirmButton = {
                     Button(
@@ -412,4 +619,22 @@ fun LogItem(uid: String, transaction: TransactionData, isEvenRow: Boolean) {
     }
 }
 
-
+@Composable
+private fun DetailRow(label: String, value: String) {
+    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontFamily = mintsansFontFamily,
+            fontWeight = FontWeight.Bold,
+            color = Green1
+        )
+        Text(
+            text = value,
+            fontSize = 13.sp,
+            fontFamily = mintsansFontFamily,
+            color = Green1,
+            modifier = Modifier.padding(start = 8.dp)
+        )
+    }
+}
