@@ -758,13 +758,14 @@ fun OnlineSalesDetails(
                     fontFamily = mintsansFontFamily
                 )
                 Box {
+                    val buttonEnabled = !isStatusFinal && currentOrder.status != "To Receive"
                     Button(
                         onClick = {
-                            if (!isStatusFinal) {
+                            if (buttonEnabled) {
                                 showDialog = true
                             }
                         },
-                        enabled = !isStatusFinal,
+                        enabled = buttonEnabled,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Green1,
                             disabledContainerColor = Color.Gray
@@ -772,7 +773,7 @@ fun OnlineSalesDetails(
                     ) {
                         Text(
                             text = "Update Status",
-                            color = if (isStatusFinal) Color.LightGray else Color.White,
+                            color = if (buttonEnabled) Color.White else Color.LightGray,
                             fontWeight = FontWeight.Bold,
                             fontFamily = mintsansFontFamily
                         )
@@ -1220,6 +1221,7 @@ fun UpdateStatusCard(
     var statusDescriptionValue by remember { mutableStateOf(statusDescription) }
     var expanded by remember { mutableStateOf(false) }
     var isEditingDescription by remember { mutableStateOf(false) }
+    var hasStatusChanged by remember { mutableStateOf(false) }
 
     val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
     val currentDateTime = remember { LocalDateTime.now().format(formatter) }
@@ -1267,42 +1269,50 @@ fun UpdateStatusCard(
                     onValueChange = {},
                     label = { Text("Status") },
                     readOnly = true,
-                    enabled = true,  // Enable the status field
+                    enabled = true,
                     modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.ArrowDropDown,
-                            contentDescription = "Dropdown",
-                            modifier = Modifier.clickable { expanded = true }  // Enable clicking
-                        )
-                    }
-                )
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    val availableStatuses = getAvailableStatuses(status)
-                    availableStatuses.forEach { option ->
-                        DropdownMenuItem(
-                            text = { Text(option) },
-                            onClick = {
-                                statusValue = option
-                                if (!isEditingDescription) {
-                                    statusDescriptionValue = statusOptions[option] ?: ""
-                                }
-                                expanded = false
-
-                                val newUpdate = StatusUpdate(
-                                    status = option,
-                                    statusDescription = statusDescriptionValue,
-                                    dateTime = currentDateTime
+                    trailingIcon = if (!hasStatusChanged) {
+                        {
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Dropdown",
+                                modifier = Modifier.clickable(
+                                    enabled = !hasStatusChanged,
+                                    onClick = { expanded = true }
                                 )
+                            )
+                        }
+                    } else null
+                )
 
-                                val updatedHistory = statusHistory + newUpdate
-                                onStatusUpdate(option, statusDescriptionValue, updatedHistory)
-                            },
-                            enabled = true
-                        )
+                if (!hasStatusChanged) {
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        getAvailableStatuses(status).forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    statusValue = option
+                                    if (!isEditingDescription) {
+                                        statusDescriptionValue = statusOptions[option] ?: ""
+                                    }
+                                    expanded = false
+                                    hasStatusChanged = true
+
+                                    val newUpdate = StatusUpdate(
+                                        status = option,
+                                        statusDescription = statusDescriptionValue,
+                                        dateTime = currentDateTime
+                                    )
+
+                                    val updatedHistory = statusHistory + newUpdate
+                                    onStatusUpdate(option, statusDescriptionValue, updatedHistory)
+                                },
+                                enabled = true
+                            )
+                        }
                     }
                 }
             }
