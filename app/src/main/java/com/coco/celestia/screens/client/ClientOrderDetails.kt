@@ -283,7 +283,9 @@ fun SupportCenter(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(15.dp)
                 ) {
-                    if (orderData.status == "Pending" || orderData.status == "Confirmed") {
+                    // Show Cancel Order only if status is Pending/Confirmed AND payment method is not GCash
+                    if ((orderData.status == "Pending" || orderData.status == "Confirmed") &&
+                        orderData.paymentMethod.lowercase() != "gcash") {
                         SupportCenterItemsCard(
                             title = "Cancel Order",
                             onClick = { showCancelOrderDialog = true }

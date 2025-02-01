@@ -898,6 +898,14 @@ fun OrderStatusesCard(
     val showAllItems = facilityItems.size <= 2
     val displayItems = if (showAllItems) facilityItems else facilityItems.take(2)
 
+    val completedStatuses = listOf(
+        "Completed",
+        "Refund Requested",
+        "Refund Approved",
+        "Refund Rejected",
+        "Cancelled"
+    )
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -910,7 +918,6 @@ fun OrderStatusesCard(
         Column(
             modifier = Modifier.padding(12.dp)
         ) {
-            // Order ID and Date
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -945,7 +952,6 @@ fun OrderStatusesCard(
                 Spacer(modifier = Modifier.height(4.dp))
             }
 
-            // Items Count and Status
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -1058,7 +1064,6 @@ fun OrderStatusesCard(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            // Collection Method
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -1070,13 +1075,16 @@ fun OrderStatusesCard(
                 )
             }
 
-            // Payment Method and Total
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ){
                 Text(
-                    text = "${order.paymentMethod} * Unpaid",
+                    text = if (order.status !in completedStatuses) {
+                        "${order.paymentMethod} * Unpaid"
+                    } else {
+                        order.paymentMethod
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     fontFamily = mintsansFontFamily
                 )
