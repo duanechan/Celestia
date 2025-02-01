@@ -178,10 +178,10 @@ fun NavGraph(
                                 ToastStatus.SUCCESSFUL,
                                 it.maxByOrNull { notification ->
                                     val standardizedTimestamp = notification.timestamp
-                                        .replace("PM", "pm", true)
-                                        .replace("AM", "am", true)
+                                        .replace("pm", "PM", true)
+                                        .replace("am", "AM", true)
                                     LocalDateTime.parse(standardizedTimestamp, formatter)
-                                }?.message.toString(),
+                                }?.subject.toString(),
                                 System.currentTimeMillis()
                             )
                         )

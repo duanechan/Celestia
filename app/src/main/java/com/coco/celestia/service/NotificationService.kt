@@ -32,6 +32,10 @@ object NotificationService {
         onNotificationsChanged: (List<Notification>) -> Unit,
         onError: (DatabaseError) -> Unit
     ) {
+        var role: String? = null
+        usersRef.child(uid).child("role").get()
+            .addOnSuccessListener { snapshot -> role = snapshot.value as? String }
+
         usersRef
             .child(uid)
             .child("notifications")
