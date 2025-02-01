@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.coop.admin
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -19,9 +20,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -38,6 +42,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -48,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -58,11 +64,13 @@ import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.UserData
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.text.font.FontStyle
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.TransactionViewModel
+import com.coco.celestia.viewmodel.model.FacilityData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -294,7 +302,8 @@ fun AdminUserManagement(
                     .semantics { testTag = "android:id/userTable" },
                 onEditUserClick = { user ->
                     selectedUser = user
-                }
+                },
+                facilityViewModel = facilityViewModel
             )
         }
 
@@ -320,9 +329,67 @@ fun UserTable(
     userViewModel: UserViewModel,
     selectedTab: Int,
     modifier: Modifier,
-    onEditUserClick: (UserData) -> Unit
+    onEditUserClick: (UserData) -> Unit,
+    facilityViewModel: FacilityViewModel
 ) {
     val userState by userViewModel.userState.observeAsState(initial = UserState.LOADING)
+    val facilitiesData by facilityViewModel.facilitiesData.observeAsState(initial = emptyList())
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var selectedUserId by remember { mutableStateOf<String?>(null) }
+    var selectedUserName by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+
+    if (showDeleteDialog && selectedUserId != null && selectedUserName != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteDialog = false
+                selectedUserId = null
+                selectedUserName = null
+            },
+            title = {
+                Text(
+                    "Confirm Deletion",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontFamily = mintsansFontFamily,
+                    color = Green1
+                )
+            },
+            text = {
+                Text(
+                    "Are you sure you want to delete $selectedUserName?",
+                    fontFamily = mintsansFontFamily,
+                    color = Green1
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        selectedUserId?.let { uid ->
+                            userViewModel.deleteUser(uid)
+                            Toast.makeText(context, "User deleted successfully", Toast.LENGTH_SHORT).show()
+                        }
+                        showDeleteDialog = false
+                        selectedUserId = null
+                        selectedUserName = null
+                    }
+                ) {
+                    Text("Delete", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        selectedUserId = null
+                        selectedUserName = null
+                    }
+                ) {
+                    Text("Cancel", color = Green1)
+                }
+            },
+            containerColor = Color.White
+        )
+    }
 
     LazyColumn(
         modifier = modifier.fillMaxWidth()
@@ -360,11 +427,11 @@ fun UserTable(
                     fontFamily = mintsansFontFamily
                 )
                 Text(
-                    text = "EDIT",
+                    text = "ACTIONS",
                     modifier = Modifier
                         .weight(2f)
                         .fillMaxWidth()
-                        .semantics { testTag = "android:id/userTableHeaderEdit" },
+                        .semantics { testTag = "android:id/userTableHeaderActions" },
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
                     color = Green1,
@@ -406,37 +473,58 @@ fun UserTable(
                             color = Green1,
                             fontFamily = mintsansFontFamily
                         )
-                        Text(
-                            text = when {
-                                user.role == "Farmer" -> "Farmer"
-                                user.role == "Coop" -> "No Facility"
-                                else -> user.role.removePrefix("Coop")
-                            },
+
+                        Box(
                             modifier = Modifier
                                 .weight(2f)
                                 .fillMaxWidth()
-                                .semantics { testTag = "android:id/userRole_$index" },
-                            textAlign = TextAlign.Start,
-                            color = Green1,
-                            fontFamily = mintsansFontFamily
-                        )
-
-                        IconButton(
-                            onClick = {
-                                onEditUserClick(user)
-                            },
-                            modifier = Modifier
-                                .offset(x = (-30).dp)
-                                .semantics { testTag = "android:id/editButton_$index" }
+                                .semantics { testTag = "android:id/userRole_$index" }
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit User",
-                                tint = Green1,
-                                modifier = Modifier.semantics { testTag = "android:id/editIcon_$index" }
+                            FacilityStatusCell(
+                                user = user,
+                                facilitiesData = facilitiesData
                             )
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Row(
+                            modifier = Modifier
+                                .weight(2f)
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(
+                                onClick = { onEditUserClick(user) },
+                                modifier = Modifier.semantics { testTag = "android:id/editButton_$index" }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit User",
+                                    tint = Green1,
+                                    modifier = Modifier.semantics { testTag = "android:id/editIcon_$index" }
+                                )
+                            }
+
+                            IconButton(
+                                onClick = {
+                                    userViewModel.getUserUidByEmail(user.email) { uid ->
+                                        if (uid != null) {
+                                            selectedUserId = uid
+                                            selectedUserName = "${user.firstname} ${user.lastname}"
+                                            showDeleteDialog = true
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.semantics { testTag = "android:id/deleteButton_$index" }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Delete User",
+                                    tint = Color.Red,
+                                    modifier = Modifier.semantics { testTag = "android:id/deleteIcon_$index" }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -483,6 +571,47 @@ fun UserTable(
 
         item {
             Spacer(modifier = Modifier.height(90.dp))
+        }
+    }
+}
+
+@Composable
+fun FacilityStatusCell(
+    user: UserData,
+    facilitiesData: List<FacilityData>,
+    modifier: Modifier = Modifier
+) {
+    val facilityExists = if (user.role.startsWith("Coop") && user.role != "Coop") {
+        val facilityName = user.role.removePrefix("Coop")
+        facilitiesData.any { it.name == facilityName }
+    } else {
+        true
+    }
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = when {
+                user.role == "Farmer" -> "Farmer"
+                user.role == "Coop" -> "No Facility"
+                else -> user.role.removePrefix("Coop")
+            },
+            color = if (!facilityExists) Color.Red else Green1,
+            fontFamily = mintsansFontFamily,
+            fontStyle = if (!facilityExists) FontStyle.Italic else FontStyle.Normal
+        )
+
+        if (!facilityExists) {
+            Spacer(modifier = Modifier.width(4.dp))
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = "Facility no longer exists",
+                tint = Color.Red,
+                modifier = Modifier.size(16.dp)
+            )
         }
     }
 }

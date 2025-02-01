@@ -432,6 +432,19 @@ class UserViewModel : ViewModel() {
         }
     }
 
+    fun deleteUser(uid: String) {
+        viewModelScope.launch {
+            _userState.value = UserState.LOADING
+            try {
+                database.child(uid).removeValue().await()
+                _userState.value = UserState.SUCCESS
+                fetchUsers()
+            } catch (e: Exception) {
+                _userState.value = UserState.ERROR(e.message ?: "Unknown error")
+            }
+        }
+    }
+
     fun addItem(uid: String, item: BasketItem) {
         viewModelScope.launch {
             _userState.value = UserState.LOADING
