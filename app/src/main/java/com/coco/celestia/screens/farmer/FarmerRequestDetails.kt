@@ -279,8 +279,54 @@ fun DisplayRequestDetails (
             ) {
                 // Assign Milestone
                 specialRequest?.assignedMember?.forEach { member ->
-                    if (member.status != "Delivering to Coop") {
-                        if (member.status == "Completed" || member.status == "Calamity Affected") {
+                    if (member.email == farmerEmail && member.product == product) {
+                        if (member.status != "Delivering to Coop") {
+                            if (member.status == "Completed" || member.status == "Calamity Affected") {
+                                Button(
+                                    onClick = { },
+                                    shape = RoundedCornerShape(25.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        contentColor = Color.White,
+                                        disabledContainerColor = Green4
+                                    ),
+                                    enabled = false,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(56.dp)
+                                ) {
+                                    Text(
+                                        text =  if (member.status == "Completed") "Order is Completed" else "Order is affected by Unforeseen Event/s",
+                                        color = DarkGreen,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            } else {
+                                Button(
+                                    onClick = {
+                                        updateStatusDialog = true
+                                    },
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        contentColor = Color.White,
+                                        containerColor = Green1
+                                    ),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(56.dp)
+                                        .padding(top = 16.dp)
+                                ) {
+                                    Text("Assign Milestone")
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.dashboard),
+                                        contentDescription = "Assign Milestone Icon",
+                                        modifier = Modifier.size(20.dp),
+                                        tint = Color.White
+                                    )
+                                }
+                            }
+                        } else {
                             Button(
                                 onClick = { },
                                 shape = RoundedCornerShape(25.dp),
@@ -294,56 +340,12 @@ fun DisplayRequestDetails (
                                     .height(56.dp)
                             ) {
                                 Text(
-                                    text =  if (member.status == "Completed") "Order is Completed" else "Order is affected by Unforeseen Event/s",
+                                    text = "Waiting for Coop to Receive the Products",
                                     color = DarkGreen,
                                     textAlign = TextAlign.Center,
                                     modifier = Modifier.fillMaxWidth()
                                 )
                             }
-                        } else {
-                            Button(
-                                onClick = {
-                                    updateStatusDialog = true
-                                },
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    contentColor = Color.White,
-                                    containerColor = Green1
-                                ),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(56.dp)
-                                    .padding(top = 16.dp)
-                            ) {
-                                Text("Assign Milestone")
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Icon(
-                                    painter = painterResource(id = R.drawable.dashboard),
-                                    contentDescription = "Assign Milestone Icon",
-                                    modifier = Modifier.size(20.dp),
-                                    tint = Color.White
-                                )
-                            }
-                        }
-                    } else {
-                        Button(
-                            onClick = { },
-                            shape = RoundedCornerShape(25.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                contentColor = Color.White,
-                                disabledContainerColor = Green4
-                            ),
-                            enabled = false,
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(56.dp)
-                        ) {
-                            Text(
-                                text = "Waiting for Coop to Receive the Products",
-                                color = DarkGreen,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
                         }
                     }
                 }
