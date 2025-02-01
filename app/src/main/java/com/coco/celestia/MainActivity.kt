@@ -298,7 +298,11 @@ fun App() {
                          shouldShowNavigation, currentDestination, onTopBarTitleChange, onToastEvent,
                          onExpandMenu ->
 
-        val shouldShowDrawer = userData.role.startsWith("Coop") || userData.role == "Admin"
+        val shouldShowDrawer = (userData.role.startsWith("Coop") || userData.role == "Admin") &&
+                currentDestination != Screen.Login.route &&
+                currentDestination != Screen.Register.route &&
+                currentDestination != Screen.Splash.route &&
+                currentDestination != Screen.ForgotPassword.route
 
         if (shouldShowDrawer) {
             ModalNavigationDrawer(
