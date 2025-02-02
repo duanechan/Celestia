@@ -129,7 +129,8 @@ data class AssignedMember(
     val trackingID: String = "",
     val deliveredQuantity: Int = 0,
     val remainingQuantity: Int = 0,
-    val farmerTrackRecord: List<TrackRecord> = emptyList()
+    val farmerTrackRecord: List<TrackRecord> = emptyList(),
+    val isManuallyAdded: Boolean = false
 )
 
 data class TrackRecord(

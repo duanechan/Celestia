@@ -2,20 +2,25 @@ package com.coco.celestia.screens.coop.admin
 
 import android.annotation.SuppressLint
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -23,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -34,6 +40,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -56,6 +63,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -63,13 +71,17 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import com.coco.celestia.R
 import com.coco.celestia.screens.`object`.Screen
+import com.coco.celestia.service.AttachFileService
 import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
@@ -85,6 +97,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
+import kotlin.math.roundToInt
 
 @SuppressLint("MutableCollectionMutableState")
 @Composable
@@ -230,16 +243,22 @@ fun SpecialRequestDetails(
         if (request.status == "In Progress" || request.status == "Completed") {
             if (request.assignedMember.isEmpty()) {
                 AssignAMember(
-                    assignedMember,
-                    productPairs,
+                    assignedMember = assignedMember,
+                    productPairs = productPairs,
+                    request = request,
+                    filteredUsers = filteredUsers,
                     onDismiss = {
                         assignedMember.clear()
                         productPairs = request.products.associate { it.name to it.quantity }.toMutableMap()
                     },
                     onSave = {
                         assignedMember.forEach { member ->
-                            val assignMember = TrackRecord (
-                                description = "Assigned to ${member.name}: ${member.product} ${member.quantity}kg.",
+                            val assignMember = TrackRecord(
+                                description = if (member.email == "Manually Inputted Farmer") {
+                                    "Assigned to Manually Inputted Farmer ${member.name}: ${member.product} ${member.quantity}kg."
+                                } else {
+                                    "Assigned to ${member.name}: ${member.product} ${member.quantity}kg."
+                                },
                                 dateTime = formattedDateTime
                             )
 
@@ -332,7 +351,6 @@ fun SpecialRequestDetails(
                 }
             }
         }
-        // Deliver/ Pickup button
         if (request.toDeliver.any { it.status == "To Deliver" }) {
             Button(
                 onClick = {
@@ -393,7 +411,6 @@ fun SpecialRequestDetails(
             }
         }
 
-        // Accept/ Decline
         if (request.status == "To Review") {
             Box (
                 modifier = Modifier
@@ -428,7 +445,6 @@ fun SpecialRequestDetails(
         }
 
         if (request.status == "In Progress" || request.status == "Completed") {
-            // Track Order and Update Order
             if (request.trackRecord.isNotEmpty()) {
                 Row (
                     modifier = Modifier
@@ -462,8 +478,9 @@ fun SpecialRequestDetails(
                     .sortedByDescending { it.dateTime }
                     .forEachIndexed { index, record ->
                         DisplayTrackOrder(
-                            record,
-                            index == request.trackRecord.lastIndex
+                            record = record,
+                            isLastItem = index == request.trackRecord.lastIndex,
+                            requestId = request.specialRequestUID
                         )
                     }
             }
@@ -604,7 +621,12 @@ fun SpecialRequestDetails(
                         suggestions = filteredUsers,
                         onSuggestionClick = { selectedUser ->
                             text = selectedUser
-                        }
+                        },
+                        value = text,
+                        onValueChange = { text = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = "Select Member",
+                        isError = memberEmpty && text.isEmpty()
                     )
 
                     Row (
@@ -759,7 +781,7 @@ fun SpecialRequestDetails(
 
                                 val member = AssignedMember(
                                     email = email,
-                                    specialRequestUID = request.specialRequestUID,
+                                    specialRequestUID = "${request.specialRequestUID}_proof_of_interaction",
                                     name = name,
                                     product = product,
                                     quantity = quantity,
@@ -798,9 +820,11 @@ fun SpecialRequestDetails(
 
 @SuppressLint("MutableCollectionMutableState")
 @Composable
-fun AssignAMember (
+fun AssignAMember(
     assignedMember: SnapshotStateList<AssignedMember>,
     productPairs: MutableMap<String, Int>,
+    request: SpecialRequest,
+    filteredUsers: List<String>,
     onDismiss: () -> Unit,
     onSave: () -> Unit,
     onShowAddMember: () -> Unit
@@ -808,7 +832,27 @@ fun AssignAMember (
     var unfulfilled by remember { mutableStateOf(false) }
     val unfulfilledRequests = productPairs.filter { it.value != 0 }
 
-    Column (
+    var showDialog by remember { mutableStateOf(false) }
+    var isManualInput by remember { mutableStateOf(false) }
+    var text by remember { mutableStateOf("") }
+    var manualName by remember { mutableStateOf("") }
+    var manualEmail by remember { mutableStateOf("") }
+    var product by remember { mutableStateOf("") }
+    var quantity by remember { mutableIntStateOf(0) }
+    var productExpanded by remember { mutableStateOf(false) }
+    var attachmentUri by remember { mutableStateOf<Uri?>(null) }
+
+    var memberEmpty by remember { mutableStateOf(false) }
+    var productEmpty by remember { mutableStateOf(false) }
+    var quantityEmpty by remember { mutableStateOf(false) }
+    var quantityExceeded by remember { mutableStateOf(false) }
+    var invalidEmail by remember { mutableStateOf(false) }
+
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let { attachmentUri = it }
+    }
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp)
@@ -819,10 +863,9 @@ fun AssignAMember (
                 color = Green4,
                 shape = RoundedCornerShape(12.dp)
             )
-    ){
-        Row (
-            modifier = Modifier
-                .padding(16.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -836,34 +879,31 @@ fun AssignAMember (
                 contentDescription = null,
                 modifier = Modifier
                     .size(24.dp)
-                    .clickable { onShowAddMember() }
+                    .clickable { showDialog = true }
             )
         }
 
         if (assignedMember.isNotEmpty()) {
             assignedMember.forEach { member ->
-                Column (
+                Column(
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 8.dp)
                         .fillMaxWidth()
-                ){
-                    Text(
-                        text = "Name: ${member.name}",
-                    )
-
-                    Text(
-                        text = "Product: ${member.product}"
-                    )
-
-                    Text(
-                        text = "Quantity: ${member.quantity}"
-                    )
+                ) {
+                    Text(text = "Name: ${member.name}")
+                    Text(text = "Product: ${member.product}")
+                    Text(text = "Quantity: ${member.quantity}")
+                    Text(text = "Status: ${member.status}")
+                    Text(text = "Tracking ID: ${member.trackingID}")
+                    if (member.isManuallyAdded) {
+                        Text(text = "Manually Added Farmer")
+                    }
                 }
             }
 
             if (unfulfilled) {
-                Column (
+                Column(
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 8.dp)
@@ -880,32 +920,26 @@ fun AssignAMember (
                             text = request.key,
                             fontWeight = FontWeight.Bold,
                             color = Color.Red,
-                            modifier = Modifier
-                                .padding(start = 6.dp)
+                            modifier = Modifier.padding(start = 6.dp)
                         )
                     }
                 }
             }
 
-            Box (
-                modifier = Modifier.fillMaxWidth()
-            ){
-                Row (
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                 ) {
-                    Button(
-                        onClick = onDismiss
-                    ) {
+                    Button(onClick = onDismiss) {
                         Text("Cancel")
                     }
 
                     Button(
                         onClick = {
                             unfulfilled = unfulfilledRequests.isNotEmpty()
-
                             if (!unfulfilled) {
                                 onSave()
                             }
@@ -918,59 +952,347 @@ fun AssignAMember (
             }
         }
     }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Assign a Member") },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Manual Input")
+                        Switch(
+                            checked = isManualInput,
+                            onCheckedChange = {
+                                isManualInput = it
+                                text = ""
+                                manualName = ""
+                            }
+                        )
+                    }
+
+                    if (isManualInput) {
+                        OutlinedTextField(
+                            value = manualName,
+                            onValueChange = { manualName = it },
+                            label = { Text("Farmer Name") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            isError = memberEmpty && manualName.isEmpty()
+                        )
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Proof of Interaction",
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            Button(
+                                onClick = { launcher.launch("*/*") },
+                                colors = ButtonDefaults.buttonColors(Green4)
+                            ) {
+                                Text(if (attachmentUri == null) "Attach File" else "Change File")
+                            }
+                        }
+
+                        attachmentUri?.let {
+                            Text(
+                                "File selected: ${it.lastPathSegment}",
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                        }
+                    } else {
+                        AutocompleteTextField(
+                            suggestions = filteredUsers,
+                            onSuggestionClick = { selectedUser ->
+                                text = selectedUser
+                            },
+                            value = text,
+                            onValueChange = { text = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            label = "Select Farmer",
+                            isError = memberEmpty && text.isEmpty()
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Column {
+                        TextField(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(
+                                    width = 2.dp,
+                                    color = Green2,
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .clickable { productExpanded = !productExpanded },
+                            value = product,
+                            onValueChange = {
+                                product = it
+                                productExpanded = true
+                            },
+                            label = { Text("Product") },
+                            singleLine = true,
+                            trailingIcon = {
+                                IconButton(onClick = { productExpanded = !productExpanded }) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.ArrowDropDown,
+                                        contentDescription = null,
+                                        tint = Color.Black
+                                    )
+                                }
+                            },
+                            colors = TextFieldDefaults.colors(
+                                disabledTextColor = Color.Black,
+                                disabledContainerColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent
+                            ),
+                            enabled = false,
+                        )
+
+                        DropdownMenu(
+                            expanded = productExpanded,
+                            onDismissRequest = { productExpanded = false }
+                        ) {
+                            request.products.map { it.name }.forEach {
+                                DropdownMenuItem(
+                                    onClick = {
+                                        product = it
+                                        productExpanded = false
+                                    },
+                                    text = { Text(text = it) }
+                                )
+                            }
+                        }
+                    }
+
+                    OutlinedTextField(
+                        value = if (quantity == 0) "" else quantity.toString(),
+                        onValueChange = { newValue ->
+                            quantity = newValue.toIntOrNull() ?: 0
+                        },
+                        label = { Text("Quantity") },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        isError = quantityEmpty || quantityExceeded
+                    )
+
+                    if (quantityExceeded) {
+                        Text(
+                            "Quantity exceeds available amount",
+                            color = Color.Red,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (isManualInput) {
+                            memberEmpty = manualName.isEmpty()
+                        } else {
+                            memberEmpty = text.isEmpty()
+                        }
+
+                        productEmpty = product.isEmpty()
+                        quantityEmpty = quantity == 0
+                        quantityExceeded = quantity > (productPairs[product] ?: 0)
+
+                        if (!memberEmpty && !productEmpty && !quantityEmpty && !quantityExceeded) {
+                            val name = if (isManualInput) manualName else text.substringBefore(" - ").trim()
+                            val email = if (isManualInput) {
+                                "Manually Inputted Farmer"
+                            } else {
+                                text.substringAfter(" - ").trim()
+                            }
+
+                            val existingMember = assignedMember.find { it.email == email && it.product == product }
+
+                            if (existingMember != null) {
+                                existingMember.quantity += quantity
+                            } else {
+                                val uuidPart = UUID.randomUUID().toString().take(6).uppercase()
+                                val timestamp = SimpleDateFormat("yyMMddHHmm", Locale.getDefault()).format(Date())
+                                val trackingID = "REQ-$timestamp-$uuidPart"
+
+                                val member = AssignedMember(
+                                    email = email,
+                                    specialRequestUID = "${request.specialRequestUID}_proof_of_interaction",
+                                    name = name,
+                                    product = product,
+                                    quantity = quantity,
+                                    status = "Assigned",
+                                    trackingID = trackingID,
+                                    deliveredQuantity = 0,
+                                    remainingQuantity = quantity,
+                                    farmerTrackRecord = emptyList(),
+                                    isManuallyAdded = isManualInput
+                                )
+                                assignedMember.add(member)
+
+                                if (isManualInput) {
+                                    attachmentUri?.let { uri ->
+                                        val fileExtension = AttachFileService.getFileName(uri).substringAfterLast(".", "")  // Get file extension
+                                        val fileName = "${request.specialRequestUID}_proof_of_interaction.$fileExtension"
+                                        AttachFileService.uploadAttachment(
+                                            requestId = "${request.specialRequestUID}_proof_of_interaction",
+                                            fileUri = uri,
+                                            fileName = fileName,
+                                            onSuccess = { success ->
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+
+                            val newQuantity = (productPairs[product] ?: 0) - quantity
+                            productPairs[product] = newQuantity
+
+                            text = ""
+                            manualName = ""
+                            product = ""
+                            quantity = 0
+                            attachmentUri = null
+                            showDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(Green4)
+                ) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = {
+                        text = ""
+                        manualName = ""
+                        product = ""
+                        quantity = 0
+                        attachmentUri = null
+                        showDialog = false
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AutocompleteTextField(
     suggestions: List<String>,
-    onSuggestionClick: (String) -> Unit
+    onSuggestionClick: (String) -> Unit,
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    label: String,
+    isError: Boolean = false,
+    enabled: Boolean = true
 ) {
-    var query by remember { mutableStateOf("") }
     var isDropdownExpanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
         expanded = isDropdownExpanded,
-        onExpandedChange = { isDropdownExpanded = it }
+        onExpandedChange = {
+            if (enabled) {
+                isDropdownExpanded = it
+            }
+        }
     ) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = { newQuery ->
-                query = newQuery
-                isDropdownExpanded = newQuery.isNotEmpty()
+        TextField(
+            value = value,
+            onValueChange = { newValue ->
+                onValueChange(newValue)
+                isDropdownExpanded = newValue.isNotEmpty()
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(),
-            label = { Text("Enter Member") },
-            singleLine = true
+            modifier = modifier
+                .menuAnchor()
+                .border(
+                    width = 2.dp,
+                    color = if (isError) Color.Red else Green2,
+                    shape = RoundedCornerShape(12.dp)
+                ),
+            label = { Text(label) },
+            singleLine = true,
+            enabled = enabled,
+            isError = isError,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+                errorContainerColor = Color.Transparent,
+                errorIndicatorColor = Color.Transparent
+            ),
+            trailingIcon = {
+                if (enabled) {
+                    IconButton(onClick = { isDropdownExpanded = !isDropdownExpanded }) {
+                        Icon(
+                            imageVector = Icons.Rounded.ArrowDropDown,
+                            contentDescription = null,
+                            tint = if (isError) Color.Red else Color.Black
+                        )
+                    }
+                }
+            }
         )
 
-        ExposedDropdownMenu(
-            expanded = isDropdownExpanded,
-            onDismissRequest = { isDropdownExpanded = false },
-            modifier = Modifier
-                .heightIn(max = 200.dp)
-        ) {
-            val filteredSuggestions = suggestions.filter {
-                it.contains(query, ignoreCase = true)
-            }
-            if (filteredSuggestions.isNotEmpty()) {
-                filteredSuggestions.forEach { suggestion ->
+        if (enabled) {
+            ExposedDropdownMenu(
+                expanded = isDropdownExpanded,
+                onDismissRequest = { isDropdownExpanded = false },
+                modifier = Modifier
+                    .heightIn(max = 200.dp)
+                    .background(Color.White)
+            ) {
+                val filteredSuggestions = suggestions.filter {
+                    it.contains(value, ignoreCase = true)
+                }
+
+                if (filteredSuggestions.isNotEmpty()) {
+                    filteredSuggestions.forEach { suggestion ->
+                        DropdownMenuItem(
+                            text = { Text(suggestion) },
+                            onClick = {
+                                onValueChange(suggestion)
+                                onSuggestionClick(suggestion)
+                                isDropdownExpanded = false
+                            }
+                        )
+                    }
+                } else {
                     DropdownMenuItem(
-                        text = { Text(suggestion) },
-                        onClick = {
-                            query = suggestion
-                            onSuggestionClick(suggestion)
-                            isDropdownExpanded = false
-                        }
+                        text = { Text("No suggestions found") },
+                        onClick = {},
+                        enabled = false
                     )
                 }
-            } else {
-                DropdownMenuItem(
-                    text = { Text("No suggestions found") },
-                    onClick = {}
-                )
             }
         }
     }
@@ -1055,7 +1377,8 @@ fun DisplayAssignedMembers (
 @Composable
 fun DisplayTrackOrder(
     record: TrackRecord,
-    isLastItem: Boolean
+    isLastItem: Boolean,
+    requestId: String
 ) {
     val inputFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
     val dateTime = LocalDateTime.parse(record.dateTime, inputFormatter)
@@ -1063,6 +1386,19 @@ fun DisplayTrackOrder(
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
     val date = dateTime.format(dateFormatter)
     val time = dateTime.format(timeFormatter)
+
+    var proofUri by remember { mutableStateOf<Uri?>(null) }
+    var showFullScreenImage by remember { mutableStateOf(false) }
+
+    LaunchedEffect(record) {
+        if (record.description.contains("Manually Inputted Farmer")) {
+            AttachFileService.fetchAttachments("${requestId}_proof_of_interaction") { uris ->
+                if (uris.isNotEmpty()) {
+                    proofUri = uris.first()
+                }
+            }
+        }
+    }
 
     Row(
         modifier = Modifier
@@ -1140,6 +1476,102 @@ fun DisplayTrackOrder(
                             .padding(top = 8.dp)
                             .clip(RoundedCornerShape(8.dp)),
                         contentScale = ContentScale.Crop
+                    )
+                }
+            }
+
+            proofUri?.let { uri ->
+                Box(
+                    modifier = Modifier.clickable { showFullScreenImage = true }
+                ) {
+                    Column {
+                        Text(
+                            text = "Proof of Interaction (Tap to view)",
+                            fontWeight = FontWeight.Bold,
+                            color = Green1,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+
+                        Image(
+                            painter = rememberImagePainter(
+                                data = uri,
+                                builder = {
+                                    crossfade(true)
+                                }
+                            ),
+                            contentDescription = "Proof of interaction",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(180.dp)
+                                .padding(top = 4.dp)
+                                .clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    if (showFullScreenImage && proofUri != null) {
+        Dialog(
+            onDismissRequest = { showFullScreenImage = false },
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true,
+                usePlatformDefaultWidth = false
+            )
+        ) {
+            var scale by remember { mutableStateOf(1f) }
+            var offsetX by remember { mutableStateOf(0f) }
+            var offsetY by remember { mutableStateOf(0f) }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.9f))
+            ) {
+                Image(
+                    painter = rememberImagePainter(
+                        data = proofUri,
+                        builder = {
+                            crossfade(true)
+                        }
+                    ),
+                    contentDescription = "Full screen proof of interaction",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .align(Alignment.Center)
+                        .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
+                        .graphicsLayer(
+                            scaleX = scale,
+                            scaleY = scale
+                        )
+                        .pointerInput(Unit) {
+                            detectTransformGestures { _, pan, zoom, _ ->
+                                scale = (scale * zoom).coerceIn(1f, 3f)
+                                if (scale > 1f) {
+                                    offsetX += pan.x
+                                    offsetY += pan.y
+                                } else {
+                                    offsetX = 0f
+                                    offsetY = 0f
+                                }
+                            }
+                        },
+                    contentScale = ContentScale.Fit
+                )
+
+                IconButton(
+                    onClick = { showFullScreenImage = false },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = Color.White
                     )
                 }
             }
