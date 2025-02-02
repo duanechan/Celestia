@@ -108,14 +108,14 @@ fun FilterDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                "Filter Products",
+                "Sort Products",
                 style = MaterialTheme.typography.titleMedium,
                 fontFamily = mintsansFontFamily
             )
         },
         text = {
             Column {
-                listOf("Price: Low to High", "Price: High to Low", "Newest First").forEach { filter ->
+                listOf("Price: Low to High", "Price: High to Low").forEach { filter ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -166,13 +166,16 @@ fun ProductCatalog(
     val facilities by facilityViewModel.facilitiesData.observeAsState(emptyList())
     var currentSearchQuery by remember { mutableStateOf(searchQuery) }
     val scrollState = rememberLazyListState()
-    var isSearchActive by remember { mutableStateOf(showSearch) }
-
     val currentDestination = navController.currentBackStackEntry?.destination?.route?.substringBefore("?")
     val isProductCatalogScreen = currentDestination == Screen.ProductCatalog.route
 
-    // Filter for online-only products
-    val onlineProducts = products?.filter { !it.isInStore }
+    val onlineProducts = products?.filter { !it.isInStore }?.let { filteredProducts ->
+        when (productViewModel.currentSortFilter.value) {
+            "Price: Low to High" -> filteredProducts.sortedBy { it.price }
+            "Price: High to Low" -> filteredProducts.sortedByDescending { it.price }
+            else -> filteredProducts
+        }
+    }
 
     LaunchedEffect(currentSearchQuery) {
         productViewModel.fetchProducts(currentSearchQuery, role)
@@ -281,22 +284,24 @@ fun ProductCatalog(
                 }
             }
 
-            // Carousel - Updated to use onlineProducts
             if (showCarousel && onlineProducts != null) {
                 item {
-                    val featuredProducts = onlineProducts.take(3).map { product ->
-                        CarouselItem(
-                            carouselId = product.productId,
-                            imageRes = R.drawable.product_image,
-                            title = product.name,
-                            subtitle = product.description,
-                            price = "Php ${product.price}/${product.weightUnit}"
-                        )
-                    }
+                    val topPurchasedProducts = onlineProducts
+                        .sortedByDescending { it.totalQuantitySold }
+                        .take(3)
+                        .map { product ->
+                            CarouselItem(
+                                carouselId = product.productId,
+                                imageRes = R.drawable.product_image,
+                                title = product.name,
+                                subtitle = "Total Sold: ${product.totalQuantitySold} ${product.weightUnit}",
+                                price = "Php ${product.price}/${product.weightUnit}"
+                            )
+                        }
 
-                    if (featuredProducts.isNotEmpty()) {
+                    if (topPurchasedProducts.isNotEmpty()) {
                         SlideshowCarousel(
-                            items = featuredProducts,
+                            items = topPurchasedProducts,
                             navController = navController
                         )
                     }

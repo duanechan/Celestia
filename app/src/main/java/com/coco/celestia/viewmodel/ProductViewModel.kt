@@ -40,6 +40,7 @@ class ProductViewModel : ViewModel() {
     private val _vendor = MutableLiveData<String>()
     private val _notes = MutableLiveData<String>()
     private val _from = MutableLiveData<String>()
+    private val _currentSortFilter = MutableLiveData<String>()
 
     val userViewModel: UserViewModel by lazy { UserViewModel() }
     val productData: LiveData<List<ProductData>> = _productData
@@ -48,6 +49,7 @@ class ProductViewModel : ViewModel() {
     val description: LiveData<String> = _description
     val vendor: LiveData<String> = _vendor
     val from: LiveData<String> = _from
+    val currentSortFilter: LiveData<String> = _currentSortFilter
 
     private val _featuredProducts = MutableLiveData<List<ProductData>>()
     val featuredProducts: LiveData<List<ProductData>> = _featuredProducts
@@ -274,10 +276,14 @@ class ProductViewModel : ViewModel() {
             _productState.value = ProductState.LOADING
             try {
                 val snapshot = database.orderByChild("type").get().await()
-                val filterKeywords = filter.split(",").map { it.trim() }
+                val filterKeywords = if (filter in listOf("Price: Low to High", "Price: High to Low")) {
+                    emptyList()
+                } else {
+                    filter.split(",").map { it.trim() }
+                }
 
                 if (snapshot.exists()) {
-                    val products = snapshot.children.mapNotNull { child ->
+                    var products = snapshot.children.mapNotNull { child ->
                         try {
                             val productId = child.child("productId").getValue(String::class.java) ?: ""
                             val timestamp = child.child("timestamp").getValue(String::class.java) ?: ""
@@ -359,6 +365,13 @@ class ProductViewModel : ViewModel() {
                         } catch (e: Exception) {
                             null
                         }
+                    }
+
+                    // Apply sorting based on filter
+                    products = when (filter) {
+                        "Price: Low to High" -> products.sortedBy { it.price }
+                        "Price: High to Low" -> products.sortedByDescending { it.price }
+                        else -> products
                     }
 
                     _productData.value = products

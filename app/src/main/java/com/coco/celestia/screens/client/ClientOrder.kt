@@ -48,6 +48,7 @@ import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.OrderData
+import com.coco.celestia.viewmodel.model.ProductData
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -288,8 +289,15 @@ fun OrderCard(
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            displayItems.forEach { product ->
-                ItemCard(product)
+            displayItems.forEach { orderItem ->
+                val productData = ProductData(
+                    productId = orderItem.productId,
+                    name = orderItem.name,
+                    quantity = orderItem.quantity,
+                    price = orderItem.price,
+                    weightUnit = orderItem.weightUnit
+                )
+                ItemCard(item = productData)
             }
 
             if (!showAllItems) {

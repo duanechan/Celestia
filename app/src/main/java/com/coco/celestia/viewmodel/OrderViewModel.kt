@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.coco.celestia.service.NotificationService
 import com.coco.celestia.util.DataParser
+import com.coco.celestia.viewmodel.model.Constants
 import com.coco.celestia.viewmodel.model.MostOrdered
 import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.NotificationType
@@ -20,6 +21,7 @@ import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -264,38 +266,54 @@ class OrderViewModel : ViewModel() {
                 updatedBy = ""
             )
 
-            // Preserve existing gcashPaymentId if it exists
-            val orderWithTimestamp = order.copy(
-                orderDate = formattedDisplayDate,
-                timestamp = timestamp,
-                statusDescription = statusDescription,
-                statusHistory = listOf(initialStatus),
-                gcashPaymentId = order.gcashPaymentId.ifEmpty { "" }  // Preserve existing gcashPaymentId
-            )
-
             try {
-                updateProductStock(order.orderData, "Pending")
-
-                val query = database.child(uid).push()
-                query.setValue(orderWithTimestamp)
-                    .addOnSuccessListener {
-                        viewModelScope.launch {
-                            notify(NotificationType.ClientOrderPlaced, orderWithTimestamp)
-                            _orderState.value = OrderState.SUCCESS
-                        }
+                val updatedOrderItems = order.orderData.map { orderItem ->
+                    try {
+                        val productSnapshot = productsRef.child(orderItem.productId).get().await()
+                        val weightUnit = productSnapshot.child("weightUnit").getValue(String::class.java)
+                        orderItem.copy(
+                            weightUnit = weightUnit ?: Constants.WEIGHT_GRAMS
+                        )
+                    } catch (e: Exception) {
+                        orderItem
                     }
-                    .addOnFailureListener { exception ->
-                        viewModelScope.launch {
-                            _orderState.value = OrderState.ERROR(exception.message ?: "Unknown error")
-                            try {
-                                updateProductStock(order.orderData, "Cancelled")
-                            } catch (e: Exception) {
-                                _orderState.value = OrderState.ERROR("Failed to rollback stock changes")
+                }
+
+                val orderWithTimestamp = order.copy(
+                    orderDate = formattedDisplayDate,
+                    timestamp = timestamp,
+                    statusDescription = statusDescription,
+                    statusHistory = listOf(initialStatus),
+                    gcashPaymentId = order.gcashPaymentId.ifEmpty { "" },
+                    orderData = updatedOrderItems
+                )
+
+                try {
+                    updateProductStock(orderWithTimestamp.orderData, "Pending")
+
+                    val query = database.child(uid).push()
+                    query.setValue(orderWithTimestamp)
+                        .addOnSuccessListener {
+                            viewModelScope.launch {
+                                notify(NotificationType.ClientOrderPlaced, orderWithTimestamp)
+                                _orderState.value = OrderState.SUCCESS
                             }
                         }
-                    }
+                        .addOnFailureListener { exception ->
+                            viewModelScope.launch {
+                                _orderState.value = OrderState.ERROR(exception.message ?: "Unknown error")
+                                try {
+                                    updateProductStock(orderWithTimestamp.orderData, "Cancelled")
+                                } catch (e: Exception) {
+                                    _orderState.value = OrderState.ERROR("Failed to rollback stock changes")
+                                }
+                            }
+                        }
+                } catch (e: Exception) {
+                    _orderState.value = OrderState.ERROR(e.message ?: "Failed to update product stock")
+                }
             } catch (e: Exception) {
-                _orderState.value = OrderState.ERROR(e.message ?: "Failed to update product stock")
+                _orderState.value = OrderState.ERROR("Failed to fetch product details: ${e.message}")
             }
         }
     }
