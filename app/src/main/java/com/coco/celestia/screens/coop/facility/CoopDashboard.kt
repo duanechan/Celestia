@@ -139,17 +139,19 @@ fun CoopDashboard(
         }
     } else emptyList()
 
-    val pendingCount = facilityOrders.count { it.status == "Pending" }
-    val confirmedCount = facilityOrders.count { it.status == "Confirmed" }
-    val toDeliverCount = facilityOrders.count { it.status == "To Deliver" }
-    val toReceiveCount = facilityOrders.count { it.status == "To Receive" }
-    val completedCount = facilityOrders.count { it.status == "Completed" }
-    val cancelledCount = facilityOrders.count { it.status == "Cancelled" }
-    val returnRefundCount = facilityOrders.count { it.status == "Return/Refund" }
+    val pendingCount = if (userFacility != null) facilityOrders.count { it.status == "Pending" } else 0
+    val confirmedCount = if (userFacility != null) facilityOrders.count { it.status == "Confirmed" } else 0
+    val toDeliverCount = if (userFacility != null) facilityOrders.count { it.status == "To Deliver" } else 0
+    val toReceiveCount = if (userFacility != null) facilityOrders.count { it.status == "To Receive" } else 0
+    val completedCount = if (userFacility != null) facilityOrders.count { it.status == "Completed" } else 0
+    val cancelledCount = if (userFacility != null) facilityOrders.count { it.status == "Cancelled" } else 0
+    val returnRefundCount = if (userFacility != null) facilityOrders.count { it.status == "Return/Refund" } else 0
 
-    val activeProducts = products.count { it.isActive }
-    val inactiveProducts = products.count { !it.isActive }
-    val lowStockProducts = products.filter { it.quantity <= it.reorderPoint }
+    val activeProducts = if (userFacility != null) products.count { it.isActive } else 0
+    val inactiveProducts = if (userFacility != null) products.count { !it.isActive } else 0
+    val lowStockProducts = if (userFacility != null) {
+        products.filter { it.quantity <= it.reorderPoint }
+    } else emptyList()
     var showLowStockDialog by remember { mutableStateOf(false) }
     var showActiveProductsDialog by remember { mutableStateOf(false) }
     var showInactiveProductsDialog by remember { mutableStateOf(false) }

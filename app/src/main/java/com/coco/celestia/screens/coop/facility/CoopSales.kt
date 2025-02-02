@@ -1,5 +1,6 @@
 package com.coco.celestia.screens.coop.facility
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -330,6 +331,7 @@ private fun InStoreSalesContentUI(
     }
 }
 
+@SuppressLint("DefaultLocale")
 @Composable
 private fun SalesCard(
     sales: List<SalesData>,
@@ -339,6 +341,8 @@ private fun SalesCard(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(sales) { sale ->
+            val total = sale.quantity * sale.price
+
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -354,13 +358,20 @@ private fun SalesCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(
-                            text = "${sale.productName} (${sale.salesNumber})",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Green1,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = mintsansFontFamily
-                        )
+                        Column {
+                            Text(
+                                text = sale.productName,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Green1,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = mintsansFontFamily
+                            )
+                            Text(
+                                text = sale.salesNumber,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontFamily = mintsansFontFamily
+                            )
+                        }
                         Text(
                             text = sale.date,
                             style = MaterialTheme.typography.bodyMedium,
@@ -378,7 +389,7 @@ private fun SalesCard(
                             fontFamily = mintsansFontFamily
                         )
                         Text(
-                            text = "₱${sale.price}",
+                            text = "₱${String.format("%.2f", total)}",
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Bold,
                             fontFamily = mintsansFontFamily
@@ -403,7 +414,6 @@ private fun SalesCard(
         }
     }
 }
-
 
 // ONLINE SALES
 @Composable

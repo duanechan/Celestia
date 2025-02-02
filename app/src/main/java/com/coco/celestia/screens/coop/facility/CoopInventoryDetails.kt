@@ -884,10 +884,8 @@ fun TransactionsTab(
                 )
             }
             TransactionState.SUCCESS -> {
-                // Flatten all transactions from all users
                 val allTransactions = transactionData.values.flatten()
 
-                // Log the number of transactions found
                 Log.d("TransactionsTab", "Total transactions: ${allTransactions.size}")
 
                 if (allTransactions.isEmpty()) {

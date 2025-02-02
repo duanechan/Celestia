@@ -622,4 +622,42 @@ class ProductViewModel : ViewModel() {
                 }
         }
     }
+    fun updateProductTotalSold(productName: String, soldQuantity: Int) {
+        viewModelScope.launch {
+            try {
+                val snapshot = database.get().await()
+
+                if (snapshot.exists()) {
+                    val productSnapshot = snapshot.children.find { child ->
+                        child.child("name").getValue(String::class.java) == productName
+                    }
+
+                    if (productSnapshot != null) {
+                        val currentTotalSold = productSnapshot.child("totalQuantitySold").getValue(Double::class.java) ?: 0.0
+                        val currentTotalPurchases = productSnapshot.child("totalPurchases").getValue(Double::class.java) ?: 0.0
+
+                        val price = productSnapshot.child("price").getValue(Double::class.java) ?: 0.0
+                        val newTotalSold = currentTotalSold + soldQuantity
+                        val newTotalPurchases = currentTotalPurchases + (soldQuantity * price)
+
+                        val updates = hashMapOf<String, Any>(
+                            "totalQuantitySold" to newTotalSold,
+                            "totalPurchases" to newTotalPurchases
+                        )
+
+                        productSnapshot.ref.updateChildren(updates).await()
+
+                        _productState.value = ProductState.SUCCESS
+                        fetchProducts("", "")
+                    } else {
+                        _productState.value = ProductState.ERROR("Product not found")
+                    }
+                } else {
+                    _productState.value = ProductState.ERROR("No products exist in database")
+                }
+            } catch (e: Exception) {
+                _productState.value = ProductState.ERROR(e.message ?: "Failed to update total sales")
+            }
+        }
+    }
 }

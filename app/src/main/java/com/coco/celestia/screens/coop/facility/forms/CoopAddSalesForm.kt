@@ -256,6 +256,8 @@ fun recordSaleTransaction(
 
     val encodedFacility = encodeEmail(sale.facility)
     transactionViewModel.recordTransaction(encodedFacility, transaction)
+
+    productViewModel.updateProductTotalSold(sale.productName, sale.quantity)
     productViewModel.updateProductQuantity(sale.productName, -sale.quantity)
 }
 

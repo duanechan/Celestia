@@ -77,6 +77,7 @@ import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.ProductState
 import com.coco.celestia.viewmodel.ProductViewModel
+import com.coco.celestia.viewmodel.model.FacilityData
 import com.coco.celestia.viewmodel.model.ProductData
 
 @Composable
@@ -179,6 +180,17 @@ fun CoopProductInventory(
 
     LaunchedEffect(Unit) {
         facilityViewModel.fetchFacilities()
+    }
+
+    fun isConfigurationComplete(facility: FacilityData): Boolean {
+        val hasCollectionMethod = facility.isPickupEnabled || facility.isDeliveryEnabled
+        val hasPaymentMethod = facility.isCashEnabled || facility.isGcashEnabled
+
+        return when {
+            facility.isPickupEnabled -> facility.pickupLocation.isNotBlank() && hasPaymentMethod
+            facility.isDeliveryEnabled -> facility.deliveryDetails.isNotBlank() && hasPaymentMethod
+            else -> false
+        }
     }
 
     Box(
@@ -361,24 +373,48 @@ fun CoopProductInventory(
                             )
                         }
                         is ProductState.EMPTY -> {
-                            EmptyProductsScreen(isInStore, userFacility.name, navController)
+                            EmptyProductsScreen(
+                                isInStore = isInStore,
+                                facilityName = userFacility.name,
+                                navController = navController,
+                                facility = userFacility
+                            )
                         }
                     }
 
-                    FloatingActionButton(
-                        onClick = {
-                            navController.navigate(Screen.AddProductInventory.route)
-                        },
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(16.dp)
-                            .semantics { testTag = "android:id/AddProductFAB" },
-                        containerColor = White1
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = "Add Product"
-                        )
+                    // Check configuration before showing FAB
+                    val isConfigured = userFacility.run {
+                        val hasCollectionMethod = when {
+                            isPickupEnabled -> pickupLocation.isNotBlank()
+                            isDeliveryEnabled -> deliveryDetails.isNotBlank()
+                            else -> false
+                        }
+
+                        val hasPaymentMethod = when {
+                            isCashEnabled -> cashInstructions.isNotBlank()
+                            isGcashEnabled -> gcashNumbers.isNotBlank()
+                            else -> false
+                        }
+
+                        hasCollectionMethod && hasPaymentMethod
+                    }
+
+                    if (isConfigured) {
+                        FloatingActionButton(
+                            onClick = {
+                                navController.navigate(Screen.AddProductInventory.route)
+                            },
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(16.dp)
+                                .semantics { testTag = "android:id/AddProductFAB" },
+                            containerColor = White1
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add Product"
+                            )
+                        }
                     }
                 } else {
                     NoFacilityScreen()
@@ -563,8 +599,25 @@ fun ErrorScreen(message: String) {
 fun EmptyProductsScreen(
     isInStore: Boolean,
     facilityName: String,
-    navController: NavController
+    navController: NavController,
+    facility: FacilityData? = null
 ) {
+    fun isConfigurationComplete(facility: FacilityData): Boolean {
+        val hasCollectionMethod = when {
+            facility.isPickupEnabled -> facility.pickupLocation.isNotBlank()
+            facility.isDeliveryEnabled -> facility.deliveryDetails.isNotBlank()
+            else -> false
+        }
+
+        val hasPaymentMethod = when {
+            facility.isCashEnabled -> facility.cashInstructions.isNotBlank()
+            facility.isGcashEnabled -> facility.gcashNumbers.isNotBlank()
+            else -> false
+        }
+
+        return hasCollectionMethod && hasPaymentMethod
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -589,31 +642,33 @@ fun EmptyProductsScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text(
-            text = "Make sure collection and payment methods are configured first before adding products",
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.Center,
-            color = Gray
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Button(
-            onClick = {
-                navController.navigate(Screen.FacilitySettings.route)
-            },
-            modifier = Modifier
-                .fillMaxWidth(0.7f)
-                .height(48.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Green1
-            )
-        ) {
+        if (facility != null && !isConfigurationComplete(facility)) {
             Text(
-                text = "Go to Facility Settings",
-                style = MaterialTheme.typography.labelLarge,
-                color = White1
+                text = "Make sure collection and payment methods are configured first before adding products",
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center,
+                color = Gray
             )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(
+                onClick = {
+                    navController.navigate(Screen.FacilitySettings.route)
+                },
+                modifier = Modifier
+                    .fillMaxWidth(0.7f)
+                    .height(48.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Green1
+                )
+            ) {
+                Text(
+                    text = "Go to Facility Settings",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = White1
+                )
+            }
         }
     }
 }

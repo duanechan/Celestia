@@ -44,8 +44,24 @@ class FacilityViewModel: ViewModel() {
                                 null
                             } else {
                                 val facility = child.getValue(FacilityData::class.java)
-                                val isArchived = child.child("isArchived").getValue(Boolean::class.java) ?: false
-                                facility?.isArchived = isArchived
+
+                                // Explicitly get all configuration values from snapshot
+                                facility?.apply {
+                                    isArchived = child.child("isArchived").getValue(Boolean::class.java) ?: false
+
+                                    // Collection Methods
+                                    isPickupEnabled = child.child("isPickupEnabled").getValue(Boolean::class.java) ?: false
+                                    isDeliveryEnabled = child.child("isDeliveryEnabled").getValue(Boolean::class.java) ?: false
+                                    pickupLocation = child.child("pickupLocation").getValue(String::class.java) ?: ""
+                                    deliveryDetails = child.child("deliveryDetails").getValue(String::class.java) ?: ""
+
+                                    // Payment Methods
+                                    isCashEnabled = child.child("isCashEnabled").getValue(Boolean::class.java) ?: false
+                                    isGcashEnabled = child.child("isGcashEnabled").getValue(Boolean::class.java) ?: false
+                                    cashInstructions = child.child("cashInstructions").getValue(String::class.java) ?: ""
+                                    gcashNumbers = child.child("gcashNumbers").getValue(String::class.java) ?: ""
+                                }
+
                                 if (includeArchived || !facility?.isArchived!!) {
                                     facility
                                 } else {
