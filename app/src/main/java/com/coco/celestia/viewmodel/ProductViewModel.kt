@@ -660,4 +660,12 @@ class ProductViewModel : ViewModel() {
             }
         }
     }
+    fun checkDuplicateProduct(productName: String, isInStore: Boolean): Boolean {
+        val products = productData.value ?: emptyList()
+        return products.any {
+            it.name.equals(productName, ignoreCase = true) &&
+                    it.isInStore == isInStore &&
+                    it.isActive
+        }
+    }
 }

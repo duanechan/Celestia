@@ -6,21 +6,15 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -30,15 +24,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.coco.celestia.R
 import com.coco.celestia.components.toast.ToastStatus
@@ -301,6 +291,7 @@ fun AddFacilityForm(
     var iconPickerShown by remember { mutableStateOf(false) }
     var selectedIcon by remember { mutableIntStateOf(R.drawable.facility) }
     var expanded by remember { mutableStateOf(false) }
+    var noMembersSelected by remember { mutableStateOf(false) }
 
     val usersData by userViewModel.usersData.observeAsState(initial = emptyList())
     val noFacilityUsers = usersData.filter { it.role == "Coop" }
@@ -407,7 +398,11 @@ fun AddFacilityForm(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     OutlinedTextField(
-                        value = if (selectedUsers.isEmpty()) "Select users" else "${selectedUsers.size} user(s) selected",
+                        value = when {
+                            noMembersSelected -> "No Members for Now"
+                            selectedUsers.isEmpty() -> "Select users"
+                            else -> "${selectedUsers.size} user(s) selected"
+                        },
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = {
@@ -430,6 +425,35 @@ fun AddFacilityForm(
                             .background(Color.White)
                             .exposedDropdownSize()
                     ) {
+                        // No Members for Now option
+                        DropdownMenuItem(
+                            text = {
+                                Row(
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text("No Members for Now", fontFamily = mintsansFontFamily)
+                                    if (noMembersSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.CheckCircle,
+                                            contentDescription = "Selected",
+                                            tint = Green1
+                                        )
+                                    }
+                                }
+                            },
+                            onClick = {
+                                noMembersSelected = !noMembersSelected
+                                if (noMembersSelected) {
+                                    selectedUsers = emptySet()
+                                }
+                                expanded = false
+                            }
+                        )
+
+                        Divider()
+
                         if (noFacilityUsers.isEmpty()) {
                             DropdownMenuItem(
                                 text = { Text("No users available without a facility") },
@@ -456,6 +480,7 @@ fun AddFacilityForm(
                                         }
                                     },
                                     onClick = {
+                                        noMembersSelected = false
                                         selectedUsers = if (selectedUsers.contains(user)) {
                                             selectedUsers - user
                                         } else {
@@ -467,9 +492,7 @@ fun AddFacilityForm(
                         }
                     }
                 }
-
-                // Show selected users
-                if (selectedUsers.isNotEmpty()) {
+                if (selectedUsers.isNotEmpty() && !noMembersSelected) {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "Selected Users:",
@@ -494,7 +517,7 @@ fun AddFacilityForm(
 
         Button(
             onClick = {
-                if (name.isNotEmpty() && selectedUsers.isNotEmpty()) {
+                if (name.isNotEmpty() && (selectedUsers.isNotEmpty() || noMembersSelected)) {
                     val currentDateTime = LocalDateTime.now()
                     val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma", Locale.US)
                     val formattedDateTime = currentDateTime.format(formatter).toString()
@@ -502,10 +525,12 @@ fun AddFacilityForm(
                     facilityViewModel.createFacility(
                         icon = selectedIcon,
                         name = name,
-                        emails = selectedUsers.map { it.email }.toMutableList(),
+                        emails = if (noMembersSelected) mutableListOf() else selectedUsers.map { it.email }.toMutableList(),
                         onComplete = {
                             onEvent(Triple(ToastStatus.SUCCESSFUL, "$name facility added.", System.currentTimeMillis()))
-                            userViewModel.assignFacility(selectedUsers.map { it.email }, name)
+                            if (!noMembersSelected) {
+                                userViewModel.assignFacility(selectedUsers.map { it.email }, name)
+                            }
                             navController.navigate(Screen.Admin.route)
                         },
                         onError = { onEvent(Triple(ToastStatus.FAILED, it, System.currentTimeMillis())) }
@@ -514,7 +539,7 @@ fun AddFacilityForm(
                     onEvent(Triple(
                         ToastStatus.FAILED,
                         if (name.isEmpty()) "Please enter a facility name."
-                        else "Please select at least one user.",
+                        else "Please select users or choose 'No Members for Now'",
                         System.currentTimeMillis()
                     ))
                 }

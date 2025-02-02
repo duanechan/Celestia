@@ -497,6 +497,15 @@ fun AddProductForm(
                     return@Button
                 }
 
+                if (!isEditMode && productViewModel.checkDuplicateProduct(productName, isInStore)) {
+                    onEvent(Triple(
+                        ToastStatus.WARNING,
+                        "A ${if (isInStore) "store" else "online"} product with name '$productName' already exists",
+                        System.currentTimeMillis()
+                    ))
+                    return@Button
+                }
+
                 if (productName.isNotEmpty() && quantity > 0 && price > 0.0) {
                     val currentDateTime = LocalDateTime.now()
                     val dateFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
