@@ -844,12 +844,15 @@ fun PurchaseOrderItemForm(
     }.sortedBy { it.name }
 
     fun validateForm(): Boolean {
+        val quantityValue = quantity.toIntOrNull()
         return itemName.isNotBlank() &&
                 quantity.isNotBlank() &&
                 rate.isNotBlank() &&
-                quantity.toIntOrNull() != null &&
+                quantityValue != null &&
                 rate.toDoubleOrNull() != null &&
-                isInStore != null
+                isInStore != null &&
+                quantityValue <= currentStock &&
+                quantityValue > 0
     }
 
     LaunchedEffect(Unit) {
@@ -890,7 +893,6 @@ fun PurchaseOrderItemForm(
                         )
                     }
                     else -> {
-                        // Product Type Dropdown
                         ExposedDropdownMenuBox(
                             expanded = productTypeExpanded,
                             onExpandedChange = { productTypeExpanded = it },
@@ -928,8 +930,8 @@ fun PurchaseOrderItemForm(
                                         text = { Text(label) },
                                         onClick = {
                                             isInStore = value
-                                            itemName = "" // Reset product selection
-                                            selectedProductId = "" // Reset selected product ID
+                                            itemName = ""
+                                            selectedProductId = ""
                                             productTypeExpanded = false
                                         }
                                     )
@@ -1019,7 +1021,6 @@ fun PurchaseOrderItemForm(
                                     }
 
                                     if (itemName.isNotBlank()) {
-                                        // Display current stock and weight unit
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
                                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -1049,12 +1050,25 @@ fun PurchaseOrderItemForm(
                                             value = quantity,
                                             onValueChange = { if (it.all { char -> char.isDigit() }) quantity = it },
                                             label = { Text("Quantity") },
-                                            isError = showErrorMessages && (quantity.isBlank() || quantity.toIntOrNull() == null),
+                                            isError = showErrorMessages && (
+                                                    quantity.isBlank() ||
+                                                            quantity.toIntOrNull() == null ||
+                                                            quantity.toIntOrNull()?.let { it > currentStock || it <= 0 } == true
+                                                    ),
                                             supportingText = {
-                                                if (showErrorMessages && quantity.isBlank()) {
-                                                    Text("Quantity is required")
-                                                } else if (showErrorMessages && quantity.toIntOrNull() == null) {
-                                                    Text("Please enter a valid number")
+                                                when {
+                                                    showErrorMessages && quantity.isBlank() -> {
+                                                        Text("Quantity is required")
+                                                    }
+                                                    showErrorMessages && quantity.toIntOrNull() == null -> {
+                                                        Text("Please enter a valid number")
+                                                    }
+                                                    showErrorMessages && quantity.toIntOrNull()?.let { it <= 0 } == true -> {
+                                                        Text("Quantity must be greater than 0")
+                                                    }
+                                                    showErrorMessages && quantity.toIntOrNull()?.let { it > currentStock } == true -> {
+                                                        Text("Quantity exceeds available stock ($currentStock)")
+                                                    }
                                                 }
                                             },
                                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
