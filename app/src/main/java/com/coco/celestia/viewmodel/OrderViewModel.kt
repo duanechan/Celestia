@@ -17,6 +17,8 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.MutableData
+import com.google.firebase.database.Transaction
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -331,97 +333,80 @@ class OrderViewModel : ViewModel() {
             _orderState.value = OrderState.LOADING
 
             try {
-                database.addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-                        if (snapshot.exists()) {
-                            var orderFound = false
+                database.runTransaction(object : Transaction.Handler {
+                    override fun doTransaction(currentData: MutableData): Transaction.Result {
+                        var orderFound: MutableData? = null
+                        var existingOrder: OrderData? = null
 
-                            for (user in snapshot.children) {
-                                for (order in user.children) {
-                                    val orderId = order.child("orderId").getValue(String::class.java)
-                                    if (orderId == updatedOrderData.orderId) {
-                                        orderFound = true
-                                        val existingHistory = order.child("statusHistory").children.mapNotNull {
-                                            it.getValue(StatusUpdate::class.java)
-                                        }
+                        for (userSnapshot in currentData.children) {
+                            for (orderSnapshot in userSnapshot.children) {
+                                val order = orderSnapshot.getValue(OrderData::class.java)
 
-                                        val previousStatus = existingHistory.lastOrNull()?.status ?: ""
-
-                                        viewModelScope.launch {
-                                            try {
-                                                if (previousStatus != updatedOrderData.status) {
-                                                    when (updatedOrderData.status) {
-                                                        "Pending" -> {
-                                                            if (previousStatus.isEmpty()) {
-                                                                updateProductStock(updatedOrderData.orderData, "Pending")
-                                                            }
-                                                        }
-                                                        "Completed" -> {
-                                                            updateProductStock(updatedOrderData.orderData, "Completed")
-                                                        }
-                                                        "Cancelled" -> {
-                                                            updateProductStock(updatedOrderData.orderData, "Cancelled")
-                                                        }
-                                                    }
-                                                }
-
-                                                val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
-                                                val currentDateTime = LocalDateTime.now().format(formatter)
-
-                                                val newStatusUpdate = StatusUpdate(
-                                                    status = updatedOrderData.status,
-                                                    statusDescription = if (updatedOrderData.statusDescription.isNullOrBlank()) {
-                                                        getDefaultStatusDescription(updatedOrderData.status)
-                                                    } else {
-                                                        updatedOrderData.statusDescription
-                                                    },
-                                                    dateTime = currentDateTime
-                                                )
-
-                                                val updatedHistory = existingHistory + newStatusUpdate
-                                                val orderWithHistory = updatedOrderData.copy(
-                                                    statusHistory = updatedHistory,
-                                                    gcashPaymentId = updatedOrderData.gcashPaymentId
-                                                )
-
-                                                order.ref.setValue(orderWithHistory)
-                                                    .addOnSuccessListener {
-                                                        viewModelScope.launch {
-                                                            _orderState.value = OrderState.SUCCESS
-                                                        }
-                                                    }
-                                                    .addOnFailureListener { exception ->
-                                                        viewModelScope.launch {
-                                                            _orderState.value = OrderState.ERROR(
-                                                                exception.message ?: "Unknown error updating order"
-                                                            )
-                                                        }
-                                                    }
-                                            } catch (e: Exception) {
-                                                _orderState.value = OrderState.ERROR(
-                                                    e.message ?: "Error updating order and stock"
-                                                )
-                                            }
-                                        }
-                                        break
-                                    }
+                                if (order?.orderId == updatedOrderData.orderId) {
+                                    orderFound = orderSnapshot
+                                    existingOrder = order
+                                    break
                                 }
-                                if (orderFound) break
                             }
-
-                            if (!orderFound) {
-                                _orderState.value = OrderState.ERROR("Order not found")
-                            }
-                        } else {
-                            _orderState.value = OrderState.EMPTY
+                            if (orderFound != null) break
                         }
+
+                        if (orderFound == null || existingOrder == null) {
+                            return Transaction.success(currentData)
+                        }
+
+                        if (existingOrder.status == "Cancelled" || existingOrder.status == "Completed") {
+                            return Transaction.success(currentData)
+                        }
+
+                        val previousStatus = existingOrder.status
+                        val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
+                        val currentDateTime = LocalDateTime.now().format(formatter)
+
+                        val newStatusUpdate = StatusUpdate(
+                            status = updatedOrderData.status,
+                            statusDescription = updatedOrderData.statusDescription.ifEmpty { getDefaultStatusDescription(updatedOrderData.status) },
+                            dateTime = currentDateTime
+                        )
+
+                        val updatedHistory = existingOrder.statusHistory + newStatusUpdate
+
+                        val updatedOrder = existingOrder.copy(
+                            status = updatedOrderData.status,
+                            statusHistory = updatedHistory
+                        )
+
+                        if (previousStatus != updatedOrder.status) {
+                            viewModelScope.launch {
+                                when (updatedOrder.status) {
+                                    "Pending" -> updateProductStock(updatedOrder.orderData, "Pending")
+                                    "Completed" -> updateProductStock(updatedOrder.orderData, "Completed")
+                                    "Cancelled" -> updateProductStock(updatedOrder.orderData, "Cancelled")
+                                }
+                            }
+                        }
+
+                        orderFound.setValue(updatedOrder)
+                        return Transaction.success(currentData)
                     }
 
-                    override fun onCancelled(error: DatabaseError) {
+                    override fun onComplete(
+                        error: DatabaseError?,
+                        committed: Boolean,
+                        currentData: DataSnapshot?
+                    ) {
                         viewModelScope.launch {
-                            _orderState.value = OrderState.ERROR(error.message)
+                            if (error != null) {
+                                _orderState.value = OrderState.ERROR(error.message)
+                            } else if (!committed) {
+                                _orderState.value = OrderState.ERROR("Order update rejected due to conflicts")
+                            } else {
+                                _orderState.value = OrderState.SUCCESS
+                            }
                         }
                     }
+
+
                 })
             } catch (e: Exception) {
                 _orderState.value = OrderState.ERROR(e.message ?: "Unknown error")
