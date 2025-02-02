@@ -28,6 +28,7 @@ import com.coco.celestia.R
 import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
+import com.coco.celestia.viewmodel.model.ProductStatus
 import com.coco.celestia.viewmodel.model.TrackRecord
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
@@ -262,18 +263,30 @@ fun ClientSpecialReqDetails(
                             Button(
                                 onClick = {
                                     request.toDeliver.map { product ->
-                                        val addTrack = TrackRecord(
-                                            description = "Client Received ${product.name}: ${product.quantity}kg",
-                                            dateTime = formattedDateTime
-                                        )
-                                        trackRecord.add(addTrack)
+                                        if (product.status != "Delivered") {
+                                            val addTrack = TrackRecord(
+                                                description = "Client Received ${product.name}: ${product.quantity}kg",
+                                                dateTime = formattedDateTime
+                                            )
+                                            trackRecord.add(addTrack)
+                                        }
                                     }
 
-                                    toDeliver.clear()
+                                    val mergeExisting = request.toDeliver
+                                        .groupBy { it.name }
+                                        .map { (name, products) ->
+                                            val totalQuantity = products.sumOf { it.quantity }
+                                            ProductStatus(
+                                                name = name,
+                                                quantity = totalQuantity,
+                                                status = "Delivered"
+                                            )
+                                        }
+
                                     specialRequestViewModel.updateSpecialRequest(
                                         request.copy(
                                             trackRecord = trackRecord,
-                                            toDeliver = toDeliver,
+                                            toDeliver = mergeExisting,
                                             status = if (request.assignedMember.all { it.status == "Completed" }) {
                                                 "Completed"
                                             } else "In Progress"

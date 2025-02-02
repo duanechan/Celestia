@@ -40,7 +40,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -51,6 +50,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -311,15 +311,20 @@ fun SpecialRequestDetails(
                                     },
                                     dateTime = formattedDateTime
                                 )
-                                val addToDeliver = ProductStatus(
-                                    name = member.product,
-                                    quantity = member.deliveredQuantity,
-                                    status = if (request.collectionMethod == Constants.COLLECTION_DELIVERY) "To Deliver" else "To Pick Up"
-                                )
+                                val existingProduct = request.toDeliver.find { it.name == member.product && it.status != "Delivered"}
 
+                                if (existingProduct != null) {
+                                    existingProduct.quantity += member.deliveredQuantity
+                                } else {
+                                    val addToDeliver = ProductStatus(
+                                        name = member.product,
+                                        quantity = member.deliveredQuantity,
+                                        status = if (request.collectionMethod == Constants.COLLECTION_DELIVERY) "To Deliver" else "To Pick Up"
+                                    )
+                                    toDeliver.add(addToDeliver)
+                                }
                                 farmerTrackRecord.add(addFarmerTrack)
                                 trackRecord.add(addTrack)
-                                toDeliver.add(addToDeliver)
 
                                 updatedMember.copy(farmerTrackRecord = farmerTrackRecord)
                             } else assigned
@@ -355,12 +360,13 @@ fun SpecialRequestDetails(
             Button(
                 onClick = {
                     val updateProductStatus = request.toDeliver.map { product ->
-                        val addTrack = TrackRecord(
-                            description = "Delivering ${product.name}: ${product.quantity}kg",
-                            dateTime = formattedDateTime
-                        )
-                        trackRecord.add(addTrack)
-
+                        if (product.status != "Delivered") {
+                            val addTrack = TrackRecord(
+                                description = "Delivering ${product.name}: ${product.quantity}kg",
+                                dateTime = formattedDateTime
+                            )
+                            trackRecord.add(addTrack)
+                        }
                         product.copy(
                             status = "Delivering to Client"
                         )
@@ -1367,8 +1373,67 @@ fun DisplayAssignedMembers (
                     )
                 }
             }
+        }
+    }
 
-            // TODO: Display delivered quantity
+    if (request.toDeliver.any { it.status == "Delivered" }) {
+        Column (
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.White)
+                .border(
+                    width = 2.dp,
+                    color = Green4,
+                    shape = RoundedCornerShape(12.dp)
+                )
+        ) {
+            Column (
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ){
+                Text(
+                    text = "Delivered Quantity",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+
+                Row {
+                    Text(
+                        text = "Product",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    Text(
+                        text = "Quantity",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                request.toDeliver.forEach { product ->
+                    if (product.status == "Delivered") {
+                        Row (
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 2.dp)
+                        ){
+                            Text(
+                                text = product.name,
+                                modifier = Modifier.weight(2f)
+                            )
+
+                            Text(
+                                text = product.quantity.toString(),
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -1522,9 +1587,9 @@ fun DisplayTrackOrder(
                 usePlatformDefaultWidth = false
             )
         ) {
-            var scale by remember { mutableStateOf(1f) }
-            var offsetX by remember { mutableStateOf(0f) }
-            var offsetY by remember { mutableStateOf(0f) }
+            var scale by remember { mutableFloatStateOf(1f) }
+            var offsetX by remember { mutableFloatStateOf(0f) }
+            var offsetY by remember { mutableFloatStateOf(0f) }
 
             Box(
                 modifier = Modifier

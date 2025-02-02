@@ -110,7 +110,7 @@ data class SpecialRequest(
 
 data class ProductStatus (
     val name: String = "",
-    val quantity: Int = 0,
+    var quantity: Int = 0,
     val status: String = ""
 )
 
