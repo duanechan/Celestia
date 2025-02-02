@@ -552,9 +552,6 @@ fun FacilityConfigurationSettings(
 
 @Composable
 fun OrganizationProfileScreen() {
-    var aboutUsText by remember { mutableStateOf("") }
-    var isEditing by remember { mutableStateOf(false) }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -590,15 +587,12 @@ fun OrganizationProfileScreen() {
                 Text("App Name", style = TextStyle(fontFamily = mintsansFontFamily, fontSize = 16.sp, fontWeight = FontWeight.Bold))
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("Coco: CoopConnects", style = TextStyle(fontFamily = mintsansFontFamily, fontSize = 16.sp))
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("*Contact developers to edit this.", fontSize = 12.sp, color = Color.Red, style = TextStyle(fontFamily = mintsansFontFamily))
             }
         }
 
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(300.dp)
                 .padding(start = 20.dp, end = 20.dp, top = 5.dp),
             colors = CardDefaults.cardColors(
                 containerColor = White1
@@ -610,40 +604,26 @@ fun OrganizationProfileScreen() {
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("About Us", style = TextStyle(fontFamily = mintsansFontFamily, fontSize = 16.sp, fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
-                    TextButton(
-                        onClick = { isEditing = !isEditing }
-                    ) {
-                        Text(if (isEditing) "Save" else "Edit", style = TextStyle(fontFamily = mintsansFontFamily), color = Green1)
-                    }
-                }
+                Text(
+                    "About Us",
+                    style = TextStyle(
+                        fontFamily = mintsansFontFamily,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
 
-                if (isEditing) {
-                    OutlinedTextField(
-                        value = aboutUsText,
-                        onValueChange = { aboutUsText = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp),
-                        placeholder = { Text("Enter organization description here...", style = TextStyle(fontFamily = mintsansFontFamily)) },
-                        maxLines = 5,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = White2,
-                            unfocusedContainerColor = White2,
-                            disabledContainerColor = White2,
-                        )
-                    )
-                } else {
-                    Text(
-                        text = aboutUsText.ifBlank { "No description provided." },
-                        style = TextStyle(fontFamily = mintsansFontFamily, fontSize = 16.sp),
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Coco: CoopConnects is an innovative digital platform tailored for the Baguio City Farmers Agriculture Cooperative (BCFAC). The app empowers farmers by linking them directly to consumers or clients while leveraging the cooperative's role as the vital facilitator in managing transactions, inventory, and logistics. It is a tool that enhances traceability, efficiency, and trust in the agricultural supply chain, creating a stronger, more connected farming community in Baguio City.",
+                    style = TextStyle(
+                        fontFamily = mintsansFontFamily,
+                        fontSize = 16.sp,
+                        lineHeight = 24.sp
+                    ),
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
         }
     }
