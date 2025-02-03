@@ -20,6 +20,7 @@ import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 sealed class SpecialReqState {
     data object LOADING : SpecialReqState()
@@ -38,16 +39,16 @@ class SpecialRequestViewModel : ViewModel() {
     val specialReqState: LiveData<SpecialReqState> = _specialReqState
 
     fun notify(type: NotificationType, specialReq: SpecialRequest) {
-        val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma")
-        val formattedDateTime = LocalDateTime.now().format(formatter)
         viewModelScope.launch {
+            val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma", Locale.ENGLISH)
+            val currentDateTime = LocalDateTime.now()
+            val formattedDateTime = currentDateTime.format(formatter)
+
             println(type)
             println(specialReq)
 
             val notification = Notification(
-                timestamp = formattedDateTime
-                    .replace("am", "AM", ignoreCase = true)
-                    .replace("pm", "PM", ignoreCase = true),
+                timestamp = formattedDateTime,
                 sender = specialReq.name,
                 detailsId = specialReq.specialRequestUID,
                 subject = when (type) {
@@ -107,7 +108,8 @@ class SpecialRequestViewModel : ViewModel() {
         _specialReqState.value = SpecialReqState.LOADING
         database.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
+                val displayFormatter = DateTimeFormatter.ofPattern("MMMM d, yyyy h:mma", Locale.ENGLISH)
+                val systemFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss", Locale.ENGLISH)
 
                 val requests = snapshot.children.flatMap { userSnapshot ->
                     userSnapshot.children.mapNotNull { requestSnapshot ->
@@ -126,8 +128,16 @@ class SpecialRequestViewModel : ViewModel() {
                         val sortedRequests = filteredRequests.sortedByDescending { request ->
                             try {
                                 when (orderBy) {
-                                    "Requested" -> request.dateRequested.let { LocalDateTime.parse(it, formatter) }
-                                    "Accepted" -> request.dateAccepted.let { LocalDateTime.parse(it, formatter) }
+                                    "Requested" -> try {
+                                        LocalDateTime.parse(request.dateRequested, systemFormatter)
+                                    } catch (e: Exception) {
+                                        LocalDateTime.parse(request.dateRequested, displayFormatter)
+                                    }
+                                    "Accepted" -> try {
+                                        LocalDateTime.parse(request.dateAccepted, systemFormatter)
+                                    } catch (e: Exception) {
+                                        LocalDateTime.parse(request.dateAccepted, displayFormatter)
+                                    }
                                     else -> null
                                 }
                             } catch (e: Exception) {

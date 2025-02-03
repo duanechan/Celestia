@@ -89,3 +89,15 @@
     public static int w(...);
     public static int e(...);
 }
+
+# JavaMail and JavaBeans Activation Framework
+-keep class com.sun.mail.** { *; }
+-keep class com.sun.activation.** { *; }
+-dontwarn com.sun.mail.**
+-dontwarn com.sun.activation.**
+
+# If using Jakarta Mail
+-keep class jakarta.mail.** { *; }
+-keep class jakarta.activation.** { *; }
+-dontwarn jakarta.mail.**
+-dontwarn jakarta.activation.**
