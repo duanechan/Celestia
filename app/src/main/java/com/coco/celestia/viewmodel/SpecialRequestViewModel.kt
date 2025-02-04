@@ -62,7 +62,6 @@ class SpecialRequestViewModel : ViewModel() {
                 message = NotificationService.parseDetailsMessage(type, specialReq.specialRequestUID),
                 type = type
             )
-            println(notification)
 
             NotificationService.pushNotifications(
                 notification = notification,

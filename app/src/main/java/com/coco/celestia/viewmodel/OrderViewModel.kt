@@ -66,7 +66,15 @@ class OrderViewModel : ViewModel() {
                 .replace("pm", "PM", ignoreCase = true),
             sender = order.client,
             detailsId = order.orderId,
-            message = "New order request from ${order.client}!",
+            subject = when (type) {
+                NotificationType.ClientSpecialRequest,
+                NotificationType.CoopSpecialRequestUpdated,
+                NotificationType.FarmerCalamityAffected,
+                NotificationType.Notice -> "Coco"
+                NotificationType.ClientOrderPlaced -> "New order request from ${order.client}!"
+                NotificationType.OrderUpdated -> "Your order has been updated to: ${order.status}!"
+            },
+            message = NotificationService.parseDetailsMessage(type, order.orderId),
             type = type
         )
 
@@ -387,6 +395,7 @@ class OrderViewModel : ViewModel() {
                         }
 
                         orderFound.setValue(updatedOrder)
+                        viewModelScope.launch { notify(NotificationType.OrderUpdated, updatedOrder) }
                         return Transaction.success(currentData)
                     }
 

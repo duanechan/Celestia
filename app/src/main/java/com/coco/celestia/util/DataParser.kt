@@ -95,15 +95,6 @@ object DataParser {
             "FarmerCalamityAffected" -> NotificationType.FarmerCalamityAffected
             else -> NotificationType.Notice
         }
-        val details: Any = when (type) {
-            NotificationType.Notice -> parseUserData(snapshot.child("details"))
-            NotificationType.OrderUpdated,
-            NotificationType.ClientOrderPlaced -> parseOrderData(snapshot.child("details"))
-            NotificationType.CoopSpecialRequestUpdated,
-            NotificationType.FarmerCalamityAffected,
-            NotificationType.ClientSpecialRequest -> parseSpecialRequest(snapshot.child("details"))
-
-        }
 
         return Notification(
             timestamp = snapshot.child("timestamp").getValue(String::class.java) ?: "",

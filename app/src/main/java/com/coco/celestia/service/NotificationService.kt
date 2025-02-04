@@ -66,7 +66,6 @@ object NotificationService {
         type: NotificationType,
         detailsId: String
     ): List<UserData> = suspendCoroutine { continuation ->
-        val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
 
         usersRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -84,14 +83,19 @@ object NotificationService {
                     }
 
                     NotificationType.ClientOrderPlaced -> {
-                        ordersRef.child(detailsId).get().addOnSuccessListener { orderSnapshot ->
-                            val order = DataParser.parseOrderData(orderSnapshot)
+                        val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+                        ordersRef.child(uid).get().addOnSuccessListener { orderSnapshot ->
+                            val order = orderSnapshot.children
+                                .mapNotNull { DataParser.parseOrderData(it) }
+                                .find { it.orderId == detailsId }!!
+                            println("Order: $order")
                             val recipients = snapshot.children
                                 .mapNotNull { DataParser.parseUserData(it) }
                                 .filter { userData ->
-                                    order?.orderData?.any { product ->
+                                    order.orderData.any { product ->
+                                        println("Product Type: ${product.type}")
                                         "Coop${product.type}" == userData.role
-                                    } == true
+                                    }
                                 }
                             continuation.resume(recipients)
                         }.addOnFailureListener {
@@ -100,12 +104,16 @@ object NotificationService {
                     }
 
                     NotificationType.OrderUpdated -> {
-                        ordersRef.child(detailsId).get().addOnSuccessListener { orderSnapshot ->
-                            val order = DataParser.parseOrderData(orderSnapshot)
+                        ordersRef.get().addOnSuccessListener { userSnapshot ->
+                            val order = userSnapshot.children.firstNotNullOf { orderSnapshot ->
+                                orderSnapshot.children
+                                    .mapNotNull { DataParser.parseOrderData(it) }
+                                    .find { it.orderId == detailsId }
+                            }
                             val recipients = snapshot.children
                                 .mapNotNull { DataParser.parseUserData(it) }
                                 .filter { userData ->
-                                    "${userData.firstname} ${userData.lastname}" == order?.client
+                                    "${userData.firstname} ${userData.lastname}" == order.client
                                 }
                             continuation.resume(recipients)
                         }.addOnFailureListener {
@@ -122,11 +130,9 @@ object NotificationService {
                     }
 
                     NotificationType.CoopSpecialRequestUpdated -> {
-                        // Search through all users' special requests
                         specialRequestsRef.get().addOnSuccessListener { usersSnapshot ->
                             var foundSpecialRequest: SpecialRequest? = null
 
-                            // Traverse the correct path: special_requests -> userId -> srKey -> sr
                             for (userSnapshot in usersSnapshot.children) {
                                 for (srSnapshot in userSnapshot.children) {
                                     val specialRequest = DataParser.parseSpecialRequest(srSnapshot)
@@ -178,12 +184,38 @@ object NotificationService {
 
     suspend fun parseDetailsMessage(type: NotificationType, detailsId: String): String = suspendCoroutine { continuation ->
         when (type) {
-            NotificationType.OrderUpdated,
             NotificationType.Notice -> continuation.resume("Announcement:")
+            NotificationType.OrderUpdated -> {
+                ordersRef.get().addOnSuccessListener { userSnapshot ->
+                    val order = userSnapshot.children.firstNotNullOf { orderSnapshot ->
+                        orderSnapshot.children
+                            .mapNotNull { DataParser.parseOrderData(it) }
+                            .find { it.orderId == detailsId }
+                    }
 
+                    continuation.resume(
+                        when (order.status) {
+                            "Confirmed" -> "Your order has been confirmed and is being processed."
+                            "To Deliver" -> "Your order is being prepared for shipment."
+                            "To Receive" -> "Your order is out for delivery."
+                            "Completed" -> "Your order has been successfully delivered."
+                            "Rejected" -> "Unfortunately, your order has been rejected."
+                            "Cancelled" -> "Your order has been cancelled."
+                            "Refund Requested" -> "You've requested a refund. We're reviewing your request."
+                            "Refund Accepted" -> "Your refund has been approved and is being processed."
+                            "Refund Rejected" -> "Your refund request has been denied."
+                            else -> "Check it out now!"
+                        }
+                    )
+                }
+            }
             NotificationType.ClientOrderPlaced -> {
-                ordersRef.child(detailsId).get().addOnSuccessListener { snapshot ->
-                    val order = DataParser.parseOrderData(snapshot)
+                val uid = FirebaseAuth.getInstance().currentUser?.uid.toString()
+                ordersRef.child(uid).get().addOnSuccessListener { snapshot ->
+                    val order = snapshot.children
+                        .mapNotNull { DataParser.parseOrderData(it) }
+                        .find { it.orderId == detailsId }
+
                     if (order == null) {
                         continuation.resume("Order details not available")
                         return@addOnSuccessListener
