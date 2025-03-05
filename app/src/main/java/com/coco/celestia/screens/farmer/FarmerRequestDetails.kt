@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -37,6 +39,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -59,6 +62,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -375,7 +379,7 @@ fun DisplayRequestDetails (
 
             // Track Progress
             specialRequest?.assignedMember?.forEach { member ->
-                if (member.email == farmerEmail && member.farmerTrackRecord.isNotEmpty()) {
+                if (member.email == farmerEmail && member.product == product && member.farmerTrackRecord.isNotEmpty()) {
                     Button(
                         onClick = {
                             navController.navigate(Screen.FarmerProgressTracking.createRoute(member.trackingID))
@@ -582,6 +586,123 @@ fun DisplayUpdateStatus(
                     }
                 }
 
+                if (status == "Delivering to Coop") {
+                    val radioOptions = listOf("Full Delivery", "Partial Delivery")
+                    val (selectedOption, onOptionSelected) = remember { mutableStateOf(radioOptions[0]) }
+
+                    Column (Modifier.selectableGroup()) {
+                        radioOptions.forEach { text ->
+                            Row (
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp)
+                                    .selectable(
+                                        selected = (text == selectedOption),
+                                        onClick = { onOptionSelected(text) },
+                                        role = Role.RadioButton
+                                    )
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {  
+                                RadioButton(
+                                    selected = (text == selectedOption),
+                                    onClick = null
+                                )
+
+                                Text(
+                                    text = text
+                                )
+                            }
+                        }
+                    }
+
+                    if (selectedOption == "Partial Delivery") {
+                        Text(
+                            text = "* Maximum quantity is ${requiredQuantity}kg",
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+
+                        if (quantityExceeded) {
+                            Text(
+                                text = "Quantity Exceeded!",
+                                color = Color.Red,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.align(Alignment.End)
+                            )
+                        }
+
+                        OutlinedTextField(
+                            value = if (quantity == 0) "" else quantity.toString(),
+                            onValueChange = { quantity = it.toIntOrNull() ?: 0 },
+                            label = { Text("Quantity to Deliver") },
+                            placeholder = { Text("Enter Quantity") },
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.White,
+                                unfocusedContainerColor = Color.White,
+                                disabledContainerColor = Color.White,
+                                errorContainerColor = Color.White,
+                                focusedIndicatorColor = Green1,
+                                unfocusedIndicatorColor = Green4
+                            )
+                        )
+                    } else {
+                        quantity = requiredQuantity
+                    }
+                }
+
+                if (status.isNotEmpty()) {
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        label = { Text("Update Progress") },
+                        placeholder = { Text("Update the cooperative with your progress...") },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            disabledContainerColor = Color.White,
+                            errorContainerColor = Color.White,
+                            focusedIndicatorColor = Green1,
+                            unfocusedIndicatorColor = Green4
+                        )
+                    )
+                }
+
+                if (status == "Calamity Affected") {
+                    Button(
+                        onClick = {
+                            specialRequestViewModel.notify(
+                                NotificationType.FarmerCalamityAffected,
+                                specialRequest!!
+                            )
+                            showNotificationPopup = true
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Green1
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .padding(top = 16.dp)
+                    ) {
+                        Text(
+                            text = "Notify Unforeseen Circumstances",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
                 if (status.isNotEmpty()) {
                     Column(
                         modifier = Modifier
@@ -666,84 +787,6 @@ fun DisplayUpdateStatus(
                                 }
                             }
                         }
-                    }
-                }
-
-                if (status == "Delivering to Coop") {
-                    if (quantityExceeded) {
-                        Text(
-                            text = "Quantity Exceeded!",
-                            color = Color.Red,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.align(Alignment.End)
-                        )
-                    }
-
-                    OutlinedTextField(
-                        value = if (quantity == 0) "" else quantity.toString(),
-                        onValueChange = { quantity = it.toIntOrNull() ?: 0 },
-                        label = { Text("Quantity to Deliver") },
-                        placeholder = { Text("Enter Quantity") },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            disabledContainerColor = Color.White,
-                            errorContainerColor = Color.White,
-                            focusedIndicatorColor = Green1,
-                            unfocusedIndicatorColor = Green4
-                        )
-                    )
-                }
-
-                if (status.isNotEmpty()) {
-                    OutlinedTextField(
-                        value = description,
-                        onValueChange = { description = it },
-                        label = { Text("Update Progress") },
-                        placeholder = { Text("Update the cooperative with your progress...") },
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.White,
-                            unfocusedContainerColor = Color.White,
-                            disabledContainerColor = Color.White,
-                            errorContainerColor = Color.White,
-                            focusedIndicatorColor = Green1,
-                            unfocusedIndicatorColor = Green4
-                        )
-                    )
-                }
-
-                if (status == "Calamity Affected") {
-                    Button(
-                        onClick = {
-                            specialRequestViewModel.notify(
-                                NotificationType.FarmerCalamityAffected,
-                                specialRequest!!
-                            )
-                            showNotificationPopup = true
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Green1
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .padding(top = 16.dp)
-                    ) {
-                        Text(
-                            text = "Notify Unforeseen Circumstances",
-                            color = Color.White,
-                            fontSize = 12.sp,
-                            textAlign = TextAlign.Center
-                        )
                     }
                 }
             }
@@ -972,7 +1015,7 @@ private fun updateSpecialRequestWithStatus(
     specialRequestViewModel: SpecialRequestViewModel
 ) {
     specialRequest.assignedMember.map { member ->
-        if (member.email == farmerEmail) {
+        if (member.email == farmerEmail && member.product == product) {
             val addTrack = TrackRecord(
                 description = "Farmer ${member.name} status: $status - $description",
                 dateTime = formattedDateTime,

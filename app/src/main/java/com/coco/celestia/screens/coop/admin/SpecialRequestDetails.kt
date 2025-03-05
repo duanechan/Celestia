@@ -10,7 +10,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -126,24 +125,10 @@ fun SpecialRequestDetails(
     val trackRecord = remember { mutableStateListOf(*request.trackRecord.toTypedArray()) }
     val toDeliver = remember { mutableStateListOf(*request.toDeliver.toTypedArray()) }
 
-    var text by remember { mutableStateOf("") }
-    var product by remember { mutableStateOf("") }
-    var quantity by remember { mutableIntStateOf(0) }
-    var email by remember { mutableStateOf("") }
-    var expanded by remember { mutableStateOf(false) }
-    var productExpanded by remember { mutableStateOf(false) }
-    val interactionSource = remember { MutableInteractionSource() }
-
     var updateEmail by remember { mutableStateOf("") }
     var updateStatus by remember { mutableStateOf("") }
 
-    var memberEmpty by remember { mutableStateOf(false) }
-    var productEmpty by remember { mutableStateOf(false) }
-    var quantityEmpty by remember { mutableStateOf(false) }
-    var quantityExceeded by remember { mutableStateOf(false) }
-
     var productPairs by remember { mutableStateOf(request.products.associate { it.name to it.quantity }.toMutableMap()) }
-    val quantityPair = productPairs[product] ?: 0
 
     LaunchedEffect(Unit) {
         userViewModel.fetchUsers()
@@ -152,12 +137,6 @@ fun SpecialRequestDetails(
     val filteredUsers = usersData?.filter {
         (it.role == "Farmer")
     }?.map { "${it.firstname} ${it.lastname} - ${it.email}" } ?: emptyList()
-
-    val productList = request.products.map { it.name }
-
-    fun updateQuantity(product: String, newQuantity: Int) {
-        productPairs[product] = newQuantity
-    }
 
     Column (
         modifier = Modifier
@@ -293,7 +272,7 @@ fun SpecialRequestDetails(
                         )
 
                         val updatedMembers = request.assignedMember.map { assigned ->
-                            if (assigned.email == member.email) {
+                            if (assigned.email == member.email && assigned.product == member.product) {
                                 val farmerTrackRecord = assigned.farmerTrackRecord.toMutableList()
                                 val addTrack = TrackRecord(
                                     description = if (remainingQuantity == 0) {
@@ -585,243 +564,6 @@ fun SpecialRequestDetails(
             }
         )
     }
-
-    if (showAddMemberDialog) {
-        AlertDialog(
-            onDismissRequest = { showAddMemberDialog = false},
-            title = {
-                Text("Assign a Member")
-            },
-            text = {
-                Column (
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable (
-                            interactionSource = interactionSource,
-                            indication = null,
-                            onClick = {
-                                expanded = false
-                            }
-                        )
-                ){
-                    Row (
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Member",
-                            modifier = Modifier.padding(2.dp)
-                        )
-
-                        if (memberEmpty) {
-                            Text(
-                                text = "Member cannot be Empty",
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Red,
-                                modifier = Modifier.padding(2.dp)
-                            )
-                        }
-                    }
-
-                    AutocompleteTextField(
-                        suggestions = filteredUsers,
-                        onSuggestionClick = { selectedUser ->
-                            text = selectedUser
-                        },
-                        value = text,
-                        onValueChange = { text = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        label = "Select Member",
-                        isError = memberEmpty && text.isEmpty()
-                    )
-
-                    Row (
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Product",
-                            modifier = Modifier.padding(2.dp)
-                        )
-                        if (productEmpty) {
-                            Text(
-                                text = "Product cannot be Empty",
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Red,
-                                modifier = Modifier.padding(2.dp)
-                            )
-                        }
-                    }
-
-                    Column {
-                        TextField(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(
-                                    width = 2.dp,
-                                    color = Green2,
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                .clickable { productExpanded = !productExpanded },
-                            value = product,
-                            onValueChange = {
-                                product = it
-                                productExpanded = true
-                            },
-                            singleLine = true,
-                            trailingIcon = {
-                                IconButton(onClick = { productExpanded = !productExpanded }) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.ArrowDropDown,
-                                        contentDescription = null,
-                                        tint = Color.Black
-                                    )
-                                }
-                            },
-                            colors = TextFieldDefaults.colors(
-                                disabledTextColor = Color.Black,
-                                disabledContainerColor = Color.Transparent,
-                                disabledIndicatorColor = Color.Transparent
-                            ),
-                            enabled = false,
-                        )
-
-                        DropdownMenu(
-                            expanded = productExpanded,
-                            onDismissRequest = { productExpanded = false}
-                        ) {
-                            productList.forEach {
-                                DropdownMenuItem(
-                                    onClick = {
-                                        product = it
-                                        productExpanded = false
-                                    },
-                                    text = {
-                                        Text(text = it)
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    Row (
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = "Quantity",
-                            modifier = Modifier.padding(2.dp)
-                        )
-
-                        if (quantityEmpty) {
-                            Text(
-                                text = "Quantity cannot be Empty",
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Red,
-                                modifier = Modifier.padding(2.dp)
-                            )
-                        }
-                        if (quantityExceeded) {
-                            Text(
-                                text = "Exceeds required amount",
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Red,
-                                modifier = Modifier.padding(2.dp)
-                            )
-                        }
-                    }
-
-                    TextField(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(
-                                width = 2.dp,
-                                color = Green2,
-                                shape = RoundedCornerShape(12.dp)
-                            ),
-                        value = if (quantity == 0) "" else quantity.toString(),
-                        onValueChange = { newValue ->
-                            quantity = newValue.toIntOrNull() ?: 0
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number,
-                            imeAction = ImeAction.Done
-                        ),
-                        singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent
-                        )
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        memberEmpty = text.isEmpty()
-                        productEmpty = product.isEmpty()
-                        quantityEmpty = quantity == 0
-                        quantityExceeded = quantity > quantityPair
-
-                        if (!quantityExceeded) {
-                            val newQuantity = quantityPair - quantity
-                            updateQuantity(product, newQuantity)
-                        }
-
-                        if (!memberEmpty && !productEmpty && !quantityEmpty && !quantityExceeded) {
-                            email = text.substringAfter(" - ").trim()
-                            val name = text.substringBefore(" - ").trim()
-
-                            val existingMember = assignedMember.find { it.email == email && it.product == product }
-
-                            if (existingMember != null) {
-                                existingMember.quantity += quantity
-                            } else {
-                                val uuidPart = UUID.randomUUID().toString().take(6).uppercase()
-                                val timestamp = SimpleDateFormat("yyMMddHHmm", Locale.getDefault()).format(
-                                    Date()
-                                )
-                                val trackingID = "REQ-$timestamp-$uuidPart"
-
-                                val member = AssignedMember(
-                                    email = email,
-                                    specialRequestUID = "${request.specialRequestUID}_proof_of_interaction",
-                                    name = name,
-                                    product = product,
-                                    quantity = quantity,
-                                    trackingID = trackingID,
-                                    remainingQuantity = quantity
-                                )
-                                assignedMember.add(member)
-                            }
-
-                            text = ""
-                            product = ""
-                            quantity = 0
-                            showAddMemberDialog = false
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(Green4)
-                ) {
-                    Text("Add")
-                }
-            },
-            dismissButton = {
-                Button(
-                    onClick = {
-                        text = ""
-                        product = ""
-                        quantity = 0
-                        showAddMemberDialog = false
-                    }
-                ) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
 }
 
 @SuppressLint("MutableCollectionMutableState")
@@ -853,6 +595,9 @@ fun AssignAMember(
     var quantityEmpty by remember { mutableStateOf(false) }
     var quantityExceeded by remember { mutableStateOf(false) }
     var invalidEmail by remember { mutableStateOf(false) }
+
+    val productList = request.products.map { it.name }.toMutableList()
+    productList.removeAll { productPairs[it] == 0}
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { attachmentUri = it }
@@ -888,6 +633,16 @@ fun AssignAMember(
                     .clickable { showDialog = true }
             )
         }
+
+        Text(
+            text = "*Products need to be fully fulfilled in order to save",
+            fontSize = 12.sp,
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 8.dp)
+                .padding(start = 8.dp)
+                .fillMaxWidth()
+        )
 
         if (assignedMember.isNotEmpty()) {
             assignedMember.forEach { member ->
@@ -1088,6 +843,14 @@ fun AssignAMember(
                         }
                     }
 
+                    if (product.isNotEmpty()) {
+                        Text(
+                            text = "* Maximum quantity is ${productPairs[product]}kg",
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+
                     OutlinedTextField(
                         value = if (quantity == 0) "" else quantity.toString(),
                         onValueChange = { newValue ->
@@ -1099,8 +862,7 @@ fun AssignAMember(
                             imeAction = ImeAction.Done
                         ),
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
+                            .fillMaxWidth(),
                         isError = quantityEmpty || quantityExceeded
                     )
 
@@ -1116,10 +878,10 @@ fun AssignAMember(
             confirmButton = {
                 Button(
                     onClick = {
-                        if (isManualInput) {
-                            memberEmpty = manualName.isEmpty()
+                        memberEmpty = if (isManualInput) {
+                            manualName.isEmpty()
                         } else {
-                            memberEmpty = text.isEmpty()
+                            text.isEmpty()
                         }
 
                         productEmpty = product.isEmpty()
@@ -1166,7 +928,7 @@ fun AssignAMember(
                                             requestId = "${request.specialRequestUID}_proof_of_interaction",
                                             fileUri = uri,
                                             fileName = fileName,
-                                            onSuccess = { success ->
+                                            onSuccess = { _ ->
                                             }
                                         )
                                     }

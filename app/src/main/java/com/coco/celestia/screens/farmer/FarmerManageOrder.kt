@@ -55,6 +55,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.painter.Painter
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
+import com.coco.celestia.viewmodel.model.AssignedMember
 import com.coco.celestia.viewmodel.model.SpecialRequest
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -238,11 +239,16 @@ fun FarmerManageOrder(
                             ?.dateTime
                     }
                     ?.forEach { assigned ->
-                        DisplayRequestCard(
-                            navController,
-                            assigned,
-                            userData?.email ?: ""
-                        )
+                        assigned.assignedMember
+                            .filter { it.email == userData?.email }
+                            .forEach { member ->
+                                DisplayRequestCard(
+                                    navController,
+                                    assigned,
+                                    userData?.email ?: "",
+                                    member
+                                )
+                            }
                     }
             }
         }
@@ -253,10 +259,11 @@ fun FarmerManageOrder(
 fun DisplayRequestCard(
     navController: NavController,
     specialRequest: SpecialRequest,
-    farmerEmail: String
+    farmerEmail: String,
+    member: AssignedMember
 ) {
-    val assignedMember = specialRequest.assignedMember.find { it.email == farmerEmail }
-    val status = assignedMember?.status ?: ""
+    val status = member.status
+    val product = member.product
     val normalizedStatus = status.uppercase()
     val dateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
 
@@ -297,7 +304,7 @@ fun DisplayRequestCard(
                     Screen.FarmerRequestCardDetails.createRoute(
                         specialRequest.specialRequestUID,
                         farmerEmail,
-                        assignedMember?.product ?: ""
+                        product
                     )
                 )
             },
@@ -330,7 +337,7 @@ fun DisplayRequestCard(
                 }
             }
             Text(
-                text = specialRequest.products.joinToString(", ") { it.name },
+                text = product,
                 fontSize = 24.sp,
                 color = Green1
             )
@@ -339,8 +346,8 @@ fun DisplayRequestCard(
                 color = Green2
             )
 
-            if (assignedMember?.status == "Growing") {
-                val latestDateStr = assignedMember
+            if (status == "Growing") {
+                val latestDateStr = member
                     .farmerTrackRecord
                     .maxByOrNull { LocalDateTime.parse(it.dateTime, dateFormatter) }
                     ?.dateTime

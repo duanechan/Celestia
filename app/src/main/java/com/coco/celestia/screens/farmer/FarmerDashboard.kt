@@ -170,11 +170,16 @@ fun FarmerDashboard(
                     }
                     ?.take(3)
                     ?.forEach { assigned ->
-                        DisplayRequestCard(
-                            navController,
-                            assigned,
-                            farmerData?.email ?: ""
-                        )
+                        assigned.assignedMember
+                            .filter { it.email == farmerData?.email }
+                            .forEach { member ->
+                                DisplayRequestCard(
+                                    navController,
+                                    assigned,
+                                    farmerData?.email ?: "",
+                                    member
+                                )
+                            }
                     }
             }
         }
