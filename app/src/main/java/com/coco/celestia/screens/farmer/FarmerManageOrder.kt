@@ -363,7 +363,7 @@ fun DisplayRequestCard(
 
                 if (daysDifference >= 10) {
                     Text(
-                        text = "! Your last update is 10 Days ago. Please update your status.",
+                        text = "! Your last update is $daysDifference Days ago. The Cooperative is asking for a feedback. Please update your status.",
                         color = Color.Red,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp

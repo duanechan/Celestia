@@ -116,7 +116,6 @@ fun SpecialRequestDetails(
     val date = dateTime.format(dateFormatter)
 
     var showDialog by remember { mutableStateOf(false) }
-    var showAddMemberDialog by remember { mutableStateOf(false) }
     var updateStatusDialog by remember { mutableStateOf(false) }
     var checked by remember { mutableStateOf(true) }
     var action by remember { mutableStateOf("") }
@@ -250,8 +249,7 @@ fun SpecialRequestDetails(
                                 trackRecord = trackRecord
                             )
                         )
-                    },
-                    onShowAddMember = { showAddMemberDialog = true }
+                    }
                 )
             } else {
                 DisplayAssignedMembers(
@@ -378,7 +376,27 @@ fun SpecialRequestDetails(
 
         if (request.toDeliver.any { it.status == "To Pick Up" }) {
             Button(
-                onClick = { },
+                onClick = {
+                    val updateProductStatus = request.toDeliver.map { product ->
+                        if (product.status != "Delivered") {
+                            val addTrack = TrackRecord(
+                                description = "Waiting for Client to Pick Up ${product.name}: ${product.quantity}kg",
+                                dateTime = formattedDateTime
+                            )
+                            trackRecord.add(addTrack)
+                        }
+                        product.copy(
+                            status = "Ready for Pick Up"
+                        )
+                    }
+
+                    specialRequestViewModel.updateSpecialRequest(
+                        request.copy(
+                            trackRecord = trackRecord,
+                            toDeliver = updateProductStatus
+                        )
+                    )
+                },
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     contentColor = Color.White,
@@ -388,7 +406,7 @@ fun SpecialRequestDetails(
                     .height(52.dp)
             ) {
                 Text(
-                    text = "Waiting for Client to Pick Up Product",
+                    text = "Ready for Pick Up",
                     color = Color.White,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
@@ -574,8 +592,7 @@ fun AssignAMember(
     request: SpecialRequest,
     filteredUsers: List<String>,
     onDismiss: () -> Unit,
-    onSave: () -> Unit,
-    onShowAddMember: () -> Unit
+    onSave: () -> Unit
 ) {
     var unfulfilled by remember { mutableStateOf(false) }
     val unfulfilledRequests = productPairs.filter { it.value != 0 }
@@ -584,7 +601,6 @@ fun AssignAMember(
     var isManualInput by remember { mutableStateOf(false) }
     var text by remember { mutableStateOf("") }
     var manualName by remember { mutableStateOf("") }
-    var manualEmail by remember { mutableStateOf("") }
     var product by remember { mutableStateOf("") }
     var quantity by remember { mutableIntStateOf(0) }
     var productExpanded by remember { mutableStateOf(false) }
@@ -594,7 +610,6 @@ fun AssignAMember(
     var productEmpty by remember { mutableStateOf(false) }
     var quantityEmpty by remember { mutableStateOf(false) }
     var quantityExceeded by remember { mutableStateOf(false) }
-    var invalidEmail by remember { mutableStateOf(false) }
 
     val productList = request.products.map { it.name }.toMutableList()
     productList.removeAll { productPairs[it] == 0}

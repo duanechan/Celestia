@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -81,14 +82,11 @@ import com.coco.celestia.screens.farmer.details.FarmerItemDetails
 import com.coco.celestia.screens.farmer.details.FarmerOrderDetails
 import com.coco.celestia.screens.farmer.details.FarmerOrderMilestones
 import com.coco.celestia.screens.farmer.details.FarmerRequestDetails
-import com.coco.celestia.screens.farmer.details.LoadingIndicator
 import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.service.NotificationService
 import com.coco.celestia.viewmodel.ContactViewModel
 import com.coco.celestia.viewmodel.FacilityViewModel
-import com.coco.celestia.viewmodel.FarmerItemViewModel
 import com.coco.celestia.viewmodel.LocationViewModel
-import com.coco.celestia.viewmodel.OrderState
 import com.coco.celestia.viewmodel.OrderViewModel
 import com.coco.celestia.viewmodel.ProductViewModel
 import com.coco.celestia.viewmodel.PurchaseOrderViewModel
@@ -106,8 +104,6 @@ import com.coco.celestia.viewmodel.model.ProductData
 import com.coco.celestia.viewmodel.model.VendorData
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.serialization.json.Json
-import java.net.URLDecoder
-import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -117,7 +113,6 @@ fun NavGraph(
     userRole: String,
     contactViewModel: ContactViewModel = viewModel(),
     facilityViewModel: FacilityViewModel = viewModel(),
-    itemViewModel: FarmerItemViewModel = viewModel(),
     locationViewModel: LocationViewModel = viewModel(),
     orderViewModel: OrderViewModel = viewModel(),
     productViewModel: ProductViewModel = viewModel(),
@@ -138,20 +133,19 @@ fun NavGraph(
     val userEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
     val productName by productViewModel.productName.observeAsState("")
     var quantityAmount by remember { mutableIntStateOf(0) }
-    var defectBeans by remember { mutableIntStateOf(0) }
     var productType by remember { mutableStateOf("") }
     var emailSend by remember { mutableStateOf("") }
     var firstname by remember { mutableStateOf("") }
     var lastname by remember { mutableStateOf("") }
     var role by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf(0.0) }
+    var price by remember { mutableDoubleStateOf(0.0) }
     var isInStore by remember { mutableStateOf(true) }
     var weightUnit by remember { mutableStateOf(Constants.WEIGHT_KILOGRAMS) }
-    var description by remember { mutableStateOf("") }
-    var vendor by remember { mutableStateOf("") }
-    var totalPurchases by remember { mutableStateOf(0.0) }
-    var committedStock by remember { mutableStateOf(0.0) }
-    var reorderPoint by remember { mutableStateOf(0.0) }
+    val description by remember { mutableStateOf("") }
+    val vendor by remember { mutableStateOf("") }
+    var totalPurchases by remember { mutableDoubleStateOf(0.0) }
+    var committedStock by remember { mutableDoubleStateOf(0.0) }
+    var reorderPoint by remember { mutableDoubleStateOf(0.0) }
     var isDelivery by remember { mutableStateOf(false) }
     var isGcash by remember { mutableStateOf(false) }
     val notifications = remember { mutableStateListOf<Notification>() }
@@ -535,11 +529,11 @@ fun NavGraph(
             route = Screen.CoopInventoryDetails.route,
             arguments = listOf(navArgument("productName") { type = NavType.StringType })
         ) { backStackEntry ->
-            val productName = backStackEntry.arguments?.getString("productName") ?: ""
+            val prodName = backStackEntry.arguments?.getString("productName") ?: ""
             onNavigate("Product Details")
             CoopInventoryDetails(
                 navController = navController,
-                productName = productName,
+                productName = prodName,
                 productViewModel = productViewModel,
                 transactionViewModel = transactionViewModel,
                 onEvent = { onEvent(it) },
@@ -551,7 +545,7 @@ fun NavGraph(
                 navController = navController,
                 orderViewModel = orderViewModel,
                 productViewModel = productViewModel,
-                productType = productType ?: "",
+                productType = productType,
                 userViewModel = userViewModel,
             )
         }
@@ -681,7 +675,7 @@ fun NavGraph(
             arguments = listOf(
                 navArgument("salesNumber") { type = NavType.StringType }
             )
-        ) { backStackEntry ->
+        ) {
             CoopSalesDetails(
                 navController = navController,
                 userEmail = userEmail
@@ -693,7 +687,7 @@ fun NavGraph(
             arguments = listOf(
                 navArgument("orderId") { type = NavType.StringType }
             )
-        ) { backStackEntry ->
+        ) {
             CoopSalesDetails(
                 navController = navController,
                 userEmail = userEmail
@@ -702,9 +696,9 @@ fun NavGraph(
 
         composable(route = Screen.AddProductInventory.route) {
             var facilityName by remember { mutableStateOf("") }
-            var quantity by remember { mutableStateOf(0) }
+            var quantity by remember { mutableIntStateOf(0) }
             var notes by remember { mutableStateOf("") }
-            var productId by remember { mutableStateOf("") }
+            val productId by remember { mutableStateOf("") }
 
             val email = FirebaseAuth.getInstance().currentUser?.email.orEmpty()
 
@@ -1046,10 +1040,9 @@ fun NavGraph(
                 navArgument("quantity") { type = NavType.IntType }
             )
         ) { backStackEntry ->
-            val productName = backStackEntry.arguments?.getString("productName")
+            val prodName = backStackEntry.arguments?.getString("productName")
             val quantity = backStackEntry.arguments?.getInt("quantity")
-            val product = ProductData(name = productName ?: "", quantity = quantity ?: 0)
-            val currentMonth = java.time.LocalDate.now().monthValue.toString()
+            val product = ProductData(name = prodName ?: "", quantity = quantity ?: 0)
 
             onNavigate("Inventory")
             FarmerProductTypeInventory(
@@ -1147,14 +1140,14 @@ fun NavGraph(
             )
         ) { backStackEntry ->
             val searchQuery = backStackEntry.arguments?.getString("searchQuery") ?: "none"
-            val role = backStackEntry.arguments?.getString("role") ?: "Client"
+            val roleUser = backStackEntry.arguments?.getString("role") ?: "Client"
             val showSearch = backStackEntry.arguments?.getBoolean("showSearch") ?: false
 
             onNavigate("Product Search")
             ProductCatalog(
                 productViewModel = productViewModel,
                 facilityViewModel = facilityViewModel,
-                role = role,
+                role = roleUser,
                 navController = navController,
                 searchQuery = if (searchQuery == "none") "" else searchQuery,
                 showSearch = showSearch
@@ -1168,7 +1161,6 @@ fun NavGraph(
             val specialRequestUID = backStackEntry.arguments?.getString("specialRequestUID") ?: ""
             onNavigate("Request Details")
             ClientSpecialReqDetails(
-                navController = navController,
                 specialRequestViewModel = specialRequestViewModel,
                 specialRequestUID = specialRequestUID
             )
@@ -1218,10 +1210,10 @@ fun NavGraph(
             route = "add_order/{productType}",
             arguments = listOf(navArgument("productType") { type = NavType.StringType })
         ) { backStackEntry ->
-            val productType = backStackEntry.arguments?.getString("productType")
+            val prodType = backStackEntry.arguments?.getString("productType")
             AddOrderPanel(
                 navController = navController,
-                productType = productType ?: "",
+                productType = prodType ?: "",
                 orderViewModel = viewModel(),
                 productViewModel = viewModel(),
                 userViewModel = viewModel()

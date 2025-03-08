@@ -21,7 +21,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import com.coco.celestia.R
@@ -38,7 +37,6 @@ import java.util.Locale
 @OptIn(ExperimentalCoilApi::class)
 @Composable
 fun ClientSpecialReqDetails(
-    navController: NavController,
     specialRequestViewModel: SpecialRequestViewModel,
     specialRequestUID: String
 ) {
@@ -49,7 +47,6 @@ fun ClientSpecialReqDetails(
     val specialReqData by specialRequestViewModel.specialReqData.observeAsState(emptyList())
     val request = specialReqData.find { it.specialRequestUID == specialRequestUID }
     val trackRecord = remember { mutableStateListOf(*(request?.trackRecord?.toTypedArray() ?: emptyArray())) }
-    val toDeliver = remember { mutableStateListOf(*(request?.toDeliver?.toTypedArray() ?: emptyArray())) }
     LaunchedEffect(Unit) {
         specialRequestViewModel.fetchSpecialRequests(
             filter = "",
@@ -251,7 +248,7 @@ fun ClientSpecialReqDetails(
                     }
                 }
 
-                if (specialReq.toDeliver.any { it.status == "Delivering to Client" || it.status == "To Pick Up"}) {
+                if (specialReq.toDeliver.any { it.status == "Delivering to Client" || it.status == "Ready for Pick Up"}) {
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()

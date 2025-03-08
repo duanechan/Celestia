@@ -75,7 +75,7 @@ class SpecialRequestViewModel : ViewModel() {
         val description = trackRecord.maxByOrNull { it.dateTime }?.description.toString()
         return when {
             description.contains("accepted", ignoreCase = true) -> "Your special request has been accepted!"
-            description.contains("assigned", ignoreCase = true) -> "You have been assigned to a special request!"
+            description.contains("assigned", ignoreCase = true) -> "You have been assigned to a planting request!"
             description.contains("status", ignoreCase = true) -> "Special Request Update"
             else -> "Unknown"
         }
