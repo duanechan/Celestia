@@ -116,6 +116,7 @@ fun SpecialRequestDetails(
     val date = dateTime.format(dateFormatter)
 
     var showDialog by remember { mutableStateOf(false) }
+    var declineDialog by remember { mutableStateOf(false) }
     var updateStatusDialog by remember { mutableStateOf(false) }
     var checked by remember { mutableStateOf(true) }
     var action by remember { mutableStateOf("") }
@@ -123,6 +124,8 @@ fun SpecialRequestDetails(
     val assignedMember = remember { mutableStateListOf<AssignedMember>() }
     val trackRecord = remember { mutableStateListOf(*request.trackRecord.toTypedArray()) }
     val toDeliver = remember { mutableStateListOf(*request.toDeliver.toTypedArray()) }
+    var description by remember { mutableStateOf("") }
+    var descriptionEmpty by remember { mutableStateOf(false) }
 
     var updateEmail by remember { mutableStateOf("") }
     var updateStatus by remember { mutableStateOf("") }
@@ -439,7 +442,7 @@ fun SpecialRequestDetails(
                             action = "Accept"
                             showDialog = true
                         },
-                        colors = ButtonDefaults.buttonColors(Green4)
+                        colors = ButtonDefaults.buttonColors(Green2)
                     ) {
                         Text("Accept")
                     }
@@ -554,21 +557,10 @@ fun SpecialRequestDetails(
                             )
                             navController.navigate(Screen.AdminSpecialRequests.createRoute("In Progress"))
                         } else {
-                            val declineOrder = TrackRecord(
-                                description = "Order Request has been turned down.",
-                                dateTime = formattedDateTime
-                            )
-                            trackRecord.add(declineOrder)
-
-                            specialRequestViewModel.updateSpecialRequest(
-                                request.copy(
-                                    status = "Turned Down"
-                                )
-                            )
-                            navController.navigate(Screen.AdminSpecialRequests.createRoute("Turned Down"))
+                            declineDialog = true
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(Green4)
+                    colors = ButtonDefaults.buttonColors(Green2)
                 ) {
                     Text("Yes")
                 }
@@ -578,6 +570,81 @@ fun SpecialRequestDetails(
                     onClick = { showDialog = false }
                 ) {
                     Text("No")
+                }
+            }
+        )
+    }
+
+    if (declineDialog) {
+        AlertDialog(
+            onDismissRequest = { declineDialog = false},
+            title = {
+                Text("Reason for Declining")
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Please Enter Reason for Declining this Request.",
+                    )
+
+                    if (descriptionEmpty) {
+                        Text(
+                            text = "! Please Enter a Reason",
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Red
+                        )
+                    }
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        label = { Text("Enter Reason") },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.White,
+                            unfocusedContainerColor = Color.White,
+                            disabledContainerColor = Color.White,
+                            errorContainerColor = Color.White,
+                            focusedIndicatorColor = Green1,
+                            unfocusedIndicatorColor = Green4
+                        )
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        descriptionEmpty = description.isEmpty()
+
+                        if (!descriptionEmpty) {
+                            declineDialog = false
+                            val declineOrder = TrackRecord(
+                                description = description,
+                                dateTime = formattedDateTime
+                            )
+                            trackRecord.add(declineOrder)
+
+                            specialRequestViewModel.updateSpecialRequest(
+                                request.copy(
+                                    status = "Turned Down",
+                                    trackRecord = trackRecord
+                                )
+                            )
+                            navController.navigate(Screen.AdminSpecialRequests.createRoute("Turned Down"))
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(Green2)
+                ) {
+                    Text("Submit")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { declineDialog = false }
+                ) {
+                    Text("Cancel")
                 }
             }
         )
@@ -961,7 +1028,7 @@ fun AssignAMember(
                             showDialog = false
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(Green4)
+                    colors = ButtonDefaults.buttonColors(Green2)
                 ) {
                     Text("Add")
                 }
@@ -1619,6 +1686,34 @@ fun DisplayRequestDetails(
                 modifier = Modifier
                     .weight(2f)
             )
+        }
+
+        Divider(
+            color = Color.Gray,
+            thickness = 1.dp,
+            modifier = Modifier.padding(8.dp)
+        )
+
+        if (request.status == "Turned Down") {
+            Row(
+                modifier = Modifier
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = "Reason for Declining",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .weight(1f)
+                )
+
+                Text(
+                    text = request.trackRecord.lastOrNull()?.description ?: "",
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .weight(2f)
+                )
+            }
         }
 
         Divider(

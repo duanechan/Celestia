@@ -158,6 +158,7 @@ fun DisplayRequestItem(
     val reqDateTime = LocalDateTime.parse(request.dateRequested, inputFormatter)
     val dateFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy")
     val requestDate = reqDateTime.format(dateFormatter)
+    var currentStatus by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         ImageService.fetchProfilePicture(request.uid) { uri ->
@@ -176,6 +177,15 @@ fun DisplayRequestItem(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ){
         Row {
+            if (request.assignedMember.isEmpty()) {
+                currentStatus = "Need to Assign Farmers"
+            }
+            currentStatus = if (request.assignedMember.any { it.status == "Completed" }) {
+                "Partially Fulfilled"
+            } else {
+                "Farmers Assigned"
+            }
+
             Image(
                 painter = rememberImagePainter(
                     data = profilePicture ?: R.drawable.profile),
@@ -194,11 +204,22 @@ fun DisplayRequestItem(
                     text = request.name
                 )
 
-                Text(
-                    text = request.status,
-                    fontWeight = FontWeight.Bold,
-                    color = Green1
-                )
+                Row {
+                    Text(
+                        text = if (request.status == "In Progress") "${request.status}:" else request.status,
+                        fontWeight = FontWeight.Bold,
+                        color = Green1
+                    )
+
+                    if (request.status == "In Progress") {
+                        Text(
+                            text = currentStatus,
+                            fontWeight = FontWeight.Bold,
+                            color = Green1,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
+                }
             }
         }
 
