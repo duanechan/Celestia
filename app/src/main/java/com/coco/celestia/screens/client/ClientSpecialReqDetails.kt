@@ -359,7 +359,12 @@ fun ClientSpecialReqDetails(
                             SimpleDateFormat("MM-dd-yyyy HH:mm:ss", Locale.getDefault()).parse(it.dateTime)?.time ?: 0
                         }
 
+                        val mostRecentDate = sortedRecords.firstOrNull()?.dateTime
+
+
                         sortedRecords.forEachIndexed { index, record ->
+                            val isRecent = record.dateTime == mostRecentDate
+
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -401,13 +406,14 @@ fun ClientSpecialReqDetails(
                                 ) {
                                     Text(
                                         text = record.description,
-                                        fontWeight = FontWeight.Bold,
+                                        fontWeight = if (isRecent) FontWeight.Bold else FontWeight.Normal,
                                         color = Green1,
                                         fontFamily = mintsansFontFamily
                                     )
 
                                     Text(
                                         text = record.dateTime,
+                                        fontWeight = if (isRecent) FontWeight.Bold else FontWeight.Normal,
                                         fontSize = 12.sp,
                                         color = Green1,
                                         fontFamily = mintsansFontFamily
