@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.widget.DatePicker
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,11 +27,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.coco.celestia.R
-import com.coco.celestia.viewmodel.ReportState
 import com.coco.celestia.viewmodel.ReportsViewModel
 import com.coco.celestia.viewmodel.TransactionState
 import com.coco.celestia.viewmodel.TransactionViewModel
 import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.ContextCompat
@@ -38,8 +39,16 @@ import com.coco.celestia.screens.`object`.Screen
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.FacilityState
 import com.coco.celestia.viewmodel.FacilityViewModel
+import com.coco.celestia.viewmodel.UserState
+import com.coco.celestia.viewmodel.UserViewModel
+import com.coco.celestia.viewmodel.model.UserData
+import com.google.firebase.auth.FirebaseAuth
 import java.io.File
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("DefaultLocale")
 @Composable
 fun CoopReports(
@@ -50,16 +59,27 @@ fun CoopReports(
     transactionViewModel: TransactionViewModel = viewModel(),
     facilityViewModel: FacilityViewModel = viewModel()
 ) {
-    var selectedPeriod by remember { mutableStateOf("This Month") }
-    var selectedReportType by remember { mutableStateOf("Sales by Customer") }
+    val selectedReportType = "Sales by Item"
+    var selectedProduct by remember { mutableStateOf<String?>(null) }
     var showTransactionsDialog by remember { mutableStateOf(false) }
     var showPermissionDialog by remember { mutableStateOf(false) }
     var hasInitialFetch by remember { mutableStateOf(false) }
     var transactionUpdateKey by remember { mutableIntStateOf(0) }
-
-    val periods = listOf("This Week", "This Month", "Last 3 Months", "This Year")
-    val reportTypes = listOf("Sales by Customer", "Sales by Item")
+    var startDate by remember { mutableStateOf(LocalDate.now().minusMonths(1)) }
+    var endDate by remember { mutableStateOf(LocalDate.now()) }
     val context = LocalContext.current
+
+    val userViewModel: UserViewModel = viewModel()
+    val userData by userViewModel.userData.observeAsState(UserData())
+    val userState by userViewModel.userState.observeAsState(UserState.LOADING)
+    val isAdmin = remember(userData) { userData.role == "Admin" }
+
+    LaunchedEffect(Unit) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            userViewModel.fetchUser(currentUser.uid)
+        }
+    }
 
     val facilitiesData by facilityViewModel.facilitiesData.observeAsState(emptyList())
     val facilityState by facilityViewModel.facilityState.observeAsState(FacilityState.LOADING)
@@ -68,6 +88,52 @@ fun CoopReports(
     val transactionState by transactionViewModel.transactionState.observeAsState(TransactionState.LOADING)
     val transactionData by transactionViewModel.transactionData.observeAsState(hashMapOf())
     val transactionsList = transactionData.values.flatten()
+
+    val filteredTransactions = remember(transactionsList, startDate, endDate, selectedProduct) {
+        transactionsList.filter { transaction ->
+            if (transaction.type != "Online Sale") return@filter false
+
+            if (selectedProduct != null && transaction.productName != selectedProduct) {
+                return@filter false
+            }
+
+            try {
+                val formatters = listOf(
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+                    DateTimeFormatter.ofPattern("dd MMM yyyy"),
+                    DateTimeFormatter.ofPattern("dd-MM-yyyy"),
+                    DateTimeFormatter.ofPattern("MM/dd/yyyy"),
+                    DateTimeFormatter.ofPattern("dd MMMM yyyy")
+                )
+
+                val transactionDate = formatters.firstNotNullOfOrNull { formatter ->
+                    try {
+                        LocalDate.parse(transaction.date, formatter)
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+
+                if (transactionDate != null) {
+                    transactionDate.isEqual(startDate) ||
+                            transactionDate.isEqual(endDate) ||
+                            (transactionDate.isAfter(startDate) && transactionDate.isBefore(endDate))
+                } else {
+                    true
+                }
+            } catch (e: Exception) {
+                true
+            }
+        }
+    }
+
+    val productNames = remember(transactionsList) {
+        transactionsList
+            .filter { it.type == "Online Sale" }
+            .map { it.productName }
+            .distinct()
+            .sorted()
+    }
 
     fun checkAndRequestPermissions(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -128,28 +194,35 @@ fun CoopReports(
                     facility.emails.contains(currentEmail)
                 }
 
-                if (userFacility != null) {
+                if (userFacility != null || isAdmin) {
                     LaunchedEffect(Unit) {
                         if (!hasInitialFetch) {
-                            transactionViewModel.fetchAllTransactions(
-                                filter = "Online Sale",
-                                facilityName = userFacility.name
-                            )
+                            if (isAdmin) {
+                                transactionViewModel.fetchAllTransactions(
+                                    filter = "Online Sale"
+                                )
+                            } else {
+                                transactionViewModel.fetchAllTransactions(
+                                    filter = "Online Sale",
+                                    facilityName = userFacility?.name ?: ""
+                                )
+                            }
                             hasInitialFetch = true
                         }
                     }
 
-                    LaunchedEffect(selectedPeriod, transactionsList) {
+                    LaunchedEffect(startDate, endDate, selectedReportType, selectedProduct, transactionsList) {
                         if (transactionsList.isNotEmpty()) {
-                            reportsViewModel.generateReport(
+                            reportsViewModel.generateReportWithDateRange(
                                 reportType = selectedReportType,
-                                dateRange = selectedPeriod,
-                                transactions = transactionsList
+                                startDate = startDate,
+                                endDate = endDate,
+                                transactions = filteredTransactions,
+                                productFilter = selectedProduct
                             )
                         }
                     }
 
-                    // Permission Dialog
                     if (showPermissionDialog) {
                         AlertDialog(
                             onDismissRequest = { showPermissionDialog = false },
@@ -177,13 +250,12 @@ fun CoopReports(
                         )
                     }
 
-                    // Transactions Dialog
                     if (showTransactionsDialog) {
                         AlertDialog(
                             onDismissRequest = { showTransactionsDialog = false },
                             title = {
                                 Text(
-                                    text = "Report Summary",
+                                    text = "Sales by Item Report Summary",
                                     style = MaterialTheme.typography.titleLarge,
                                     modifier = Modifier.fillMaxWidth(),
                                     textAlign = TextAlign.Center
@@ -220,20 +292,108 @@ fun CoopReports(
                                         }
 
                                         TransactionState.SUCCESS -> {
-                                            if (transactionsList.isEmpty()) {
+                                            if (filteredTransactions.isEmpty()) {
                                                 Text(
-                                                    text = "No transactions found",
+                                                    text = "No transactions found for the selected criteria",
                                                     style = MaterialTheme.typography.bodyLarge,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                     modifier = Modifier.align(Alignment.Center)
                                                 )
                                             } else {
-                                                LazyColumn(
-                                                    modifier = Modifier.fillMaxSize(),
-                                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                                Column(
+                                                    modifier = Modifier.fillMaxSize()
                                                 ) {
-                                                    items(transactionsList.toList()) { transaction ->
-                                                        TransactionsCard(transaction)
+                                                    Text(
+                                                        text = "Product Summary",
+                                                        style = MaterialTheme.typography.titleMedium,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+
+                                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                                    val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
+                                                    Text(
+                                                        text = "Period: ${startDate.format(dateFormatter)} to ${endDate.format(dateFormatter)}",
+                                                        style = MaterialTheme.typography.bodyMedium
+                                                    )
+
+                                                    if (selectedProduct != null) {
+                                                        Text(
+                                                            text = "Product: $selectedProduct",
+                                                            style = MaterialTheme.typography.bodyMedium
+                                                        )
+                                                    } else {
+                                                        Text(
+                                                            text = "Product: All Products",
+                                                            style = MaterialTheme.typography.bodyMedium
+                                                        )
+                                                    }
+
+                                                    Text(
+                                                        text = "Total Sales: ${filteredTransactions.size}",
+                                                        style = MaterialTheme.typography.bodyMedium
+                                                    )
+
+                                                    Spacer(modifier = Modifier.height(16.dp))
+
+                                                    Row(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .background(Green4)
+                                                            .padding(8.dp),
+                                                        horizontalArrangement = Arrangement.SpaceBetween
+                                                    ) {
+                                                        Text(
+                                                            text = "Product",
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            fontWeight = FontWeight.Bold,
+                                                            modifier = Modifier.weight(1.3f)
+                                                        )
+                                                        Text(
+                                                            text = "Date",
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            fontWeight = FontWeight.Bold,
+                                                            modifier = Modifier.weight(1.5f)
+                                                        )
+                                                        Text(
+                                                            text = "Status",
+                                                            style = MaterialTheme.typography.bodyMedium,
+                                                            fontWeight = FontWeight.Bold,
+                                                            modifier = Modifier.weight(1f)
+                                                        )
+                                                    }
+
+                                                    LazyColumn(
+                                                        modifier = Modifier.fillMaxSize(),
+                                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                                    ) {
+                                                        items(filteredTransactions) { transaction ->
+                                                            val displayDate = transaction.date
+
+                                                            Row(
+                                                                modifier = Modifier
+                                                                    .fillMaxWidth()
+                                                                    .padding(vertical = 4.dp, horizontal = 8.dp),
+                                                                horizontalArrangement = Arrangement.SpaceBetween
+                                                            ) {
+                                                                Text(
+                                                                    text = transaction.productName,
+                                                                    style = MaterialTheme.typography.bodySmall,
+                                                                    modifier = Modifier.weight(1.3f)
+                                                                )
+                                                                Text(
+                                                                    text = displayDate,
+                                                                    style = MaterialTheme.typography.bodySmall,
+                                                                    modifier = Modifier.weight(1.5f)
+                                                                )
+                                                                Text(
+                                                                    text = transaction.status,
+                                                                    style = MaterialTheme.typography.bodySmall,
+                                                                    modifier = Modifier.weight(1f)
+                                                                )
+                                                            }
+                                                            Divider(color = Color.LightGray, thickness = 0.5.dp)
+                                                        }
                                                     }
                                                 }
                                             }
@@ -254,7 +414,6 @@ fun CoopReports(
                             .fillMaxSize()
                             .padding(16.dp)
                     ) {
-                        // Current Facility Card
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -267,21 +426,21 @@ fun CoopReports(
                                 modifier = Modifier.padding(16.dp)
                             ) {
                                 Text(
-                                    text = "Current Facility",
+                                    text = if (isAdmin) "Admin Report" else "Current Facility",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = mintsansFontFamily
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = userFacility.name,
+                                    text = if (isAdmin) "Special Requests" else userFacility?.name ?: "",
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontFamily = mintsansFontFamily
                                 )
                             }
                         }
 
-                        // Report Type Card
+                        // Report Type
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -294,28 +453,73 @@ fun CoopReports(
                                 modifier = Modifier.padding(16.dp)
                             ) {
                                 Text(
-                                    text = "Report Type",
+                                    text = "Sales by Item Report",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = mintsansFontFamily
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
-                                reportTypes.forEach { type ->
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.padding(vertical = 4.dp)
+                                if (productNames.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    Text(
+                                        text = "Select Product",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = mintsansFontFamily
+                                    )
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    var expanded by remember { mutableStateOf(false) }
+
+                                    ExposedDropdownMenuBox(
+                                        expanded = expanded,
+                                        onExpandedChange = { expanded = it },
+                                        modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        RadioButton(
-                                            selected = selectedReportType == type,
-                                            onClick = { selectedReportType = type }
+                                        TextField(
+                                            value = selectedProduct ?: "All Products",
+                                            onValueChange = {},
+                                            readOnly = true,
+                                            trailingIcon = {
+                                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                                            },
+                                            colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                                            modifier = Modifier
+                                                .menuAnchor()
+                                                .fillMaxWidth()
                                         )
-                                        Text(text = type, fontFamily = mintsansFontFamily)
+
+                                        ExposedDropdownMenu(
+                                            expanded = expanded,
+                                            onDismissRequest = { expanded = false },
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            DropdownMenuItem(
+                                                text = { Text("All Products") },
+                                                onClick = {
+                                                    selectedProduct = null
+                                                    expanded = false
+                                                }
+                                            )
+
+                                            productNames.forEach { product ->
+                                                DropdownMenuItem(
+                                                    text = { Text(product) },
+                                                    onClick = {
+                                                        selectedProduct = product
+                                                        expanded = false
+                                                    }
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
 
-                        // Report Period Card
+                        // Report Period
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -333,18 +537,98 @@ fun CoopReports(
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = mintsansFontFamily
                                 )
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // Start Date
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "Start Date",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontFamily = mintsansFontFamily
+                                    )
+
+                                    OutlinedTextField(
+                                        value = startDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
+                                        onValueChange = { },
+                                        singleLine = true,
+                                        readOnly = true,
+                                        modifier = Modifier.width(200.dp),
+                                        trailingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.DateRange,
+                                                contentDescription = "Select Date",
+                                                modifier = Modifier.clickable {
+                                                    val calendar = Calendar.getInstance()
+                                                    calendar.set(startDate.year, startDate.monthValue - 1, startDate.dayOfMonth)
+
+                                                    android.app.DatePickerDialog(
+                                                        context,
+                                                        { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+                                                            startDate = LocalDate.of(
+                                                                year,
+                                                                month + 1,
+                                                                dayOfMonth
+                                                            )
+                                                        },
+                                                        calendar.get(Calendar.YEAR),
+                                                        calendar.get(Calendar.MONTH),
+                                                        calendar.get(Calendar.DAY_OF_MONTH)
+                                                    ).show()
+                                                }
+                                            )
+                                        }
+                                    )
+                                }
+
                                 Spacer(modifier = Modifier.height(8.dp))
-                                periods.forEach { period ->
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.padding(vertical = 4.dp)
-                                    ) {
-                                        RadioButton(
-                                            selected = selectedPeriod == period,
-                                            onClick = { selectedPeriod = period }
-                                        )
-                                        Text(text = period, fontFamily = mintsansFontFamily)
-                                    }
+
+                                // End Date
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "End Date",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontFamily = mintsansFontFamily
+                                    )
+
+                                    OutlinedTextField(
+                                        value = endDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy")),
+                                        onValueChange = { },
+                                        singleLine = true,
+                                        readOnly = true,
+                                        modifier = Modifier.width(200.dp),
+                                        trailingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.DateRange,
+                                                contentDescription = "Select Date",
+                                                modifier = Modifier.clickable {
+                                                    val calendar = Calendar.getInstance()
+                                                    calendar.set(endDate.year, endDate.monthValue - 1, endDate.dayOfMonth)
+
+                                                    android.app.DatePickerDialog(
+                                                        context,
+                                                        { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+                                                            endDate = LocalDate.of(
+                                                                year,
+                                                                month + 1,
+                                                                dayOfMonth
+                                                            )
+                                                        },
+                                                        calendar.get(Calendar.YEAR),
+                                                        calendar.get(Calendar.MONTH),
+                                                        calendar.get(Calendar.DAY_OF_MONTH)
+                                                    ).show()
+                                                }
+                                            )
+                                        }
+                                    )
                                 }
                             }
                         }
@@ -391,37 +675,104 @@ fun CoopReports(
                                         return@IconButton
                                     }
 
-                                    if (reportState == null || reportState is ReportState.LOADING) {
+                                    if (filteredTransactions.isEmpty()) {
                                         Toast.makeText(
                                             context,
-                                            "Please wait for the report to generate",
+                                            "No transactions found for the selected criteria",
                                             Toast.LENGTH_SHORT
                                         ).show()
                                         return@IconButton
                                     }
 
                                     try {
-                                        val reportContent =
-                                            reportData?.values?.flatten()?.firstOrNull()?.content
-                                        if (reportContent == null) {
-                                            Toast.makeText(
-                                                context,
-                                                "No report data available",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                            return@IconButton
+                                        val reportContent = buildString {
+                                            appendLine("Sales by Item Report")
+                                            appendLine("Generated on: ${LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy"))}")
+                                            appendLine()
+                                            appendLine()
+
+                                            appendLine("----------------------------------------")
+                                            appendLine("Product Analysis")
+                                            appendLine("----------------------------------------")
+                                            appendLine()
+
+                                            val productGroups = filteredTransactions
+                                                .groupBy { it.productName }
+                                                .toSortedMap()
+
+                                            if (productGroups.isNotEmpty()) {
+                                                productGroups.forEach { (product, sales) ->
+                                                    val dates = sales.map { it.date }
+                                                    appendLine("-----------------------------------")
+                                                    appendLine("Product Name: $product")
+                                                    appendLine("Product ID: ${sales.firstOrNull()?.productId ?: ""}")
+                                                    appendLine("Number of Sales: ${sales.size}")
+                                                    appendLine("First Sale Date: ${dates.minOrNull() ?: ""}")
+                                                    appendLine("Last Sale Date: ${dates.maxOrNull() ?: ""}")
+                                                    appendLine("-----------------------------------")
+                                                    appendLine()
+                                                }
+                                            }
+                                            appendLine()
+
+                                            appendLine("----------------------------------------")
+                                            appendLine("Daily Sales Breakdown")
+                                            appendLine("----------------------------------------")
+                                            appendLine()
+
+                                            if (filteredTransactions.isNotEmpty()) {
+                                                filteredTransactions
+                                                    .groupBy { it.date }
+                                                    .toSortedMap()
+                                                    .forEach { (date, salesOnDate) ->
+                                                        appendLine("-----------------------------------")
+                                                        appendLine("Date: $date")
+                                                        appendLine("Number of Sales: ${salesOnDate.size}")
+                                                        appendLine("Products Sold: ${salesOnDate.map { it.productName }.distinct().joinToString(", ")}")
+                                                        appendLine("-----------------------------------")
+                                                        appendLine()
+                                                    }
+                                            }
+                                            appendLine()
+
+                                            appendLine("----------------------------------------")
+                                            appendLine("Overall Summary")
+                                            appendLine("----------------------------------------")
+                                            appendLine()
+                                            appendLine("Total Unique Products: ${productGroups.size}")
+                                            appendLine("Total Sales Transactions: ${filteredTransactions.size}")
+                                            appendLine()
+                                            appendLine("Total Sales by Product:")
+                                            productGroups.forEach { (product, sales) ->
+                                                appendLine("$product: ${sales.size} sales")
+                                            }
+                                            appendLine()
+
+                                            val dates = filteredTransactions.map { it.date }
+                                            if (dates.isNotEmpty()) {
+                                                appendLine("Report Period:")
+                                                appendLine("First Transaction Date: ${dates.minOrNull()}")
+                                                appendLine("Last Transaction Date: ${dates.maxOrNull()}")
+                                            } else {
+                                                appendLine("Report Period: No transactions found")
+                                            }
+                                            appendLine()
+                                            appendLine("----------------------------------------")
+                                            appendLine()
+                                            appendLine("Sales by Item Report Summary")
+                                            appendLine()
+                                            appendLine("Product,Date,Status")
+
+                                            filteredTransactions.forEach { transaction ->
+                                                appendLine("${transaction.productName},${transaction.date},${transaction.status}")
+                                            }
                                         }
 
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                                             val contentValues = ContentValues().apply {
                                                 put(
                                                     MediaStore.MediaColumns.DISPLAY_NAME,
-                                                    "${
-                                                        selectedReportType.replace(
-                                                            " ",
-                                                            "_"
-                                                        )
-                                                    }_${System.currentTimeMillis()}.txt"
+                                                    "Sales_by_Item_${System.currentTimeMillis()}.txt"
                                                 )
                                                 put(MediaStore.MediaColumns.MIME_TYPE, "text/plain")
                                                 put(
@@ -456,12 +807,7 @@ fun CoopReports(
                                                 downloadDir.mkdirs()
                                             }
 
-                                            val fileName = "${
-                                                selectedReportType.replace(
-                                                    " ",
-                                                    "_"
-                                                )
-                                            }_${System.currentTimeMillis()}.csv"
+                                            val fileName = "Sales_by_Item_${System.currentTimeMillis()}.txt"
                                             val downloadFile = File(downloadDir, fileName)
                                             downloadFile.writeText(reportContent)
                                             Toast.makeText(
@@ -487,7 +833,7 @@ fun CoopReports(
                         }
                     }
                 }
-                else {
+                else if (!isAdmin) {
                     NoFacilityScreen()
                 }
             }

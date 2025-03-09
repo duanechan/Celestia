@@ -25,84 +25,6 @@ class ReportsViewModel : ViewModel() {
     val reportData: LiveData<HashMap<String, List<ReportData>>> = _reportData
     val reportState: LiveData<ReportState> = _reportState
 
-    fun generateReport(reportType: String, dateRange: String, transactions: List<TransactionData>) {
-        viewModelScope.launch {
-            _reportState.value = ReportState.LOADING
-            try {
-                val filteredTransactions = filterTransactions(reportType, dateRange, transactions)
-
-                val report = when (reportType) {
-                    "Sales by Customer" -> generateSalesByCustomerReport(filteredTransactions)
-                    "Sales by Item" -> generateSalesByItemReport(filteredTransactions)
-                    else -> throw IllegalArgumentException("Unknown report type")
-                }
-
-                val reportData = ReportData(
-                    reportType = reportType,
-                    dateRange = dateRange,
-                    content = report,
-                    totalAmount = calculateTotalAmount(filteredTransactions)
-                )
-
-                val currentData = _reportData.value ?: hashMapOf()
-                val reportsList = currentData[reportType]?.toMutableList() ?: mutableListOf()
-                reportsList.add(reportData)
-                currentData[reportType] = reportsList
-                _reportData.value = currentData
-
-                val reportId = database.push().key ?: return@launch
-                database.child(reportId).setValue(reportData)
-                    .addOnSuccessListener {
-                        _reportState.value = ReportState.SUCCESS
-                    }
-                    .addOnFailureListener { exception ->
-                        _reportState.value = ReportState.ERROR(exception.message ?: "Unknown error")
-                    }
-            } catch (e: Exception) {
-                _reportState.value = ReportState.ERROR(e.message ?: "Unknown error")
-            }
-        }
-    }
-
-    private fun filterTransactions(
-        reportType: String,
-        dateRange: String,
-        transactions: List<TransactionData>
-    ): List<TransactionData> {
-        val formatters = listOf(
-            DateTimeFormatter.ofPattern("dd MMM yyyy"),
-            DateTimeFormatter.ofPattern("MM/dd/yyyy")
-        )
-
-        val dateFilter = when (dateRange) {
-            "This Week" -> LocalDate.now().minusWeeks(1)
-            "This Month" -> LocalDate.now().withDayOfMonth(1)
-            "Last 3 Months" -> LocalDate.now().minusMonths(3)
-            "This Year" -> LocalDate.now().withDayOfYear(1)
-            else -> LocalDate.now().minusYears(100)
-        }
-
-        return transactions.filter { transaction ->
-            if (transaction.type != "Online Sale") {
-                return@filter false
-            }
-
-            try {
-                val transactionDate = formatters.firstNotNullOfOrNull { formatter ->
-                    try {
-                        LocalDate.parse(transaction.date, formatter)
-                    } catch (e: Exception) {
-                        null
-                    }
-                } ?: throw IllegalArgumentException("Unable to parse date: ${transaction.date}")
-
-                transactionDate.isAfter(dateFilter)
-            } catch (e: Exception) {
-                true
-            }
-        }
-    }
-
     private fun generateSalesByCustomerReport(transactions: List<TransactionData>): String {
         val formatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
         return buildString {
@@ -185,16 +107,21 @@ class ReportsViewModel : ViewModel() {
                 .groupBy { it.productName }
                 .toSortedMap()
 
-            productGroups.forEach { (product, sales) ->
-                val dates = sales.map { it.date }
-                appendLine("-----------------------------------")
-                appendLine("Product Name: $product")
-                appendLine("Product ID: ${sales.firstOrNull()?.productId ?: ""}")
-                appendLine("Number of Sales: ${sales.size}")
-                appendLine("First Sale Date: ${dates.minOrNull() ?: ""}")
-                appendLine("Last Sale Date: ${dates.maxOrNull() ?: ""}")
-                appendLine("-----------------------------------")
+            if (productGroups.isEmpty()) {
+                appendLine("No products found for the selected criteria")
                 appendLine()
+            } else {
+                productGroups.forEach { (product, sales) ->
+                    val dates = sales.map { it.date }
+                    appendLine("-----------------------------------")
+                    appendLine("Product Name: $product")
+                    appendLine("Product ID: ${sales.firstOrNull()?.productId ?: ""}")
+                    appendLine("Number of Sales: ${sales.size}")
+                    appendLine("First Sale Date: ${dates.minOrNull() ?: ""}")
+                    appendLine("Last Sale Date: ${dates.maxOrNull() ?: ""}")
+                    appendLine("-----------------------------------")
+                    appendLine()
+                }
             }
             appendLine()
 
@@ -203,17 +130,22 @@ class ReportsViewModel : ViewModel() {
             appendLine("----------------------------------------")
             appendLine()
 
-            salesTransactions
-                .groupBy { it.date }
-                .toSortedMap()
-                .forEach { (date, salesOnDate) ->
-                    appendLine("-----------------------------------")
-                    appendLine("Date: $date")
-                    appendLine("Number of Sales: ${salesOnDate.size}")
-                    appendLine("Products Sold: ${salesOnDate.map { it.productName }.distinct().joinToString(", ")}")
-                    appendLine("-----------------------------------")
-                    appendLine()
-                }
+            if (salesTransactions.isEmpty()) {
+                appendLine("No sales found for the selected criteria")
+                appendLine()
+            } else {
+                salesTransactions
+                    .groupBy { it.date }
+                    .toSortedMap()
+                    .forEach { (date, salesOnDate) ->
+                        appendLine("-----------------------------------")
+                        appendLine("Date: $date") // Keep original date format
+                        appendLine("Number of Sales: ${salesOnDate.size}")
+                        appendLine("Products Sold: ${salesOnDate.map { it.productName }.distinct().joinToString(", ")}")
+                        appendLine("-----------------------------------")
+                        appendLine()
+                    }
+            }
             appendLine()
 
             appendLine("----------------------------------------")
@@ -223,11 +155,14 @@ class ReportsViewModel : ViewModel() {
             appendLine("Total Unique Products: ${productGroups.size}")
             appendLine("Total Sales Transactions: ${salesTransactions.size}")
             appendLine()
-            appendLine("Total Sales by Product:")
-            productGroups.forEach { (product, sales) ->
-                appendLine("$product: ${sales.size} sales")
+
+            if (productGroups.isNotEmpty()) {
+                appendLine("Total Sales by Product:")
+                productGroups.forEach { (product, sales) ->
+                    appendLine("$product: ${sales.size} sales")
+                }
+                appendLine()
             }
-            appendLine()
 
             val dates = salesTransactions.map { it.date }
             if (dates.isNotEmpty()) {
@@ -239,10 +174,129 @@ class ReportsViewModel : ViewModel() {
             }
             appendLine()
             appendLine("----------------------------------------")
+            appendLine()
+            appendLine("Sales by Item Report Summary")
+            appendLine()
+            appendLine("Product,Date,Status")
+            if (salesTransactions.isNotEmpty()) {
+                salesTransactions.forEach { transaction ->
+                    appendLine("${transaction.productName},${transaction.date},${transaction.status}")
+                }
+            }
         }
     }
 
     private fun calculateTotalAmount(transactions: List<TransactionData>): Double {
         return transactions.filter { it.type == "Online Sale" }.size.toDouble()
+    }
+
+    fun generateReportWithDateRange(
+        reportType: String,
+        startDate: LocalDate,
+        endDate: LocalDate,
+        transactions: List<TransactionData>,
+        productFilter: String? = null
+    ) {
+        viewModelScope.launch {
+            _reportState.value = ReportState.LOADING
+            try {
+                val filteredTransactions = filterTransactionsByDateRange(
+                    reportType = reportType,
+                    startDate = startDate,
+                    endDate = endDate,
+                    transactions = transactions,
+                    productFilter = productFilter
+                )
+
+                val report = when (reportType) {
+                    "Sales by Customer" -> generateSalesByCustomerReport(filteredTransactions)
+                    "Sales by Item" -> generateSalesByItemReport(filteredTransactions)
+                    else -> throw IllegalArgumentException("Unknown report type")
+                }
+
+                val dateRangeStr = "${startDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))} - ${endDate.format(DateTimeFormatter.ofPattern("dd MMM yyyy"))}"
+
+                val reportData = ReportData(
+                    reportType = reportType,
+                    dateRange = dateRangeStr,
+                    content = report,
+                    totalAmount = calculateTotalAmount(filteredTransactions)
+                )
+
+                val currentData = _reportData.value ?: hashMapOf()
+                val reportsList = currentData[reportType]?.toMutableList() ?: mutableListOf()
+                reportsList.add(reportData)
+                currentData[reportType] = reportsList
+                _reportData.value = currentData
+
+                val reportId = database.push().key ?: return@launch
+                database.child(reportId).setValue(reportData)
+                    .addOnSuccessListener {
+                        _reportState.value = ReportState.SUCCESS
+                    }
+                    .addOnFailureListener { exception ->
+                        _reportState.value = ReportState.ERROR(exception.message ?: "Unknown error")
+                    }
+            } catch (e: Exception) {
+                _reportState.value = ReportState.ERROR(e.message ?: "Unknown error")
+            }
+        }
+    }
+    private fun filterTransactionsByDateRange(
+        reportType: String,
+        startDate: LocalDate,
+        endDate: LocalDate,
+        transactions: List<TransactionData>,
+        productFilter: String? = null
+    ): List<TransactionData> {
+        return transactions.filter { transaction ->
+            if (transaction.type != "Online Sale") return@filter false
+
+            if (productFilter != null && transaction.productName != productFilter) {
+                return@filter false
+            }
+
+            try {
+                val formatters = listOf(
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+                    DateTimeFormatter.ofPattern("dd MMM yyyy"),
+                    DateTimeFormatter.ofPattern("MM/dd/yyyy"),
+                    DateTimeFormatter.ofPattern("dd-MM-yyyy"),
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                )
+
+                val datePart = if (transaction.date.contains(" ") && transaction.date.contains(":")) {
+                    transaction.date.split(" ")[0]
+                } else {
+                    transaction.date
+                }
+
+                val transactionDate = formatters.firstNotNullOfOrNull { formatter ->
+                    try {
+                        LocalDate.parse(transaction.date, formatter)
+                    } catch (e: Exception) {
+                        if (datePart != transaction.date) {
+                            try {
+                                LocalDate.parse(datePart, DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                            } catch (e2: Exception) {
+                                null
+                            }
+                        } else {
+                            null
+                        }
+                    }
+                }
+
+                if (transactionDate != null) {
+                    transactionDate.isEqual(startDate) ||
+                            transactionDate.isEqual(endDate) ||
+                            (transactionDate.isAfter(startDate) && transactionDate.isBefore(endDate))
+                } else {
+                    true
+                }
+            } catch (e: Exception) {
+                true
+            }
+        }
     }
 }

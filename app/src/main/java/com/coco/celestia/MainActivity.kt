@@ -209,6 +209,7 @@ fun AppStateAndContent(
             "Special Requests" to Screen.AdminSpecialRequests.route,
             "Members" to Screen.AdminUserManagement.route,
             "Clients & Customers" to Screen.AdminClients.route,
+            "Reports" to Screen.CoopReports.route,
             "Settings" to Screen.Settings.route
         )
     }
@@ -529,6 +530,7 @@ fun App() {
                                                     "Home" -> Icons.Default.Home
                                                     "Settings" -> Icons.Default.Settings
                                                     "Reports" -> Icons.Default.Info
+                                                    "Special Requests" -> Icons.Default.Info
                                                     else -> Icons.Default.Home
                                                 },
                                                 contentDescription = null,
