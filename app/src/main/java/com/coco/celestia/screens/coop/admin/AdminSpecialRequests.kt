@@ -177,10 +177,9 @@ fun DisplayRequestItem(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ){
         Row {
-            if (request.assignedMember.isEmpty()) {
-                currentStatus = "Need to Assign Farmers"
-            }
-            currentStatus = if (request.assignedMember.any { it.status == "Completed" }) {
+            currentStatus = if (request.assignedMember.isEmpty()) {
+                "Need to Assign Farmers"
+            } else if (request.assignedMember.any { it.status == "Completed" }) {
                 "Partially Fulfilled"
             } else {
                 "Farmers Assigned"
