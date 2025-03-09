@@ -16,7 +16,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -50,8 +49,15 @@ fun AdminSpecialRequests(
     var orderBy by remember { mutableStateOf("") }
     var ascending by remember { mutableStateOf(true) }
     var expanded by remember { mutableStateOf(false) }
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
 
-    val statusList = listOf("To Review", "In Progress", "Cancelled", "Turned Down")
+    val statusList = listOf("To Review", "In Progress", "Completed", "Cancelled", "Turned Down")
+    val inProgressFilters = listOf(
+        "All",
+        "Assign Farmer/s",
+        "Assigned Farmer/s",
+        "Partially Fulfilled"
+    )
     val filteredList = statusList.filterNot { it == status }
 
     LaunchedEffect(keywords, orderBy, ascending) {
@@ -118,6 +124,30 @@ fun AdminSpecialRequests(
             }
         }
 
+        if (status == "In Progress") {
+            ScrollableTabRow(
+                selectedTabIndex = selectedTabIndex,
+                edgePadding = 0.dp
+            ) {
+                inProgressFilters.forEachIndexed { index, label ->
+                    Tab(
+                        selected = selectedTabIndex == index,
+                        onClick = { selectedTabIndex = index },
+                        modifier = Modifier.background(Green4),
+                        text = {
+                            Text(
+                                text = label,
+                                fontFamily = mintsansFontFamily,
+                                modifier = Modifier.padding(horizontal = 5.dp),
+                                color = Green1,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    )
+                }
+            }
+        }
+
         Box (modifier = Modifier
             .fillMaxWidth()
             .background(White2)
@@ -136,7 +166,22 @@ fun AdminSpecialRequests(
                         .semantics { testTag = "android:id/OrderList" },
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    itemsIndexed(reqData) { _, request ->
+                    itemsIndexed(reqData.filter { request ->
+                        when (selectedTabIndex) {
+                            1 -> {
+                                request.assignedMember.isEmpty()
+                            }
+                            2 -> {
+                                request.assignedMember.isNotEmpty() && request.assignedMember.none { it.status == "Completed" }
+                            }
+                            3 -> {
+                                request.assignedMember.any { it.status == "Completed" }
+                            }
+                            else -> {
+                                true
+                            }
+                        }
+                    }) { _, request ->
                         DisplayRequestItem(
                             request,
                             navController
