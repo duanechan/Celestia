@@ -1,11 +1,11 @@
 package com.coco.celestia.screens.client
 
 import android.net.Uri
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -14,8 +14,10 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -43,6 +45,7 @@ fun ClientSpecialReqDetails(
     val currentDateTime = LocalDateTime.now()
     val formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
     val formattedDateTime = currentDateTime.format(formatter)
+    val descColumnHeight = remember { mutableStateMapOf<String, Int>() }
 
     val specialReqData by specialRequestViewModel.specialReqData.observeAsState(emptyList())
     val request = specialReqData.find { it.specialRequestUID == specialRequestUID }
@@ -341,7 +344,9 @@ fun ClientSpecialReqDetails(
                     colors = CardDefaults.cardColors(containerColor = White1),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column(
+                        modifier = Modifier.padding(16.dp)
+                    ) {
                         Text(
                             text = "Track Order",
                             fontWeight = FontWeight.Bold,
@@ -353,62 +358,58 @@ fun ClientSpecialReqDetails(
                         val sortedRecords = specialReq.trackRecord.sortedByDescending {
                             SimpleDateFormat("MM-dd-yyyy HH:mm:ss", Locale.getDefault()).parse(it.dateTime)?.time ?: 0
                         }
-                        val mostRecentDate = sortedRecords.firstOrNull()?.dateTime
 
-                        sortedRecords.forEach { record ->
-                            val isRecent = record.dateTime == mostRecentDate
-                            val textColor = if (isRecent) Green1 else Gray.copy(alpha = 0.6f)
-                            val dotColor = if (isRecent) Green2 else Gray.copy(alpha = 0.6f)
-                            val lineColor = if (isRecent) Green1 else Gray.copy(alpha = 0.6f)
-
+                        sortedRecords.forEachIndexed { index, record ->
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 4.dp),
                                 verticalAlignment = Alignment.Top
                             ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                Box(
+                                    contentAlignment = Alignment.TopCenter,
                                     modifier = Modifier
-                                        .wrapContentHeight()
-                                        .width(24.dp)
+                                        .fillMaxHeight()
                                 ) {
-                                    Box(
+                                    Canvas(
                                         modifier = Modifier
                                             .size(12.dp)
-                                            .background(
-                                                color = dotColor,
-                                                shape = CircleShape
+                                    ) {
+                                        drawCircle(color = Green2)
+
+                                        if (sortedRecords.indexOf(record) < sortedRecords.size - 1) {
+                                            val dynamicLineHeight = descColumnHeight[sortedRecords.getOrNull(index + 1)?.dateTime] ?: 0
+                                            drawLine(
+                                                color = Green1,
+                                                start = Offset(size.width / 2, size.height),
+                                                end = Offset(size.width / 2, size.height + dynamicLineHeight.toFloat()),
+                                                strokeWidth = 2.dp.toPx()
                                             )
-                                    )
-                                    if (sortedRecords.indexOf(record) < sortedRecords.size - 1) {
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Box(
-                                            modifier = Modifier
-                                                .width(2.dp)
-                                                .height(33.dp)
-                                                .background(lineColor)
-                                        )
+                                        }
                                     }
                                 }
 
                                 Spacer(modifier = Modifier.width(12.dp))
 
                                 Column(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .onGloballyPositioned { coordinates ->
+                                            descColumnHeight[record.dateTime] = coordinates.size.height
+                                        },
                                     verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
                                     Text(
                                         text = record.description,
-                                        fontWeight = if (isRecent) FontWeight.Bold else FontWeight.Normal,
-                                        color = textColor,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Green1,
                                         fontFamily = mintsansFontFamily
                                     )
 
                                     Text(
                                         text = record.dateTime,
                                         fontSize = 12.sp,
-                                        color = textColor,
+                                        color = Green1,
                                         fontFamily = mintsansFontFamily
                                     )
 
