@@ -3,17 +3,15 @@ package com.coco.celestia.screens.farmer
 import android.net.Uri
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -27,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,8 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.annotation.ExperimentalCoilApi
@@ -116,8 +114,7 @@ fun DisplayTrackOrder(
     val date = dateTime.format(dateFormatter)
     val time = dateTime.format(timeFormatter)
 
-    var cardHeight by remember { mutableStateOf(0) }
-    val density = LocalDensity.current
+    var descColumnHeight by remember { mutableIntStateOf(0) }
 
     val recordKey = remember(record.dateTime, record.description, record.imageUrl) {
         "${record.dateTime}_${record.description}_${record.imageUrl}"
@@ -126,7 +123,7 @@ fun DisplayTrackOrder(
     var imageUri by remember(recordKey) { mutableStateOf<Uri?>(null) }
 
     LaunchedEffect(recordKey) {
-        imageUri = null // Reset first
+        imageUri = null
         record.imageUrl?.let { url ->
             ImageService.fetchStatusImage(url) { uri ->
                 imageUri = uri
@@ -138,10 +135,12 @@ fun DisplayTrackOrder(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.Top
     ) {
         Column(
-            horizontalAlignment = Alignment.End
+            horizontalAlignment = Alignment.End,
+            modifier = Modifier
+                .weight(0.3f)
         ) {
             Text(
                 text = date,
@@ -156,36 +155,38 @@ fun DisplayTrackOrder(
             )
         }
 
-        Column(
-            modifier = Modifier.padding(horizontal = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Box(
+            modifier = Modifier
+                .padding(horizontal = 8.dp)
+                .fillMaxHeight(),
+            contentAlignment = Alignment.TopCenter
         ) {
             Canvas(
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier
+                    .size(16.dp)
             ) {
                 drawCircle(color = Green2)
-            }
 
-            if (!isLastItem) {
-                Box(
-                    modifier = Modifier
-                        .width(4.dp)
-                        .height(with(LocalDensity.current) { cardHeight.toDp() } + 12.dp)
-                        .offset(y = 4.dp)
-                        .background(Green4)
-                )
+                if (!isLastItem) {
+                    val dynamicLineHeight = descColumnHeight.toFloat()
+                    drawLine(
+                        color = Green4,
+                        start = Offset(size.width / 2, size.height),
+                        end = Offset(size.width / 2, size.height + dynamicLineHeight),
+                        strokeWidth = 4.dp.toPx()
+                    )
                 }
             }
+        }
 
 
         Box(
             modifier = Modifier
-                .padding(start = 8.dp)
-                .wrapContentWidth()
-                .wrapContentHeight()
-                .onSizeChanged { size ->
-                    cardHeight = size.height
+                .weight(1f)
+                .onGloballyPositioned { coordinates ->
+                    descColumnHeight = coordinates.size.height
                 }
+                .padding(start = 8.dp)
         ) {
             Card(
                 modifier = Modifier

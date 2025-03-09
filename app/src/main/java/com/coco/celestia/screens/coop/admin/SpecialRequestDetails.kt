@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -64,6 +65,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -1296,6 +1298,8 @@ fun DisplayTrackOrder(
     val date = dateTime.format(dateFormatter)
     val time = dateTime.format(timeFormatter)
 
+    var descColumnHeight by remember { mutableIntStateOf(0) }
+
     var proofUri by remember { mutableStateOf<Uri?>(null) }
     var showFullScreenImage by remember { mutableStateOf(false) }
 
@@ -1312,11 +1316,13 @@ fun DisplayTrackOrder(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 32.dp, end = 8.dp),
+            .padding(start = 16.dp, end = 8.dp),
         verticalAlignment = Alignment.Top
     ) {
         Column(
-            horizontalAlignment = Alignment.End
+            horizontalAlignment = Alignment.End,
+            modifier = Modifier
+                .weight(0.3f)
         ) {
             Text(
                 text = date,
@@ -1331,9 +1337,11 @@ fun DisplayTrackOrder(
             )
         }
 
-        Column(
+        Box(
+            contentAlignment = Alignment.TopCenter,
             modifier = Modifier
                 .padding(horizontal = 8.dp)
+                .fillMaxHeight()
         ) {
             Canvas(
                 modifier = Modifier
@@ -1342,10 +1350,11 @@ fun DisplayTrackOrder(
                 drawCircle(color = Green2)
 
                 if (!isLastItem) {
+                    val dynamicLineHeight = descColumnHeight.toFloat()
                     drawLine(
                         color = Green4,
                         start = Offset(size.width / 2, size.height),
-                        end = Offset(size.width / 2, size.height + 80.dp.toPx()),
+                        end = Offset(size.width / 2, size.height + dynamicLineHeight),
                         strokeWidth = 4.dp.toPx()
                     )
                 }
@@ -1353,12 +1362,17 @@ fun DisplayTrackOrder(
         }
 
         Column(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .onGloballyPositioned { coordinates ->
+                    descColumnHeight = coordinates.size.height
+                }
         ) {
             Text(
                 text = record.description,
                 color = Green1,
-                fontFamily = mintsansFontFamily
+                fontFamily = mintsansFontFamily,
+                modifier = Modifier.padding(bottom = 4.dp)
             )
 
             record.imageUrl?.let { url ->

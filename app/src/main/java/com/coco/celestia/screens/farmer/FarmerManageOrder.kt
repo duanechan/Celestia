@@ -214,11 +214,32 @@ fun FarmerManageOrder(
                 }
 
                 assignedProducts
+                    ?.asSequence()
                     ?.filter { member ->
                         if (tabName == "Completed") {
                             member.assignedMember.any { it.status == "Completed" }
                         } else {
                             member.status == "In Progress" && member.assignedMember.any { it.email == userData?.email && it.status != "Completed" }
+                        }
+                    }
+                    ?.mapNotNull { member ->
+                        if (tabName == "Completed") {
+                            val filteredAssigned = member.assignedMember.filter { it.status == "Completed" }
+                            if (filteredAssigned.isNotEmpty()) {
+                                member.copy(assignedMember = filteredAssigned)
+                            } else {
+                                null
+                            }
+                        } else {
+                            val filteredNotCompleted = member.assignedMember.filter {
+                                it.email == userData?.email && it.status != "Completed"
+                            }
+
+                            if (filteredNotCompleted.isNotEmpty()) {
+                                member.copy(assignedMember = filteredNotCompleted)
+                            } else {
+                                null
+                            }
                         }
                     }
                     ?.filter { member ->
@@ -238,6 +259,7 @@ fun FarmerManageOrder(
                             .maxByOrNull { it.dateTime }
                             ?.dateTime
                     }
+                    ?.toList()
                     ?.forEach { assigned ->
                         assigned.assignedMember
                             .filter { it.email == userData?.email }
