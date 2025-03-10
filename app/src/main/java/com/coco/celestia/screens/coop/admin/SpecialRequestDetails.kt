@@ -924,7 +924,7 @@ fun AssignAMember(
                             expanded = productExpanded,
                             onDismissRequest = { productExpanded = false }
                         ) {
-                            request.products.map { it.name }.forEach {
+                            productList.forEach {
                                 DropdownMenuItem(
                                     onClick = {
                                         product = it
