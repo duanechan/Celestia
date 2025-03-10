@@ -1,6 +1,9 @@
 package com.coco.celestia.screens.client
 
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -23,23 +26,32 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Observer
 import coil.annotation.ExperimentalCoilApi
 import coil.compose.rememberImagePainter
 import com.coco.celestia.R
 import com.coco.celestia.service.ImageService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.viewmodel.SpecialRequestViewModel
+import com.coco.celestia.viewmodel.TransactionState
+import com.coco.celestia.viewmodel.TransactionViewModel
 import com.coco.celestia.viewmodel.model.ProductStatus
+import com.coco.celestia.viewmodel.model.SpecialRequest
 import com.coco.celestia.viewmodel.model.TrackRecord
+import com.coco.celestia.viewmodel.model.TransactionData
+import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeFormatterBuilder
 import java.util.Locale
 
 @OptIn(ExperimentalCoilApi::class)
 @Composable
 fun ClientSpecialReqDetails(
     specialRequestViewModel: SpecialRequestViewModel,
+    transactionViewModel: TransactionViewModel,
+    clientEmail: String,
     specialRequestUID: String
 ) {
     val currentDateTime = LocalDateTime.now()
@@ -262,6 +274,8 @@ fun ClientSpecialReqDetails(
                         Column(modifier = Modifier.padding(16.dp)) {
                             Button(
                                 onClick = {
+                                    Log.d("SpecialRequest", "Received Products button clicked")
+
                                     request.toDeliver.map { product ->
                                         if (product.status != "Delivered") {
                                             val addTrack = TrackRecord(
@@ -269,6 +283,7 @@ fun ClientSpecialReqDetails(
                                                 dateTime = formattedDateTime
                                             )
                                             trackRecord.add(addTrack)
+                                            Log.d("SpecialRequest", "Added track record for ${product.name}")
                                         }
                                     }
 
@@ -276,30 +291,41 @@ fun ClientSpecialReqDetails(
                                         .groupBy { it.name }
                                         .map { (name, products) ->
                                             val totalQuantity = products.sumOf { it.quantity }
+                                            val productId = products.firstOrNull()?.productId
                                             ProductStatus(
                                                 name = name,
                                                 quantity = totalQuantity,
-                                                status = "Delivered"
+                                                status = "Delivered",
+                                                productId = productId
                                             )
                                         }
 
-                                    specialRequestViewModel.updateSpecialRequest(
-                                        request.copy(
-                                            trackRecord = trackRecord,
-                                            toDeliver = mergeExisting,
-                                            status = if (request.assignedMember.all { it.status == "Completed" }) {
-                                                "Completed"
-                                            } else "In Progress"
-                                        )
+                                    val requestStatus = if (request.assignedMember.all { it.status == "Completed" }) {
+                                        "Completed"
+                                    } else {
+                                        "In Progress"
+                                    }
+
+                                    val updatedRequest = request.copy(
+                                        trackRecord = trackRecord,
+                                        toDeliver = mergeExisting,
+                                        status = requestStatus
                                     )
+                                    Log.d("SpecialRequest", "Recording transactions for delivered products")
+                                    recordSpecialRequestTransaction(
+                                        specialReq = updatedRequest,
+                                        clientEmail = clientEmail,
+                                        transactionViewModel = transactionViewModel,
+                                        formattedDateTime = formattedDateTime
+                                    )
+                                    specialRequestViewModel.updateSpecialRequest(updatedRequest)
                                 },
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     contentColor = Color.White,
                                     containerColor = Green1
                                 ),
-                                modifier = Modifier
-                                    .height(52.dp)
+                                modifier = Modifier.height(52.dp)
                             ) {
                                 Text(
                                     text = "Received Products",
@@ -400,7 +426,8 @@ fun ClientSpecialReqDetails(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .onGloballyPositioned { coordinates ->
-                                            descColumnHeight[record.dateTime] = coordinates.size.height
+                                            descColumnHeight[record.dateTime] =
+                                                coordinates.size.height
                                         },
                                     verticalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
@@ -460,5 +487,58 @@ fun ClientSpecialReqDetails(
                 }
             }
         }
+    }
+}
+fun encodeEmail(email: String): String {
+    return email.replace(".", ",")
+}
+
+fun formatDateTime(dateTimeStr: String): String {
+    return try {
+        val inputFormatter = DateTimeFormatter.ofPattern("MM-dd-yyyy HH:mm:ss")
+        val dateTime = LocalDateTime.parse(dateTimeStr, inputFormatter)
+        val outputFormatter = DateTimeFormatterBuilder()
+            .appendPattern("dd MMM yyyy")
+            .toFormatter(Locale.ENGLISH)
+        dateTime.format(outputFormatter)
+    } catch (e: Exception) {
+        dateTimeStr
+    }
+}
+
+fun recordSpecialRequestTransaction(
+    specialReq: SpecialRequest,
+    clientEmail: String,
+    transactionViewModel: TransactionViewModel,
+    formattedDateTime: String
+) {
+    val deliveredProducts = specialReq.toDeliver
+    if (deliveredProducts.isEmpty()) return
+
+    val formattedDate = formatDateTime(formattedDateTime)
+    val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+    val encodedClient = encodeEmail(clientEmail)
+
+    deliveredProducts.forEach { product ->
+        try {
+            val assignedFarmer = specialReq.assignedMember.find { it.product == product.name }
+            val farmerName = assignedFarmer?.name ?: "Unassigned"
+
+            val transaction = TransactionData(
+                transactionId = specialReq.specialRequestUID,
+                type = "Non-Retail Sale",
+                date = formattedDate,
+                description = "Fulfilled special request of ${product.quantity} kg of ${product.name} by $farmerName for client: $clientEmail",
+                status = "COMPLETED",
+                productName = product.name,
+                productId = product.productId ?: "SR-${System.currentTimeMillis()}",
+                facilityName = "Special Request",
+                vendorName = farmerName
+            )
+            transactionViewModel.recordTransaction(
+                uid = currentUserUid,
+                transaction = transaction
+            )
+        } catch (_: Exception) {}
     }
 }

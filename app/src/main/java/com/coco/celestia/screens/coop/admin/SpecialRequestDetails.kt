@@ -704,7 +704,7 @@ fun AssignAMember(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Assign a Member",
+                text = "Assign to Farmer",
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(end = 16.dp)
             )
@@ -801,7 +801,7 @@ fun AssignAMember(
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text("Assign a Member") },
+            title = { Text("Assign to Farmer") },
             text = {
                 Column(
                     modifier = Modifier

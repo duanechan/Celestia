@@ -59,7 +59,7 @@ fun CoopReports(
     transactionViewModel: TransactionViewModel = viewModel(),
     facilityViewModel: FacilityViewModel = viewModel()
 ) {
-    val selectedReportType = "Sales by Item"
+    val selectedReportType = "Special Requests"
     var selectedProduct by remember { mutableStateOf<String?>(null) }
     var showTransactionsDialog by remember { mutableStateOf(false) }
     var showPermissionDialog by remember { mutableStateOf(false) }
@@ -91,7 +91,11 @@ fun CoopReports(
 
     val filteredTransactions = remember(transactionsList, startDate, endDate, selectedProduct) {
         transactionsList.filter { transaction ->
-            if (transaction.type != "Online Sale") return@filter false
+            // For admin users, show only Non-Retail Sale transactions
+            if (isAdmin && transaction.type != "Non-Retail Sale") return@filter false
+
+            // For non-admin users, keep the original "Online Sale" filter
+            if (!isAdmin && transaction.type != "Online Sale") return@filter false
 
             if (selectedProduct != null && transaction.productName != selectedProduct) {
                 return@filter false
@@ -127,9 +131,9 @@ fun CoopReports(
         }
     }
 
-    val productNames = remember(transactionsList) {
+    val productNames = remember(transactionsList, isAdmin) {
         transactionsList
-            .filter { it.type == "Online Sale" }
+            .filter { if (isAdmin) it.type == "Non-Retail Sale" else it.type == "Online Sale" }
             .map { it.productName }
             .distinct()
             .sorted()
@@ -198,10 +202,12 @@ fun CoopReports(
                     LaunchedEffect(Unit) {
                         if (!hasInitialFetch) {
                             if (isAdmin) {
+                                // For admin, fetch Non-Retail Sale transactions
                                 transactionViewModel.fetchAllTransactions(
-                                    filter = "Online Sale"
+                                    filter = "Non-Retail Sale"
                                 )
                             } else {
+                                // For regular users, keep the original filter
                                 transactionViewModel.fetchAllTransactions(
                                     filter = "Online Sale",
                                     facilityName = userFacility?.name ?: ""
@@ -255,7 +261,7 @@ fun CoopReports(
                             onDismissRequest = { showTransactionsDialog = false },
                             title = {
                                 Text(
-                                    text = "Sales by Item Report Summary",
+                                    text = if (isAdmin) "Special Requests Report Summary" else "Sales by Item Report Summary",
                                     style = MaterialTheme.typography.titleLarge,
                                     modifier = Modifier.fillMaxWidth(),
                                     textAlign = TextAlign.Center
@@ -304,7 +310,7 @@ fun CoopReports(
                                                     modifier = Modifier.fillMaxSize()
                                                 ) {
                                                     Text(
-                                                        text = "Product Summary",
+                                                        text = if (isAdmin) "Special Requests Summary" else "Product Summary",
                                                         style = MaterialTheme.typography.titleMedium,
                                                         fontWeight = FontWeight.Bold
                                                     )
@@ -330,7 +336,7 @@ fun CoopReports(
                                                     }
 
                                                     Text(
-                                                        text = "Total Sales: ${filteredTransactions.size}",
+                                                        text = "Total Transactions: ${filteredTransactions.size}",
                                                         style = MaterialTheme.typography.bodyMedium
                                                     )
 
@@ -356,10 +362,10 @@ fun CoopReports(
                                                             modifier = Modifier.weight(1.5f)
                                                         )
                                                         Text(
-                                                            text = "Status",
+                                                            text = "Description",
                                                             style = MaterialTheme.typography.bodyMedium,
                                                             fontWeight = FontWeight.Bold,
-                                                            modifier = Modifier.weight(1f)
+                                                            modifier = Modifier.weight(2f)
                                                         )
                                                     }
 
@@ -387,9 +393,9 @@ fun CoopReports(
                                                                     modifier = Modifier.weight(1.5f)
                                                                 )
                                                                 Text(
-                                                                    text = transaction.status,
+                                                                    text = transaction.description,
                                                                     style = MaterialTheme.typography.bodySmall,
-                                                                    modifier = Modifier.weight(1f)
+                                                                    modifier = Modifier.weight(2f)
                                                                 )
                                                             }
                                                             Divider(color = Color.LightGray, thickness = 0.5.dp)
@@ -453,7 +459,7 @@ fun CoopReports(
                                 modifier = Modifier.padding(16.dp)
                             ) {
                                 Text(
-                                    text = "Sales by Item Report",
+                                    text = if (isAdmin) "Special Requests Report" else "Sales by Item Report",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     fontFamily = mintsansFontFamily
@@ -716,7 +722,7 @@ fun CoopReports(
                                             appendLine()
 
                                             appendLine("----------------------------------------")
-                                            appendLine("Daily Sales Breakdown")
+                                            appendLine("Sales Breakdown")
                                             appendLine("----------------------------------------")
                                             appendLine()
 
@@ -764,7 +770,7 @@ fun CoopReports(
                                             appendLine("Product,Date,Status")
 
                                             filteredTransactions.forEach { transaction ->
-                                                appendLine("${transaction.productName},${transaction.date},${transaction.status}")
+                                                appendLine("${transaction.productName},${transaction.date},${transaction.description}")
                                             }
                                         }
 

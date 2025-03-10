@@ -1153,16 +1153,18 @@ fun NavGraph(
                 showSearch = showSearch
             )
         }
-
         composable(
             route = Screen.ClientSpecialReqDetails.route,
             arguments = listOf(navArgument("specialRequestUID") { type = NavType.StringType })
         ) { backStackEntry ->
             val specialRequestUID = backStackEntry.arguments?.getString("specialRequestUID") ?: ""
             onNavigate("Request Details")
+
             ClientSpecialReqDetails(
                 specialRequestViewModel = specialRequestViewModel,
-                specialRequestUID = specialRequestUID
+                transactionViewModel = transactionViewModel,
+                specialRequestUID = specialRequestUID,
+                clientEmail = userEmail
             )
         }
 

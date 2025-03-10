@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -23,6 +24,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -38,6 +41,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -73,6 +77,9 @@ import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.VegetableViewModel
 import com.coco.celestia.viewmodel.model.Constants
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import com.coco.celestia.service.AttachFileService
 import com.coco.celestia.viewmodel.model.ProductReq
 import com.coco.celestia.viewmodel.model.ProductReqValidation
@@ -488,9 +495,9 @@ fun AddSpecialReq(
                     suggestions = vegetableList,
                     onSuggestionClick = { selectedProduct ->
                         productRows[index] = productRow.copy(name = selectedProduct)
-                        productEmpty[index] =
-                            productEmpty[index].copy(name = selectedProduct.isEmpty())
+                        productEmpty[index] = productEmpty[index].copy(name = selectedProduct.isEmpty())
                     },
+                    initialValue = productRow.name,
                     modifier = Modifier
                         .padding(vertical = 4.dp)
                         .weight(1f)
@@ -843,54 +850,77 @@ fun AddSpecialReq(
 fun AutocompleteTextField(
     suggestions: List<String>,
     onSuggestionClick: (String) -> Unit,
-    modifier: Modifier
+    modifier: Modifier,
+    initialValue: String = "",
+    isError: Boolean = false,
+    errorMessage: String? = null
 ) {
-    var query by remember { mutableStateOf("") }
+    var query by remember { mutableStateOf(initialValue) }
     var isDropdownExpanded by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
 
-    ExposedDropdownMenuBox(
-        expanded = isDropdownExpanded,
-        onExpandedChange = { isDropdownExpanded = it },
-        modifier = modifier
-    ) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = { newQuery ->
-                query = newQuery
-                isDropdownExpanded = newQuery.isNotEmpty()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .menuAnchor(),
-            label = { Text("Enter Product") },
-            singleLine = true
-        )
-
-        ExposedDropdownMenu(
+    Column(modifier = modifier) {
+        ExposedDropdownMenuBox(
             expanded = isDropdownExpanded,
-            onDismissRequest = { isDropdownExpanded = false },
-            modifier = Modifier
-                .heightIn(max = 200.dp)
+            onExpandedChange = { isDropdownExpanded = it },
         ) {
-            val filteredSuggestions = suggestions.filter {
-                it.contains(query, ignoreCase = true)
-            }
-            if (filteredSuggestions.isNotEmpty()) {
-                filteredSuggestions.forEach { suggestion ->
-                    DropdownMenuItem(
-                        text = { Text(suggestion) },
-                        onClick = {
-                            query = suggestion
-                            onSuggestionClick(suggestion)
-                            isDropdownExpanded = false
-                        }
-                    )
+            OutlinedTextField(
+                value = query,
+                onValueChange = { newQuery ->
+                    query = newQuery
+                    onSuggestionClick(newQuery)
+                    isDropdownExpanded = true
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(),
+                label = { Text("Enter Product") },
+                singleLine = true,
+                isError = isError && query.isEmpty(),
+                supportingText = if (isError && query.isEmpty()) {
+                    { Text(errorMessage ?: "Product cannot be empty") }
+                } else null,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Text
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        isDropdownExpanded = false
+                        focusManager.clearFocus()
+                    }
+                ),
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = isDropdownExpanded)
                 }
-            } else {
-                DropdownMenuItem(
-                    text = { Text("No suggestions found") },
-                    onClick = {}
-                )
+            )
+
+            if (isDropdownExpanded) {
+                ExposedDropdownMenu(
+                    expanded = true,
+                    onDismissRequest = { isDropdownExpanded = false },
+                    modifier = Modifier.heightIn(max = 200.dp)
+                ) {
+                    if (suggestions.isNotEmpty()) {
+                        suggestions.forEach { suggestion ->
+                            DropdownMenuItem(
+                                text = { Text(suggestion) },
+                                onClick = {
+                                    query = suggestion
+                                    onSuggestionClick(suggestion)
+                                    isDropdownExpanded = false
+                                },
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                            )
+                        }
+                    } else {
+                        DropdownMenuItem(
+                            text = { Text("No products available") },
+                            onClick = {},
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
+                }
             }
         }
     }
