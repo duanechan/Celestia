@@ -6,6 +6,7 @@ import android.app.DatePickerDialog
 import android.net.Uri
 import android.widget.DatePicker
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -382,6 +383,8 @@ fun AddSpecialReq(
     val vegetables by vegetableViewModel.vegData.observeAsState()
     val trackRecord = remember { mutableStateListOf<TrackRecord>() }
     var deliveryAddress by remember { mutableStateOf("") }
+    var showCustomDeliveryField by remember { mutableStateOf(false) }
+    var deliveryAddressEmpty by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
@@ -477,7 +480,7 @@ fun AddSpecialReq(
             )
 
             Text(
-                text = "Quantity",
+                text = "Quantity (Kg)",
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .padding(vertical = 4.dp)
@@ -629,6 +632,16 @@ fun AddSpecialReq(
                 .padding(vertical = 4.dp)
         )
 
+        LaunchedEffect(collectionMethod) {
+            if (collectionMethod == Constants.COLLECTION_PICKUP) {
+                deliveryAddress = "City Vet Office, Baguio City"
+                showCustomDeliveryField = false
+            } else if (collectionMethod == Constants.COLLECTION_DELIVERY) {
+                deliveryAddress = "${userData?.streetNumber}, ${userData?.barangay}"
+                showCustomDeliveryField = true
+            }
+        }
+
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -637,6 +650,7 @@ fun AddSpecialReq(
                 onClick = {
                     collectionMethod = Constants.COLLECTION_PICKUP
                     deliveryAddress = "City Vet Office, Baguio City"
+                    showCustomDeliveryField = false
                 }
             )
             Text(Constants.COLLECTION_PICKUP)
@@ -650,9 +664,46 @@ fun AddSpecialReq(
                 onClick = {
                     collectionMethod = Constants.COLLECTION_DELIVERY
                     deliveryAddress = "${userData?.streetNumber}, ${userData?.barangay}"
+                    showCustomDeliveryField = true
                 }
             )
             Text(Constants.COLLECTION_DELIVERY)
+        }
+
+        AnimatedVisibility(visible = showCustomDeliveryField) {
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Delivery Address",
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    if (deliveryAddressEmpty) {
+                        Text(
+                            text = "Delivery Address is Empty!",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Red,
+                        )
+                    }
+                }
+
+                OutlinedTextField(
+                    value = deliveryAddress,
+                    onValueChange = { deliveryAddress = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    label = { Text("Enter delivery address details") },
+                    placeholder = { Text("Street, Barangay, Landmarks, etc.") },
+                    maxLines = 3
+                )
+            }
         }
 
         if (collectionMethodEmpty) {
@@ -721,6 +772,7 @@ fun AddSpecialReq(
                 }
 
                 if (!subjectEmpty && !targetDateEmpty && !collectionMethodEmpty &&
+                    !deliveryAddressEmpty && // Add this condition
                     productEmpty.all { !it.name && !it.quantity }
                 ) {
 
@@ -811,7 +863,8 @@ fun AddSpecialReq(
                             dateRequested = formattedDateTime,
                             specialRequestUID = specialRequestUID,
                             trackRecord = trackRecord,
-                            attachments = emptyList()
+                            attachments = emptyList(),
+                            deliveryAddress = deliveryAddress
                         )
 
                         specialRequestViewModel.addSpecialRequest(

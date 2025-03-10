@@ -31,6 +31,7 @@ import com.coco.celestia.viewmodel.ReportsViewModel
 import com.coco.celestia.viewmodel.TransactionState
 import com.coco.celestia.viewmodel.TransactionViewModel
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -491,7 +492,12 @@ fun CoopReports(
                                             trailingIcon = {
                                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                                             },
-                                            colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                                            colors = TextFieldDefaults.colors(
+                                                unfocusedContainerColor = White1,
+                                                focusedContainerColor = White1,
+                                                disabledContainerColor = White1,
+                                            ),
+                                            shape = RoundedCornerShape(8.dp),
                                             modifier = Modifier
                                                 .menuAnchor()
                                                 .fillMaxWidth()

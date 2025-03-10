@@ -36,7 +36,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -66,14 +65,12 @@ import com.coco.celestia.navigation.NavDrawerTopBar
 import com.coco.celestia.navigation.NavGraph
 import com.coco.celestia.navigation.TopBar
 import com.coco.celestia.screens.`object`.Screen
-import com.coco.celestia.service.NotificationService
 import com.coco.celestia.ui.theme.*
 import com.coco.celestia.util.checkNetworkConnection
 import com.coco.celestia.viewmodel.FacilityViewModel
 import com.coco.celestia.viewmodel.UserState
 import com.coco.celestia.viewmodel.UserViewModel
 import com.coco.celestia.viewmodel.model.FacilityData
-import com.coco.celestia.viewmodel.model.Notification
 import com.coco.celestia.viewmodel.model.UserData
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.google.firebase.auth.FirebaseAuth
@@ -81,7 +78,6 @@ import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
 
 @OptIn(ExperimentalComposeUiApi::class)
 class MainActivity : ComponentActivity() {
@@ -89,12 +85,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
-            CelestiaTheme {
+            CelestiaTheme(
+                darkTheme = false,
+            ) {
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color(0xFFF2E3DB))
-                        .semantics { testTagsAsResourceId = true }
+                        .semantics { testTagsAsResourceId = true },
+                    color = Color(0xFFF2E3DB)
                 ) {
                     App()
                 }
@@ -222,6 +221,13 @@ fun AppStateAndContent(
             color = Color.Transparent,
             darkIcons = true
         )
+
+        systemUiController.setSystemBarsColor(
+            color = Color.Transparent,
+            darkIcons = true,
+            isNavigationBarContrastEnforced = false
+        )
+
         onDispose {}
     }
 
