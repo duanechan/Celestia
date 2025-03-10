@@ -434,7 +434,8 @@ fun SpecialRequestDetails(
                         onClick = {
                             action = "Decline"
                             showDialog = true
-                        }
+                        },
+                        colors = ButtonDefaults.buttonColors(Color.Gray)
                     ) {
                         Text("Decline")
                     }
@@ -473,11 +474,11 @@ fun SpecialRequestDetails(
                         onClick = {
                             updateStatusDialog = true
                         },
-                        colors = ButtonDefaults.buttonColors(Green4)
+                        colors = ButtonDefaults.buttonColors(Green2)
                     ) {
                         Text(
                             text = "Update Status",
-                            color = Green2
+                            color = Color.White
                         )
                     }
                 }
@@ -569,7 +570,8 @@ fun SpecialRequestDetails(
             },
             dismissButton = {
                 Button(
-                    onClick = { showDialog = false }
+                    onClick = { showDialog = false },
+                    colors = ButtonDefaults.buttonColors(Color.Gray)
                 ) {
                     Text("No")
                 }
@@ -644,7 +646,8 @@ fun SpecialRequestDetails(
             },
             dismissButton = {
                 Button(
-                    onClick = { declineDialog = false }
+                    onClick = { declineDialog = false },
+                    colors = ButtonDefaults.buttonColors(Color.Gray)
                 ) {
                     Text("Cancel")
                 }
@@ -778,7 +781,13 @@ fun AssignAMember(
                         .padding(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                 ) {
-                    Button(onClick = onDismiss) {
+                    Button(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Gray,
+                            contentColor = Color.White
+                        )
+                    ) {
                         Text("Cancel")
                     }
 
@@ -813,7 +822,7 @@ fun AssignAMember(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Manual Input")
+                        Text("Farmer Without an Account")
                         Switch(
                             checked = isManualInput,
                             onCheckedChange = {
@@ -849,7 +858,7 @@ fun AssignAMember(
 
                             Button(
                                 onClick = { launcher.launch("*/*") },
-                                colors = ButtonDefaults.buttonColors(Green4)
+                                colors = ButtonDefaults.buttonColors(Green2)
                             ) {
                                 Text(if (attachmentUri == null) "Attach File" else "Change File")
                             }
@@ -1044,7 +1053,8 @@ fun AssignAMember(
                         quantity = 0
                         attachmentUri = null
                         showDialog = false
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(Color.Gray)
                 ) {
                     Text("Cancel")
                 }
@@ -1633,14 +1643,19 @@ fun UpdateStatusDialog (
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(email, status) }
+                onClick = { onConfirm(email, status) },
+                colors = ButtonDefaults.buttonColors(Green2)
             ) {
                 Text("Confirm")
             }
         },
         dismissButton = {
             Button(
-                onClick = onDismiss
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Gray,
+                    contentColor = Color.White
+                )
             ) {
                 Text("Cancel")
             }
