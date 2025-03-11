@@ -798,7 +798,7 @@ fun AssignAMember(
                                 onSave()
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(Green4)
+                        colors = ButtonDefaults.buttonColors(Green2)
                     ) {
                         Text("Save")
                     }

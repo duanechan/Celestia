@@ -90,6 +90,7 @@ import com.coco.celestia.ui.theme.DuskyBlue
 import com.coco.celestia.ui.theme.FarmerGradientBrush
 import com.coco.celestia.ui.theme.GrayGradientBrush
 import com.coco.celestia.ui.theme.Green1
+import com.coco.celestia.ui.theme.Green2
 import com.coco.celestia.ui.theme.Green4
 import com.coco.celestia.ui.theme.LightBlue
 import com.coco.celestia.ui.theme.LightBlueGreen
@@ -546,7 +547,7 @@ fun ProfileScreen(
                                     modifier = Modifier
                                         .semantics { testTag = "android:id/confirmButton" },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = LightBlue,
+                                        containerColor = Green2,
                                         contentColor = Color.White
                                     )
                                 ) {
@@ -560,7 +561,7 @@ fun ProfileScreen(
                                     },
                                     modifier = Modifier.semantics { testTag = "android:id/cancelButton" },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = LightBlue,
+                                        containerColor = Color.Gray,
                                         contentColor = Color.White
                                     )
                                 ) {

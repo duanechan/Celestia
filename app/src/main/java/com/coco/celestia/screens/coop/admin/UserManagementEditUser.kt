@@ -1,6 +1,5 @@
 package com.coco.celestia.screens.coop.admin
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,6 +41,7 @@ import com.google.firebase.auth.FirebaseAuth
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
+import com.coco.celestia.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -286,6 +287,7 @@ fun EditUser(
                     }
                 },
                 enabled = !isUpdating,
+                colors = ButtonDefaults.buttonColors(Green2),
                 modifier = Modifier.semantics { testTag = "android:id/EditUserConfirmButton" }
             ) {
                 Text("Save")
@@ -295,6 +297,7 @@ fun EditUser(
             Button(
                 onClick = { onDismiss() },
                 enabled = !isUpdating,
+                colors = ButtonDefaults.buttonColors(Color.Gray),
                 modifier = Modifier.semantics { testTag = "android:id/EditUserDismissButton" }
             ) {
                 Text("Cancel")

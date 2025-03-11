@@ -800,13 +800,17 @@ fun DisplayUpdateStatus(
                     if (!quantityExceeded && !emptyMilestone) {
                         onConfirm(status, description, quantity, selectedImageUri)
                     }
-                }
+                },
+                colors = ButtonDefaults.buttonColors(Green2)
             ) {
                 Text("Confirm")
             }
         },
         dismissButton = {
-            Button(onClick = onDismiss) {
+            Button(
+                onClick = onDismiss,
+                colors = ButtonDefaults.buttonColors(Color.Gray)
+            ) {
                 Text("Cancel")
             }
         }
