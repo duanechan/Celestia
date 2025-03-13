@@ -531,17 +531,41 @@ fun App() {
                                                 }
                                                 .padding(8.dp)
                                         ) {
-                                            Icon(
-                                                imageVector = when (label) {
-                                                    "Home" -> Icons.Default.Home
-                                                    "Settings" -> Icons.Default.Settings
-                                                    "Reports" -> Icons.Default.Info
-                                                    "Special Requests" -> Icons.Default.Info
-                                                    else -> Icons.Default.Home
-                                                },
-                                                contentDescription = null,
-                                                tint = if (currentDestination == route) Green1 else Color.Gray
-                                            )
+                                            when (label) {
+                                                "Home" -> Icon(
+                                                    imageVector = Icons.Default.Home,
+                                                    contentDescription = null,
+                                                    tint = if (currentDestination == route) Green1 else Color.Gray
+                                                )
+                                                "Settings" -> Icon(
+                                                    imageVector = Icons.Default.Settings,
+                                                    contentDescription = null,
+                                                    tint = if (currentDestination == route) Green1 else Color.Gray
+                                                )
+                                                "Reports" -> Icon(
+                                                    painter = painterResource(id = R.drawable.reports),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(24.dp),
+                                                    tint = if (currentDestination == route) Green1 else Color.Gray
+                                                )
+                                                "Members" -> Icon(
+                                                    painter = painterResource(id = R.drawable.members),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(24.dp),
+                                                    tint = if (currentDestination == route) Green1 else Color.Gray
+                                                )
+                                                "Clients & Customers" -> Icon(
+                                                    painter = painterResource(id = R.drawable.clients),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(24.dp),
+                                                    tint = if (currentDestination == route) Green1 else Color.Gray
+                                                )
+                                                else -> Icon(
+                                                    imageVector = Icons.Default.Home,
+                                                    contentDescription = null,
+                                                    tint = if (currentDestination == route) Green1 else Color.Gray
+                                                )
+                                            }
                                             Spacer(modifier = Modifier.width(12.dp))
                                             Text(
                                                 text = label,
